@@ -201,11 +201,13 @@ export function RelicMarketPage() {
             )}
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-1 text-lg font-bold text-coc-gold">
+            <div className="flex items-center justify-end gap-1 text-lg font-bold text-coc-gold">
               {l.currency === 'coin' ? <Coins size={16} /> : <Sparkles size={16} />}
               {l.price}
             </div>
-            <div className="text-xs text-coc-text-muted">{l.sellerName}</div>
+            <div className="text-xs text-coc-text-muted">
+              {l.currency === 'coin' ? '锈蚀硬币' : '虚银'} · {l.sellerName}
+            </div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between">
@@ -382,8 +384,8 @@ export function RelicMarketPage() {
                   onChange={(e) => setListCurrency(e.target.value as any)}
                   className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
                 >
-                  <option value="coin">硬币</option>
-                  <option value="stardust">星尘</option>
+                  <option value="coin">锈蚀硬币</option>
+                  <option value="stardust">虚银</option>
                 </select>
               </div>
             </div>

@@ -139,11 +139,11 @@ export function InventoryPage() {
 
       {tab === 'general' && (
         <RuneBorder variant="gold" intensity="subtle">
-          <div className="coc-bg-parchment p-4">
+          <div className="bg-coc-bg-secondary p-4">
             {loading ? (
-              <div className="py-10 text-center text-coc-parchment-dim">加载中...</div>
+              <div className="py-10 text-center text-coc-text-muted">加载中...</div>
             ) : generalItems.length === 0 ? (
-              <div className="py-10 text-center text-coc-parchment-dim">暂无道具</div>
+              <div className="py-10 text-center text-coc-text-muted">暂无道具</div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {generalItems.map((i) => (
@@ -166,11 +166,11 @@ export function InventoryPage() {
 
       {tab === 'titles' && (
         <RuneBorder variant="madness" intensity="subtle">
-          <div className="coc-bg-parchment p-4">
+          <div className="bg-coc-bg-secondary p-4">
             {loading ? (
-              <div className="py-10 text-center text-coc-parchment-dim">加载中...</div>
+              <div className="py-10 text-center text-coc-text-muted">加载中...</div>
             ) : titleItems.length === 0 ? (
-              <div className="py-10 text-center text-coc-parchment-dim">暂无印记</div>
+              <div className="py-10 text-center text-coc-text-muted">暂无印记</div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {titleItems.map((i) => (
@@ -194,10 +194,10 @@ export function InventoryPage() {
       {tab === 'relics' && (
         <div className="space-y-4">
           <RuneBorder variant="gold" intensity="subtle">
-            <div className="coc-bg-parchment p-4">
+            <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">已绑定遗物（角色保险箱）</h2>
               {boundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-coc-parchment-dim">还没有遗物绑定到角色卡上</div>
+                <div className="py-6 text-center text-sm text-coc-text-muted">还没有遗物绑定到角色卡上</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {boundRelics.map((r) => (
@@ -217,10 +217,10 @@ export function InventoryPage() {
           </RuneBorder>
 
           <RuneBorder variant="madness" intensity="subtle">
-            <div className="coc-bg-parchment p-4">
+            <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">未绑定遗物</h2>
               {unboundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-coc-parchment-dim">暂无有可绑定的遗物</div>
+                <div className="py-6 text-center text-sm text-coc-text-muted">暂无有可绑定的遗物</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {unboundRelics.map((r) => (

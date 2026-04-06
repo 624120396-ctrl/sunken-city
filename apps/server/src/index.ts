@@ -33,6 +33,7 @@ import aiRoutes from './modules/ai/ai.routes';
 import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import relicsRoutes from './modules/relics/relics.routes';
+import adminRelicRoutes from './modules/relics/admin-relics.routes';
 
 // 加载环境变量
 dotenv.config();
@@ -89,6 +90,7 @@ app.use('/api', shopRoutes);
 app.use('/api/admin', adminRankTitleRoutes);
 app.use('/api/admin', adminAnnouncementRoutes);
 app.use('/api/admin', adminShopRoutes);
+app.use('/api/admin', adminRelicRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);

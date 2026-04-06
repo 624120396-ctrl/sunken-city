@@ -47,6 +47,7 @@ import { AdminRankTitlePage } from '@pages/admin/AdminRankTitlePage';
 import { AdminAnnouncementsPage } from '@pages/admin/AdminAnnouncementsPage';
 import { AdminShopPage } from '@pages/admin/AdminShopPage';
 import { AdminBoardModeratorsPage } from '@pages/admin/AdminBoardModeratorsPage';
+import { AdminRelicMarketPage } from '@pages/admin/AdminRelicMarketPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -73,6 +74,7 @@ function App() {
       <Route path="/admin/announcements" element={<AdminLayout><AdminAnnouncementsPage /></AdminLayout>} />
       <Route path="/admin/shop" element={<AdminLayout><AdminShopPage /></AdminLayout>} />
       <Route path="/admin/board-moderators" element={<AdminLayout><AdminBoardModeratorsPage /></AdminLayout>} />
+      <Route path="/admin/relic-market" element={<AdminLayout><AdminRelicMarketPage /></AdminLayout>} />
 
       {/* 主站路由 */}
       <Route path="*" element={

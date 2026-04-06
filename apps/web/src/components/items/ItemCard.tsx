@@ -46,9 +46,9 @@ export function ItemCard({
     <div
       onClick={onClick}
       className={cn(
-        'relative rounded-lg border bg-coc-bg-secondary/40 p-4 transition-colors',
+        'relative rounded-lg border bg-coc-bg-tertiary p-4 transition-colors',
         borderColor,
-        onClick && 'cursor-pointer hover:bg-coc-bg-secondary/70',
+        onClick && 'cursor-pointer hover:bg-coc-mist',
         className
       )}
     >
