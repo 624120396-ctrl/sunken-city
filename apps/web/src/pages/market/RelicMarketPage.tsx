@@ -10,6 +10,7 @@ import {
 } from '@services/relics.service';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Store, X, Plus, Coins, Sparkles } from 'lucide-react';
+import { getRarityColorClass } from '@data/relics';
 
 interface Listing {
   id: string;
@@ -33,6 +34,11 @@ interface Listing {
   } | null;
 }
 
+interface ToastState {
+  message: string;
+  type: 'success' | 'error';
+}
+
 export function RelicMarketPage() {
   const { user } = useAuthStore();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -42,6 +48,7 @@ export function RelicMarketPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'market' | 'mine'>('market');
   const [filterKey, setFilterKey] = useState('');
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   // 上架 Modal
   const [showListModal, setShowListModal] = useState(false);
@@ -59,6 +66,12 @@ export function RelicMarketPage() {
     loadData();
     fetchCharacters();
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 3000);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const loadData = async () => {
     setLoading(true);
@@ -134,9 +147,10 @@ export function RelicMarketPage() {
     try {
       await createListing(selectedRelicId, Number(listPrice), listCurrency);
       setShowListModal(false);
+      setToast({ message: '上架成功', type: 'success' });
       loadData();
     } catch (err: any) {
-      alert(err.message || '上架失败');
+      setToast({ message: err.message || '上架失败', type: 'error' });
     }
   };
 
@@ -144,9 +158,10 @@ export function RelicMarketPage() {
     if (!confirm('确定下架该挂单吗？')) return;
     try {
       await cancelListing(tradeId);
+      setToast({ message: '下架成功', type: 'success' });
       loadData();
     } catch (err: any) {
-      alert(err.message || '下架失败');
+      setToast({ message: err.message || '下架失败', type: 'error' });
     }
   };
 
@@ -154,12 +169,12 @@ export function RelicMarketPage() {
     if (!buyTradeId || !buyCharId) return;
     try {
       await buyListing(buyTradeId, buyCharId);
-      alert('购买成功');
+      setToast({ message: '购买成功', type: 'success' });
       setBuyTradeId(null);
       setBuyCharId('');
       loadData();
     } catch (err: any) {
-      alert(err.message || '购买失败');
+      setToast({ message: err.message || '购买失败', type: 'error' });
     }
   };
 
@@ -167,12 +182,18 @@ export function RelicMarketPage() {
     const meta = registry[l.relicKey] || l.meta;
     const dur =
       l.relicSnapshot?.durability ?? l.relicSnapshot?.maxDurability ?? null;
+    const rarity = meta?.rarity || 'common';
     return (
-      <div key={l.id} className="rounded border border-coc-void bg-coc-bg-secondary p-4">
+      <div key={l.id} className={`rounded border bg-coc-bg-secondary p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}>
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-base font-bold text-coc-parchment">
-              {meta?.name || l.relicKey}
+            <div className="flex items-center gap-2">
+              <div className="text-base font-bold text-coc-parchment">
+                {meta?.name || l.relicKey}
+              </div>
+              <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)}`}>
+                {rarity}
+              </span>
             </div>
             <div className="mt-1 text-xs text-coc-text-muted">{meta?.description}</div>
             {dur !== null && (
@@ -273,7 +294,11 @@ export function RelicMarketPage() {
           {loading ? (
             <div className="py-12 text-center text-coc-text-muted">加载中...</div>
           ) : listings.length === 0 ? (
-            <div className="py-12 text-center text-coc-text-muted">暂无挂单</div>
+            <div className="py-16 text-center text-coc-text-muted">
+              <Store size={48} className="mx-auto mb-4 text-coc-text-secondary/50" />
+              <p>暂无挂单</p>
+              <p className="mt-1 text-xs">成为第一位在市场出售遗物的调查员</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {listings.map((l) => renderListingCard(l))}
@@ -417,6 +442,18 @@ export function RelicMarketPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed right-4 top-4 z-[60] rounded border px-4 py-2 text-sm shadow-lg ${
+            toast.type === 'success'
+              ? 'border-green-500/50 bg-green-900/80 text-green-100'
+              : 'border-red-500/50 bg-red-900/80 text-red-100'
+          }`}
+        >
+          {toast.message}
         </div>
       )}
     </div>

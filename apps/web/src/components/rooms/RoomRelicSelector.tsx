@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@lib/api';
-import { getRelicEffect } from '@data/relics';
+import { getRelicEffect, getRarityColorClass } from '@data/relics';
 import { cn } from '@lib/utils';
 
 interface Relic {
@@ -81,6 +81,7 @@ export function RoomRelicSelector({ characterId, selectedIds, onChange }: RoomRe
       <div className="grid grid-cols-1 gap-2">
         {relics.map((r) => {
           const selected = selectedIds.includes(r.id);
+          const rarity = r.meta?.rarity || 'common';
           return (
             <button
               key={r.id}
@@ -90,12 +91,17 @@ export function RoomRelicSelector({ characterId, selectedIds, onChange }: RoomRe
                 'flex items-center justify-between rounded border p-3 text-left transition-colors',
                 selected
                   ? 'border-coc-gold bg-coc-gold/10'
-                  : 'border-coc-void bg-coc-bg-secondary/40 hover:bg-coc-bg-secondary/70'
+                  : `${getRarityColorClass(rarity).split(' ')[1]} bg-coc-bg-secondary/40 hover:bg-coc-bg-secondary/70`
               )}
             >
-              <div>
-                <div className="text-sm font-medium text-coc-parchment">{r.meta?.name || r.relicKey}</div>
-                <div className="text-xs text-coc-text-muted">{r.meta?.rarity} · {r.meta?.description}</div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-medium text-coc-parchment">{r.meta?.name || r.relicKey}</div>
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)}`}>
+                    {rarity}
+                  </span>
+                </div>
+                <div className="mt-0.5 text-xs text-coc-text-muted line-clamp-1">{r.meta?.description}</div>
               </div>
               {selected && (
                 <span className="rounded bg-coc-gold px-2 py-0.5 text-xs font-bold text-coc-abyss">携带</span>

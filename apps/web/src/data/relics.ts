@@ -90,3 +90,35 @@ export const rarityOrder: Record<string, number> = {
   legendary: 4,
   mythical: 5,
 };
+
+export function getRarityColorClass(rarity?: string): string {
+  switch (rarity) {
+    case 'mythical':
+      return 'text-purple-400 border-purple-500/50 bg-purple-500/10';
+    case 'legendary':
+      return 'text-amber-400 border-amber-500/50 bg-amber-500/10';
+    case 'epic':
+      return 'text-fuchsia-400 border-fuchsia-500/50 bg-fuchsia-500/10';
+    case 'rare':
+      return 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10';
+    case 'common':
+    default:
+      return 'text-stone-400 border-stone-500/50 bg-stone-500/10';
+  }
+}
+
+export function getRarityLabelClass(rarity?: string): string {
+  switch (rarity) {
+    case 'mythical':
+      return 'text-purple-300';
+    case 'legendary':
+      return 'text-amber-300';
+    case 'epic':
+      return 'text-fuchsia-300';
+    case 'rare':
+      return 'text-cyan-300';
+    case 'common':
+    default:
+      return 'text-stone-400';
+  }
+}

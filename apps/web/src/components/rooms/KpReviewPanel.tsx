@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@lib/api';
 import { Check, X } from 'lucide-react';
+import { getRarityColorClass } from '@data/relics';
 
 interface Application {
   id: string;
@@ -8,7 +9,7 @@ interface Application {
   nickname: string;
   avatarUrl?: string;
   applyNote?: string;
-  broughtRelics: string[];
+  broughtRelics: string[]; // CharacterRelic ids
   character?: {
     id: string;
     name: string;
@@ -25,9 +26,59 @@ interface KpReviewPanelProps {
   roomId: string;
 }
 
+interface RelicInfo {
+  id: string;
+  key: string;
+  name: string;
+  rarity: string;
+}
+
 export function KpReviewPanel({ applications, onRefresh, roomId }: KpReviewPanelProps) {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  const [relicMap, setRelicMap] = useState<Record<string, RelicInfo>>({});
+
+  useEffect(() => {
+    const loadRelics = async () => {
+      try {
+        const res = await apiFetch('/relics/registry');
+        const data = await res.json();
+        const registry: Record<string, { key: string; name: string; rarity: string }> = {};
+        (data.data?.relics || []).forEach((r: any) => {
+          registry[r.key] = r;
+        });
+
+        // 需要把 broughtRelics 中的 CharacterRelic id 映射到 relicKey
+        // 这里先收集所有 id，然后批量查询（但没有批量接口）
+        // 更简单：我们在 applications 里已经有了 broughtRelics 的 id，
+        // 先通过 character 去查角色的遗物列表，然后构建 id -> info 映射
+        const allIds = applications.flatMap((a) => a.broughtRelics);
+        if (allIds.length === 0) return;
+        const charIds = [...new Set(applications.map((a) => a.character?.id).filter(Boolean))];
+        const idMap: Record<string, RelicInfo> = {};
+        await Promise.all(
+          charIds.map(async (cid) => {
+            const r = await apiFetch(`/relics/character/${cid}`);
+            const d = await r.json();
+            (d.data?.relics || []).forEach((rel: any) => {
+              idMap[rel.id] = {
+                id: rel.id,
+                key: rel.relicKey,
+                name: registry[rel.relicKey]?.name || rel.relicKey,
+                rarity: registry[rel.relicKey]?.rarity || 'common',
+              };
+            });
+          })
+        );
+        setRelicMap(idMap);
+      } catch (err) {
+        console.error('加载遗物信息失败', err);
+      }
+    };
+    if (applications.length > 0) {
+      loadRelics();
+    }
+  }, [applications]);
 
   const handleApprove = async (memberId: string) => {
     try {
@@ -123,7 +174,21 @@ export function KpReviewPanel({ applications, onRefresh, roomId }: KpReviewPanel
             )}
 
             {app.broughtRelics.length > 0 && (
-              <div className="mt-2 text-xs text-coc-text-muted">携带遗物：{app.broughtRelics.join(', ')}</div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-coc-text-muted">携带遗物：</span>
+                {app.broughtRelics.map((rid) => {
+                  const info = relicMap[rid];
+                  if (!info) return <span key={rid} className="text-coc-text-muted">未知遗物</span>;
+                  return (
+                    <span
+                      key={rid}
+                      className={`rounded border px-1.5 py-0.5 ${getRarityColorClass(info.rarity)}`}
+                    >
+                      {info.name}
+                    </span>
+                  );
+                })}
+              </div>
             )}
 
             {rejectingId === app.id && (

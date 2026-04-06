@@ -1,4 +1,5 @@
 import { cn } from '@lib/utils';
+import { getRarityLabelClass } from '@data/relics';
 
 export interface ItemCardProps {
   variant: 'shop' | 'inventory' | 'relic' | 'trade';
@@ -74,7 +75,7 @@ export function ItemCard({
             )}
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-xs text-coc-text-muted">
-            <span className="capitalize">{rarity}</span>
+            <span className={`capitalize ${getRarityLabelClass(rarity)}`}>{rarity}</span>
             <span>·</span>
             <span>{category}</span>
           </div>
