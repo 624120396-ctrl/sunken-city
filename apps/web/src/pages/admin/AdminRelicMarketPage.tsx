@@ -586,6 +586,15 @@ export function AdminRelicMarketPage() {
                         <div>标签：{r.tags.join('、')}</div>
                       )}
                     </div>
+                    <div className="mt-3 pt-2 border-t border-coc-border flex justify-end">
+                      <button
+                        onClick={() => { setGrantRelicKey(r.key); setShowGrant(true); }}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs border border-coc-gold/40 text-coc-gold hover:bg-coc-gold/10"
+                      >
+                        <Plus size={12} />
+                        发放此遗物
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {filteredCodex.length === 0 && (
