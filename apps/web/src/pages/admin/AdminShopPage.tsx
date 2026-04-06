@@ -28,6 +28,7 @@ const CATEGORIES = [
   { value: 'dice_skin', label: '骰子皮肤' },
   { value: 'card_skin', label: '调查员卡皮肤' },
   { value: 'room_theme', label: '房间主题' },
+  { value: 'title', label: '印记' },
 ];
 
 export function AdminShopPage() {

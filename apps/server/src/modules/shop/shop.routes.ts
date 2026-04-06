@@ -5,6 +5,15 @@ import { authMiddleware } from '../../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+async function getFrameUrl(frameKey: string | null): Promise<string | null> {
+  if (!frameKey) return null;
+  const item = await prisma.shopItem.findUnique({
+    where: { key: frameKey },
+    select: { iconUrl: true },
+  });
+  return item?.iconUrl || null;
+}
+
 /**
  * GET /api/shop/items
  * 获取商店商品列表
@@ -117,10 +126,34 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
       }
     });
 
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        avatarUrl: true,
+        exp: true,
+        displayedTitleKey: true,
+        isAdmin: true,
+        coins: true,
+        stardust: true,
+        equippedFrame: true,
+      },
+    });
+
+    const frameUrl = await getFrameUrl(updatedUser?.equippedFrame || null);
+
     res.json({
       success: true,
       message: '购买成功',
-      data: { itemKey: key, quantity: qty, totalPrice, currency: item.currency },
+      data: {
+        itemKey: key,
+        quantity: qty,
+        totalPrice,
+        currency: item.currency,
+        user: updatedUser ? { ...updatedUser, frameUrl } : null,
+      },
     });
   } catch (error) {
     console.error('购买商品失败:', error);
