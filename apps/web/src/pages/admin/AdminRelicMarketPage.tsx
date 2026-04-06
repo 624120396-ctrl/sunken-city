@@ -21,6 +21,7 @@ import {
   Coins,
   Sparkles,
   Loader2,
+  ScrollText,
 } from 'lucide-react';
 
 const rarityColors: Record<string, string> = {
@@ -39,7 +40,7 @@ const sourceLabels: Record<string, string> = {
 };
 
 export function AdminRelicMarketPage() {
-  const [tab, setTab] = useState<'relics' | 'trades'>('relics');
+  const [tab, setTab] = useState<'relics' | 'trades' | 'codex'>('relics');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -65,7 +66,17 @@ export function AdminRelicMarketPage() {
   const [grantMaxDurability, setGrantMaxDurability] = useState('');
   const [grantLoading, setGrantLoading] = useState(false);
 
+  // Codex filters
+  const [codexType, setCodexType] = useState('');
+  const [codexRarity, setCodexRarity] = useState('');
+
   const relicOptions = Object.entries(RELIC_REGISTRY).map(([k, v]) => ({ key: k, name: v.name, rarity: v.rarity }));
+
+  const filteredCodex = Object.values(RELIC_REGISTRY).filter((r) => {
+    if (codexType && r.type !== codexType) return false;
+    if (codexRarity && r.rarity !== codexRarity) return false;
+    return true;
+  });
 
   useEffect(() => {
     if (toast) {
@@ -76,7 +87,7 @@ export function AdminRelicMarketPage() {
 
   useEffect(() => {
     if (tab === 'relics') loadRelics();
-    else loadTrades();
+    else if (tab === 'trades') loadTrades();
   }, [tab, relicPage, tradePage]);
 
   const loadRelics = async () => {
@@ -207,7 +218,13 @@ export function AdminRelicMarketPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {tab === 'relics' ? <Backpack className="w-7 h-7 text-coc-gold" /> : <Store className="w-7 h-7 text-coc-gold" />}
+          {tab === 'relics' ? (
+            <Backpack className="w-7 h-7 text-coc-gold" />
+          ) : tab === 'trades' ? (
+            <Store className="w-7 h-7 text-coc-gold" />
+          ) : (
+            <ScrollText className="w-7 h-7 text-coc-gold" />
+          )}
           <h1 className="text-2xl font-ritual font-bold text-coc-parchment">遗物与市场管理</h1>
         </div>
         <div className="flex items-center gap-2">
@@ -228,6 +245,7 @@ export function AdminRelicMarketPage() {
         {[
           { key: 'relics', label: '遗物总览' },
           { key: 'trades', label: '市场交易' },
+          { key: 'codex', label: '遗物图鉴' },
         ].map((t) => (
           <button
             key={t.key}
@@ -486,6 +504,94 @@ export function AdminRelicMarketPage() {
                   )}
                 </>
               )}
+            </div>
+          </RuneBorder>
+        </div>
+      )}
+
+      {/* 遗物图鉴 */}
+      {tab === 'codex' && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={codexType}
+              onChange={(e) => setCodexType(e.target.value)}
+              className="bg-coc-bg-secondary border border-coc-border rounded px-3 py-2 text-sm text-coc-parchment outline-none"
+            >
+              <option value="">全部类型</option>
+              <option value="narrative">叙事型</option>
+              <option value="micro_buff">微效型</option>
+              <option value="tool">工具型</option>
+              <option value="consumable">消耗型</option>
+            </select>
+            <select
+              value={codexRarity}
+              onChange={(e) => setCodexRarity(e.target.value)}
+              className="bg-coc-bg-secondary border border-coc-border rounded px-3 py-2 text-sm text-coc-parchment outline-none"
+            >
+              <option value="">全部稀有度</option>
+              <option value="common">普通</option>
+              <option value="rare">稀有</option>
+              <option value="epic">史诗</option>
+              <option value="legendary">传说</option>
+              <option value="mythical">神话</option>
+            </select>
+          </div>
+
+          <RuneBorder variant="gold" intensity="subtle">
+            <div className="bg-coc-bg-secondary p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCodex.map((r) => (
+                  <div
+                    key={r.key}
+                    className="rounded-lg border bg-coc-bg-tertiary p-4 transition-colors hover:bg-coc-mist"
+                    style={{ borderColor: rarityColors[r.rarity] || '#9ca3af' }}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-bold text-coc-parchment">{r.name}</h3>
+                      <span
+                        className="px-2 py-0.5 rounded text-xs border"
+                        style={{
+                          color: rarityColors[r.rarity] || '#9ca3af',
+                          borderColor: rarityColors[r.rarity] || '#9ca3af',
+                          backgroundColor: `${rarityColors[r.rarity]}20`,
+                        }}
+                      >
+                        {r.rarity === 'common' ? '普通' : r.rarity === 'rare' ? '稀有' : r.rarity === 'epic' ? '史诗' : r.rarity === 'legendary' ? '传说' : '神话'}
+                      </span>
+                    </div>
+                    <div className="mb-3">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs border border-coc-border text-coc-text-muted bg-coc-void">
+                        {r.type === 'narrative' ? '叙事型' : r.type === 'micro_buff' ? '微效型' : r.type === 'tool' ? '工具型' : '消耗型'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-coc-text-secondary mb-3 leading-relaxed">{r.description}</p>
+                    <div className="space-y-1 text-xs text-coc-parchment-dim">
+                      {r.skill && r.value !== undefined && (
+                        <div>效果：{r.skill} {r.value > 0 ? '+' : ''}{r.value}{r.threshold !== undefined ? `（阈值 ${r.threshold}）` : ''}</div>
+                      )}
+                      {r.dice && (
+                        <div>骰子：{r.dice}</div>
+                      )}
+                      {r.maxUsePerRoom !== undefined && (
+                        <div>每局可用：{r.maxUsePerRoom} 次</div>
+                      )}
+                      {r.maxDurability !== undefined && (
+                        <div>最大耐久：{r.maxDurability}</div>
+                      )}
+                      {r.sideEffect && (
+                        <div className="text-coc-accent-red">副作用：{r.sideEffect}</div>
+                      )}
+                      {r.tags && r.tags.length > 0 && (
+                        <div>标签：{r.tags.join('、')}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {filteredCodex.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-coc-text-muted">暂无匹配图鉴</div>
+                )}
+              </div>
             </div>
           </RuneBorder>
         </div>
