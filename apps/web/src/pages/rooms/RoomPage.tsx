@@ -15,6 +15,9 @@ import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
 import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
 
+import { RoomRelicSelector } from '@components/rooms/RoomRelicSelector';
+import { KpReviewPanel } from '@components/rooms/KpReviewPanel';
+
 // ===== 新增沉浸式体验组件 =====
 import { SceneCard } from '@components/room/SceneCard';
 import { StatusTags } from '@components/room/StatusTags';
@@ -31,6 +34,7 @@ interface Room {
   status: string;
   isCreator: boolean;
   isMember: boolean;
+  isApproved: boolean;
   members: RoomMember[];
   // 新增字段
   atmosphere?: string;
@@ -54,6 +58,9 @@ interface RoomMember {
   titleColor?: string | null;
   expToNext?: number;
   nextRankName?: string | null;
+  joinStatus?: string;
+  applyNote?: string | null;
+  broughtRelics?: string[];
   displayedCharacter?: {
     id: string;
     name: string;
@@ -154,6 +161,9 @@ export function RoomPage() {
   const [showCharacterModal, setShowCharacterModal] = useState(false);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
+  const [applyNote, setApplyNote] = useState('');
+  const [broughtRelicIds, setBroughtRelicIds] = useState<string[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'combat'>('chat');
   const [combatState, setCombatState] = useState<CombatState | null>(null);
   const [showAttackModal, setShowAttackModal] = useState(false);
@@ -397,6 +407,17 @@ export function RoomPage() {
       if (!data.room.isMember) {
         fetchMyCharacters();
       }
+
+      // KP 加载待审核列表
+      if (data.room.isCreator) {
+        fetchApplications();
+      }
+
+      // 初始化当前角色
+      const myMember = data.room.members.find((m: RoomMember) => m.userId === user?.id);
+      if (myMember?.character) {
+        setSelectedCharacter(myMember.character);
+      }
     } catch (error: any) {
       if (error.message?.includes('不存在')) {
         alert('房间不存在');
@@ -404,6 +425,26 @@ export function RoomPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchApplications = async () => {
+    try {
+      const res = await apiFetch(`/rooms/${roomId}/applications`);
+      const data = await handleApiResponse<{ applications: any[] }>(res);
+      setApplications(data.applications || []);
+    } catch (err) {
+      console.error('获取审核列表失败', err);
+    }
+  };
+
+  const handleStartGame = async () => {
+    if (!confirm('开启游戏后，玩家将无法更换角色和携带遗物。确定吗？')) return;
+    try {
+      await apiFetch(`/rooms/${roomId}/start`, { method: 'POST' });
+      fetchRoom();
+    } catch (error: any) {
+      alert(error.message || '开启游戏失败');
     }
   };
 
@@ -519,9 +560,11 @@ export function RoomPage() {
     try {
       await apiFetch(`/rooms/${roomId}/join`, {
         method: 'POST',
-        body: JSON.stringify({ characterId }),
+        body: JSON.stringify({ characterId, applyNote, broughtRelicIds }),
       });
       setShowCharacterModal(false);
+      setApplyNote('');
+      setBroughtRelicIds([]);
       fetchRoom();
     } catch (error: any) {
       alert(error.message || '加入房间失败');
@@ -760,6 +803,15 @@ export function RoomPage() {
             <DoorOpen size={14} />
             离开
           </button>
+          {room?.isCreator && room?.status !== 'PLAYING' && (
+            <button
+              onClick={handleStartGame}
+              className="rounded bg-coc-gold px-3 py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow flex items-center gap-1"
+            >
+              <Play size={14} />
+              开启游戏
+            </button>
+          )}
           {room?.isCreator && (
             <button
               onClick={handleCloseRoom}
@@ -775,6 +827,15 @@ export function RoomPage() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
         {/* 左侧：成员列表 */}
         <div className="lg:col-span-1 space-y-4">
+          {/* KP 审核面板 */}
+          {room?.isCreator && applications.length > 0 && (
+            <KpReviewPanel
+              applications={applications}
+              onRefresh={fetchApplications}
+              roomId={room.roomId}
+            />
+          )}
+
           {/* 当前状态条 - 自己的角色 */}
           {selectedCharacter && (
             <div className="coc-card">
@@ -1158,54 +1219,73 @@ export function RoomPage() {
               </div>
 
               {/* 输入框 */}
-              <form
-                onSubmit={handleSendMessage}
-                className="p-4 border-t border-coc-border space-y-2"
-              >
-                <div className="flex items-center gap-2">
-                  <QuickPhrases
-                    onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
-                  />
-                  {room?.isCreator && (
-                    <>
-                      <SecretDiceToggle
-                        isSecret={isSecretDice}
-                        onToggle={() => setIsSecretDice(!isSecretDice)}
+              {(() => {
+                const myMember = room?.members.find((m) => m.userId === user?.id);
+                if (myMember?.joinStatus === 'pending') {
+                  return (
+                    <div className="border-t border-coc-border p-4 text-center text-sm text-coc-parchment-dim">
+                      你的入团申请正在等待 KP 审核...
+                    </div>
+                  );
+                }
+                if (!room?.isApproved && !room?.isCreator) {
+                  return (
+                    <div className="border-t border-coc-border p-4 text-center text-sm text-coc-parchment-dim">
+                      你尚未正式加入该房间
+                    </div>
+                  );
+                }
+                return (
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="p-4 border-t border-coc-border space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <QuickPhrases
+                        onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
+                      />
+                      {room?.isCreator && (
+                        <>
+                          <SecretDiceToggle
+                            isSecret={isSecretDice}
+                            onToggle={() => setIsSecretDice(!isSecretDice)}
+                            disabled={!connected}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const initial: Record<string, number> = {};
+                              room?.members.forEach(m => {
+                                if (m.character) initial[m.userId] = 0;
+                              });
+                              setSanityTargets(initial);
+                              setSanityDescription('');
+                              setShowSanityModal(true);
+                            }}
+                            disabled={!connected}
+                            className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
+                          >
+                            理智侵蚀
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <MentionInput
+                        value={inputMessage}
+                        onChange={setInputMessage}
+                        members={room?.members.map(m => ({ userId: m.userId, nickname: m.nickname })) || []}
+                        onSubmit={handleSendMessage}
+                        placeholder={connected ? "输入消息..." : "连接中..."}
                         disabled={!connected}
                       />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const initial: Record<string, number> = {};
-                          room?.members.forEach(m => {
-                            if (m.character) initial[m.userId] = 0;
-                          });
-                          setSanityTargets(initial);
-                          setSanityDescription('');
-                          setShowSanityModal(true);
-                        }}
-                        disabled={!connected}
-                        className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
-                      >
-                        理智侵蚀
+                      <button type="submit" className="coc-btn-primary" disabled={!connected}>
+                        <Send size={18} />
                       </button>
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <MentionInput
-                    value={inputMessage}
-                    onChange={setInputMessage}
-                    members={room?.members.map(m => ({ userId: m.userId, nickname: m.nickname })) || []}
-                    onSubmit={handleSendMessage}
-                    placeholder={connected ? "输入消息..." : "连接中..."}
-                    disabled={!connected}
-                  />
-                  <button type="submit" className="coc-btn-primary" disabled={!connected}>
-                    <Send size={18} />
-                  </button>
-                </div>
-              </form>
+                    </div>
+                  </form>
+                );
+              })()}
 
               {/* ===== 新增：快捷掷骰栏 ===== */}
               {selectedCharacter && (
@@ -1325,13 +1405,13 @@ export function RoomPage() {
       <Modal
         isOpen={showCharacterModal}
         onClose={() => navigate('/rooms')}
-        title="选择调查员"
+        title="申请加入房间"
       >
         <div className="space-y-4">
           <p className="text-sm text-coc-text-secondary">
-            进入房间需要绑定一个调查员角色卡
+            选择调查员和携带遗物，提交后等待 KP 审核
           </p>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          <div className="space-y-2 max-h-[200px] overflow-y-auto">
             {myCharacters.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-coc-text-muted">你还没有创建调查员</p>
@@ -1346,25 +1426,51 @@ export function RoomPage() {
               myCharacters.map((char) => (
                 <button
                   key={char.id}
-                  onClick={() => {
-                    setSelectedCharacter(char);
-                    handleJoinRoom(char.id);
-                  }}
-                  className="w-full p-3 bg-coc-bg-tertiary rounded hover:bg-coc-accent-red/20 transition-colors text-left"
+                  onClick={() => setSelectedCharacter(char)}
+                  className={`w-full p-3 rounded text-left transition-colors ${
+                    selectedCharacter?.id === char.id
+                      ? 'bg-coc-gold/20 border border-coc-gold'
+                      : 'bg-coc-bg-tertiary hover:bg-coc-accent-red/20'
+                  }`}
                 >
                   <div className="font-medium">{char.name}</div>
                   <div className="text-sm text-coc-text-secondary">
                     {char.occupation} | HP:{char.hp} MP:{char.mp} SAN:{char.san}
                   </div>
                 </button>
-              ))
-            )}
+              )))
+            }
           </div>
+
+          {selectedCharacter && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs text-coc-text-muted">携带遗物（最多2件）</label>
+                <RoomRelicSelector
+                  characterId={selectedCharacter.id}
+                  selectedIds={broughtRelicIds}
+                  onChange={setBroughtRelicIds}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-coc-text-muted">入团备注（可选）</label>
+                <textarea
+                  value={applyNote}
+                  onChange={(e) => setApplyNote(e.target.value)}
+                  placeholder="告诉 KP 你想要扮演什么..."
+                  className="w-full rounded border border-coc-void bg-coc-bg-tertiary p-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                  rows={2}
+                />
+              </div>
+            </>
+          )}
+
           <button
-            onClick={() => handleJoinRoom()}
-            className="w-full coc-btn-secondary"
+            onClick={() => handleJoinRoom(selectedCharacter?.id)}
+            disabled={!selectedCharacter}
+            className="w-full rounded bg-coc-gold py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow disabled:opacity-50"
           >
-            以观察者身份加入
+            提交申请
           </button>
         </div>
       </Modal>

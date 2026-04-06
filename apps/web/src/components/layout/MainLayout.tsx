@@ -1,6 +1,6 @@
 import { useAuthStore } from '@stores/auth.store';
 import { cn } from '@lib/utils';
-import { BookOpen, User, Home, LogOut, Shield, ShoppingBag, MessageSquare } from 'lucide-react';
+import { BookOpen, User, Home, LogOut, Shield, ShoppingBag, MessageSquare, Backpack } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { NotificationBell } from '../notifications/NotificationBell';
 
@@ -17,6 +17,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     { path: '/characters', label: '调查员', icon: User },
     { path: '/rooms', label: '故事书', icon: BookOpen },
     { path: '/shop', label: '拉莱耶遗珍', icon: ShoppingBag },
+    { path: '/inventory', label: '背包', icon: Backpack },
     { path: '/forums', label: '旧日低语', icon: MessageSquare },
   ];
 

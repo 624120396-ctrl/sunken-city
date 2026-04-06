@@ -107,7 +107,8 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
     }
 
     // 检查用户是否在房间中
-    const isMember = room.members.some(m => m.userId === req.userId);
+    const isMember = room.members.some(m => m.userId === req.userId && !m.leftAt);
+    const isApproved = room.members.some(m => m.userId === req.userId && m.joinStatus === 'approved');
     const isCreator = room.creatorId === req.userId;
 
     // 批量获取头像框图片URL
@@ -144,7 +145,8 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
           status: room.status,
           isCreator,
           isMember,
-          members: room.members.map(m => {
+          isApproved,
+          members: room.members.filter(m => !m.leftAt).map(m => {
             const rank = getCurrentRank(m.user.exp);
             return {
               id: m.id,
@@ -160,6 +162,9 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
               displayedTitleKey: m.user.displayedTitleKey,
               rankName: rank?.name || 'Unknown',
               titleName: titleMap.get(m.user.displayedTitleKey || '') || null,
+              joinStatus: m.joinStatus,
+              applyNote: m.applyNote,
+              broughtRelics: JSON.parse(m.broughtRelics || '[]'),
             };
           }),
         },
@@ -203,12 +208,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
   }
 });
 
-// 加入房间
+// 加入房间（提交申请）
 router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
     const userId = req.userId!;
-    const { characterId } = req.body;
+    const { characterId, applyNote, broughtRelicIds } = req.body;
 
     const room = await prisma.room.findUnique({
       where: { roomId },
@@ -220,28 +225,57 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
     }
 
     if (room.status !== 'ACTIVE') {
-      throw new AppError('ROOM_CLOSED', '房间已关闭', 400);
+      throw new AppError('ROOM_CLOSED', '房间已关闭或已开始', 400);
     }
 
-    // 检查是否已在房间中
-    const existingMember = room.members.find(m => m.userId === userId);
+    // 检查是否已在房间中（包括 pending 和 approved）
+    const existingMember = room.members.find(m => m.userId === userId && !m.leftAt);
     if (existingMember) {
-      throw new AppError('ALREADY_MEMBER', '你已在房间中', 400);
+      throw new AppError('ALREADY_MEMBER', '你已在该房间中', 400);
     }
 
-    // 加入房间
+    // 检查是否已有 pending 申请（同一房间）
+    const pendingMember = room.members.find(m => m.userId === userId && m.joinStatus === 'pending');
+    if (pendingMember) {
+      throw new AppError('PENDING_APPLICATION', '你已提交申请，等待 KP 审核', 400);
+    }
+
+    // 校验携带遗物
+    let carriedRelics: string[] = [];
+    if (broughtRelicIds && Array.isArray(broughtRelicIds) && broughtRelicIds.length > 0) {
+      if (broughtRelicIds.length > 2) {
+        throw new AppError('TOO_MANY_RELICS', '每场最多携带2件遗物', 400);
+      }
+      if (characterId) {
+        const valid = await prisma.characterRelic.findMany({
+          where: { id: { in: broughtRelicIds }, characterId, userId },
+        });
+        if (valid.length !== broughtRelicIds.length) {
+          throw new AppError('INVALID_RELICS', '部分遗物不属于所选角色', 400);
+        }
+        carriedRelics = broughtRelicIds;
+      } else {
+        throw new AppError('CHARACTER_REQUIRED', '携带遗物必须同时选择角色卡', 400);
+      }
+    }
+
+    // 加入房间（pending 状态）
     const member = await prisma.roomMember.create({
       data: {
         roomId: room.id,
         userId,
         characterId,
         role: 'PLAYER',
+        joinStatus: 'pending',
+        applyNote: applyNote || null,
+        broughtRelics: JSON.stringify(carriedRelics),
       },
     });
 
     res.json({
       success: true,
       data: { member },
+      message: '申请已提交，等待 KP 审核',
     });
   } catch (error) {
     next(error);
@@ -314,6 +348,160 @@ router.post('/:roomId/close', authMiddleware, async (req: AuthRequest, res, next
       success: true,
       message: '房间已关闭',
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========== 新增：KP审核与游戏开启（v1.5.0 遗物系统）==========
+
+// 获取待审核成员列表 (仅KP)
+router.get('/:roomId/applications', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.userId!;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: {
+        members: {
+          where: { joinStatus: 'pending', leftAt: null },
+          include: {
+            user: {
+              select: { id: true, nickname: true, avatarUrl: true, exp: true },
+            },
+            character: {
+              select: {
+                id: true, name: true, occupation: true,
+                hp: true, mp: true, san: true,
+                maxHp: true, maxMp: true, maxSan: true,
+                str: true, dex: true, con: true, siz: true,
+                app: true, int: true, pow: true, edu: true,
+                luck: true, mov: true, build: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    }
+    if (room.creatorId !== userId) {
+      throw new AppError('FORBIDDEN', '只有KP可以查看审核列表', 403);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        applications: room.members.map(m => ({
+          id: m.id,
+          userId: m.userId,
+          nickname: m.user.nickname,
+          avatarUrl: m.user.avatarUrl,
+          applyNote: m.applyNote,
+          broughtRelics: JSON.parse(m.broughtRelics || '[]'),
+          character: m.character,
+          submittedAt: m.submittedAt,
+        })),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// KP 审核申请 (仅KP)
+router.post('/:roomId/applications/:memberId/review', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId, memberId } = req.params;
+    const userId = req.userId!;
+    const { action, reason } = req.body; // action: 'approve' | 'reject'
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+
+    if (!room) {
+      throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    }
+    if (room.creatorId !== userId) {
+      throw new AppError('FORBIDDEN', '只有KP可以审核成员', 403);
+    }
+
+    const member = room.members.find(m => m.id === memberId);
+    if (!member || member.joinStatus !== 'pending') {
+      throw new AppError('NOT_FOUND', '申请不存在或已处理', 404);
+    }
+
+    if (action === 'reject') {
+      if (!reason || reason.trim().length < 5) {
+        throw new AppError('INVALID_REASON', '拒绝理由至少需要5个字', 400);
+      }
+      await prisma.roomMember.update({
+        where: { id: memberId },
+        data: { joinStatus: 'rejected', joinReason: reason.trim(), reviewedAt: new Date(), leftAt: new Date() },
+      });
+      return res.json({ success: true, message: '已拒绝申请' });
+    }
+
+    if (action === 'approve') {
+      // 重新校验携带遗物数量
+      const relicIds: string[] = JSON.parse(member.broughtRelics || '[]');
+      if (relicIds.length > 2) {
+        throw new AppError('TOO_MANY_RELICS', '该申请者携带遗物超过2件，无法通过', 400);
+      }
+      await prisma.roomMember.update({
+        where: { id: memberId },
+        data: { joinStatus: 'approved', reviewedAt: new Date() },
+      });
+      return res.json({ success: true, message: '已通过申请' });
+    }
+
+    throw new AppError('INVALID_ACTION', '无效的操作', 400);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 游戏开启 (仅KP)
+router.post('/:roomId/start', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.userId!;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: { where: { leftAt: null } } },
+    });
+
+    if (!room) {
+      throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    }
+    if (room.creatorId !== userId) {
+      throw new AppError('FORBIDDEN', '只有KP可以开启游戏', 403);
+    }
+    if (room.status === 'PLAYING') {
+      throw new AppError('ALREADY_STARTED', '游戏已经开始', 400);
+    }
+    if (room.status === 'CLOSED') {
+      throw new AppError('ROOM_CLOSED', '房间已关闭', 400);
+    }
+
+    // 检查是否所有非 KP 成员都已 approved
+    const unapproved = room.members.filter(m => m.role !== 'KP' && m.joinStatus !== 'approved');
+    if (unapproved.length > 0) {
+      throw new AppError('MEMBERS_NOT_READY', `还有 ${unapproved.length} 位成员未通过审核`, 400);
+    }
+
+    await prisma.room.update({
+      where: { id: room.id },
+      data: { status: 'PLAYING' },
+    });
+
+    res.json({ success: true, message: '游戏已开始' });
   } catch (error) {
     next(error);
   }

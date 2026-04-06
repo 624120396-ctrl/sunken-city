@@ -32,6 +32,7 @@ import adminShopRoutes from './modules/shop/admin-shop.routes';
 import aiRoutes from './modules/ai/ai.routes';
 import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
+import relicsRoutes from './modules/relics/relics.routes';
 
 // 加载环境变量
 dotenv.config();
@@ -91,6 +92,7 @@ app.use('/api/admin', adminShopRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);
+app.use('/api', relicsRoutes);
 
 // 404处理
 app.use((req, res) => {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../../middleware/auth';
+import { purchaseRelic } from '../relics/relics.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -37,6 +38,10 @@ router.get('/shop/items', async (req, res) => {
         currency: true,
         rarity: true,
         iconUrl: true,
+        effectType: true,
+        effectData: true,
+        tradable: true,
+        bindOnAcquire: true,
       },
     });
 
@@ -58,7 +63,7 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
   try {
     const userId = req.user!.userId;
     const { key } = req.params;
-    const { quantity = 1 } = req.body;
+    const { quantity = 1, characterId } = req.body;
     const qty = Math.max(1, Math.min(10, parseInt(quantity) || 1));
 
     const item = await prisma.shopItem.findUnique({
@@ -86,6 +91,8 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
       return res.status(400).json({ success: false, message: '虚银不足' });
     }
 
+    let purchaseResult: any = null;
+
     await prisma.$transaction(async (tx) => {
       // 扣款
       await tx.user.update({
@@ -109,7 +116,18 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
         }
       }
 
-      // 加入背包
+      // 遗物类商品：单独处理
+      if (item.category === 'relic') {
+        if (qty > 1) {
+          throw new Error('遗物每次只能购买1件');
+        }
+        // purchaseRelic 使用全局 prisma，但这里已经在 transaction 中完成扣款，
+        // purchaseRelic 只做入库/绑定，不重复扣款
+        purchaseResult = await purchaseRelic(userId, key, characterId);
+        return;
+      }
+
+      // 其他商品加入背包
       const existing = await tx.userInventory.findUnique({
         where: { userId_itemKey: { userId, itemKey: key } },
       });
@@ -153,6 +171,7 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
         totalPrice,
         currency: item.currency,
         user: updatedUser ? { ...updatedUser, frameUrl } : null,
+        ...(purchaseResult ? { relic: purchaseResult } : {}),
       },
     });
   } catch (error) {

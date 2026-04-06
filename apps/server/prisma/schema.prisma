@@ -198,6 +198,7 @@ model RoomMember {
 
   // 新增：KP审核机制
   joinStatus      String   @default("pending") // pending | approved | rejected
+  applyNote       String?  // 入团申请备注
   joinReason      String?  // 拒绝理由
   submittedAt     DateTime @default(now())     // 提交申请时间
   reviewedAt      DateTime?                    // KP审核时间

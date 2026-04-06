@@ -28,6 +28,7 @@ import { ProfilePage } from '@pages/profile/ProfilePage';
 
 // 商店
 import { ShopPage } from '@pages/shop/ShopPage';
+import { InventoryPage } from '@pages/inventory/InventoryPage';
 
 // 论坛
 import { ForumListPage } from '@pages/forum/ForumListPage';
@@ -89,6 +90,7 @@ function App() {
             <Route path="/ranks" element={<RanksPage />} />
             <Route path="/titles" element={<TitlesPage />} />
             <Route path="/shop" element={<ShopPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/forums" element={<ForumListPage />} />
             <Route path="/forums/board/:boardKey" element={<ForumBoardPage />} />
             <Route path="/forums/new" element={<ForumNewPostPage />} />
