@@ -16,6 +16,10 @@ interface ShopItem {
   iconUrl?: string;
   sortOrder: number;
   isActive: boolean;
+  effectType?: string;
+  effectData?: string;
+  tradable?: boolean;
+  bindOnAcquire?: boolean;
 }
 
 const RARITIES = ['common', 'rare', 'epic', 'legendary', 'mythical'];
@@ -29,6 +33,15 @@ const CATEGORIES = [
   { value: 'card_skin', label: '调查员卡皮肤' },
   { value: 'room_theme', label: '房间主题' },
   { value: 'title', label: '印记' },
+  { value: 'relic', label: '遗物' },
+];
+
+const RELIC_EFFECT_TYPES = [
+  { value: '', label: '无' },
+  { value: 'narrative', label: '叙事型' },
+  { value: 'micro_buff', label: '微效型' },
+  { value: 'tool', label: '工具型' },
+  { value: 'consumable', label: '消耗型' },
 ];
 
 export function AdminShopPage() {
@@ -43,6 +56,8 @@ export function AdminShopPage() {
     price: 0,
     sortOrder: 0,
     isActive: true,
+    tradable: true,
+    bindOnAcquire: false,
   });
   const [editForm, setEditForm] = useState<Partial<ShopItem>>({});
   const [aiPrompt, setAiPrompt] = useState('');
@@ -84,6 +99,8 @@ export function AdminShopPage() {
         price: 0,
         sortOrder: 0,
         isActive: true,
+        tradable: true,
+        bindOnAcquire: false,
       });
       fetchItems();
     } catch (err) {
@@ -237,6 +254,41 @@ export function AdminShopPage() {
               <Wand2 size={14} /> AI 生成图标
             </button>
           </div>
+          {form.category === 'relic' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded border border-coc-void/50 bg-coc-abyss/30 p-3">
+              <select
+                value={form.effectType || ''}
+                onChange={(e) => setForm({ ...form, effectType: e.target.value || undefined })}
+                className="px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none"
+              >
+                {RELIC_EFFECT_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <input
+                placeholder="效果数据 JSON（如 {skill:'occult',value:3}）"
+                value={form.effectData || ''}
+                onChange={(e) => setForm({ ...form, effectData: e.target.value || undefined })}
+                className="px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none"
+              />
+              <label className="flex items-center gap-2 text-coc-parchment">
+                <input
+                  type="checkbox"
+                  checked={!!form.tradable}
+                  onChange={(e) => setForm({ ...form, tradable: e.target.checked })}
+                />
+                可玩家交易
+              </label>
+              <label className="flex items-center gap-2 text-coc-parchment">
+                <input
+                  type="checkbox"
+                  checked={!!form.bindOnAcquire}
+                  onChange={(e) => setForm({ ...form, bindOnAcquire: e.target.checked })}
+                />
+                购买后立刻绑定
+              </label>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-coc-parchment">
               <input
@@ -274,6 +326,7 @@ export function AdminShopPage() {
                     <th className="py-2">分类</th>
                     <th className="py-2">价格</th>
                     <th className="py-2">稀有度</th>
+                    <th className="py-2">类型/属性</th>
                     <th className="py-2">状态</th>
                     <th className="py-2 text-right">操作</th>
                   </tr>
@@ -367,6 +420,70 @@ export function AdminShopPage() {
                           </select>
                         ) : (
                           item.rarity
+                        )}
+                      </td>
+                      <td className="py-3">
+                        {editingId === item.id ? (
+                          <div className="space-y-1">
+                            {editForm.category === 'relic' && (
+                              <>
+                                <select
+                                  value={editForm.effectType || ''}
+                                  onChange={(e) => setEditForm({ ...editForm, effectType: e.target.value || undefined })}
+                                  className="px-2 py-1 bg-coc-abyss border border-coc-void rounded text-xs w-full"
+                                >
+                                  {RELIC_EFFECT_TYPES.map((t) => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                  ))}
+                                </select>
+                                <input
+                                  value={editForm.effectData || ''}
+                                  onChange={(e) => setEditForm({ ...editForm, effectData: e.target.value || undefined })}
+                                  placeholder="效果 JSON"
+                                  className="px-2 py-1 bg-coc-abyss border border-coc-void rounded text-xs w-full"
+                                />
+                                <div className="flex items-center gap-2 text-xs text-coc-parchment">
+                                  <label className="flex items-center gap-1">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!editForm.tradable}
+                                      onChange={(e) => setEditForm({ ...editForm, tradable: e.target.checked })}
+                                    />
+                                    可交易
+                                  </label>
+                                  <label className="flex items-center gap-1">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!editForm.bindOnAcquire}
+                                      onChange={(e) => setEditForm({ ...editForm, bindOnAcquire: e.target.checked })}
+                                    />
+                                    即绑
+                                  </label>
+                                </div>
+                              </>
+                            )}
+                            {editForm.category !== 'relic' && (
+                              <span className="text-xs text-coc-parchment-dim">-</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-coc-parchment-dim">
+                            {item.category === 'relic' ? (
+                              <div className="space-y-0.5">
+                                <span className="rounded bg-coc-abyss px-1.5 py-0.5 text-coc-gold">
+                                  {RELIC_EFFECT_TYPES.find((t) => t.value === item.effectType)?.label || '遗物'}
+                                </span>
+                                {item.tradable === false && (
+                                  <span className="ml-1 rounded bg-coc-void px-1 py-0.5">不可交易</span>
+                                )}
+                                {item.bindOnAcquire && (
+                                  <span className="ml-1 rounded bg-coc-void px-1 py-0.5">即绑</span>
+                                )}
+                              </div>
+                            ) : (
+                              '-'
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="py-3">

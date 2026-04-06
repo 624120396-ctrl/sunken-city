@@ -28,6 +28,10 @@ model User {
   displayedCharacterId String?
   displayedCharacter   Character? @relation("UserDisplayedCharacter", fields: [displayedCharacterId], references: [id])
 
+  // 用户交易所挂单（未来扩展）
+  // relicTradesSeller RelicTrade[] @relation("Seller")
+  // relicTradesBuyer  RelicTrade[] @relation("Buyer")
+
   // 每日签到
   lastCheckinAt     DateTime?
 
@@ -114,6 +118,7 @@ model Character {
   roomMembers RoomMember[]
   privateMessagesSent   PrivateMessage[] @relation("SentMessages")
   privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
+  relics      CharacterRelic[]
 }
 
 // COC7e 职业模板表
@@ -161,6 +166,10 @@ model Room {
   
   // 新增：当前场景描述
   sceneDesc   String?
+
+  // 新增：游戏开启锁定
+  isGameStarted   Boolean  @default(false)
+  gameStartedAt   DateTime?
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -183,6 +192,15 @@ model RoomMember {
   
   // 新增：角色状态标记（JSON数组：injured, poisoned, insane, unconscious, dying）
   statusTags  String   @default("[]")
+
+  // 新增：遗物携带（最多2件的JSON key数组）
+  broughtRelics   String   @default("[]")
+
+  // 新增：KP审核机制
+  joinStatus      String   @default("pending") // pending | approved | rejected
+  joinReason      String?  // 拒绝理由
+  submittedAt     DateTime @default(now())     // 提交申请时间
+  reviewedAt      DateTime?                    // KP审核时间
 
   room        Room      @relation(fields: [roomId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
@@ -253,6 +271,7 @@ model SessionReport {
   diceRollCount Int      @default(0)
   keyEvents     String   @default("[]")  // JSON array
   characterGrowth String @default("[]")  // JSON array
+  lootedRelics  String   @default("[]")  // JSON array: 本场掉落的遗物实例
   exportedAt    DateTime?
   createdAt     DateTime @default(now())
 
@@ -429,11 +448,18 @@ model ShopItem {
   key         String   @unique  // 唯一标识，如 "rusted_chain"
   name        String
   description String
-  category    String   // avatar_frame, dice_skin, card_skin, room_theme
+  category    String   // avatar_frame, dice_skin, card_skin, room_theme, title, relic
   price       Int      @default(0)
   currency    String   @default("coin") // coin | stardust
   rarity      String   @default("common") // common | rare | epic | legendary | mythical
   iconUrl     String?
+
+  // 新增：遗物专用字段
+  effectType    String?  // narrative | micro_buff | tool | consumable
+  effectData    String?  // JSON 配置（技能、数值、阈值等）
+  tradable      Boolean  @default(true)
+  bindOnAcquire Boolean  @default(false)
+
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -454,6 +480,42 @@ model UserInventory {
 
   @@unique([userId, itemKey])
   @@index([userId])
+}
+
+// 新增：角色绑定遗物表（保险箱）
+model CharacterRelic {
+  id              String   @id @default(uuid())
+  characterId     String
+  userId          String   // 冗余索引，方便按用户查询
+  relicKey        String   // 对应 ShopItem.key
+  source          String   @default("shop") // shop | room_drop | trade | gift
+  durability      Int?     // 当前耐久
+  maxDurability   Int?     // 最大耐久
+  usedCount       Int      @default(0)     // 已使用次数（consumable）
+  isEquipped      Boolean  @default(false) // 是否标记为常备（展示用）
+  acquiredAt      DateTime @default(now())
+
+  character       Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId])
+  @@index([userId])
+}
+
+// 新增：遗物玩家交易市场（v1.5.0 Phase 3）
+model RelicTrade {
+  id            String   @id @default(uuid())
+  sellerId      String
+  sellerCharacterRelicId String? // 若从角色上解绑交易，记录来源
+  relicKey      String
+  price         Int
+  currency      String   @default("coin")
+  status        String   @default("active") // active | sold | cancelled
+  buyerId       String?
+  createdAt     DateTime @default(now())
+  soldAt        DateTime?
+
+  @@index([status, createdAt])
+  @@index([relicKey])
 }
 
 // ========== 论坛系统（v1.4.0） ==========

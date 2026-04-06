@@ -48,7 +48,7 @@ router.get('/shop/items', async (req, res) => {
  */
 router.post('/shop/items', async (req, res) => {
   try {
-    const { key, name, description, category, price, currency, rarity, iconUrl, sortOrder } = req.body;
+    const { key, name, description, category, price, currency, rarity, iconUrl, sortOrder, effectType, effectData, tradable, bindOnAcquire } = req.body;
 
     const existing = await prisma.shopItem.findUnique({
       where: { key },
@@ -68,6 +68,10 @@ router.post('/shop/items', async (req, res) => {
         rarity: rarity || 'common',
         iconUrl,
         sortOrder: parseInt(sortOrder) || 0,
+        effectType: effectType || null,
+        effectData: effectData || null,
+        tradable: tradable !== undefined ? !!tradable : true,
+        bindOnAcquire: bindOnAcquire !== undefined ? !!bindOnAcquire : false,
       },
     });
 
@@ -85,7 +89,7 @@ router.post('/shop/items', async (req, res) => {
 router.put('/shop/items/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, price, currency, rarity, iconUrl, sortOrder, isActive } = req.body;
+    const { name, description, category, price, currency, rarity, iconUrl, sortOrder, isActive, effectType, effectData, tradable, bindOnAcquire } = req.body;
 
     const item = await prisma.shopItem.update({
       where: { id },
@@ -99,6 +103,10 @@ router.put('/shop/items/:id', async (req, res) => {
         iconUrl,
         sortOrder: sortOrder !== undefined ? parseInt(sortOrder) : undefined,
         isActive,
+        effectType: effectType !== undefined ? (effectType || null) : undefined,
+        effectData: effectData !== undefined ? (effectData || null) : undefined,
+        tradable: tradable !== undefined ? !!tradable : undefined,
+        bindOnAcquire: bindOnAcquire !== undefined ? !!bindOnAcquire : undefined,
       },
     });
 
