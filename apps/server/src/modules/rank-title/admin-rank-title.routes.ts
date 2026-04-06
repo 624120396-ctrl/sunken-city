@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../../middleware/auth';
 import { adminMiddleware } from '../../middleware/admin';
+import { createNotification } from '../notifications/notifications.service';
+import { checkAndNotifyRankUp } from './rank-title.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -425,11 +427,12 @@ router.get('/users/:userId/titles', async (req, res) => {
  * POST /api/admin/users/:userId/titles
  * 授予印记
  */
-router.post('/users/:userId/titles', async (req, res) => {
+router.post('/users/:userId/titles', async (req: any, res) => {
   try {
     const { userId } = req.params;
     const { titleKey, note } = req.body;
     const adminId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     
     // 验证印记
     const title = await prisma.titleConfig.findUnique({
@@ -461,10 +464,19 @@ router.post('/users/:userId/titles', async (req, res) => {
     });
     
     // 添加灵魂碎片奖励
-    await prisma.user.update({
+    const oldUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { exp: true },
+    });
+
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { exp: { increment: title.expReward } },
     });
+
+    if (oldUser && title.expReward > 0) {
+      await checkAndNotifyRankUp(userId, oldUser.exp, updatedUser.exp, io);
+    }
 
     // 货币奖励（根据稀有度）
     const rarityCoinMap: Record<string, number> = {
@@ -490,6 +502,16 @@ router.post('/users/:userId/titles', async (req, res) => {
         },
       });
     }
+    
+    // 发送通知
+    await createNotification(prisma, io, {
+      userId,
+      type: 'title_unlock',
+      title: `获得印记：${title.name}`,
+      content: title.description?.slice(0, 100) || `管理员授予了你印记「${title.name}」。`,
+      link: '/titles',
+      isSystem: true,
+    });
     
     // 记录日志
     await prisma.titleUnlockLog.create({
@@ -589,11 +611,12 @@ router.put('/users/:userId/displayed-title', async (req, res) => {
  * POST /api/admin/users/:userId/exp/adjust
  * 调整用户灵魂碎片
  */
-router.post('/users/:userId/exp/adjust', async (req, res) => {
+router.post('/users/:userId/exp/adjust', async (req: any, res) => {
   try {
     const { userId } = req.params;
     const { amount, reason } = req.body;
     const adminId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     
     // 获取用户当前信息
     const user = await prisma.user.findUnique({
@@ -625,6 +648,8 @@ router.post('/users/:userId/exp/adjust', async (req, res) => {
       where: { id: userId },
       data: { exp: newExp },
     });
+
+    await checkAndNotifyRankUp(userId, oldExp, newExp, io, true);
 
     // 位阶晋升货币奖励
     let coinReward = 0;

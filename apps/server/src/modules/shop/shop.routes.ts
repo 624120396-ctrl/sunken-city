@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../../middleware/auth';
+import { createNotification } from '../notifications/notifications.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -57,6 +58,7 @@ router.get('/shop/items', async (req, res) => {
 router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const { key } = req.params;
     const { quantity = 1 } = req.body;
     const qty = Math.max(1, Math.min(10, parseInt(quantity) || 1));
@@ -140,6 +142,16 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
         stardust: true,
         equippedFrame: true,
       },
+    });
+
+    // 发送购买通知
+    await createNotification(prisma, io, {
+      userId,
+      type: 'shop_purchase',
+      title: `商城购买成功：${item.name}`,
+      content: `你消耗 ${totalPrice} ${item.currency === 'coin' ? '锈蚀硬币' : '虚银'} 购买了 ${item.name}${qty > 1 ? ` x${qty}` : ''}。`,
+      link: '/shop',
+      isSystem: true,
     });
 
     const frameUrl = await getFrameUrl(updatedUser?.equippedFrame || null);

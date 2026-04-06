@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
+import { createNotification } from '../notifications/notifications.service';
+import { checkAndNotifyRankUp } from '../rank-title/rank-title.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -67,12 +69,18 @@ async function canRewardToday(userId: string, action: keyof typeof REWARD_LIMITS
 async function grantReward(
   userId: string,
   action: keyof typeof REWARD_LIMITS,
-  postId?: string
+  postId?: string,
+  io?: import('socket.io').Server | undefined
 ) {
   const cfg = REWARD_LIMITS[action];
   if (!(await canRewardToday(userId, action, postId))) return null;
 
-  await prisma.user.update({
+  const oldUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { exp: true },
+  });
+
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: {
       exp: { increment: cfg.exp },
@@ -90,33 +98,11 @@ async function grantReward(
     },
   });
 
-  return log;
-}
-
-// ==================== 通知辅助函数 ====================
-
-async function createNotification({
-  userId,
-  type,
-  title,
-  content,
-  postId,
-  replyId,
-}: {
-  userId: string;
-  type: string;
-  title: string;
-  content?: string;
-  postId?: string;
-  replyId?: string;
-}) {
-  try {
-    await prisma.notification.create({
-      data: { userId, type, title, content, postId, replyId },
-    });
-  } catch {
-    // 静默失败，不阻断主流程
+  if (cfg.exp > 0 && oldUser) {
+    await checkAndNotifyRankUp(userId, oldUser.exp, updated.exp, io);
   }
+
+  return log;
 }
 
 async function parseMentions(content: string): Promise<string[]> {
@@ -449,6 +435,7 @@ router.get('/forum/boards/:key/posts', async (req, res, next) => {
 router.post('/forum/posts', authMiddleware, async (req: any, res, next) => {
   try {
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const { boardKey, title, content, bountyCoin = 0 } = req.body;
 
     if (!boardKey || !title?.trim() || !content?.trim()) {
@@ -488,7 +475,7 @@ router.post('/forum/posts', authMiddleware, async (req: any, res, next) => {
     });
 
     // 发帖奖励
-    const reward = await grantReward(userId, 'create_post', post.id);
+    const reward = await grantReward(userId, 'create_post', post.id, io);
 
     res.json({
       success: true,
@@ -712,6 +699,7 @@ router.post('/forum/posts/:id/replies', authMiddleware, async (req: any, res, ne
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const { content } = req.body;
 
     if (!content?.trim()) {
@@ -749,11 +737,12 @@ router.post('/forum/posts/:id/replies', authMiddleware, async (req: any, res, ne
 
     // 给楼主发回复通知
     if (post.userId !== userId) {
-      await createNotification({
+      await createNotification(prisma, io, {
         userId: post.userId,
-        type: 'reply',
+        type: 'forum_reply',
         title: `有人回复了你的帖子《${post.title}》`,
         content: trimmed.slice(0, 100),
+        link: `/forums/${post.id}`,
         postId: post.id,
         replyId: reply.id,
       });
@@ -763,17 +752,18 @@ router.post('/forum/posts/:id/replies', authMiddleware, async (req: any, res, ne
     const mentionIds = await parseMentions(trimmed);
     for (const mentionUserId of mentionIds) {
       if (mentionUserId === userId) continue;
-      await createNotification({
+      await createNotification(prisma, io, {
         userId: mentionUserId,
-        type: 'mention',
+        type: 'forum_mention',
         title: `有人在帖子《${post.title}》中提到了你`,
         content: trimmed.slice(0, 100),
+        link: `/forums/${post.id}`,
         postId: post.id,
         replyId: reply.id,
       });
     }
 
-    const reward = await grantReward(userId, 'create_reply', id);
+    const reward = await grantReward(userId, 'create_reply', id, io);
 
     res.json({
       success: true,
@@ -792,6 +782,7 @@ router.post('/forum/posts/:id/like', authMiddleware, async (req: any, res, next)
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
 
     const post = await prisma.forumPost.findUnique({
       where: { id },
@@ -833,12 +824,13 @@ router.post('/forum/posts/:id/like', authMiddleware, async (req: any, res, next)
 
     // 给帖子作者发奖励（receive_like 每日上限）
     if (post.userId !== userId) {
-      await grantReward(post.userId, 'receive_like', id);
+      await grantReward(post.userId, 'receive_like', id, io);
 
-      await createNotification({
+      await createNotification(prisma, io, {
         userId: post.userId,
-        type: 'like',
+        type: 'forum_like',
         title: '有人赞了你的帖子',
+        link: `/forums/${post.id}`,
         postId: post.id,
       });
 
@@ -848,7 +840,7 @@ router.post('/forum/posts/:id/like', authMiddleware, async (req: any, res, next)
         select: { likeCount: true },
       });
       if (updatedPost && updatedPost.likeCount === 10) {
-        await grantReward(post.userId, 'post_hit_10_likes', id);
+        await grantReward(post.userId, 'post_hit_10_likes', id, io);
       }
     }
 
@@ -866,6 +858,7 @@ router.post('/forum/posts/:id/best-reply', authMiddleware, async (req: any, res,
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const { replyId } = req.body;
 
     const post = await prisma.forumPost.findUnique({
@@ -912,12 +905,13 @@ router.post('/forum/posts/:id/best-reply', authMiddleware, async (req: any, res,
     }
 
     // 最佳回复奖励
-    await grantReward(reply.userId, 'best_reply', id);
+    await grantReward(reply.userId, 'best_reply', id, io);
 
-    await createNotification({
+    await createNotification(prisma, io, {
       userId: reply.userId,
-      type: 'best_reply',
+      type: 'forum_best_reply',
       title: `你的回复在《${post.title}》中被设为最佳回复`,
+      link: `/forums/${post.id}`,
       postId: post.id,
       replyId: reply.id,
     });
@@ -936,6 +930,7 @@ router.patch('/forum/posts/:id', authMiddleware, async (req: any, res, next) => 
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const isAdmin = req.user?.isAdmin;
     const { title, content } = req.body;
 
@@ -963,11 +958,12 @@ router.patch('/forum/posts/:id', authMiddleware, async (req: any, res, next) => 
       const mentionIds = await parseMentions(content.trim());
       for (const mentionUserId of mentionIds) {
         if (mentionUserId === userId) continue;
-        await createNotification({
+        await createNotification(prisma, io, {
           userId: mentionUserId,
-          type: 'mention',
+          type: 'forum_mention',
           title: `帖子《${updated.title}》的内容更新中提到了你`,
           content: content.trim().slice(0, 100),
+          link: `/forums/${updated.id}`,
           postId: updated.id,
         });
       }
@@ -1079,6 +1075,7 @@ router.patch('/forum/replies/:id', authMiddleware, async (req: any, res, next) =
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
     const isAdmin = req.user?.isAdmin;
     const { content } = req.body;
 
@@ -1103,11 +1100,12 @@ router.patch('/forum/replies/:id', authMiddleware, async (req: any, res, next) =
       const mentionIds = await parseMentions(content.trim());
       for (const mentionUserId of mentionIds) {
         if (mentionUserId === userId) continue;
-        await createNotification({
+        await createNotification(prisma, io, {
           userId: mentionUserId,
-          type: 'mention',
+          type: 'forum_mention',
           title: `回复中有人提到了你（帖子《${reply.post.title}》）`,
           content: content.trim().slice(0, 100),
+          link: `/forums/${reply.post.id}`,
           postId: reply.post.id,
           replyId: updated.id,
         });
