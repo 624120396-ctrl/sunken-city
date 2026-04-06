@@ -8,8 +8,7 @@ export async function checkAndNotifyRankUp(
   userId: string,
   oldExp: number,
   newExp: number,
-  io: Server | null | undefined,
-  skipHistory?: boolean
+  io: Server | null | undefined
 ) {
   const ranks = await prisma.rankConfig.findMany({
     where: { isActive: true },
@@ -35,17 +34,5 @@ export async function checkAndNotifyRankUp(
       link: '/ranks',
       isSystem: true,
     });
-
-    if (!skipHistory) {
-      await prisma.userRankHistory.create({
-        data: {
-          userId,
-          oldLevel: oldRank.level,
-          newLevel: newRank.level,
-          oldRankName: oldRank.name,
-          newRankName: newRank.name,
-        },
-      });
-    }
   }
 }

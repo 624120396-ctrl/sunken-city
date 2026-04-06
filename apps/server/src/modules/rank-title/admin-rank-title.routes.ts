@@ -649,7 +649,7 @@ router.post('/users/:userId/exp/adjust', async (req: any, res) => {
       data: { exp: newExp },
     });
 
-    await checkAndNotifyRankUp(userId, oldExp, newExp, io, true);
+    await checkAndNotifyRankUp(userId, oldExp, newExp, io);
 
     // 位阶晋升货币奖励
     let coinReward = 0;

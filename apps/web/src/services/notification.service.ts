@@ -1,14 +1,32 @@
 import { apiFetch, handleApiResponse } from '@lib/api';
 
+export type NotificationType =
+  | 'mention'
+  | 'reply'
+  | 'like'
+  | 'best_reply'
+  | 'system'
+  | 'system_announcement'
+  | 'rank_up'
+  | 'title_unlock'
+  | 'shop_purchase'
+  | 'forum_reply'
+  | 'forum_mention'
+  | 'forum_like'
+  | 'forum_best_reply'
+  | 'moderator_action';
+
 export interface NotificationItem {
   id: string;
   userId: string;
-  type: 'mention' | 'reply' | 'like' | 'best_reply' | 'system';
+  type: NotificationType;
   title: string;
   content?: string;
+  link?: string;
   postId?: string;
   replyId?: string;
   isRead: boolean;
+  isSystem?: boolean;
   createdAt: string;
 }
 

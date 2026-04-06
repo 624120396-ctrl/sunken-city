@@ -35,6 +35,9 @@ import { ForumBoardPage } from '@pages/forum/ForumBoardPage';
 import { ForumPostPage } from '@pages/forum/ForumPostPage';
 import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
 
+// 消息中心
+import { MessageCenterPage } from '@pages/messages/MessageCenterPage';
+
 // 管理后台
 import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from '@pages/admin/AdminUsersPage';
@@ -94,6 +97,7 @@ function App() {
             <Route path="/forums/new" element={<ForumNewPostPage />} />
             <Route path="/forums/:postId" element={<ForumPostPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/messages" element={<MessageCenterPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </MainLayout>

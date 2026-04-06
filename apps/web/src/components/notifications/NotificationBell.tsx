@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, Trash2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Bell, Check, Trash2, X, Mail } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { io } from 'socket.io-client';
+import { useAuthStore } from '@stores/auth.store';
 import {
   getNotifications,
   markNotificationRead,
@@ -8,6 +10,7 @@ import {
   deleteNotification,
   NotificationItem,
 } from '../../services/notification.service';
+import { getUnreadMessageCount } from '../../services/user-messages.service';
 import { formatTimeAgo } from '../../lib/utils';
 
 function typeLabel(type: NotificationItem['type']) {
@@ -20,6 +23,25 @@ function typeLabel(type: NotificationItem['type']) {
       return '点赞';
     case 'best_reply':
       return '最佳回复';
+    case 'forum_reply':
+      return '论坛回复';
+    case 'forum_mention':
+      return '论坛提及';
+    case 'forum_like':
+      return '论坛点赞';
+    case 'forum_best_reply':
+      return '最佳回复';
+    case 'rank_up':
+      return '位阶晋升';
+    case 'title_unlock':
+      return '获得印记';
+    case 'shop_purchase':
+      return '商城';
+    case 'system_announcement':
+      return '公告';
+    case 'moderator_action':
+      return '管理';
+    case 'system':
     default:
       return '系统';
   }
@@ -29,8 +51,10 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { token } = useAuthStore();
 
   const fetchNotifications = async () => {
     try {
@@ -42,11 +66,52 @@ export function NotificationBell() {
     }
   };
 
+  const fetchUnreadMessages = async () => {
+    try {
+      const res = await getUnreadMessageCount();
+      setUnreadMessageCount(res.unreadCount);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchNotifications();
-    const id = setInterval(fetchNotifications, 30000);
+    fetchUnreadMessages();
+    const id = setInterval(() => {
+      fetchNotifications();
+      fetchUnreadMessages();
+    }, 30000);
     return () => clearInterval(id);
   }, []);
+
+  // Socket 监听全局通知
+  useEffect(() => {
+    if (!token) return;
+
+    const socketUrl = import.meta.env.VITE_WS_URL || window.location.origin;
+    const socket = io(socketUrl, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      path: '/socket.io',
+    });
+
+    socket.on('connect', () => {
+      console.log('Global socket connected');
+    });
+
+    socket.on('notification:new', () => {
+      fetchNotifications();
+    });
+
+    socket.on('user_message:new', () => {
+      fetchUnreadMessages();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [token]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -57,6 +122,7 @@ export function NotificationBell() {
     if (open) {
       document.addEventListener('mousedown', onClick);
       fetchNotifications();
+      fetchUnreadMessages();
     }
     return () => document.removeEventListener('mousedown', onClick);
   }, [open]);
@@ -77,12 +143,18 @@ export function NotificationBell() {
   };
 
   const handleNavigate = (n: NotificationItem) => {
-    if (n.postId) {
+    if (n.link) {
+      navigate(n.link);
+    } else if (n.postId) {
       navigate(`/forums/${n.postId}`);
-      if (!n.isRead) handleRead(n.id);
+    } else {
+      navigate('/messages');
     }
+    if (!n.isRead) handleRead(n.id);
     setOpen(false);
   };
+
+  const totalUnread = unreadCount + unreadMessageCount;
 
   return (
     <div ref={containerRef} className="relative">
@@ -92,9 +164,9 @@ export function NotificationBell() {
         aria-label="通知"
       >
         <Bell size={20} />
-        {unreadCount > 0 && (
+        {totalUnread > 0 && (
           <span className="absolute top-1 right-1 min-w-[1rem] h-4 px-1 rounded-full bg-coc-accent-red text-[10px] text-white font-bold flex items-center justify-center">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
       </button>
@@ -113,6 +185,16 @@ export function NotificationBell() {
                   全部已读
                 </button>
               )}
+              <Link
+                to="/messages"
+                onClick={() => setOpen(false)}
+                className="text-xs text-coc-text-muted hover:text-coc-parchment flex items-center gap-1"
+              >
+                <Mail size={12} />
+                {unreadMessageCount > 0 && (
+                  <span className="ml-0.5 text-coc-accent-red">({unreadMessageCount})</span>
+                )}
+              </Link>
               <button
                 onClick={() => setOpen(false)}
                 className="text-coc-text-muted hover:text-coc-parchment"
@@ -172,6 +254,16 @@ export function NotificationBell() {
                 </div>
               ))
             )}
+          </div>
+
+          <div className="px-3 py-2 border-t border-coc-border bg-coc-bg-secondary/30">
+            <Link
+              to="/messages"
+              onClick={() => setOpen(false)}
+              className="block text-center text-xs text-coc-text-muted hover:text-coc-parchment"
+            >
+              查看全部通知与私信 →
+            </Link>
           </div>
         </div>
       )}

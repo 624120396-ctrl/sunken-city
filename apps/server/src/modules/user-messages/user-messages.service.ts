@@ -35,7 +35,7 @@ export async function getConversationList(userId: string) {
     string,
     {
       partnerId: string;
-      partner: { id: string; nickname: string; avatarUrl?: string };
+      partner: { id: string; nickname: string; avatarUrl?: string | null };
       lastMessage: typeof messages[0];
       unreadCount: number;
     }
