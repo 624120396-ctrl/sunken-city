@@ -1,0 +1,472 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== v1.1 深渊纹理系统 ===== */
+
+/* 噪点纹理 - base64 内联 */
+:root {
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  --rune-top-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 40 L0 0 L40 0' fill='none' stroke='%23d4c5a8' stroke-width='0.5' opacity='0.15'/%3E%3Ccircle cx='8' cy='8' r='2' fill='%23c9a227' opacity='0.1'/%3E%3Cpath d='M4 4 L12 12' stroke='%238b2635' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
+  --rune-top-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 0 L40 0 L40 40' fill='none' stroke='%23d4c5a8' stroke-width='0.5' opacity='0.15'/%3E%3Ccircle cx='32' cy='8' r='2' fill='%23c9a227' opacity='0.1'/%3E%3Cpath d='M36 4 L28 12' stroke='%238b2635' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
+  --rune-bottom-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 0 L0 40 L40 40' fill='none' stroke='%23d4c5a8' stroke-width='0.5' opacity='0.15'/%3E%3Ccircle cx='8' cy='32' r='2' fill='%23c9a227' opacity='0.1'/%3E%3Cpath d='M4 36 L12 28' stroke='%238b2635' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
+  --rune-bottom-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M40 0 L40 40 L0 40' fill='none' stroke='%23d4c5a8' stroke-width='0.5' opacity='0.15'/%3E%3Ccircle cx='32' cy='32' r='2' fill='%23c9a227' opacity='0.1'/%3E%3Cpath d='M36 36 L28 28' stroke='%238b2635' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
+}
+
+@layer base {
+  * {
+    @apply border-coc-void;
+  }
+
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-coc-deep text-coc-parchment min-h-screen;
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* 全局噪点纹理 */
+    position: relative;
+  }
+
+  /* 噪点纹理层 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background-image: var(--noise-texture);
+    background-repeat: repeat;
+  }
+
+  /* 标题字体 */
+  h1, h2, h3 {
+    font-family: 'Cinzel', 'Noto Serif SC', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* 滚动条样式 - v1.1 深渊版 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-coc-abyss;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-coc-void rounded-full;
+    border: 1px solid #3d3d4a;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-coc-rift;
+  }
+
+  /* 选中文字样式 */
+  ::selection {
+    background: rgba(139, 38, 53, 0.3);
+    color: #e8d4a0;
+  }
+}
+
+@layer components {
+  /* ===== v1.1 卡片系统 ===== */
+  
+  /* 基础卡片 - 带符文角标 */
+  .coc-card {
+    @apply bg-coc-surface border border-coc-void rounded-lg p-4 relative;
+    transition: all 0.3s ease;
+  }
+
+  .coc-card::before,
+  .coc-card::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+  }
+
+  .coc-card::before {
+    top: 0;
+    left: 0;
+    background: var(--rune-top-left);
+  }
+
+  .coc-card::after {
+    top: 0;
+    right: 0;
+    background: var(--rune-top-right);
+  }
+
+  .coc-card-bottom::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--rune-bottom-left);
+    pointer-events: none;
+  }
+
+  .coc-card-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--rune-bottom-right);
+    pointer-events: none;
+  }
+
+  /* 卡片hover效果 */
+  .coc-card-hover:hover {
+    @apply border-coc-rift;
+    box-shadow: 0 0 20px rgba(139, 38, 53, 0.1);
+  }
+
+  /* ===== v1.1 输入框系统 ===== */
+  .coc-input {
+    @apply bg-coc-abyss border border-coc-void rounded px-4 py-3 
+           text-coc-parchment placeholder-coc-parchment-faded
+           transition-all duration-300;
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  }
+
+  .coc-input:focus {
+    @apply outline-none border-coc-blood;
+    box-shadow: 0 0 0 1px rgba(139, 38, 53, 0.3), 
+                inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ===== v1.1 按钮系统 ===== */
+  .coc-btn {
+    @apply px-6 py-3 rounded font-medium transition-all duration-300
+           disabled:opacity-50 disabled:cursor-not-allowed
+           relative overflow-hidden;
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+    letter-spacing: 0.05em;
+  }
+
+  /* 血祭按钮 */
+  .coc-btn-blood {
+    @apply coc-btn bg-coc-blood text-coc-parchment;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .coc-btn-blood:hover:not(:disabled) {
+    @apply bg-coc-blood-glow;
+    box-shadow: 0 0 15px rgba(139, 38, 53, 0.4);
+  }
+
+  /* 黄金按钮 */
+  .coc-btn-gold {
+    @apply coc-btn bg-coc-gold text-coc-abyss;
+  }
+
+  .coc-btn-gold:hover:not(:disabled) {
+    @apply bg-coc-gold-glow;
+    box-shadow: 0 0 15px rgba(201, 162, 39, 0.3);
+  }
+
+  /* 深渊按钮 */
+  .coc-btn-void {
+    @apply coc-btn bg-coc-surface border border-coc-void text-coc-parchment;
+  }
+
+  .coc-btn-void:hover:not(:disabled) {
+    @apply border-coc-rift bg-coc-mist;
+  }
+
+  /* v1.0 兼容 */
+  .coc-btn-primary {
+    @apply coc-btn-blood;
+  }
+
+  .coc-btn-secondary {
+    @apply coc-btn-void;
+  }
+
+  /* ===== v1.1 文字效果 ===== */
+  
+  /* 仪式标题 */
+  .coc-title-ritual {
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+    @apply text-coc-gold font-semibold tracking-wider;
+    text-shadow: 0 0 20px rgba(201, 162, 39, 0.2);
+  }
+
+  /* 疯狂低语 */
+  .coc-text-whisper {
+    font-family: 'Caveat', 'KaiTi', cursive;
+    @apply text-coc-madness italic;
+    letter-spacing: 0.05em;
+  }
+
+  /* 符文文字 */
+  .coc-text-rune {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    @apply text-coc-parchment-dim tracking-widest;
+  }
+
+  /* 金属质感文字 */
+  .coc-text-metal {
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+    background: linear-gradient(180deg, #e8d4a0 0%, #c9a227 50%, #8b7355 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ===== v1.1 特殊效果 ===== */
+  
+  /* 呼吸动画容器 */
+  .coc-breathe {
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  /* 微光边框 */
+  .coc-glow-border {
+    position: relative;
+  }
+
+  .coc-glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(139, 38, 53, 0.5), transparent, rgba(201, 162, 39, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* 疯狂边缘效果（SAN值低时使用） */
+  .coc-madness-edge {
+    position: relative;
+  }
+
+  .coc-madness-edge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: 
+      radial-gradient(ellipse at top left, rgba(107, 76, 122, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(107, 76, 122, 0.1) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .coc-madness-edge.active::before {
+    opacity: 1;
+  }
+
+  /* 深渊背景 */
+  .coc-bg-abyss {
+    background: 
+      radial-gradient(ellipse at 50% 0%, rgba(201, 162, 39, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(139, 38, 53, 0.03) 0%, transparent 40%),
+      #0d0d12;
+  }
+
+  /* 旧纸张纹理背景 */
+  .coc-bg-parchment {
+    background-color: #1a1a24;
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 197, 168, 0.02) 2px,
+        rgba(212, 197, 168, 0.02) 4px
+      );
+  }
+}
+
+@layer utilities {
+  /* ===== v1.1 工具类 ===== */
+  
+  /* 隐藏滚动条但保持功能 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 文字渐隐 */
+  .text-fade-b {
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  }
+
+  /* 禁用动画（尊重用户设置） */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ===== v1.1 关键帧动画 ===== */
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.005);
+    opacity: 0.98;
+  }
+}
+
+@keyframes abyss-drift {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes madness-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes rune-glow {
+  0%, 100% {
+    opacity: 0.1;
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.3;
+    filter: blur(1px);
+  }
+}
+
+/* Glitch 效果动画 */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes glitch-red {
+  0%, 100% {
+    transform: translate(0);
+  }
+  50% {
+    transform: translate(-2px, 0);
+  }
+}
+
+@keyframes glitch-cyan {
+  0%, 100% {
+    transform: translate(0);
+  }
+  50% {
+    transform: translate(2px, 0);
+  }
+}
+
+@keyframes glitch-flash {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+/* 动画类 */
+.animate-glitch {
+  animation: glitch 0.3s ease-in-out;
+}
+
+.animate-glitch-red {
+  animation: glitch-red 0.2s ease-in-out infinite;
+}
+
+.animate-glitch-cyan {
+  animation: glitch-cyan 0.2s ease-in-out infinite;
+  animation-delay: 0.1s;
+}
+
+.animate-glitch-flash {
+  animation: glitch-flash 0.1s ease-in-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-rune-glow {
+  animation: rune-glow 3s ease-in-out infinite;
+}
+
+.animate-madness-flicker {
+  animation: madness-flicker 2s ease-in-out infinite;
+}
+
+.animate-abyss-drift {
+  animation: abyss-drift 20s linear infinite;
+}

@@ -1,0 +1,453 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, Award, Lock, Sparkles, Filter, Check, Loader2 } from 'lucide-react';
+import { RuneBorder } from '@components/ui/RuneBorder';
+import { useAuthStore } from '@stores/auth.store';
+import { 
+  getTitles, 
+  getMyTitles, 
+  getMyRankTitle,
+  setDisplayedTitle,
+  type Title,
+  type UserTitleWithConfig,
+  type UserRankInfo
+} from '@services/rank-title.service';
+
+type TitleCategory = 'exploration' | 'combat' | 'social' | 'madness' | 'special' | 'hidden' | 'all';
+type TitleRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythical' | 'all';
+
+const RARITY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
+  common: { label: '普通', color: '#a69b85', bgColor: '#a69b8520' },
+  rare: { label: '稀有', color: '#c9a227', bgColor: '#c9a22720' },
+  epic: { label: '史诗', color: '#8b2635', bgColor: '#8b263520' },
+  legendary: { label: '传说', color: '#6b4c7a', bgColor: '#6b4c7a20' },
+  mythical: { label: '神话', color: '#e8d4a0', bgColor: '#e8d4a020' },
+};
+
+const CATEGORY_CONFIG: Record<string, { label: string; icon: string }> = {
+  exploration: { label: '探索', icon: '🗺️' },
+  combat: { label: '战斗', icon: '⚔️' },
+  social: { label: '社交', icon: '🗣️' },
+  madness: { label: '疯狂', icon: '🌀' },
+  special: { label: '特殊', icon: '⭐' },
+  hidden: { label: '隐藏', icon: '❓' },
+};
+
+export function TitlesPage() {
+  const { updateUser } = useAuthStore();
+  const [titles, setTitles] = useState<Title[]>([]);
+  const [userTitles, setUserTitles] = useState<UserTitleWithConfig[]>([]);
+  const [rankInfo, setRankInfo] = useState<UserRankInfo | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<TitleCategory>('all');
+  const [selectedRarity, setSelectedRarity] = useState<TitleRarity>('all');
+  const [selectedTitle, setSelectedTitle] = useState<Title | null>(null);
+  const [showLocked, setShowLocked] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [settingDisplay, setSettingDisplay] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [titlesData, myTitlesData, rankData] = await Promise.all([
+        getTitles(),
+        getMyTitles().catch(() => []),
+        getMyRankTitle().catch(() => null),
+      ]);
+      setTitles(titlesData);
+      setUserTitles(myTitlesData);
+      setRankInfo(rankData);
+      // 同步到全局 auth store
+      if (rankData) {
+        updateUser({
+          rankName: rankData.rank?.name,
+          displayedTitleName: rankData.displayBadge?.name,
+        });
+      }
+    } catch (err) {
+      setError('加载印记数据失败');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetDisplayed = async (titleKey: string | null) => {
+    try {
+      setSettingDisplay(titleKey || 'none');
+      await setDisplayedTitle(titleKey);
+      // 刷新数据
+      const newRankInfo = await getMyRankTitle();
+      setRankInfo(newRankInfo);
+      // 同步更新全局 auth store
+      updateUser({
+        displayedTitleKey: titleKey,
+        displayedTitleName: newRankInfo.displayBadge?.name,
+        rankName: newRankInfo.rank?.name,
+      });
+    } catch (err) {
+      console.error('设置展示印记失败:', err);
+      alert('设置失败：' + (err as Error).message);
+    } finally {
+      setSettingDisplay(null);
+    }
+  };
+
+  // 获取已解锁的印记key列表
+  const unlockedKeys = userTitles.map(ut => ut.titleKey);
+  
+  // 过滤印记
+  const filteredTitles = titles.filter((title: Title) => {
+    if (selectedCategory !== 'all' && title.category !== selectedCategory) return false;
+    if (selectedRarity !== 'all' && title.rarity !== selectedRarity) return false;
+    if (!showLocked && !unlockedKeys.includes(title.key)) return false;
+    return true;
+  });
+
+  // 统计
+  const totalTitles = titles.length;
+  const unlockedCount = unlockedKeys.length;
+  const progress = totalTitles > 0 ? Math.round((unlockedCount / totalTitles) * 100) : 0;
+  
+  // 当前展示的印记
+  const displayedTitleKey = rankInfo?.titleStats?.displayedTitleKey;
+
+  const categories: Array<{ id: TitleCategory; name: string; icon: string }> = [
+    { id: 'all', name: '全部', icon: '✦' },
+    { id: 'exploration', name: '探索', icon: '🗺️' },
+    { id: 'combat', name: '战斗', icon: '⚔️' },
+    { id: 'social', name: '社交', icon: '🗣️' },
+    { id: 'madness', name: '疯狂', icon: '🌀' },
+    { id: 'special', name: '特殊', icon: '⭐' },
+    { id: 'hidden', name: '隐藏', icon: '❓' },
+  ];
+
+  const rarities: Array<{ id: TitleRarity; name: string; color: string }> = [
+    { id: 'all', name: '全部', color: '#d4c5a8' },
+    { id: 'common', name: '普通', color: '#a69b85' },
+    { id: 'rare', name: '稀有', color: '#c9a227' },
+    { id: 'epic', name: '史诗', color: '#8b2635' },
+    { id: 'legendary', name: '传说', color: '#6b4c7a' },
+    { id: 'mythical', name: '神话', color: '#e8d4a0' },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-coc-deep flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-coc-gold animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || titles.length === 0) {
+    return (
+      <div className="min-h-screen bg-coc-deep flex items-center justify-center">
+        <div className="text-coc-parchment text-center">
+          <p className="mb-4">{error || '暂无印记数据'}</p>
+          <button 
+            onClick={loadData}
+            className="px-4 py-2 bg-coc-gold/20 text-coc-gold rounded hover:bg-coc-gold/30"
+          >
+            重试
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-coc-deep pb-12">
+      {/* 顶部导航 */}
+      <div className="sticky top-0 z-40 bg-coc-abyss/95 backdrop-blur-sm border-b border-coc-void">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 text-coc-parchment-dim hover:text-coc-gold transition-colors"
+            >
+              <ChevronLeft size={20} />
+              <span className="font-rune">返回</span>
+            </Link>
+            
+            <div className="flex items-center gap-3">
+              <Award className="text-coc-gold" size={24} />
+              <h1 className="text-xl font-ritual font-bold text-coc-gold">
+                印记图鉴
+              </h1>
+            </div>
+            
+            <div className="w-20" />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+        {/* 收集进度 */}
+        <RuneBorder variant="gold" intensity="normal" showEdges>
+          <div className="coc-bg-parchment p-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="relative w-24 h-24">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#1a1a24"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#c9a227"
+                    strokeWidth="8"
+                    strokeDasharray={`${progress * 2.83} 283`}
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-ritual font-bold text-coc-gold">
+                    {progress}%
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-2xl font-ritual font-bold text-coc-parchment mb-2">
+                  收集进度
+                </h2>
+                <p className="text-coc-parchment-dim">
+                  已收集 <span className="text-coc-gold font-bold">{unlockedCount}</span> / {totalTitles} 个印记
+                </p>
+                {displayedTitleKey && (
+                  <p className="text-sm text-coc-gold mt-2">
+                    当前展示: <span className="font-medium">
+                      {titles.find(t => t.key === displayedTitleKey)?.name || '位阶名称'}
+                    </span>
+                  </p>
+                )}
+              </div>
+              
+              {/* 显示/隐藏未解锁 */}
+              <button
+                onClick={() => setShowLocked(!showLocked)}
+                className={`px-4 py-2 rounded font-rune text-sm transition-colors
+                  ${showLocked 
+                    ? 'bg-coc-gold/20 text-coc-gold' 
+                    : 'bg-coc-void text-coc-parchment-dim'}`}
+              >
+                {showLocked ? '显示全部' : '仅显示已解锁'}
+              </button>
+            </div>
+          </div>
+        </RuneBorder>
+
+        {/* 筛选器 */}
+        <div className="space-y-4">
+          {/* 分类筛选 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter size={16} className="text-coc-parchment-dim mr-2" />
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors
+                  ${selectedCategory === cat.id
+                    ? 'bg-coc-gold text-coc-abyss'
+                    : 'bg-coc-void text-coc-parchment-dim hover:text-coc-parchment'}`}
+              >
+                <span className="mr-1">{cat.icon}</span>
+                {cat.name}
+              </button>
+            ))}
+          </div>
+          
+          {/* 稀有度筛选 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Sparkles size={16} className="text-coc-parchment-dim mr-2" />
+            {rarities.map((rarity) => (
+              <button
+                key={rarity.id}
+                onClick={() => setSelectedRarity(rarity.id)}
+                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors
+                  ${selectedRarity === rarity.id
+                    ? 'bg-coc-gold text-coc-abyss'
+                    : 'bg-coc-void text-coc-parchment-dim hover:text-coc-parchment'}`}
+                style={selectedRarity === rarity.id ? {} : { color: rarity.color }}
+              >
+                {rarity.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 印记网格 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {filteredTitles.map((title) => {
+            const isUnlocked = unlockedKeys.includes(title.key);
+            const isDisplayed = displayedTitleKey === title.key;
+            const rarityConfig = RARITY_CONFIG[title.rarity];
+            
+            return (
+              <button
+                key={title.key}
+                onClick={() => setSelectedTitle(title)}
+                className="text-left group"
+              >
+                <RuneBorder 
+                  variant={isDisplayed ? 'gold' : isUnlocked ? 'default' : 'default'}
+                  intensity={isDisplayed ? 'normal' : 'subtle'}
+                  className={isDisplayed ? 'scale-105' : ''}
+                >
+                  <div className={`p-4 ${!isUnlocked ? 'opacity-50' : ''}`}>
+                    {/* 印记图标 */}
+                    <div className="text-center mb-3">
+                      <span className="text-4xl">{title.icon}</span>
+                    </div>
+                    
+                    {/* 稀有度标签 */}
+                    <div 
+                      className="text-xs font-rune px-2 py-0.5 rounded text-center mb-2"
+                      style={{ 
+                        backgroundColor: rarityConfig.bgColor,
+                        color: rarityConfig.color,
+                      }}
+                    >
+                      {rarityConfig.label}
+                    </div>
+                    
+                    {/* 名称 */}
+                    <h3 
+                      className="font-ritual font-bold text-sm text-center truncate"
+                      style={{ color: isUnlocked ? title.color : '#6b6558' }}
+                    >
+                      {title.name}
+                    </h3>
+                    
+                    {/* 锁定状态 */}
+                    {!isUnlocked && (
+                      <div className="flex items-center justify-center gap-1 mt-2 text-coc-parchment-faded">
+                        <Lock size={12} />
+                        <span className="text-xs font-rune">未解锁</span>
+                      </div>
+                    )}
+                    
+                    {/* 展示中标记 */}
+                    {isDisplayed && (
+                      <div className="flex items-center justify-center gap-1 mt-2 text-coc-gold">
+                        <Check size={12} />
+                        <span className="text-xs font-rune">展示中</span>
+                      </div>
+                    )}
+                  </div>
+                </RuneBorder>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 选中印记详情 */}
+        {selectedTitle && (
+          <RuneBorder variant="gold" intensity="normal">
+            <div className="coc-bg-parchment p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-5xl">{selectedTitle.icon}</span>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span 
+                        className="text-xs font-rune px-2 py-0.5 rounded"
+                        style={{ 
+                          backgroundColor: RARITY_CONFIG[selectedTitle.rarity]?.bgColor,
+                          color: RARITY_CONFIG[selectedTitle.rarity]?.color,
+                        }}
+                      >
+                        {RARITY_CONFIG[selectedTitle.rarity]?.label}
+                      </span>
+                      <span className="text-xs text-coc-parchment-dim">
+                        {CATEGORY_CONFIG[selectedTitle.category]?.label}
+                      </span>
+                    </div>
+                    <h3 
+                      className="text-2xl font-ritual font-bold"
+                      style={{ color: selectedTitle.color }}
+                    >
+                      {selectedTitle.name}
+                    </h3>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setSelectedTitle(null)}
+                  className="text-coc-parchment-faded hover:text-coc-parchment"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-coc-parchment-dim mb-4">
+                {selectedTitle.description}
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-coc-abyss/50 rounded">
+                  <span className="text-sm text-coc-parchment-dim">获取条件</span>
+                  <span className="text-sm text-coc-parchment font-rune">
+                    {selectedTitle.isHidden && !unlockedKeys.includes(selectedTitle.key)
+                      ? selectedTitle.hint || '???'
+                      : selectedTitle.condition}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-coc-abyss/50 rounded">
+                  <span className="text-sm text-coc-parchment-dim">奖励灵魂碎片</span>
+                  <span className="text-sm text-coc-gold font-rune">
+                    +{selectedTitle.expReward} SP
+                  </span>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="mt-6 flex gap-3">
+                {unlockedKeys.includes(selectedTitle.key) ? (
+                  <>
+                    {displayedTitleKey === selectedTitle.key ? (
+                      <button
+                        onClick={() => handleSetDisplayed(null)}
+                        disabled={settingDisplay === 'none'}
+                        className="flex-1 py-2 bg-coc-void text-coc-parchment-dim rounded font-rune
+                                 hover:bg-coc-void/80 transition-colors disabled:opacity-50"
+                      >
+                        {settingDisplay === 'none' ? '设置中...' : '取消展示'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleSetDisplayed(selectedTitle.key)}
+                        disabled={settingDisplay === selectedTitle.key}
+                        className="flex-1 py-2 bg-coc-gold text-coc-abyss rounded font-rune
+                                 hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
+                      >
+                        {settingDisplay === selectedTitle.key ? '设置中...' : '设为展示'}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex-1 py-2 bg-coc-void/50 text-coc-parchment-faded rounded font-rune text-center">
+                    尚未解锁
+                  </div>
+                )}
+              </div>
+            </div>
+          </RuneBorder>
+        )}
+      </div>
+    </div>
+  );
+}

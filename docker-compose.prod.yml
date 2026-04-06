@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: coc-db-prod
+    environment:
+      POSTGRES_USER: ${DB_USER:-coc}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-coc_platform}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-coc} -d ${DB_NAME:-coc_platform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: coc-redis-prod
+    volumes:
+      - redis_prod_data:/data
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+    container_name: coc-server-prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-coc}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-coc_platform}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      PORT: 3001
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: coc-web-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

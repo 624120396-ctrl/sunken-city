@@ -1,0 +1,579 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  nickname          String
+  password          String
+  avatarUrl         String?
+  exp               Int      @default(0)
+  displayedTitleKey String?  // 当前展示的印记key
+  isAdmin           Boolean  @default(false)
+
+  // 货币系统
+  coins             Int      @default(0)   // 锈蚀硬币
+  stardust          Int      @default(0)   // 虚银
+
+  // 装备
+  equippedFrame     String?  // 当前装备的头像框 key
+
+  // 展示角色（社交资料卡使用，与房间内绑定角色解耦）
+  displayedCharacterId String?
+  displayedCharacter   Character? @relation("UserDisplayedCharacter", fields: [displayedCharacterId], references: [id])
+
+  // 每日签到
+  lastCheckinAt     DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  characters      Character[]
+  roomMembers     RoomMember[]
+  diceRolls       DiceRoll[]
+  unlockedTitles  UserTitle[]
+  uploads         Upload[]
+  inventory       UserInventory[]
+  forumPosts      ForumPost[]
+  forumReplies    ForumReply[]
+  forumLikes      ForumPostLike[]
+  lastReplyPosts  ForumPost[] @relation("LastReplyAuthor")
+  notifications   Notification[]
+  boardModerators ForumBoardModerator[]
+
+  @@index([exp])
+}
+
+model Character {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+
+  // COC7e 职业系统（职业名称与绑定）
+  occupation  String   // 职业显示名称
+  occupationKey String? // 绑定职业模板的key
+
+  age         Int      @default(25)
+  gender      String?
+  avatarUrl   String?
+
+  // 快捷技能栏
+  quickSkills String   @default("[\"侦查\",\"聆听\",\"图书馆使用\",\"心理学\",\"话术\"]")
+
+  // 8项基本属性（COC7e 规则值范围 15-90 左右）
+  str         Int      @default(50)
+  con         Int      @default(50)
+  siz         Int      @default(50)
+  dex         Int      @default(50)
+  app         Int      @default(50)
+  int         Int      @default(50)
+  pow         Int      @default(50)
+  edu         Int      @default(50)
+  luck        Int      @default(50)
+
+  // COC7e 新增：信用评级与资产
+  creditRating Int     @default(0) // 信用评级 0-99
+  cash         Int     @default(0) // 现金（美元）
+  assetsValue  Int     @default(0) // 其他资产（美元）
+
+  // 背景系统（结构化存储）
+  background  String?  // 旧版兼容性保留
+  backgroundEntries String @default("[]") // 6种背景条目 JSON
+  keyConnection String? // 关键背景连接类型
+
+  // 派生属性
+  hp          Int      @default(10)
+  mp          Int      @default(10)
+  san         Int      @default(50)
+  maxHp       Int      @default(10)
+  maxMp       Int      @default(10)
+  maxSan      Int      @default(50)
+  mov         Int      @default(8)
+  build       Int      @default(0)
+  db          String?  // 伤害加值，如 "+1d4", "-1", "+2d6"
+
+  // 技能与战斗
+  skills      String   @default("{}") // 标准COC7技能JSON
+  weapons     String   @default("[]")
+  armor       String?
+
+  // 技能点分配记录（用于校验和展示）
+  skillPointsJson String @default("{}") // { occupationPoints: number, interestPoints: number, usedOccupation: number, usedInterest: number }
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  displayedByUsers User[] @relation("UserDisplayedCharacter")
+  roomMembers RoomMember[]
+  privateMessagesSent   PrivateMessage[] @relation("SentMessages")
+  privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
+}
+
+// COC7e 职业模板表
+model Occupation {
+  id                String @id @default(uuid())
+  key               String @unique
+  name              String
+  nameEn            String?
+  description       String?
+  category          String @default("general") // general | academic | criminal | military | artistic
+
+  // 技能点公式，如 "EDU*4", "EDU*2+APP*2", "EDU*2+DEX*2", "EDU*2+STR*2", "EDU*2+POW*2"
+  skillPointFormula String @default("EDU*4")
+
+  // 信用评级范围
+  creditRatingMin   Int    @default(0)
+  creditRatingMax   Int    @default(99)
+
+  // 本职技能列表（JSON 字符串数组）
+  coreSkills        String @default("[]")
+
+  // 可选技能选择配置：例如 "自选一技能", "选四:估价,易容,格斗,射击,锁匠,机械维修,妙手"
+  // 前端按此渲染选择器
+  electiveSkills    String @default("[]")
+
+  isActive          Boolean @default(true)
+  sortOrder         Int    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  roomId      String   @unique
+  name        String
+  description String?
+  creatorId   String
+  status      String   @default("ACTIVE")
+  
+  // 新增：氛围主题
+  atmosphere  String   @default("normal") // normal, dark, horror, mystery, warm
+  
+  // 新增：当前场景描述
+  sceneDesc   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     RoomMember[]
+  diceRolls   DiceRoll[]
+  privateMessages PrivateMessage[]
+  countdowns  Countdown[]
+  messages    RoomMessage[]
+}
+
+model RoomMember {
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String
+  characterId String?
+  role        String   @default("PLAYER")
+  joinedAt    DateTime @default(now())
+  leftAt      DateTime?
+  
+  // 新增：角色状态标记（JSON数组：injured, poisoned, insane, unconscious, dying）
+  statusTags  String   @default("[]")
+
+  room        Room      @relation(fields: [roomId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  character   Character? @relation(fields: [characterId], references: [id])
+
+  @@unique([roomId, userId])
+}
+
+// 新增：房间公共聊天记录
+model RoomMessage {
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String?
+  nickname    String   @default("未知")
+  content     String
+  characterId String?
+  isSecret    Boolean  @default(false)
+  type        String   @default("text") // text | dice | system
+  meta        String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([createdAt])
+}
+
+model DiceRoll {
+  id           String   @id @default(uuid())
+  roomId       String?
+  userId       String?
+  rollType     String
+  targetName   String?
+  targetValue  Int?
+  rollResult   Int
+  rolls        String
+  successLevel String?
+  createdAt    DateTime @default(now())
+
+  room Room? @relation(fields: [roomId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model CombatLog {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String?
+  round     Int      @default(1)
+  actor     String
+  action    String
+  target    String?
+  result    String
+  timestamp DateTime @default(now())
+
+  @@index([roomId])
+}
+
+model SessionReport {
+  id            String   @id @default(uuid())
+  roomId        String
+  title         String
+  summary       String?
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  duration      Int?     // 分钟
+  participantCount Int  @default(0)
+  combatRounds  Int      @default(0)
+  diceRollCount Int      @default(0)
+  keyEvents     String   @default("[]")  // JSON array
+  characterGrowth String @default("[]")  // JSON array
+  exportedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([roomId])
+}
+
+// 新增：私聊消息表
+model PrivateMessage {
+  id          String   @id @default(uuid())
+  roomId      String
+  senderId    String
+  receiverId  String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id])
+  sender      Character @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    Character @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([roomId, receiverId])
+  @@index([createdAt])
+}
+
+// 新增：倒计时表
+model Countdown {
+  id          String   @id @default(uuid())
+  roomId      String
+  title       String   // 倒计时标题
+  duration    Int      // 秒数
+  remaining   Int      // 剩余秒数
+  isActive    Boolean  @default(true)
+  createdBy   String   // 创建者userId
+  createdAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  room        Room     @relation(fields: [roomId], references: [id])
+
+  @@index([roomId])
+}
+
+// ========== 位阶与印记系统 ==========
+
+// 位阶配置表（管理员可配置）
+model RankConfig {
+  id          String   @id @default(uuid())
+  level       Int      @unique
+  name        String
+  expRequired Int
+  description String
+  privileges  String   @default("[]")
+  icon        String
+  color       String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([level])
+  @@index([isActive])
+}
+
+// 印记配置表（管理员可配置）
+model TitleConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String
+  category    String
+  rarity      String
+  condition   String
+  conditionCode String?
+  expReward   Int
+  icon        String
+  color       String
+  hint        String?
+  isActive    Boolean  @default(true)
+  isHidden    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([rarity])
+  @@index([isActive])
+
+  unlockedByUsers UserTitle[]
+}
+
+// 用户已解锁的印记
+model UserTitle {
+  id          String   @id @default(uuid())
+  userId      String
+  titleKey    String
+  unlockedAt  DateTime @default(now())
+  unlockedBy  String   @default("system")
+  grantedBy   String?
+  note        String?
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titleConfig TitleConfig  @relation(fields: [titleKey], references: [key], onDelete: Cascade)
+
+  @@unique([userId, titleKey])
+  @@index([userId])
+  @@index([titleKey])
+}
+
+// 用户位阶变更历史
+model UserRankHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  oldLevel    Int
+  newLevel    Int
+  oldExp      Int
+  newExp      Int
+  reason      String
+  changedBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 印记解锁日志
+model TitleUnlockLog {
+  id          String   @id @default(uuid())
+  userId      String
+  titleKey    String
+  expReward   Int
+  unlockedBy  String
+  grantedBy   String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 公告/资讯表
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  isPinned    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, isPinned])
+  @@index([publishedAt])
+}
+
+// 附件上传记录表
+model Upload {
+  id          String   @id @default(uuid())
+  userId      String
+  originalName String
+  filename    String   @unique
+  mimeType    String
+  size        Int
+  url         String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 商店商品表
+model ShopItem {
+  id          String   @id @default(uuid())
+  key         String   @unique  // 唯一标识，如 "rusted_chain"
+  name        String
+  description String
+  category    String   // avatar_frame, dice_skin, card_skin, room_theme
+  price       Int      @default(0)
+  currency    String   @default("coin") // coin | stardust
+  rarity      String   @default("common") // common | rare | epic | legendary | mythical
+  iconUrl     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([category, isActive])
+  @@index([sortOrder])
+}
+
+// 用户背包表
+model UserInventory {
+  id          String   @id @default(uuid())
+  userId      String
+  itemKey     String
+  quantity    Int      @default(1)
+  purchasedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemKey])
+  @@index([userId])
+}
+
+// ========== 论坛系统（v1.4.0） ==========
+
+model ForumBoard {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  posts       ForumPost[]
+  moderators  ForumBoardModerator[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model ForumBoardModerator {
+  id        String   @id @default(uuid())
+  boardKey  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  board     ForumBoard @relation(fields: [boardKey], references: [key], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardKey, userId])
+  @@index([boardKey])
+  @@index([userId])
+}
+
+model ForumPost {
+  id          String   @id @default(uuid())
+  boardKey    String
+  userId      String
+  title       String
+  content     String
+  isPinned    Boolean  @default(false)
+  isEssence   Boolean  @default(false)
+  isLocked    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  replyCount  Int      @default(0)
+  bountyCoin  Int      @default(0) // 悬赏金额（锈蚀硬币）
+  bestReplyId String?  // 最佳回复ID
+  lastReplyAt DateTime @default(now())
+  lastReplyById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  board       ForumBoard      @relation(fields: [boardKey], references: [key], onDelete: Cascade)
+  author      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReplyBy User?           @relation("LastReplyAuthor", fields: [lastReplyById], references: [id])
+  replies     ForumReply[]
+  likedBy     ForumPostLike[]
+
+  @@index([boardKey, isPinned, lastReplyAt])
+  @@index([boardKey, isEssence, lastReplyAt])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ForumReply {
+  id          String   @id @default(uuid())
+  postId      String
+  userId      String
+  content     String
+  isBestReply Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  post        ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([userId])
+}
+
+model ForumPostLike {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model ForumRewardLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // create_post | create_reply | receive_like | best_reply
+  postId    String?
+  rewardExp Int      @default(0)
+  rewardCoin Int     @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, action, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // mention | reply | like | best_reply | system
+  title     String
+  content   String?
+  postId    String?
+  replyId   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+

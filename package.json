@@ -1,0 +1,22 @@
+{
+  "name": "sunken-city",
+  "version": "1.4.0",
+  "displayName": "沉没之城",
+  "description": "沉没之城 - COC跑团平台 v1.2",
+  "private": true,
+  "scripts": {
+    "dev": "docker-compose up -d",
+    "dev:local": "docker-compose up db redis -d",
+    "dev:server": "cd apps/server && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "build": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml build",
+    "down": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "db:migrate": "cd apps/server && npx prisma migrate dev",
+    "db:studio": "cd apps/server && npx prisma studio",
+    "install:all": "npm install && cd apps/server && npm install && cd ../web && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

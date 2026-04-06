@@ -1,0 +1,378 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, FileText, Clock, Users, Sword, Brain, Heart, Save, Download } from 'lucide-react';
+import { apiFetch, handleApiResponse } from '@lib/api';
+
+interface ReportData {
+  id: string;
+  title: string;
+  summary: string;
+  date: string;
+  duration: number;
+  participants: {
+    name: string;
+    role: string;
+    character?: string;
+  }[];
+  keyEvents: {
+    time: string;
+    event: string;
+  }[];
+  combatRecords: {
+    round: number;
+    time: string;
+    actor: string;
+    action: string;
+    target?: string;
+    result: string;
+  }[];
+  skillChecks: {
+    time: string;
+    character: string;
+    skill: string;
+    roll: number;
+    successLevel: string;
+  }[];
+  characterProgress: {
+    name: string;
+    hpChange?: { before: number; after: number };
+    mpChange?: { before: number; after: number };
+    sanChange?: { before: number; after: number };
+    skillGrowth?: { name: string; before: number; after: number }[];
+  }[];
+}
+
+export function RoomReportPage() {
+  const { roomId } = useParams();
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editedSummary, setEditedSummary] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'combat' | 'skills' | 'growth'>('overview');
+
+  useEffect(() => {
+    fetchReport();
+  }, [roomId]);
+
+  const fetchReport = async () => {
+    try {
+      const response = await apiFetch(`/rooms/${roomId}/report`);
+      const data = await handleApiResponse<{ data: ReportData }>(response);
+      setReport(data.data);
+      setEditedSummary(data.data.summary || '');
+    } catch (error) {
+      console.error('获取报告失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSummary = async () => {
+    if (!report) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/rooms/${roomId}/report`, {
+        method: 'PATCH',
+        body: JSON.stringify({ summary: editedSummary }),
+      });
+      setReport({ ...report, summary: editedSummary });
+    } catch (error) {
+      console.error('保存失败:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (!report) return;
+    window.open(`/api/rooms/${roomId}/report/export`, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="text-center py-12">
+        <FileText size={48} className="mx-auto text-coc-text-muted mb-4" />
+        <p className="text-coc-text-secondary">报告不存在</p>
+        <Link to={`/rooms/${roomId}`} className="text-coc-accent-red hover:underline mt-2 inline-block">
+          返回房间
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      {/* 头部 */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Link to={`/rooms/${roomId}`} className="coc-btn-secondary p-2">
+            <ArrowLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-serif font-bold">{report.title}</h1>
+            <p className="text-coc-text-secondary">{report.date}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleExport}
+          className="coc-btn-primary flex items-center gap-2"
+        >
+          <Download size={18} />
+          导出Markdown
+        </button>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="coc-card text-center">
+          <Clock size={20} className="mx-auto mb-2 text-coc-accent-gold" />
+          <div className="text-2xl font-bold">{report.duration}</div>
+          <div className="text-xs text-coc-text-muted">分钟</div>
+        </div>
+        <div className="coc-card text-center">
+          <Users size={20} className="mx-auto mb-2 text-coc-accent-cyan" />
+          <div className="text-2xl font-bold">{report.participants.length}</div>
+          <div className="text-xs text-coc-text-muted">参与者</div>
+        </div>
+        <div className="coc-card text-center">
+          <Sword size={20} className="mx-auto mb-2 text-coc-accent-red" />
+          <div className="text-2xl font-bold">{report.combatRecords.length}</div>
+          <div className="text-xs text-coc-text-muted">战斗记录</div>
+        </div>
+        <div className="coc-card text-center">
+          <Brain size={20} className="mx-auto mb-2 text-coc-accent-gold" />
+          <div className="text-2xl font-bold">{report.skillChecks.length}</div>
+          <div className="text-xs text-coc-text-muted">技能检定</div>
+        </div>
+      </div>
+
+      {/* Tab导航 */}
+      <div className="flex gap-2 mb-6 border-b border-coc-border">
+        {[
+          { id: 'overview', label: '概览', icon: FileText },
+          { id: 'combat', label: '战斗记录', icon: Sword },
+          { id: 'skills', label: '技能检定', icon: Brain },
+          { id: 'growth', label: '角色成长', icon: Heart },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+              activeTab === tab.id
+                ? 'border-coc-accent-red text-coc-accent-red'
+                : 'border-transparent text-coc-text-secondary hover:text-coc-text-primary'
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 内容区 */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* 参与者 */}
+          <div className="coc-card">
+            <h3 className="font-bold mb-4 flex items-center gap-2">
+              <Users size={18} />
+              参与者
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {report.participants.map((p, i) => (
+                <div key={i} className="p-3 bg-coc-bg-tertiary rounded">
+                  <div className="font-medium">{p.name}</div>
+                  <div className="text-sm text-coc-text-secondary">
+                    {p.role === 'KP' ? '守秘人' : '调查员'}
+                    {p.character && ` · ${p.character}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 故事概要 */}
+          <div className="coc-card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold flex items-center gap-2">
+                <FileText size={18} />
+                故事概要
+              </h3>
+              <button
+                onClick={handleSaveSummary}
+                disabled={saving || editedSummary === report.summary}
+                className="coc-btn-secondary text-sm flex items-center gap-1"
+              >
+                <Save size={14} />
+                {saving ? '保存中...' : '保存'}
+              </button>
+            </div>
+            <textarea
+              value={editedSummary}
+              onChange={(e) => setEditedSummary(e.target.value)}
+              placeholder="记录这次跑团的故事概要..."
+              className="w-full h-32 coc-input resize-none"
+            />
+          </div>
+
+          {/* 关键事件 */}
+          {report.keyEvents.length > 0 && (
+            <div className="coc-card">
+              <h3 className="font-bold mb-4">关键事件</h3>
+              <div className="space-y-2">
+                {report.keyEvents.map((e, i) => (
+                  <div key={i} className="flex gap-3 text-sm">
+                    <span className="text-coc-accent-gold w-20 flex-shrink-0">
+                      {new Date(e.time).toLocaleTimeString()}
+                    </span>
+                    <span>{e.event}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'combat' && (
+        <div className="coc-card">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <Sword size={18} />
+            战斗记录
+          </h3>
+          {report.combatRecords.length === 0 ? (
+            <p className="text-coc-text-muted text-center py-8">暂无战斗记录</p>
+          ) : (
+            <div className="space-y-3">
+              {report.combatRecords.map((r, i) => (
+                <div key={i} className="p-3 bg-coc-bg-tertiary rounded">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs bg-coc-accent-red/20 text-coc-accent-red px-2 py-0.5 rounded">
+                      第{r.round}回合
+                    </span>
+                    <span className="text-xs text-coc-text-muted">
+                      {new Date(r.time).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-coc-accent-cyan">{r.actor}</span>
+                    <span className="text-coc-text-secondary"> {r.action} </span>
+                    {r.target && <span className="text-coc-accent-gold">{r.target}</span>}
+                  </div>
+                  <div className="text-xs text-coc-text-secondary mt-1">{r.result}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'skills' && (
+        <div className="coc-card">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <Brain size={18} />
+            技能检定记录
+          </h3>
+          {report.skillChecks.length === 0 ? (
+            <p className="text-coc-text-muted text-center py-8">暂无技能检定记录</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-coc-text-secondary border-b border-coc-border">
+                    <th className="text-left py-2">时间</th>
+                    <th className="text-left py-2">角色</th>
+                    <th className="text-left py-2">技能</th>
+                    <th className="text-center py-2">骰值</th>
+                    <th className="text-left py-2">结果</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.skillChecks.map((s, i) => (
+                    <tr key={i} className="border-b border-coc-border/50">
+                      <td className="py-2">{new Date(s.time).toLocaleTimeString()}</td>
+                      <td className="py-2">{s.character}</td>
+                      <td className="py-2">{s.skill}</td>
+                      <td className="py-2 text-center">{s.roll}</td>
+                      <td className="py-2">
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          s.successLevel?.includes('成功') && !s.successLevel?.includes('失败')
+                            ? 'bg-green-500/20 text-green-400'
+                            : s.successLevel?.includes('失败')
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-coc-accent-gold/20 text-coc-accent-gold'
+                        }`}>
+                          {s.successLevel}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'growth' && (
+        <div className="coc-card">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <Heart size={18} />
+            角色成长
+          </h3>
+          {report.characterProgress.length === 0 ? (
+            <p className="text-coc-text-muted text-center py-8">暂无成长记录</p>
+          ) : (
+            <div className="space-y-4">
+              {report.characterProgress.map((c, i) => (
+                <div key={i} className="p-4 bg-coc-bg-tertiary rounded">
+                  <h4 className="font-bold mb-3">{c.name}</h4>
+                  <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div className="text-center">
+                      <div className="text-xs text-coc-text-muted">HP</div>
+                      <div className="text-sm">
+                        {c.hpChange?.before ?? '-'} → {c.hpChange?.after ?? '-'}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-coc-text-muted">MP</div>
+                      <div className="text-sm">
+                        {c.mpChange?.before ?? '-'} → {c.mpChange?.after ?? '-'}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-coc-text-muted">SAN</div>
+                      <div className="text-sm">
+                        {c.sanChange?.before ?? '-'} → {c.sanChange?.after ?? '-'}
+                      </div>
+                    </div>
+                  </div>
+                  {c.skillGrowth && c.skillGrowth.length > 0 && (
+                    <div>
+                      <div className="text-xs text-coc-text-muted mb-1">技能成长</div>
+                      <div className="flex flex-wrap gap-2">
+                        {c.skillGrowth.map((s, j) => (
+                          <span key={j} className="text-xs bg-coc-accent-gold/20 text-coc-accent-gold px-2 py-0.5 rounded">
+                            {s.name}: {s.before}% → {s.after}%
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
