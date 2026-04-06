@@ -45,6 +45,8 @@ model User {
   forumLikes      ForumPostLike[]
   lastReplyPosts  ForumPost[] @relation("LastReplyAuthor")
   notifications   Notification[]
+  sentMessages    UserMessage[] @relation("SentUserMessages")
+  receivedMessages UserMessage[] @relation("ReceivedUserMessages")
   boardModerators ForumBoardModerator[]
 
   @@index([exp])
@@ -275,6 +277,22 @@ model PrivateMessage {
 
   @@index([roomId, receiverId])
   @@index([createdAt])
+}
+
+// 新增：平台级用户私信表
+model UserMessage {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender     User     @relation("SentUserMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedUserMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([receiverId, isRead, createdAt])
+  @@index([senderId, receiverId, createdAt])
 }
 
 // 新增：倒计时表
@@ -564,12 +582,14 @@ model ForumRewardLog {
 model Notification {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // mention | reply | like | best_reply | system
+  type      String   // mention | reply | like | best_reply | system | rank_up | title_unlock | shop_purchase | forum_reply | forum_mention | moderator_action | system_announcement
   title     String
   content   String?
+  link      String?
   postId    String?
   replyId   String?
   isRead    Boolean  @default(false)
+  isSystem  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
