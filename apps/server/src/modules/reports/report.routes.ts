@@ -3,6 +3,7 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { logger } from '../../utils/logger';
+import { RELIC_REGISTRY, MAX_VAULT_SIZE } from '../relics/relics.config';
 
 const router = Router();
 
@@ -27,6 +28,8 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
     if (!room) {
       throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
     }
+
+    const isCreator = room.creatorId === req.userId;
 
     // 获取战斗日志
     const combatLogs = await prisma.combatLog.findMany({
@@ -81,6 +84,13 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
     // 解析JSON字段
     const parsedKeyEvents = JSON.parse(report.keyEvents as string);
     const parsedCharacterGrowth = JSON.parse(report.characterGrowth as string);
+    const parsedLootedRelics: Array<{
+      characterId: string;
+      relicKey: string;
+      characterName: string;
+      relicName: string;
+      awardedAt: string;
+    }> = JSON.parse(report.lootedRelics as string);
 
     // 构建战斗记录
     const combatRecords = combatLogs.map(log => ({
@@ -105,7 +115,10 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
     const characterProgress = room.members
       .filter(m => m.character)
       .map(m => ({
+        userId: m.user.id,
+        characterId: m.character!.id,
         name: m.character!.name,
+        role: m.role,
         hpChange: { before: m.character!.hp, after: m.character!.hp },
         mpChange: { before: m.character!.mp, after: m.character!.mp },
         sanChange: { before: m.character!.san, after: m.character!.san },
@@ -118,13 +131,20 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
         id: report.id,
         title: report.title,
         summary: report.summary,
+        roomStatus: room.status,
+        isCreator,
         date: report.createdAt.toISOString().split('T')[0],
         duration: report.duration || Math.ceil((Date.now() - report.createdAt.getTime()) / 60000),
         participants: room.members.filter(m => m.leftAt === null).map(m => ({
+          userId: m.user.id,
           name: m.user.nickname,
           role: m.role,
+          characterId: m.character?.id,
           character: m.character?.name,
+          hp: m.character?.hp ?? null,
+          isAlive: (m.character?.hp ?? 0) > 0,
         })),
+        lootedRelics: parsedLootedRelics,
         keyEvents: parsedKeyEvents,
         combatRecords,
         skillChecks,
@@ -254,6 +274,110 @@ ${c.skillGrowth?.length > 0 ? `- **技能成长**: ${c.skillGrowth.map((s: any) 
     res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${room.name}_游戏报告.md"`);
     res.send(md);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// KP 发放战后遗物
+router.post('/rooms/:roomId/report/relics', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const { characterId, relicKey } = req.body;
+
+    if (!characterId || !relicKey) {
+      throw new AppError('INVALID_PARAMS', '缺少角色或遗物信息', 400);
+    }
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: {
+        members: {
+          include: { user: true, character: true },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    }
+
+    if (room.creatorId !== req.userId) {
+      throw new AppError('FORBIDDEN', '只有 KP 可以发放遗物', 403);
+    }
+
+    const member = room.members.find((m) => m.character?.id === characterId && m.leftAt === null);
+    if (!member) {
+      throw new AppError('CHARACTER_NOT_FOUND', '该角色不在当前房间或未正式加入', 404);
+    }
+
+    if (member.role !== 'PLAYER') {
+      throw new AppError('INVALID_TARGET', '只能给玩家发放遗物', 400);
+    }
+
+    const hp = member.character?.hp ?? 0;
+    if (hp <= 0) {
+      throw new AppError('CHARACTER_DEAD', '该角色已昏迷或死亡，无法获得遗物', 400);
+    }
+
+    const relicDef = RELIC_REGISTRY[relicKey];
+    if (!relicDef) {
+      throw new AppError('RELIC_NOT_FOUND', '遗物不存在', 404);
+    }
+
+    const report = await prisma.sessionReport.findFirst({
+      where: { roomId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!report) {
+      throw new AppError('REPORT_NOT_FOUND', '战后报告不存在', 404);
+    }
+
+    const lootedRelics: Array<{ characterId: string; relicKey: string }> = JSON.parse(report.lootedRelics as string);
+    if (lootedRelics.some((r) => r.characterId === characterId)) {
+      throw new AppError('ALREADY_AWARDED', '该角色在本局中已获得遗物', 400);
+    }
+
+    const vaultCount = await prisma.characterRelic.count({
+      where: { characterId },
+    });
+
+    if (vaultCount >= MAX_VAULT_SIZE) {
+      throw new AppError('VAULT_FULL', '角色保险箱已满（最多5件遗物）', 400);
+    }
+
+    // 创建 CharacterRelic
+    await prisma.characterRelic.create({
+      data: {
+        characterId,
+        userId: member.userId,
+        relicKey,
+        source: 'room_drop',
+        maxDurability: relicDef.maxDurability ?? null,
+      },
+    });
+
+    // 更新报告
+    const newLoot = {
+      characterId,
+      relicKey,
+      characterName: member.character!.name,
+      relicName: relicDef.name,
+      awardedAt: new Date().toISOString(),
+    };
+    await prisma.sessionReport.update({
+      where: { id: report.id },
+      data: {
+        lootedRelics: JSON.stringify([...lootedRelics, newLoot]),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `已将「${relicDef.name}」发放给 ${member.character!.name}`,
+      data: newLoot,
+    });
   } catch (error) {
     next(error);
   }

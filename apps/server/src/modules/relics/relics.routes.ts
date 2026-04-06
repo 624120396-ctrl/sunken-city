@@ -9,9 +9,19 @@ import {
   setRoomRelics,
   validateRelicCarry,
 } from './relics.service';
+import { RELIC_REGISTRY } from './relics.config';
 
 const router = Router();
 router.use(authMiddleware);
+
+// GET /api/relics/registry
+router.get('/relics/registry', async (req: AuthRequest, res, next) => {
+  try {
+    res.json({ success: true, data: { relics: Object.values(RELIC_REGISTRY) } });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/relics/character/:characterId
 router.get('/relics/character/:characterId', async (req: AuthRequest, res, next) => {

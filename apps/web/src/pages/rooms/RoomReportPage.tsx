@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Clock, Users, Sword, Brain, Heart, Save, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, Users, Sword, Brain, Heart, Save, Download, Gift } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 
 interface ReportData {
@@ -9,10 +9,16 @@ interface ReportData {
   summary: string;
   date: string;
   duration: number;
+  roomStatus: string;
+  isCreator: boolean;
   participants: {
+    userId: string;
     name: string;
     role: string;
     character?: string;
+    characterId?: string;
+    hp: number | null;
+    isAlive: boolean;
   }[];
   keyEvents: {
     time: string;
@@ -34,11 +40,20 @@ interface ReportData {
     successLevel: string;
   }[];
   characterProgress: {
+    userId?: string;
+    characterId?: string;
     name: string;
     hpChange?: { before: number; after: number };
     mpChange?: { before: number; after: number };
     sanChange?: { before: number; after: number };
     skillGrowth?: { name: string; before: number; after: number }[];
+  }[];
+  lootedRelics: {
+    characterId: string;
+    relicKey: string;
+    characterName: string;
+    relicName: string;
+    awardedAt: string;
   }[];
 }
 
@@ -48,7 +63,9 @@ export function RoomReportPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editedSummary, setEditedSummary] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'combat' | 'skills' | 'growth'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'combat' | 'skills' | 'growth' | 'relics'>('overview');
+  const [relicRegistry, setRelicRegistry] = useState<Array<{ key: string; name: string; description: string; rarity: string }>>([]);
+  const [awardSelections, setAwardSelections] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchReport();
@@ -60,10 +77,39 @@ export function RoomReportPage() {
       const data = await handleApiResponse<{ data: ReportData }>(response);
       setReport(data.data);
       setEditedSummary(data.data.summary || '');
+      if (data.data.isCreator) {
+        fetchRelicRegistry();
+      }
     } catch (error) {
       console.error('获取报告失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelicRegistry = async () => {
+    try {
+      const res = await apiFetch('/relics/registry');
+      const data = await handleApiResponse<{ relics: any[] }>(res);
+      setRelicRegistry(data.relics || []);
+    } catch (err) {
+      console.error('获取遗物列表失败', err);
+    }
+  };
+
+  const handleAwardRelic = async (characterId: string) => {
+    const relicKey = awardSelections[characterId];
+    if (!relicKey) return;
+    try {
+      const res = await apiFetch(`/rooms/${roomId}/report/relics`, {
+        method: 'POST',
+        body: JSON.stringify({ characterId, relicKey }),
+      });
+      const data = await handleApiResponse<{ message: string }>(res);
+      alert(data.message);
+      fetchReport();
+    } catch (err: any) {
+      alert(err.message || '发放失败');
     }
   };
 
@@ -161,6 +207,7 @@ export function RoomReportPage() {
           { id: 'combat', label: '战斗记录', icon: Sword },
           { id: 'skills', label: '技能检定', icon: Brain },
           { id: 'growth', label: '角色成长', icon: Heart },
+          { id: 'relics', label: '遗物发放', icon: Gift },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -370,6 +417,86 @@ export function RoomReportPage() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+      {activeTab === 'relics' && (
+        <div className="coc-card">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <Gift size={18} />
+            遗物发放
+          </h3>
+
+          {/* 已发放列表 */}
+          {report.lootedRelics.length > 0 ? (
+            <div className="mb-6 space-y-2">
+              <h4 className="text-sm text-coc-text-muted">本场已发放遗物</h4>
+              {report.lootedRelics.map((lr, i) => (
+                <div key={i} className="flex items-center justify-between rounded bg-coc-bg-tertiary p-3">
+                  <div>
+                    <div className="font-medium text-coc-parchment">{lr.relicName}</div>
+                    <div className="text-xs text-coc-text-muted">获得者：{lr.characterName}</div>
+                  </div>
+                  <div className="text-xs text-coc-text-muted">
+                    {new Date(lr.awardedAt).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mb-6 text-sm text-coc-text-muted">本场尚无遗物发放记录。</p>
+          )}
+
+          {/* KP 发放区 */}
+          {report.isCreator ? (
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-coc-parchment">为存活调查员发放遗物</h4>
+              {report.participants
+                .filter((p) => p.role === 'PLAYER' && p.isAlive)
+                .map((p) => {
+                  const alreadyAwarded = report.lootedRelics.some(
+                    (lr) => lr.characterId === p.characterId
+                  );
+                  if (alreadyAwarded) {
+                    return (
+                      <div key={p.characterId} className="rounded border border-coc-void bg-coc-bg-tertiary/40 p-3 text-sm text-coc-text-muted">
+                        {p.character} · 已获得遗物
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={p.characterId} className="flex items-center gap-3 rounded border border-coc-void bg-coc-bg-tertiary p-3">
+                      <div className="flex-1 text-sm text-coc-parchment">{p.character}</div>
+                      <select
+                        value={awardSelections[p.characterId || ''] || ''}
+                        onChange={(e) =>
+                          setAwardSelections((prev) => ({
+                            ...prev,
+                            [p.characterId || '']: e.target.value,
+                          }))
+                        }
+                        className="rounded border border-coc-void bg-coc-abyss px-2 py-1 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                      >
+                        <option value="">选择遗物</option>
+                        {relicRegistry.map((r) => (
+                          <option key={r.key} value={r.key}>
+                            {r.name}（{r.rarity}）
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleAwardRelic(p.characterId || '')}
+                        disabled={!awardSelections[p.characterId || '']}
+                        className="rounded bg-coc-gold px-3 py-1 text-xs font-bold text-coc-abyss hover:bg-coc-gold-glow disabled:opacity-50"
+                      >
+                        发放
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <p className="text-sm text-coc-text-muted">只有 KP 可以发放遗物。</p>
           )}
         </div>
       )}
