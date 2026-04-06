@@ -32,6 +32,8 @@ import adminShopRoutes from './modules/shop/admin-shop.routes';
 import aiRoutes from './modules/ai/ai.routes';
 import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
+import adminNotificationRoutes from './modules/notifications/admin-notifications.routes';
+import userMessageRoutes from './modules/user-messages/user-messages.routes';
 
 // 加载环境变量
 dotenv.config();
@@ -58,6 +60,9 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) }
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'public')));
+
+// 挂载 io 实例供路由层使用
+app.set('io', io);
 
 // 健康检查
 app.get('/health', (req, res) => {
@@ -91,6 +96,8 @@ app.use('/api/admin', adminShopRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);
+app.use('/api', userMessageRoutes);
+app.use('/api/admin', adminNotificationRoutes);
 
 // 404处理
 app.use((req, res) => {

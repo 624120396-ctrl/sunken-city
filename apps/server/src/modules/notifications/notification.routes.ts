@@ -74,13 +74,41 @@ router.patch('/notifications/read-all', authMiddleware, async (req: any, res, ne
 });
 
 /**
+ * GET /api/notifications/unread-count
+ * 获取未读通知数量
+ */
+router.get('/notifications/unread-count', authMiddleware, async (req: any, res, next) => {
+  try {
+    const userId = req.user!.userId;
+    const unreadCount = await prisma.notification.count({
+      where: { userId, isRead: false },
+    });
+    res.json({ success: true, data: { unreadCount } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * DELETE /api/notifications/:id
- * 删除单条通知
+ * 删除单条通知（系统通知不可删除）
  */
 router.delete('/notifications/:id', authMiddleware, async (req: any, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+
+    const existing = await prisma.notification.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ success: false, message: '通知不存在' });
+    }
+
+    if (existing.isSystem) {
+      return res.status(403).json({ success: false, message: '系统通知不可删除' });
+    }
 
     await prisma.notification.deleteMany({
       where: { id, userId },

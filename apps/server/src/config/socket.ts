@@ -162,6 +162,9 @@ export function setupSocketHandlers(io: SocketIOServer) {
         nickname: socket.user.nickname,
       });
 
+      // 加入个人房间，用于接收实时通知和私信
+      socket.join(`user:${socket.user.userId}`);
+
       // 广播在线人数更新
       const online = await getOnlineUsers();
       io.emit('online:update', online);
