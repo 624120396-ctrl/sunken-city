@@ -29,6 +29,7 @@ import { ProfilePage } from '@pages/profile/ProfilePage';
 // 商店
 import { ShopPage } from '@pages/shop/ShopPage';
 import { InventoryPage } from '@pages/inventory/InventoryPage';
+import { RelicMarketPage } from '@pages/market/RelicMarketPage';
 
 // 论坛
 import { ForumListPage } from '@pages/forum/ForumListPage';
@@ -91,6 +92,7 @@ function App() {
             <Route path="/titles" element={<TitlesPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/market" element={<RelicMarketPage />} />
             <Route path="/forums" element={<ForumListPage />} />
             <Route path="/forums/board/:boardKey" element={<ForumBoardPage />} />
             <Route path="/forums/new" element={<ForumNewPostPage />} />

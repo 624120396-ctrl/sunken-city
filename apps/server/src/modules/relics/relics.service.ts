@@ -207,3 +207,190 @@ export async function validateRelicCarry(roomMemberId: string) {
   }
   return ids;
 }
+
+// ========== Phase 3: Relic Market ==========
+
+export async function listActiveTrades(filters?: { relicKey?: string; sellerId?: string; buyerId?: string }) {
+  const where: any = { status: 'active' };
+  if (filters?.relicKey) where.relicKey = filters.relicKey;
+  if (filters?.sellerId) where.sellerId = filters.sellerId;
+  if (filters?.buyerId) where.buyerId = filters.buyerId;
+
+  const trades = await prisma.relicTrade.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const sellerIds = [...new Set(trades.map((t) => t.sellerId))];
+  const sellers = await prisma.user.findMany({
+    where: { id: { in: sellerIds.length > 0 ? sellerIds : [''] } },
+    select: { id: true, nickname: true },
+  });
+  const sellerMap = new Map(sellers.map((u) => [u.id, u]));
+
+  return trades.map((t) => ({
+    ...t,
+    meta: getRelicEffect(t.relicKey),
+    sellerName: sellerMap.get(t.sellerId)?.nickname || '未知',
+    relicSnapshot: t.relicSnapshot ? JSON.parse(t.relicSnapshot) : null,
+  }));
+}
+
+export async function createRelicTrade(
+  sellerId: string,
+  characterRelicId: string,
+  price: number,
+  currency: string
+) {
+  const relic = await prisma.characterRelic.findFirst({
+    where: { id: characterRelicId, userId: sellerId },
+  });
+  if (!relic) throw new Error('遗物不存在或不属于你');
+  if (relic.tradeLockId) throw new Error('该遗物已在交易中');
+
+  const shopItem = await prisma.shopItem.findUnique({ where: { key: relic.relicKey } });
+  if (shopItem && shopItem.tradable === false) {
+    throw new Error('该遗物不允许交易');
+  }
+
+  if (!price || price <= 0) throw new Error('价格必须大于0');
+  if (!['coin', 'stardust'].includes(currency)) throw new Error('币种不支持');
+
+  const trade = await prisma.$transaction(async (tx) => {
+    const created = await tx.relicTrade.create({
+      data: {
+        sellerId,
+        sellerCharacterRelicId: characterRelicId,
+        relicKey: relic.relicKey,
+        price,
+        currency,
+        status: 'active',
+        relicSnapshot: JSON.stringify({
+          durability: relic.durability,
+          maxDurability: relic.maxDurability,
+          usedCount: relic.usedCount,
+          isEquipped: relic.isEquipped,
+        }),
+      },
+    });
+    await tx.characterRelic.update({
+      where: { id: characterRelicId },
+      data: { tradeLockId: created.id },
+    });
+    return created;
+  });
+
+  return trade;
+}
+
+export async function cancelRelicTrade(sellerId: string, tradeId: string) {
+  const trade = await prisma.relicTrade.findFirst({
+    where: { id: tradeId, sellerId, status: 'active' },
+  });
+  if (!trade) throw new Error('挂单不存在或已成交');
+
+  await prisma.$transaction(async (tx) => {
+    await tx.relicTrade.update({
+      where: { id: tradeId },
+      data: { status: 'cancelled' },
+    });
+    if (trade.sellerCharacterRelicId) {
+      await tx.characterRelic.update({
+        where: { id: trade.sellerCharacterRelicId },
+        data: { tradeLockId: null },
+      });
+    }
+  });
+
+  return { success: true };
+}
+
+export async function buyRelicTrade(
+  buyerId: string,
+  tradeId: string,
+  targetCharacterId: string
+) {
+  const trade = await prisma.relicTrade.findFirst({
+    where: { id: tradeId, status: 'active' },
+  });
+  if (!trade) throw new Error('挂单不存在或已成交');
+  if (trade.sellerId === buyerId) throw new Error('不能购买自己的挂单');
+
+  const buyer = await prisma.user.findUnique({ where: { id: buyerId } });
+  if (!buyer) throw new Error('用户不存在');
+
+  if (trade.currency === 'coin') {
+    if (buyer.coins < trade.price) throw new Error('锈蚀硬币不足');
+  } else {
+    if (buyer.stardust < trade.price) throw new Error('星尘不足');
+  }
+
+  const targetCharacter = await prisma.character.findFirst({
+    where: { id: targetCharacterId, userId: buyerId },
+  });
+  if (!targetCharacter) throw new Error('目标角色卡不存在或不属于你');
+
+  const vaultCount = await prisma.characterRelic.count({
+    where: { characterId: targetCharacterId },
+  });
+  if (vaultCount >= MAX_VAULT_SIZE) throw new Error('角色保险箱已满');
+
+  const snapshot = trade.relicSnapshot ? JSON.parse(trade.relicSnapshot) : {};
+
+  await prisma.$transaction(async (tx) => {
+    // 扣买家货币
+    if (trade.currency === 'coin') {
+      await tx.user.update({
+        where: { id: buyerId },
+        data: { coins: { decrement: trade.price } },
+      });
+    } else {
+      await tx.user.update({
+        where: { id: buyerId },
+        data: { stardust: { decrement: trade.price } },
+      });
+    }
+
+    // 加卖家货币
+    if (trade.currency === 'coin') {
+      await tx.user.update({
+        where: { id: trade.sellerId },
+        data: { coins: { increment: trade.price } },
+      });
+    } else {
+      await tx.user.update({
+        where: { id: trade.sellerId },
+        data: { stardust: { increment: trade.price } },
+      });
+    }
+
+    // 给买家创建 CharacterRelic
+    await tx.characterRelic.create({
+      data: {
+        characterId: targetCharacterId,
+        userId: buyerId,
+        relicKey: trade.relicKey,
+        source: 'trade',
+        durability: snapshot.durability ?? null,
+        maxDurability: snapshot.maxDurability ?? null,
+        usedCount: snapshot.usedCount ?? 0,
+        isEquipped: false,
+      },
+    });
+
+    // 删除卖家的 CharacterRelic（已售出）
+    if (trade.sellerCharacterRelicId) {
+      await tx.characterRelic.deleteMany({
+        where: { id: trade.sellerCharacterRelicId },
+      });
+    }
+
+    // 更新交易状态
+    await tx.relicTrade.update({
+      where: { id: tradeId },
+      data: { status: 'sold', buyerId, soldAt: new Date() },
+    });
+  });
+
+  return { success: true };
+}

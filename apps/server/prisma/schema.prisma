@@ -494,12 +494,14 @@ model CharacterRelic {
   maxDurability   Int?     // 最大耐久
   usedCount       Int      @default(0)     // 已使用次数（consumable）
   isEquipped      Boolean  @default(false) // 是否标记为常备（展示用）
+  tradeLockId     String?                 // 若正在挂单，记录 RelicTrade.id
   acquiredAt      DateTime @default(now())
 
   character       Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([characterId])
   @@index([userId])
+  @@index([tradeLockId])
 }
 
 // 新增：遗物玩家交易市场（v1.5.0 Phase 3）
@@ -512,6 +514,7 @@ model RelicTrade {
   currency      String   @default("coin")
   status        String   @default("active") // active | sold | cancelled
   buyerId       String?
+  relicSnapshot String?  // JSON: { durability, usedCount, maxDurability, isEquipped }
   createdAt     DateTime @default(now())
   soldAt        DateTime?
 

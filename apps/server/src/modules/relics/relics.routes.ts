@@ -8,6 +8,10 @@ import {
   getUserUnboundRelics,
   setRoomRelics,
   validateRelicCarry,
+  listActiveTrades,
+  createRelicTrade,
+  cancelRelicTrade,
+  buyRelicTrade,
 } from './relics.service';
 import { RELIC_REGISTRY } from './relics.config';
 
@@ -87,6 +91,56 @@ router.post('/relics/room/:roomMemberId/validate', async (req: AuthRequest, res,
     res.json({ success: true, data: { valid: true, carriedRelicIds: ids } });
   } catch (err) {
     next(new AppError('RELIC_VALIDATE_FAILED', (err as Error).message, 400));
+  }
+});
+
+// ========== Phase 3: Market ==========
+
+// GET /api/relics/market/listings
+router.get('/relics/market/listings', async (req: AuthRequest, res, next) => {
+  try {
+    const { relicKey, sellerId } = req.query;
+    const list = await listActiveTrades({
+      relicKey: relicKey as string | undefined,
+      sellerId: sellerId as string | undefined,
+    });
+    res.json({ success: true, data: { listings: list } });
+  } catch (err) {
+    next(new AppError('MARKET_LIST_FAILED', (err as Error).message, 400));
+  }
+});
+
+// POST /api/relics/market/listings
+router.post('/relics/market/listings', async (req: AuthRequest, res, next) => {
+  try {
+    const { characterRelicId, price, currency } = req.body;
+    const trade = await createRelicTrade(req.userId!, characterRelicId, Number(price), currency);
+    res.json({ success: true, data: trade });
+  } catch (err) {
+    next(new AppError('MARKET_LIST_FAILED', (err as Error).message, 400));
+  }
+});
+
+// DELETE /api/relics/market/listings/:tradeId  (cancel)
+router.delete('/relics/market/listings/:tradeId', async (req: AuthRequest, res, next) => {
+  try {
+    const { tradeId } = req.params;
+    const result = await cancelRelicTrade(req.userId!, tradeId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(new AppError('MARKET_CANCEL_FAILED', (err as Error).message, 400));
+  }
+});
+
+// POST /api/relics/market/listings/:tradeId/buy
+router.post('/relics/market/listings/:tradeId/buy', async (req: AuthRequest, res, next) => {
+  try {
+    const { tradeId } = req.params;
+    const { characterId } = req.body;
+    const result = await buyRelicTrade(req.userId!, tradeId, characterId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(new AppError('MARKET_BUY_FAILED', (err as Error).message, 400));
   }
 });
 
