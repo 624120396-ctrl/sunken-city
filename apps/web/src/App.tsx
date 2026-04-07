@@ -37,6 +37,9 @@ import { ForumBoardPage } from '@pages/forum/ForumBoardPage';
 import { ForumPostPage } from '@pages/forum/ForumPostPage';
 import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
 
+// 好友
+import { FriendListPage } from '@pages/friends/FriendListPage';
+
 // 管理后台
 import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from '@pages/admin/AdminUsersPage';
@@ -99,6 +102,7 @@ function App() {
             <Route path="/forums/board/:boardKey" element={<ForumBoardPage />} />
             <Route path="/forums/new" element={<ForumNewPostPage />} />
             <Route path="/forums/:postId" element={<ForumPostPage />} />
+            <Route path="/friends" element={<FriendListPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

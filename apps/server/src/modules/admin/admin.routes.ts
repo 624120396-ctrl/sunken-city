@@ -524,4 +524,67 @@ router.put('/settings', authMiddleware, adminMiddleware, async (req, res, next) 
   }
 });
 
+/**
+ * 群发系统通知
+ * POST /api/admin/notifications/broadcast
+ */
+const broadcastNotificationSchema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().min(1).max(5000),
+  userId: z.string().optional(),
+});
+
+router.post('/notifications/broadcast', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const { title, content, userId } = broadcastNotificationSchema.parse(req.body);
+
+    if (userId) {
+      // 发送给指定用户
+      const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          error: { code: 'USER_NOT_FOUND', message: '目标用户不存在' },
+        });
+      }
+
+      const notification = await prisma.notification.create({
+        data: {
+          userId,
+          type: 'system',
+          title,
+          content,
+        },
+      });
+
+      return res.json({
+        success: true,
+        data: { sentCount: 1, notification },
+      });
+    }
+
+    // 发送给所有用户
+    const users = await prisma.user.findMany({ select: { id: true } });
+    const notifications = await prisma.$transaction(
+      users.map((u) =>
+        prisma.notification.create({
+          data: {
+            userId: u.id,
+            type: 'system',
+            title,
+            content,
+          },
+        })
+      )
+    );
+
+    res.json({
+      success: true,
+      data: { sentCount: notifications.length },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

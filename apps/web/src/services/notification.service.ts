@@ -3,7 +3,7 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 export interface NotificationItem {
   id: string;
   userId: string;
-  type: 'mention' | 'reply' | 'like' | 'best_reply' | 'system';
+  type: 'mention' | 'reply' | 'like' | 'best_reply' | 'system' | 'friend_request' | 'friend_accept' | 'room_invite';
   title: string;
   content?: string;
   postId?: string;

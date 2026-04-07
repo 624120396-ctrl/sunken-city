@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, Trash2, X } from 'lucide-react';
+import { Bell, Check, Trash2, X, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   getNotifications,
@@ -20,6 +20,12 @@ function typeLabel(type: NotificationItem['type']) {
       return '点赞';
     case 'best_reply':
       return '最佳回复';
+    case 'friend_request':
+      return '好友请求';
+    case 'friend_accept':
+      return '好友通过';
+    case 'room_invite':
+      return '房间邀请';
     default:
       return '系统';
   }
@@ -29,6 +35,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [detailNotification, setDetailNotification] = useState<NotificationItem | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -76,12 +83,26 @@ export function NotificationBell() {
     fetchNotifications();
   };
 
-  const handleNavigate = (n: NotificationItem) => {
-    if (n.postId) {
+  const hasLink = (n: NotificationItem) => {
+    return n.type === 'friend_request' || n.type === 'friend_accept' || n.type === 'room_invite' || !!n.postId;
+  };
+
+  const goLink = (n: NotificationItem) => {
+    if (!n.isRead) handleRead(n.id);
+    if (n.type === 'friend_request' || n.type === 'friend_accept') {
+      navigate('/friends');
+    } else if (n.type === 'room_invite') {
+      navigate('/rooms');
+    } else if (n.postId) {
       navigate(`/forums/${n.postId}`);
-      if (!n.isRead) handleRead(n.id);
     }
     setOpen(false);
+    setDetailNotification(null);
+  };
+
+  const openDetail = (n: NotificationItem) => {
+    if (!n.isRead) handleRead(n.id);
+    setDetailNotification(n);
   };
 
   return (
@@ -100,10 +121,10 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-coc-bg-tertiary border border-coc-border rounded-lg shadow-xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border">
-            <span className="font-bold text-coc-parchment text-sm">通知</span>
-            <div className="flex items-center gap-2">
+        <div className="absolute left-0 mt-2 w-96 bg-coc-bg-tertiary border border-coc-border rounded-lg shadow-2xl z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-coc-border">
+            <span className="font-bold text-coc-parchment">通知</span>
+            <div className="flex items-center gap-3">
               {unreadCount > 0 && (
                 <button
                   onClick={handleReadAll}
@@ -122,22 +143,21 @@ export function NotificationBell() {
             </div>
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-6 text-center text-sm text-coc-text-muted">
+              <div className="px-4 py-8 text-center text-sm text-coc-text-muted">
                 暂无通知
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => handleNavigate(n)}
-                  className={`px-3 py-3 border-b border-coc-border last:border-0 cursor-pointer hover:bg-coc-bg-secondary transition-colors ${
+                  className={`px-4 py-3 border-b border-coc-border last:border-0 hover:bg-coc-bg-secondary transition-colors ${
                     n.isRead ? 'opacity-80' : 'bg-coc-bg-secondary/30'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openDetail(n)}>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="px-1.5 py-0.5 rounded border border-coc-border text-coc-text-muted">
                           {typeLabel(n.type)}
@@ -150,7 +170,7 @@ export function NotificationBell() {
                         {n.title}
                       </div>
                       {n.content && (
-                        <div className="text-xs text-coc-text-muted truncate">
+                        <div className="text-xs text-coc-text-muted line-clamp-2 mt-1">
                           {n.content}
                         </div>
                       )}
@@ -158,20 +178,101 @@ export function NotificationBell() {
                         {formatTimeAgo(n.createdAt)}
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(n.id);
-                      }}
-                      className="text-coc-text-muted hover:text-red-400 p-1"
-                      title="删除"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+
+                    <div className="flex flex-col items-end gap-2">
+                      {hasLink(n) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goLink(n);
+                          }}
+                          className="text-coc-text-muted hover:text-coc-parchment p-1"
+                          title="前往"
+                        >
+                          <ExternalLink size={12} />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(n.id);
+                        }}
+                        className="text-coc-text-muted hover:text-red-400 p-1"
+                        title="删除"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailNotification && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setDetailNotification(null)}
+        >
+          <div
+            className="w-full max-w-xl max-h-[80vh] bg-coc-bg-tertiary border border-coc-border rounded-xl shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-coc-border shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded border border-coc-border text-xs text-coc-text-muted">
+                  {typeLabel(detailNotification.type)}
+                </span>
+                {hasLink(detailNotification) && (
+                  <button
+                    onClick={() => goLink(detailNotification)}
+                    className="text-xs text-coc-accent-red hover:underline flex items-center gap-1"
+                  >
+                    前往 <ExternalLink size={10} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setDetailNotification(null)}
+                className="text-coc-text-muted hover:text-coc-parchment"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 overflow-y-auto">
+              <h3 className="text-lg font-bold text-coc-parchment leading-relaxed">
+                {detailNotification.title}
+              </h3>
+              <div className="mt-1 text-xs text-coc-text-muted">
+                {formatTimeAgo(detailNotification.createdAt)}
+              </div>
+              {detailNotification.content ? (
+                <div className="mt-5 text-sm text-coc-text-secondary leading-7 whitespace-pre-wrap">
+                  {detailNotification.content}
+                </div>
+              ) : (
+                <div className="mt-5 text-sm text-coc-text-muted">无详细内容</div>
+              )}
+            </div>
+
+            <div className="px-5 py-4 border-t border-coc-border shrink-0 flex justify-end gap-3">
+              <button
+                onClick={() => handleDelete(detailNotification.id)}
+                className="px-4 py-2 rounded text-sm text-coc-text-muted hover:text-red-400 hover:bg-coc-bg-secondary transition-colors"
+              >
+                删除
+              </button>
+              <button
+                onClick={() => setDetailNotification(null)}
+                className="px-4 py-2 rounded text-sm bg-coc-accent-red text-white hover:bg-coc-blood.glow transition-colors"
+              >
+                关闭
+              </button>
+            </div>
           </div>
         </div>
       )}

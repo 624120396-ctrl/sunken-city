@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getForumBoards, createPost } from '../../services/forum.service';
 import { useAuthStore } from '../../stores/auth.store';
+import { RichTextEditor } from '../../components/RichTextEditor';
 
 export function ForumNewPostPage() {
   const navigate = useNavigate();
@@ -95,12 +96,11 @@ export function ForumNewPostPage() {
 
         <div>
           <label className="block text-sm text-coc-text-muted mb-1">内容</label>
-          <textarea
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={10}
+            onChange={setContent}
             placeholder="写下你想分享的内容..."
-            className="w-full bg-coc-bg-primary border border-coc-border rounded p-3 text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+            minHeight="240px"
           />
         </div>
 

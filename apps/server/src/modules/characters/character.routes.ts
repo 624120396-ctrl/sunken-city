@@ -66,7 +66,7 @@ const createCharacterSchema = z.object({
     type: z.enum(['形象描述', '思想信念', '重要之人', '意义非凡之地', '宝贵之物', '特质']),
     content: z.string().min(1),
   })).optional(),
-  keyConnection: z.enum(['形象描述', '思想信念', '重要之人', '意义非凡之地', '宝贵之物', '特质']).optional(),
+  keyConnection: z.enum(['形象描述', '思想信念', '重要之人', '意义非凡之地', '宝贵之物', '特质']),
   background: z.string().max(5000).optional(),
 
   weapons: z.array(z.any()).default([]),
@@ -359,7 +359,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     const finalSkills = { ...defaultSkills, ...dynamicBases, ...data.skills };
 
     // 自动设置快捷技能栏（如果未自定义）
-    let quickSkills = ["侦查", "聆听", "图书馆使用", "心理学", "话术"];
+    let quickSkills = ["spot_hidden", "listen", "library_use", "psychology", "fast_talk"];
 
     const character = await prisma.character.create({
       data: {
@@ -526,6 +526,118 @@ router.patch('/:id/avatar', authMiddleware, async (req: AuthRequest, res, next) 
     res.json({
       success: true,
       data: { avatarUrl: character.avatarUrl },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========== 更新角色卡基础信息 ==========
+const updateCharacterSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  occupation: z.string().min(1).max(50).optional(),
+  occupationKey: z.string().optional(),
+  age: z.number().int().min(15).max(89).optional(),
+  gender: z.string().optional(),
+  background: z.string().max(5000).optional(),
+  backgroundEntries: z.array(z.object({
+    type: z.string().min(1),
+    content: z.string().min(1),
+  })).optional(),
+  keyConnection: z.string().optional(),
+  str: z.number().int().min(15).max(99).optional(),
+  con: z.number().int().min(15).max(99).optional(),
+  siz: z.number().int().min(15).max(99).optional(),
+  dex: z.number().int().min(15).max(99).optional(),
+  app: z.number().int().min(15).max(99).optional(),
+  int: z.number().int().min(15).max(99).optional(),
+  pow: z.number().int().min(15).max(99).optional(),
+  edu: z.number().int().min(15).max(99).optional(),
+  luck: z.number().int().min(15).max(99).optional(),
+  skills: z.record(z.number()).optional(),
+  weapons: z.array(z.any()).optional(),
+  armor: z.any().optional(),
+});
+
+router.patch('/:id', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId!;
+    const data = updateCharacterSchema.parse(req.body);
+
+    const existing = await prisma.character.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) {
+      throw new AppError('CHARACTER_NOT_FOUND', '调查员不存在', 404);
+    }
+
+    const attrs = {
+      str: data.str ?? existing.str,
+      con: data.con ?? existing.con,
+      siz: data.siz ?? existing.siz,
+      dex: data.dex ?? existing.dex,
+      app: data.app ?? existing.app,
+      int: data.int ?? existing.int,
+      pow: data.pow ?? existing.pow,
+      edu: data.edu ?? existing.edu,
+    };
+    const age = data.age ?? existing.age;
+    const derived = calculateDerivedAttributes(attrs, age);
+
+    const updateData: any = {
+      name: data.name,
+      age: data.age,
+      gender: data.gender,
+      background: data.background,
+      backgroundEntries: data.backgroundEntries !== undefined ? JSON.stringify(data.backgroundEntries) : undefined,
+      keyConnection: data.keyConnection,
+      str: data.str,
+      con: data.con,
+      siz: data.siz,
+      dex: data.dex,
+      app: data.app,
+      int: data.int,
+      pow: data.pow,
+      edu: data.edu,
+      luck: data.luck,
+      skills: data.skills !== undefined ? JSON.stringify(data.skills) : undefined,
+      weapons: data.weapons !== undefined ? JSON.stringify(data.weapons) : undefined,
+      armor: data.armor !== undefined ? (data.armor ? JSON.stringify(data.armor) : null) : undefined,
+      hp: derived.hp,
+      mp: derived.mp,
+      san: derived.san,
+      maxHp: derived.maxHp,
+      maxMp: derived.maxMp,
+      maxSan: derived.maxSan,
+      mov: derived.mov,
+      build: derived.build,
+      db: derived.db,
+    };
+
+    const cleanUpdateData: any = {};
+    for (const [k, v] of Object.entries(updateData)) {
+      if (v !== undefined) cleanUpdateData[k] = v;
+    }
+
+    const character = await prisma.character.update({
+      where: { id },
+      data: cleanUpdateData,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        character: {
+          ...character,
+          skills: JSON.parse(character.skills || '{}'),
+          weapons: JSON.parse(character.weapons || '[]'),
+          armor: character.armor ? JSON.parse(character.armor) : null,
+          quickSkills: JSON.parse(character.quickSkills || '[]'),
+          backgroundEntries: JSON.parse(character.backgroundEntries || '[]'),
+          skillPointsJson: JSON.parse(character.skillPointsJson || '{}'),
+        },
+      },
     });
   } catch (error) {
     next(error);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Dice5, ChevronRight, ChevronLeft, User, Sparkles, RefreshCw } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS, getDefaultSkills, resolveDynamicBases, getOccupationInfo, COC7E_OCCUPATIONS } from '@lib/coc7-data';
+import { calculateDerivedAttributes } from '@lib/coc-data';
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   str: '力量 STR', con: '体质 CON', siz: '体型 SIZ', dex: '敏捷 DEX',
@@ -35,6 +36,8 @@ export function CharacterCreateV2Page() {
   const [age, setAge] = useState(25);
   const [luck, setLuck] = useState(50);
   const [eduEnhancements, setEduEnhancements] = useState<any[]>([]);
+  const [ageApplied, setAgeApplied] = useState(false);
+  const [hasRolled, setHasRolled] = useState(false);
   const [occupationKey, setOccupationKey] = useState('');
   const [skillPointsAvailable, setSkillPointsAvailable] = useState({ occupation: 0, interest: 0 });
   const [creditRating, setCreditRating] = useState(0);
@@ -105,6 +108,8 @@ export function CharacterCreateV2Page() {
       setFinalAttrs(adj.finalAttrs);
       setLuck(adj.luck);
       setEduEnhancements(adj.eduEnhancements);
+      setHasRolled(true);
+      setAgeApplied(true);
     } catch (e: any) {
       setError(e.message || '生成属性失败');
     } finally {
@@ -120,6 +125,7 @@ export function CharacterCreateV2Page() {
       setFinalAttrs(adj.finalAttrs);
       setLuck(adj.luck);
       setEduEnhancements(adj.eduEnhancements);
+      setAgeApplied(true);
     } catch (e: any) {
       setError(e.message || '年龄调整失败');
     } finally {
@@ -135,9 +141,13 @@ export function CharacterCreateV2Page() {
       setSkillPointsAvailable({ occupation: data.occupationPoints, interest: data.interestPoints });
       const occ = getOccupationInfo(key);
       if (occ) {
-        setCreditRating(Math.max(occ.creditRatingMin, Math.min(occ.creditRatingMax, occ.creditRatingMin)));
+        const initCr = Math.max(occ.creditRatingMin, Math.min(occ.creditRatingMax, occ.creditRatingMin));
+        setCreditRating(initCr);
+        setSkillAdds({ 'credit_rating': { occ: initCr, int: 0 } });
+      } else {
+        setCreditRating(0);
+        setSkillAdds({});
       }
-      setSkillAdds({});
     } catch (e: any) {
       setError(e.message || '计算技能点失败');
     } finally {
@@ -149,6 +159,11 @@ export function CharacterCreateV2Page() {
     setLoading(true);
     setError('');
     try {
+      if (usedPoints.occ > skillPointsAvailable.occupation || usedPoints.interest > skillPointsAvailable.interest) {
+        setError('技能点分配超出限制，请重新调整');
+        setLoading(false);
+        return;
+      }
       const entries = Object.entries(backgroundEntries)
         .filter(([_, v]) => v.trim())
         .map(([type, content]) => ({ type, content }));
@@ -194,8 +209,7 @@ export function CharacterCreateV2Page() {
     // Prefix match with wildcard, e.g. "art_craft:任一"
     const [prefix] = skillKey.split(':');
     if (core.includes(`${prefix}:任一`)) return true;
-    if (core.includes(`${prefix}:任一`)) return true;
-    // 格斗:任一 射击:任一
+    // 格斗:任一 射击:任一 等前缀匹配
     for (const c of core) {
       if (c.startsWith(prefix + ':')) return true;
     }
@@ -232,6 +246,15 @@ export function CharacterCreateV2Page() {
       let nextInt = current.int + deltaInt;
       if (nextOcc < 0) nextOcc = 0;
       if (nextInt < 0) nextInt = 0;
+
+      // 硬上限：不能超过可用点数
+      const totalOcc = Object.values(prev).reduce((sum, s) => sum + (s?.occ || 0), 0);
+      const totalInt = Object.values(prev).reduce((sum, s) => sum + (s?.int || 0), 0);
+      const maxOcc = skillPointsAvailable.occupation - (totalOcc - current.occ);
+      const maxInt = skillPointsAvailable.interest - (totalInt - current.int);
+      if (nextOcc > maxOcc) nextOcc = maxOcc;
+      if (nextInt > maxInt) nextInt = maxInt;
+
       const newState = { ...prev, [skillKey]: { occ: nextOcc, int: nextInt } };
       if (newState[skillKey].occ === 0 && newState[skillKey].int === 0) {
         delete (newState as any)[skillKey];
@@ -246,13 +269,21 @@ export function CharacterCreateV2Page() {
   const nextStep = () => {
     setError('');
     if (step === 1 && !method) { setError('请选择创建方式'); return; }
-    if (step === 2 && method === 'roll' && !rawAttrs.str) { setError('请先生成属性'); return; }
+    if (step === 2 && method === 'roll' && !hasRolled) { setError('请先生成属性'); return; }
+    if (step === 2 && method === 'pointbuy') {
+      const used = Object.values(rawAttrs).reduce((a, b) => a + b, 0);
+      if (used > 460) { setError('购点超出限制，请重新分配'); return; }
+    }
+    if (step === 3 && !ageApplied) { setError('请先应用年龄调整'); return; }
     if (step === 4 && !occupationKey) { setError('请选择职业'); return; }
     if (step === 5) {
       if (usedPoints.occ > skillPointsAvailable.occupation) { setError('本职技能点超出限制'); return; }
       if (usedPoints.interest > skillPointsAvailable.interest) { setError('兴趣技能点超出限制'); return; }
     }
-    if (step === 6 && !name.trim()) { setError('请输入调查员姓名'); return; }
+    if (step === 6) {
+      if (!name.trim()) { setError('请输入调查员姓名'); return; }
+      if (!keyConnection) { setError('请选择关键背景连接'); return; }
+    }
     if (step < totalSteps) setStep(step + 1);
   };
 
@@ -287,7 +318,14 @@ export function CharacterCreateV2Page() {
             <h2 className="font-ritual text-xl mb-6 text-center">选择创建方式</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <button
-                onClick={() => setMethod('roll')}
+                onClick={() => {
+                  setMethod('roll');
+                  setRawAttrs({ str: 50, con: 50, siz: 50, dex: 50, app: 50, int: 50, pow: 50, edu: 50 });
+                  setFinalAttrs({ str: 50, con: 50, siz: 50, dex: 50, app: 50, int: 50, pow: 50, edu: 50 });
+                  setHasRolled(false);
+                  setAgeApplied(false);
+                  setEduEnhancements([]);
+                }}
                 className={`p-6 rounded-xl border text-left transition-all ${method === 'roll' ? 'border-coc-accent-red bg-coc-accent-red/10' : 'border-coc-border hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
@@ -298,7 +336,14 @@ export function CharacterCreateV2Page() {
               </button>
 
               <button
-                onClick={() => setMethod('pointbuy')}
+                onClick={() => {
+                  setMethod('pointbuy');
+                  setRawAttrs({ str: 50, con: 50, siz: 50, dex: 50, app: 50, int: 50, pow: 50, edu: 50 });
+                  setFinalAttrs({ str: 50, con: 50, siz: 50, dex: 50, app: 50, int: 50, pow: 50, edu: 50 });
+                  setHasRolled(false);
+                  setAgeApplied(false);
+                  setEduEnhancements([]);
+                }}
                 className={`p-6 rounded-xl border text-left transition-all ${method === 'pointbuy' ? 'border-coc-accent-red bg-coc-accent-red/10' : 'border-coc-border hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
@@ -463,9 +508,13 @@ export function CharacterCreateV2Page() {
                   value={creditRating}
                   onChange={(e) => {
                     const val = parseInt(e.target.value);
-                    setCreditRating(val);
-                    const diff = val - (skillAdds['credit_rating']?.occ || 0);
-                    adjustSkill('credit_rating', diff, 0);
+                    const otherOcc = usedPoints.occ - (skillAdds['credit_rating']?.occ || 0);
+                    const remainingOcc = skillPointsAvailable.occupation - otherOcc;
+                    const maxCr = Math.min(selectedOccupation.creditRatingMax, remainingOcc);
+                    const clamped = Math.max(selectedOccupation.creditRatingMin, Math.min(maxCr, val));
+                    setCreditRating(clamped);
+                    const diff = clamped - (skillAdds['credit_rating']?.occ || 0);
+                    if (diff !== 0) adjustSkill('credit_rating', diff, 0);
                   }}
                   className="flex-1 accent-coc-accent-red"
                 />
@@ -482,8 +531,8 @@ export function CharacterCreateV2Page() {
                 const isElective = isElectiveSkill(key);
                 const canOcc = canAddOccupationPoint(key);
                 const canInt = canAddInterestPoint(key);
-                const occDisabled = !canOcc || (usedPoints.occ >= skillPointsAvailable.occupation && add.occ === 0);
-                const intDisabled = !canInt || (usedPoints.interest >= skillPointsAvailable.interest && add.int === 0);
+                const occDisabled = !canOcc || usedPoints.occ >= skillPointsAvailable.occupation;
+                const intDisabled = !canInt || usedPoints.interest >= skillPointsAvailable.interest;
                 return (
                   <div key={key} className={`flex items-center justify-between p-2 rounded ${isCore ? 'bg-coc-accent-red/10 border border-coc-accent-red/30' : 'bg-coc-bg-tertiary/50'}`}>
                     <div className="flex items-center gap-2">
@@ -601,19 +650,26 @@ export function CharacterCreateV2Page() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 rounded bg-coc-bg-tertiary">
-                  <div className="text-sm text-coc-text-secondary mb-2">战斗数值</div>
-                  <div className="text-sm">HP {(finalAttrs.con + finalAttrs.siz) / 10 | 0} · MP {Math.floor(finalAttrs.pow / 5)} · SAN {finalAttrs.pow} · MOV 计算中 · DB 计算中</div>
-                </div>
-                <div className="p-4 rounded bg-coc-bg-tertiary">
-                  <div className="text-sm text-coc-text-secondary mb-2">资产</div>
-                  <div className="text-sm">信用评级 {creditRating} · 现金/资产由后端计算</div>
-                </div>
-              </div>
+              {(() => {
+                const previewDerived = calculateDerivedAttributes(finalAttrs);
+                return (
+                  <>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="p-4 rounded bg-coc-bg-tertiary">
+                        <div className="text-sm text-coc-text-secondary mb-2">战斗数值</div>
+                        <div className="text-sm">HP {previewDerived.hp} · MP {previewDerived.mp} · SAN {previewDerived.san} · MOV {previewDerived.mov} · DB {previewDerived.db}</div>
+                      </div>
+                      <div className="p-4 rounded bg-coc-bg-tertiary">
+                        <div className="text-sm text-coc-text-secondary mb-2">资产</div>
+                        <div className="text-sm">信用评级 {creditRating} · 现金/资产由后端计算</div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="p-4 rounded bg-coc-bg-tertiary max-h-40 overflow-y-auto">
-                <div className="text-sm text-coc-text-secondary mb-2">已分配技能 (显示值 {'>'} 50)</div>
+                <div className="text-sm text-coc-text-secondary mb-2">已分配技能 (显示值 {'>'} 0)</div>
                 <div className="flex flex-wrap gap-2 text-sm">
                   {Object.entries(currentSkills)
                     .filter(([_, v]) => v > 0)

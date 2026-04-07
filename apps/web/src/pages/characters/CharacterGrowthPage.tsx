@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Check, X } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { COC7_SKILLS } from '@lib/coc-data';
+import { COC7E_SKILLS } from '@lib/coc7-data';
 import { rollSkillGrowth } from '@lib/combat-data';
 
 interface SkillGrowth {
+  skillKey: string;
   skillName: string;
   oldValue: number;
   rollResult: number;
@@ -33,35 +34,34 @@ export function CharacterGrowthPage() {
     }
   };
 
-  const toggleSkill = (skillName: string) => {
+  const toggleSkill = (skillKey: string) => {
     const newSet = new Set(selectedSkills);
-    if (newSet.has(skillName)) {
-      newSet.delete(skillName);
+    if (newSet.has(skillKey)) {
+      newSet.delete(skillKey);
     } else {
-      newSet.add(skillName);
+      newSet.add(skillKey);
     }
     setSelectedSkills(newSet);
   };
 
   const rollAllGrowth = () => {
     const results: SkillGrowth[] = [];
-    
-  selectedSkills.forEach((skillName: string) => {
-      const currentValue = character?.skills?.[skillName] || 
-        Object.values(COC7_SKILLS)
-          .flat()
-          .find(s => s.name === skillName)?.base || 0;
-      
+
+    selectedSkills.forEach((skillKey: string) => {
+      const def = COC7E_SKILLS.find(s => s.key === skillKey);
+      const currentValue = character?.skills?.[skillKey] ?? def?.baseValue ?? 0;
+
       const { roll, success, newValue } = rollSkillGrowth(currentValue);
       results.push({
-        skillName,
+        skillKey,
+        skillName: def?.name || skillKey,
         oldValue: currentValue,
         rollResult: roll,
         success,
         newValue,
       });
     });
-    
+
     setGrowthResults(results);
     setSaved(false);
   };
@@ -71,7 +71,9 @@ export function CharacterGrowthPage() {
     try {
       const response = await apiFetch(`/characters/${id}/growth`, {
         method: 'POST',
-        body: JSON.stringify({ growths: growthResults }),
+        body: JSON.stringify({
+          growths: growthResults.map(r => ({ skillName: r.skillKey, newValue: r.newValue })),
+        }),
       });
       await handleApiResponse(response);
       setSaved(true);
@@ -118,51 +120,58 @@ export function CharacterGrowthPage() {
         <div className="coc-card">
           <h3 className="font-bold mb-4">选择成长技能 ({selectedSkills.size})</h3>
           <div className="space-y-4 max-h-[500px] overflow-y-auto">
-            {Object.entries(COC7_SKILLS).map(([category, skills]) => (
-              <div key={category}>
-                <h4 className="text-sm font-bold text-coc-accent-gold mb-2 capitalize">{category}</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {skills.map(skill => {
-                    const currentValue = character.skills?.[skill.name] || skill.base;
-                    const isSelected = selectedSkills.has(skill.name);
-                    const hasResult = growthResults.find(r => r.skillName === skill.name);
-                    
-                    return (
-                      <button
-                        key={skill.name}
-                        onClick={() => !hasResult && toggleSkill(skill.name)}
-                        disabled={!!hasResult}
-                        className={`p-2 rounded text-left text-sm transition-colors ${
-                          hasResult
-                            ? hasResult.success
-                              ? 'bg-green-900/30 border border-green-500/50'
-                              : 'bg-red-900/30 border border-red-500/50'
-                            : isSelected
-                            ? 'bg-coc-accent-red/30 border border-coc-accent-red'
-                            : 'bg-coc-bg-tertiary hover:bg-coc-bg-tertiary/80'
-                        }`}
-                      >
-                        <div className="flex justify-between">
-                          <span>{skill.name}</span>
-                          <span className="text-coc-text-muted">{currentValue}%</span>
-                        </div>
-                        {hasResult && (
-                          <div className="text-xs mt-1">
-                            {hasResult.success ? (
-                              <span className="text-green-400">
-                                ↑ {hasResult.newValue}% (+{hasResult.newValue - hasResult.oldValue})
-                              </span>
-                            ) : (
-                              <span className="text-red-400">未成长 ({hasResult.rollResult})</span>
-                            )}
+            {(() => {
+              const groups = COC7E_SKILLS.reduce((acc, skill) => {
+                acc[skill.category] = acc[skill.category] || [];
+                acc[skill.category].push(skill);
+                return acc;
+              }, {} as Record<string, typeof COC7E_SKILLS>);
+              return Object.entries(groups).map(([category, skills]) => (
+                <div key={category}>
+                  <h4 className="text-sm font-bold text-coc-accent-gold mb-2 capitalize">{category}</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {skills.map(skill => {
+                      const currentValue = character.skills?.[skill.key] ?? skill.baseValue;
+                      const isSelected = selectedSkills.has(skill.key);
+                      const hasResult = growthResults.find(r => r.skillKey === skill.key);
+
+                      return (
+                        <button
+                          key={skill.key}
+                          onClick={() => !hasResult && toggleSkill(skill.key)}
+                          disabled={!!hasResult}
+                          className={`p-2 rounded text-left text-sm transition-colors ${
+                            hasResult
+                              ? hasResult.success
+                                ? 'bg-green-900/30 border border-green-500/50'
+                                : 'bg-red-900/30 border border-red-500/50'
+                              : isSelected
+                              ? 'bg-coc-accent-red/30 border border-coc-accent-red'
+                              : 'bg-coc-bg-tertiary hover:bg-coc-bg-tertiary/80'
+                          }`}
+                        >
+                          <div className="flex justify-between">
+                            <span>{skill.name}</span>
+                            <span className="text-coc-text-muted">{currentValue}%</span>
                           </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                          {hasResult && (
+                            <div className="text-xs mt-1">
+                              {hasResult.success ? (
+                                <span className="text-green-400">
+                                  ↑ {hasResult.newValue}% (+{hasResult.newValue - hasResult.oldValue})
+                                </span>
+                              ) : (
+                                <span className="text-red-400">未成长 ({hasResult.rollResult})</span>
+                              )}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 

@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { User, Scroll, Crown, Sword, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Scroll, Crown, Sword, Eye, UserPlus, UserCheck, UserMinus, Clock, Mail } from 'lucide-react';
 import { ExpBar } from './ui/ExpBar';
+import { apiFetch, handleApiResponse } from '@lib/api';
+import { useAuthStore } from '@stores/auth.store';
 
 export interface DisplayedCharacter {
   id: string;
@@ -120,6 +122,12 @@ function AvatarPlaceholder({ name, color }: { name: string; color?: string }) {
 export function UserProfileCard({ user }: { user: UserProfile }) {
   const [tab, setTab] = useState<'character' | 'user'>('character');
   const [charImgError, setCharImgError] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<
+    'loading' | 'none' | 'friend' | 'pending_sent' | 'pending_received' | 'self' | 'error'
+  >('loading');
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const currentUser = useAuthStore((s) => s.user);
   const dc = user.displayedCharacter;
 
   const parsedSkills: Array<{ name: string; value: number }> = (() => {
@@ -133,6 +141,151 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
       return [];
     }
   })();
+
+  useEffect(() => {
+    if (!user.id || !currentUser) {
+      setFriendStatus('error');
+      return;
+    }
+    if (user.id === currentUser.id) {
+      setFriendStatus('self');
+      return;
+    }
+    let cancelled = false;
+    setFriendStatus('loading');
+    apiFetch(`/friends/check/${user.id}`)
+      .then(async (res) => {
+        const json = await handleApiResponse<{ status: string; requestId?: string }>(res);
+        if (cancelled) return;
+        if (json.status === 'friend') setFriendStatus('friend');
+        else if (json.status === 'pending_sent') {
+          setFriendStatus('pending_sent');
+          if (json.requestId) setRequestId(json.requestId);
+        }
+        else if (json.status === 'pending_received') {
+          setFriendStatus('pending_received');
+          if (json.requestId) setRequestId(json.requestId);
+        }
+        else setFriendStatus('none');
+      })
+      .catch(() => {
+        if (!cancelled) setFriendStatus('error');
+      });
+    return () => { cancelled = true; };
+  }, [user.id, currentUser?.id]);
+
+  const handleAddFriend = async () => {
+    if (!user.id) return;
+    setActionLoading(true);
+    try {
+      const res = await apiFetch('/friends/requests', {
+        method: 'POST',
+        body: JSON.stringify({ targetUserId: user.id }),
+      });
+      const json = await handleApiResponse<{ autoAccepted?: boolean; request?: { id: string } }>(res);
+      if (json.autoAccepted) {
+        setFriendStatus('friend');
+      } else if (json.request) {
+        setFriendStatus('pending_sent');
+        setRequestId(json.request.id);
+      }
+    } catch (e: any) {
+      alert(e?.message || '发送失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!requestId) return;
+    setActionLoading(true);
+    try {
+      await apiFetch(`/friends/requests/${requestId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'accepted' }),
+      });
+      setFriendStatus('friend');
+    } catch (e: any) {
+      alert(e?.message || '操作失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteFriend = async () => {
+    if (!user.id) return;
+    if (!confirm('确定要删除这位好友吗？')) return;
+    setActionLoading(true);
+    try {
+      await apiFetch(`/friends/${user.id}`, { method: 'DELETE' });
+      setFriendStatus('none');
+    } catch (e: any) {
+      alert(e?.message || '删除失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const renderFriendButton = () => {
+    if (friendStatus === 'loading') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-50">
+          加载中...
+        </button>
+      );
+    }
+    if (friendStatus === 'self') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-50">
+          这是你本人
+        </button>
+      );
+    }
+    if (friendStatus === 'friend') {
+      return (
+        <div className="flex gap-2">
+          <button disabled className="flex-1 coc-btn-primary opacity-80 flex items-center justify-center gap-2">
+            <UserCheck size={16} /> 已是好友
+          </button>
+          <button
+            onClick={handleDeleteFriend}
+            disabled={actionLoading}
+            className="px-3 py-2 text-red-400 hover:bg-red-400/10 rounded border border-coc-border text-sm"
+            title="删除好友"
+          >
+            <UserMinus size={16} />
+          </button>
+        </div>
+      );
+    }
+    if (friendStatus === 'pending_sent') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-70 flex items-center justify-center gap-2">
+          <Clock size={16} /> 已发送请求
+        </button>
+      );
+    }
+    if (friendStatus === 'pending_received') {
+      return (
+        <button
+          onClick={handleAccept}
+          disabled={actionLoading}
+          className="w-full coc-btn-primary flex items-center justify-center gap-2"
+        >
+          <Mail size={16} /> 接受好友请求
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={handleAddFriend}
+        disabled={actionLoading}
+        className="w-full coc-btn-primary flex items-center justify-center gap-2"
+      >
+        <UserPlus size={16} /> 加为好友
+      </button>
+    );
+  };
 
   return (
     <div className="bg-coc-bg-tertiary rounded-xl border border-coc-border overflow-hidden max-w-md w-full">
@@ -346,6 +499,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               <div className="text-lg font-bold text-coc-parchment">{user.stardust ?? 0}</div>
             </div>
           </div>
+
+          {/* 好友操作 */}
+          {renderFriendButton()}
         </div>
       )}
     </div>

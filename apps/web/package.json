@@ -1,6 +1,6 @@
 {
   "name": "@sunken-city/web",
-  "version": "1.4.0",
+  "version": "1.4.5",
   "displayName": "沉没之城 - 前端应用",
   "type": "module",
   "scripts": {
@@ -12,8 +12,14 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.17.0",
+    "@tiptap/extension-link": "^3.22.2",
+    "@tiptap/extension-placeholder": "^3.22.2",
+    "@tiptap/extension-underline": "^3.22.2",
+    "@tiptap/react": "^3.22.2",
+    "@tiptap/starter-kit": "^3.22.2",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
+    "dompurify": "^3.3.3",
     "lucide-react": "^0.298.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -21,10 +27,12 @@
     "react-router-dom": "^6.21.0",
     "socket.io-client": "^4.7.4",
     "tailwind-merge": "^2.2.0",
-    "zustand": "^4.4.7",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/dompurify": "^3.0.5",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.14.0",

@@ -48,8 +48,14 @@ model User {
   forumReplies    ForumReply[]
   forumLikes      ForumPostLike[]
   lastReplyPosts  ForumPost[] @relation("LastReplyAuthor")
-  notifications   Notification[]
-  boardModerators ForumBoardModerator[]
+  notifications        Notification[]
+  boardModerators      ForumBoardModerator[]
+  sentFriendRequests   FriendRequest[]    @relation("SentRequests")
+  receivedFriendRequests FriendRequest[]  @relation("ReceivedRequests")
+  friendshipsA         Friendship[]       @relation("FriendshipsA")
+  friendshipsB         Friendship[]       @relation("FriendshipsB")
+  directMessagesSent   DirectMessage[]    @relation("SentDirectMessages")
+  directMessagesReceived DirectMessage[]  @relation("ReceivedDirectMessages")
 
   @@index([exp])
 }
@@ -630,7 +636,7 @@ model ForumRewardLog {
 model Notification {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // mention | reply | like | best_reply | system
+  type      String   // mention | reply | like | best_reply | system | friend_request | friend_accept | room_invite
   title     String
   content   String?
   postId    String?
@@ -641,5 +647,53 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
+}
+
+// ========== 好友系统 ==========
+
+model FriendRequest {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     String   @default("pending") // pending | accepted | rejected
+  message    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender     User     @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+  @@index([senderId, status])
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  userA     User     @relation("FriendshipsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User     @relation("FriendshipsB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+}
+
+model DirectMessage {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender     User     @relation("SentDirectMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedDirectMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, createdAt])
+  @@index([receiverId, isRead, createdAt])
 }
 

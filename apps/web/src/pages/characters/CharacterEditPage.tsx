@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Dice5, Sword, Shield, Save } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { OCCUPATIONS, calculateDerivedAttributes } from '@lib/coc-data';
+import { calculateDerivedAttributes } from '@lib/coc-data';
+import { COC7E_OCCUPATIONS } from '@lib/coc7-data';
 import { COC7_WEAPONS, COC7_ARMOR } from '@lib/combat-data';
 import { Modal } from '@components/ui/Modal';
 
@@ -23,6 +24,7 @@ interface CharacterData {
   id: string;
   name: string;
   occupation: string;
+  occupationKey?: string;
   age: number;
   gender: string;
   str: number;
@@ -43,7 +45,18 @@ interface CharacterData {
   mov: number;
   build: number;
   background?: string;
+  backgroundEntries?: { type: string; content: string }[];
+  keyConnection?: string;
 }
+
+const BACKGROUND_TYPES = [
+  '形象描述',
+  '思想与信念',
+  '重要之人',
+  '意义非凡之地',
+  '宝贵之物',
+  '特质',
+];
 
 export function CharacterEditPage() {
   const { id } = useParams();
@@ -52,7 +65,7 @@ export function CharacterEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [originalData, setOriginalData] = useState<CharacterData | null>(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     occupation: '',
@@ -63,7 +76,7 @@ export function CharacterEditPage() {
 
   const [occupationMode, setOccupationMode] = useState<'preset' | 'custom'>('preset');
   const [customOccupation, setCustomOccupation] = useState('');
-  
+
   const [attributes, setAttributes] = useState<AttributeState>({
     str: 50,
     dex: 50,
@@ -75,6 +88,10 @@ export function CharacterEditPage() {
     edu: 50,
     luck: 50,
   });
+
+  const [skills, setSkills] = useState<Record<string, number>>({});
+  const [backgroundEntries, setBackgroundEntries] = useState<{ type: string; content: string }[]>([]);
+  const [keyConnection, setKeyConnection] = useState('');
 
   const [selectedWeapons, setSelectedWeapons] = useState<any[]>([]);
   const [selectedArmor, setSelectedArmor] = useState<any | null>(null);
@@ -91,14 +108,29 @@ export function CharacterEditPage() {
       const response = await apiFetch(`/characters/${id}`);
       const data = await handleApiResponse<{ character: CharacterData }>(response);
       const char = data.character;
-      
-      setOriginalData(char);
-      const isPreset = OCCUPATIONS.some(o => o.name === char.occupation);
-      setOccupationMode(isPreset ? 'preset' : 'custom');
-      setCustomOccupation(isPreset ? '' : char.occupation);
+
+      const parsedSkills = typeof char.skills === 'string' ? JSON.parse(char.skills || '{}') : (char.skills || {});
+      const parsedWeapons = typeof char.weapons === 'string' ? JSON.parse(char.weapons || '[]') : (char.weapons || []);
+      const parsedArmor = typeof char.armor === 'string' ? (char.armor ? JSON.parse(char.armor) : null) : char.armor;
+      const parsedEntries = Array.isArray(char.backgroundEntries)
+        ? char.backgroundEntries
+        : (typeof char.backgroundEntries === 'string' ? JSON.parse(char.backgroundEntries || '[]') : []);
+
+      // 补齐默认的 6 项背景条目
+      const filledEntries = BACKGROUND_TYPES.map(type => {
+        const found = parsedEntries.find((e: any) => e.type === type);
+        return found || { type, content: '' };
+      });
+
+      setOriginalData({ ...char, skills: parsedSkills, weapons: parsedWeapons, armor: parsedArmor, backgroundEntries: filledEntries });
+
+      const isPreset = COC7E_OCCUPATIONS.some(o => o.key === char.occupationKey);
+      const isPresetByName = !isPreset && COC7E_OCCUPATIONS.some(o => o.name === char.occupation);
+      setOccupationMode(isPreset || isPresetByName ? 'preset' : 'custom');
+      setCustomOccupation(isPreset || isPresetByName ? '' : char.occupation);
       setFormData({
         name: char.name,
-        occupation: isPreset ? char.occupation : '',
+        occupation: isPreset ? (char.occupationKey || '') : (isPresetByName ? char.occupation : ''),
         age: char.age,
         gender: char.gender || '',
         background: char.background || '',
@@ -114,8 +146,11 @@ export function CharacterEditPage() {
         edu: char.edu,
         luck: char.luck,
       });
-      setSelectedWeapons(char.weapons || []);
-      setSelectedArmor(char.armor || null);
+      setSkills(parsedSkills);
+      setBackgroundEntries(filledEntries);
+      setKeyConnection(char.keyConnection || '');
+      setSelectedWeapons(parsedWeapons);
+      setSelectedArmor(parsedArmor);
     } catch (err: any) {
       setError(err.message || '获取角色数据失败');
     } finally {
@@ -139,31 +174,51 @@ export function CharacterEditPage() {
     handleAttributeChange(key, roll);
   };
 
+  const handleBackgroundEntryChange = (type: string, content: string) => {
+    setBackgroundEntries(prev => prev.map(e => e.type === type ? { ...e, content } : e));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
 
     try {
+      const payload: any = {
+        name: formData.name,
+        age: formData.age,
+        gender: formData.gender,
+        background: formData.background,
+        backgroundEntries: backgroundEntries.filter(e => e.content.trim()),
+        keyConnection: keyConnection || undefined,
+        ...attributes,
+        skills,
+        weapons: selectedWeapons.map(w => ({
+          id: w.id,
+          name: w.name,
+          damage: w.damage,
+          range: w.range,
+          skill: w.skill,
+        })),
+        armor: selectedArmor ? {
+          id: selectedArmor.id,
+          name: selectedArmor.name,
+          rating: selectedArmor.rating,
+        } : null,
+      };
+
+      if (occupationMode === 'custom') {
+        payload.occupation = customOccupation;
+        payload.occupationKey = undefined;
+      } else {
+        const occ = COC7E_OCCUPATIONS.find(o => o.key === formData.occupation);
+        payload.occupation = occ?.name || formData.occupation;
+        payload.occupationKey = formData.occupation || undefined;
+      }
+
       await apiFetch(`/characters/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          ...formData,
-          occupation: occupationMode === 'custom' ? customOccupation : formData.occupation,
-          ...attributes,
-          weapons: selectedWeapons.map(w => ({ 
-            id: w.id, 
-            name: w.name, 
-            damage: w.damage, 
-            range: w.range, 
-            skill: w.skill 
-          })),
-          armor: selectedArmor ? { 
-            id: selectedArmor.id, 
-            name: selectedArmor.name, 
-            rating: selectedArmor.rating 
-          } : null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       navigate(`/characters/${id}`);
@@ -199,8 +254,8 @@ export function CharacterEditPage() {
   };
 
   const weaponTypes = ['all', ...Array.from(new Set(COC7_WEAPONS.map(w => w.type)))];
-  const filteredWeapons = weaponTypeFilter === 'all' 
-    ? COC7_WEAPONS 
+  const filteredWeapons = weaponTypeFilter === 'all'
+    ? COC7_WEAPONS
     : COC7_WEAPONS.filter(w => w.type === weaponTypeFilter);
 
   if (loading) {
@@ -216,7 +271,7 @@ export function CharacterEditPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => navigate(`/characters/${id}`)}
             className="coc-btn-secondary p-2"
           >
@@ -285,8 +340,8 @@ export function CharacterEditPage() {
                     required
                   >
                     <option value="">选择职业</option>
-                    {OCCUPATIONS.map(occ => (
-                      <option key={occ.name} value={occ.name}>{occ.name}</option>
+                    {COC7E_OCCUPATIONS.map(occ => (
+                      <option key={occ.key} value={occ.key}>{occ.name}</option>
                     ))}
                   </select>
                 ) : (
@@ -335,6 +390,38 @@ export function CharacterEditPage() {
                 placeholder="描述这位调查员的出身、经历、以及为何踏入神秘世界..."
                 rows={4}
               />
+            </div>
+          </div>
+        </div>
+
+        {/* 背景条目 */}
+        <div className="coc-card">
+          <h2 className="text-lg font-bold mb-4">背景条目</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {backgroundEntries.map((entry) => (
+              <div key={entry.type}>
+                <label className="block text-sm text-coc-text-secondary mb-1">{entry.type}</label>
+                <input
+                  type="text"
+                  value={entry.content}
+                  onChange={(e) => handleBackgroundEntryChange(entry.type, e.target.value)}
+                  className="w-full coc-input"
+                  placeholder={`输入${entry.type}`}
+                />
+              </div>
+            ))}
+            <div className="md:col-span-2">
+              <label className="block text-sm text-coc-text-secondary mb-1">关键背景连接</label>
+              <select
+                value={keyConnection}
+                onChange={(e) => setKeyConnection(e.target.value)}
+                className="w-full coc-input"
+              >
+                <option value="">未选择</option>
+                {BACKGROUND_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

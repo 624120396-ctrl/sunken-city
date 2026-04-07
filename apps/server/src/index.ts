@@ -34,6 +34,7 @@ import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import relicsRoutes from './modules/relics/relics.routes';
 import adminRelicRoutes from './modules/relics/admin-relics.routes';
+import friendRoutes from './modules/friends/friend.routes';
 
 // 加载环境变量
 dotenv.config();
@@ -94,6 +95,7 @@ app.use('/api/admin', adminRelicRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);
+app.use('/api', friendRoutes);
 app.use('/api', relicsRoutes);
 
 // 404处理

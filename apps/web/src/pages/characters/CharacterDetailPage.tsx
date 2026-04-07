@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit2, Trash2, Heart, Brain, Sparkles, Zap, Shield, Save, X, Plus, Download, Upload } from 'lucide-react';
-import { COC7_SKILLS } from '@lib/coc-data';
+import { COC7E_SKILLS, SKILL_CATEGORIES } from '@lib/coc7-data';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
 import { cn } from '@lib/utils';
@@ -38,6 +38,8 @@ interface Character {
   woundsAndScars?: string;
   phobiasAndMania?: string;
   background?: string;
+  backgroundEntries?: { type: string; content: string }[];
+  keyConnection?: string;
 }
 
 export function CharacterDetailPage() {
@@ -65,6 +67,11 @@ export function CharacterDetailPage() {
           weapons: typeof char.weapons === 'string' ? JSON.parse(char.weapons || '[]') : (char.weapons || []),
           // 处理 armor
           armor: typeof char.armor === 'string' ? (char.armor ? JSON.parse(char.armor) : null) : char.armor,
+          // 处理背景条目
+          backgroundEntries: Array.isArray(char.backgroundEntries)
+            ? char.backgroundEntries
+            : (typeof char.backgroundEntries === 'string' ? JSON.parse(char.backgroundEntries || '[]') : []),
+          keyConnection: char.keyConnection,
         });
       }
     } catch (error) {
@@ -385,61 +392,68 @@ export function CharacterDetailPage() {
                 添加技能
               </button>
             </div>
-            {Object.entries(COC7_SKILLS).map(([category, skills]) => (
-              <div key={category}>
-                <h3 className="font-bold mb-3 text-coc-accent-gold capitalize">{category}</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {skills.map((skill) => {
-                    const value = character.skills[skill.name] || skill.base;
-                    const isEditing = editingSkill === skill.name;
-                    return (
-                      <div key={skill.name} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
-                        <span className="text-sm">{skill.name}</span>
-                        {isEditing ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              value={editSkillValue}
-                              onChange={(e) => setEditSkillValue(parseInt(e.target.value) || 0)}
-                              className="w-14 coc-input text-center text-sm py-1"
-                              min={0}
-                              max={99}
-                            />
-                            <button onClick={handleSaveSkill} className="text-green-400">
-                              <Save size={14} />
-                            </button>
-                            <button onClick={() => setEditingSkill(null)} className="text-red-400">
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-coc-accent-cyan">{value}%</span>
-                            <span className="text-coc-text-muted">½{Math.floor(value/2)}</span>
-                            <span className="text-coc-text-muted">⅕{Math.floor(value/5)}</span>
-                            <button 
-                              onClick={() => handleEditSkill(skill.name, value)}
-                              className="text-coc-text-muted hover:text-coc-accent-red"
-                            >
-                              <Edit2 size={12} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+            {(() => {
+              const groups = COC7E_SKILLS.reduce((acc, skill) => {
+                acc[skill.category] = acc[skill.category] || [];
+                acc[skill.category].push(skill);
+                return acc;
+              }, {} as Record<string, typeof COC7E_SKILLS>);
+              return Object.entries(groups).map(([category, skills]) => (
+                <div key={category}>
+                  <h3 className="font-bold mb-3 text-coc-accent-gold capitalize">{SKILL_CATEGORIES[category] || category}</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {skills.map((skill) => {
+                      const value = character.skills[skill.key] ?? skill.baseValue;
+                      const isEditing = editingSkill === skill.key;
+                      return (
+                        <div key={skill.key} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
+                          <span className="text-sm">{skill.name}</span>
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                value={editSkillValue}
+                                onChange={(e) => setEditSkillValue(parseInt(e.target.value) || 0)}
+                                className="w-14 coc-input text-center text-sm py-1"
+                                min={0}
+                                max={99}
+                              />
+                              <button onClick={handleSaveSkill} className="text-green-400">
+                                <Save size={14} />
+                              </button>
+                              <button onClick={() => setEditingSkill(null)} className="text-red-400">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-coc-accent-cyan">{value}%</span>
+                              <span className="text-coc-text-muted">½{Math.floor(value/2)}</span>
+                              <span className="text-coc-text-muted">⅕{Math.floor(value/5)}</span>
+                              <button 
+                                onClick={() => handleEditSkill(skill.key, value)}
+                                className="text-coc-text-muted hover:text-coc-accent-red"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
             {/* 自定义技能 */}
             {Object.entries(character.skills || {}).filter(([name]) => 
-              !Object.values(COC7_SKILLS).flat().some(s => s.name === name)
+              !COC7E_SKILLS.some(s => s.key === name)
             ).length > 0 && (
               <div>
                 <h3 className="font-bold mb-3 text-coc-accent-gold">自定义技能</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {Object.entries(character.skills || {}).filter(([name]) => 
-                    !Object.values(COC7_SKILLS).flat().some(s => s.name === name)
+                    !COC7E_SKILLS.some(s => s.key === name)
                   ).map(([name, value]) => (
                     <div key={name} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
                       <span className="text-sm">{name}</span>
@@ -504,28 +518,33 @@ export function CharacterDetailPage() {
 
         {activeTab === 'background' && (
           <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-bold text-coc-text-secondary mb-2">背景故事</h4>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {character.background || '未填写背景故事'}
-              </p>
-            </div>
-            <hr className="border-coc-void" />
-            {[
-              { key: 'appearance', label: '形象描述' },
-              { key: 'beliefs', label: '思想与信念' },
-              { key: 'significantPeople', label: '重要之人' },
-              { key: 'meaningfulLocations', label: '意义非凡之地' },
-              { key: 'treasuredPossessions', label: '宝贵之物' },
-              { key: 'traits', label: '特质' },
-              { key: 'woundsAndScars', label: '伤口与疤痕' },
-              { key: 'phobiasAndMania', label: '恐惧症与躁狂症' },
-            ].map((item) => (
-              <div key={item.key}>
-                <h4 className="text-sm font-bold text-coc-text-secondary mb-1">{item.label}</h4>
-                <p className="text-sm">{(character as any)[item.key] || '未填写'}</p>
+            {character.background ? (
+              <div>
+                <h4 className="text-sm font-bold text-coc-text-secondary mb-2">背景故事</h4>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {character.background}
+                </p>
               </div>
-            ))}
+            ) : null}
+
+            {character.backgroundEntries && character.backgroundEntries.length > 0 ? (
+              <>
+                {character.backgroundEntries.map((entry) => (
+                  <div key={entry.type}>
+                    <h4 className="text-sm font-bold text-coc-text-secondary mb-1">{entry.type}</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{entry.content}</p>
+                  </div>
+                ))}
+                {character.keyConnection ? (
+                  <div className="pt-2 border-t border-coc-void">
+                    <h4 className="text-sm font-bold text-coc-accent-gold mb-1">关键背景连接</h4>
+                    <p className="text-sm">{character.keyConnection}</p>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              !character.background && <p className="text-coc-text-muted">未填写背景信息</p>
+            )}
           </div>
         )}
       </div>

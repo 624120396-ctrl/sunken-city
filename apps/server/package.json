@@ -1,6 +1,6 @@
 {
   "name": "@sunken-city/server",
-  "version": "1.4.0",
+  "version": "1.4.5",
   "displayName": "沉没之城 - 后端服务",
   "description": "沉没之城后端API服务 v1.2",
   "main": "dist/index.js",

@@ -370,4 +370,37 @@ router.post('/daily-checkin', authMiddleware, async (req, res, next) => {
   }
 });
 
+// 搜索用户（按昵称模糊匹配，仅返回基本公开信息）
+router.get('/users/search', authMiddleware, async (req, res, next) => {
+  try {
+    const keyword = String(req.query.nickname || '').trim();
+    if (!keyword || keyword.length < 1) {
+      throw new AppError('INVALID_INPUT', '请输入搜索关键词', 400);
+    }
+
+    // SQLite Prisma 不支持 mode: 'insensitive'，手动做大小写不敏感匹配
+    const users = await prisma.user.findMany({
+      take: 20,
+      select: {
+        id: true,
+        nickname: true,
+        avatarUrl: true,
+        displayedTitleKey: true,
+      },
+    });
+
+    const lowerKeyword = keyword.toLowerCase();
+    const filtered = users.filter((u) =>
+      u.nickname.toLowerCase().includes(lowerKeyword)
+    ).slice(0, 10);
+
+    res.json({
+      success: true,
+      data: { users: filtered },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -24,6 +24,43 @@ interface OnlineUser {
 // 全局在线用户列表（基础信息，完整数据走数据库查询）
 const onlineUsers = new Map<string, OnlineUser>();
 
+// 获取指定用户的好友ID列表
+async function getFriendIds(userId: string): Promise<string[]> {
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      OR: [{ userAId: userId }, { userBId: userId }],
+    },
+    select: { userAId: true, userBId: true },
+  });
+  return friendships.map((f) => (f.userAId === userId ? f.userBId : f.userAId));
+}
+
+// 向该用户所有在线好友广播状态变更
+async function broadcastFriendStatus(io: SocketIOServer, userId: string, isOnline: boolean, roomId?: string, roomName?: string) {
+  try {
+    const friendIds = await getFriendIds(userId);
+    if (friendIds.length === 0) return;
+
+    const payload: any = {
+      userId,
+      isOnline,
+      timestamp: new Date().toISOString(),
+    };
+    if (roomId) {
+      payload.roomId = roomId;
+      payload.roomName = roomName;
+    }
+
+    for (const [socketId, onlineUser] of onlineUsers.entries()) {
+      if (friendIds.includes(onlineUser.userId)) {
+        io.to(socketId).emit('friend:status_update', payload);
+      }
+    }
+  } catch (error) {
+    logger.error('广播好友状态失败:', error);
+  }
+}
+
 // 暴露给外部使用（实时查询数据库组装完整资料）
 export async function getOnlineUsers() {
   if (onlineUsers.size === 0) {
@@ -165,6 +202,9 @@ export function setupSocketHandlers(io: SocketIOServer) {
       // 广播在线人数更新
       const online = await getOnlineUsers();
       io.emit('online:update', online);
+
+      // 向好友广播上线状态
+      await broadcastFriendStatus(io, socket.user.userId, true);
     }
 
     // 客户端可以主动请求当前在线列表
@@ -370,6 +410,9 @@ export function setupSocketHandlers(io: SocketIOServer) {
           timestamp: new Date().toISOString(),
         });
 
+        // 向好友广播加入房间状态
+        await broadcastFriendStatus(io, userId, true, roomId, room.name);
+
         logger.info(`用户 ${socket.user?.nickname} 加入房间 ${roomId}`);
       } catch (error) {
         logger.error('加入房间失败:', error);
@@ -381,12 +424,15 @@ export function setupSocketHandlers(io: SocketIOServer) {
     socket.on('room:leave', async (data: { roomId: string }) => {
       const { roomId } = data;
       socket.leave(roomId);
-      
+
       socket.to(roomId).emit('room:member_left', {
         userId: socket.user!.userId,
         nickname: socket.user!.nickname,
         timestamp: new Date().toISOString(),
       });
+
+      // 向好友广播离开房间（恢复为仅在线）
+      await broadcastFriendStatus(io, socket.user!.userId, true);
 
       logger.info(`用户 ${socket.user?.nickname} 离开房间 ${roomId}`);
     });
@@ -1027,8 +1073,11 @@ export function setupSocketHandlers(io: SocketIOServer) {
       logger.info(`用户断开连接: ${socket.user?.nickname} (${socket.id})`);
 
       if (socket.user && onlineUsers.has(socket.id)) {
+        const userId = socket.user.userId;
         onlineUsers.delete(socket.id);
         io.emit('online:update', await getOnlineUsers());
+        // 向好友广播下线状态
+        await broadcastFriendStatus(io, userId, false);
       }
     });
   });

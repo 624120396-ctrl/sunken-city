@@ -1295,7 +1295,7 @@ export function RoomPage() {
                       ? typeof selectedCharacter.quickSkills === 'string'
                         ? JSON.parse(selectedCharacter.quickSkills)
                         : selectedCharacter.quickSkills
-                      : ['侦查', '聆听', '图书馆使用', '心理学', '话术'];
+                      : ['spot_hidden', 'listen', 'library_use', 'psychology', 'fast_talk'];
                     return qs;
                   })()}
                   characterSkills={(() => {
@@ -1574,6 +1574,7 @@ export function RoomPage() {
         {selectedMember && (
           <UserProfileCard
             user={{
+              id: selectedMember.userId,
               nickname: selectedMember.nickname,
               avatarUrl: selectedMember.avatarUrl,
               frameUrl: selectedMember.frameUrl,
