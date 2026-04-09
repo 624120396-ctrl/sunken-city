@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  UserCircle, 
-  BookOpen, 
-  Dice5, 
+import {
+  Users,
+  UserCircle,
+  BookOpen,
+  Dice5,
   TrendingUp,
   Clock,
   Activity
 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
+import { AdminCardGridSkeleton } from '@components/admin/AdminTableSkeleton';
+import { Skeleton } from '@components/ui/Skeleton';
 
 interface DashboardStats {
   users: {
@@ -81,8 +83,35 @@ export function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-40" />
+        <AdminCardGridSkeleton count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="coc-card space-y-4">
+            <Skeleton className="h-5 w-24" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton circle className="h-8 w-8" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-2 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="coc-card space-y-4">
+            <Skeleton className="h-5 w-24" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton circle className="h-8 w-8" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-2 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

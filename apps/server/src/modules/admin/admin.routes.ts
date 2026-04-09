@@ -2,9 +2,21 @@ import { Router } from 'express';
 import { authMiddleware } from '../../middleware/auth';
 import { adminMiddleware } from '../../middleware/admin';
 import { prisma } from '../../config/database';
+import { calculateDerivedAttributes } from '../../utils/character-calc';
 import { z } from 'zod';
 
 const router = Router();
+
+/**
+ * 判断搜索关键词是否是数字ID
+ */
+function isNumericSearch(str: string): number | null {
+  const trimmed = str.trim();
+  if (/^\d+$/.test(trimmed)) {
+    return parseInt(trimmed, 10);
+  }
+  return null;
+}
 
 /**
  * 获取仪表盘统计数据
@@ -68,6 +80,7 @@ router.get('/dashboard', authMiddleware, adminMiddleware, async (req, res, next)
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        displayId: true,
         nickname: true,
         email: true,
         exp: true,
@@ -85,6 +98,7 @@ router.get('/dashboard', authMiddleware, adminMiddleware, async (req, res, next)
       orderBy: { diceRolls: { _count: 'desc' } },
       select: {
         id: true,
+        displayId: true,
         nickname: true,
         _count: {
           select: { diceRolls: true },
@@ -135,12 +149,19 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res, next) => 
     const search = (req.query.search as string) || '';
     const skip = (page - 1) * limit;
 
+    const searchId = isNumericSearch(search);
     const where = search
       ? {
-          OR: [
-            { nickname: { contains: search } },
-            { email: { contains: search } },
-          ],
+          OR: searchId !== null
+            ? [
+                { displayId: { equals: searchId } },
+                { nickname: { contains: search } },
+                { email: { contains: search } },
+              ]
+            : [
+                { nickname: { contains: search } },
+                { email: { contains: search } },
+              ],
         }
       : {};
 
@@ -152,6 +173,7 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res, next) => 
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
+          displayId: true,
           nickname: true,
           email: true,
           exp: true,
@@ -217,6 +239,7 @@ router.patch('/users/:id/admin', authMiddleware, adminMiddleware, async (req, re
       data: { isAdmin },
       select: {
         id: true,
+        displayId: true,
         nickname: true,
         email: true,
         isAdmin: true,
@@ -252,6 +275,7 @@ router.patch('/users/:id/currency', authMiddleware, adminMiddleware, async (req,
       data: payload,
       select: {
         id: true,
+        displayId: true,
         nickname: true,
         email: true,
         coins: true,
@@ -310,12 +334,19 @@ router.get('/characters', authMiddleware, adminMiddleware, async (req, res, next
     const search = (req.query.search as string) || '';
     const skip = (page - 1) * limit;
 
+    const searchId = isNumericSearch(search);
     const where = search
       ? {
-          OR: [
-            { name: { contains: search } },
-            { occupation: { contains: search } },
-          ],
+          OR: searchId !== null
+            ? [
+                { displayId: { equals: searchId } },
+                { name: { contains: search } },
+                { occupation: { contains: search } },
+              ]
+            : [
+                { name: { contains: search } },
+                { occupation: { contains: search } },
+              ],
         }
       : {};
 
@@ -329,6 +360,7 @@ router.get('/characters', authMiddleware, adminMiddleware, async (req, res, next
           user: {
             select: {
               id: true,
+              displayId: true,
               nickname: true,
               email: true,
             },
@@ -349,6 +381,123 @@ router.get('/characters', authMiddleware, adminMiddleware, async (req, res, next
           totalPages: Math.ceil(total / limit),
         },
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * 获取角色卡详情
+ * GET /api/admin/characters/:id
+ */
+router.get('/characters/:id', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const character = await prisma.character.findUnique({
+      where: { id },
+    });
+
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: '角色卡不存在' },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { character },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * 更新角色卡
+ * PATCH /api/admin/characters/:id
+ */
+router.patch('/characters/:id', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+
+    const existing = await prisma.character.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: '角色卡不存在' },
+      });
+    }
+
+    // 合并基础属性并自动重算派生属性
+    const attrs = {
+      str: body.str !== undefined ? body.str : existing.str,
+      dex: body.dex !== undefined ? body.dex : existing.dex,
+      con: body.con !== undefined ? body.con : existing.con,
+      siz: body.siz !== undefined ? body.siz : existing.siz,
+      app: body.app !== undefined ? body.app : existing.app,
+      int: body.int !== undefined ? body.int : existing.int,
+      pow: body.pow !== undefined ? body.pow : existing.pow,
+      edu: body.edu !== undefined ? body.edu : existing.edu,
+    };
+    const age = body.age !== undefined ? body.age : existing.age;
+    const derived = calculateDerivedAttributes(attrs, age);
+
+    // 只允许修改的字段（含 JSON stringify 处理）
+    const allowedScalarFields = [
+      'name', 'occupation', 'occupationKey', 'age', 'gender', 'background',
+      'str', 'dex', 'con', 'siz', 'app', 'int', 'pow', 'edu', 'luck',
+      'keyConnection',
+    ];
+
+    const updateData: any = {};
+
+    allowedScalarFields.forEach((field) => {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    });
+
+    if (body.skills !== undefined) {
+      updateData.skills = JSON.stringify(body.skills);
+    }
+    if (body.weapons !== undefined) {
+      updateData.weapons = JSON.stringify(body.weapons);
+    }
+    if (body.armor !== undefined) {
+      updateData.armor = body.armor ? JSON.stringify(body.armor) : null;
+    }
+    if (body.backgroundEntries !== undefined) {
+      updateData.backgroundEntries = JSON.stringify(body.backgroundEntries);
+    }
+
+    // 无论何时提交属性/年龄变更，都自动同步派生属性
+    if (
+      body.str !== undefined || body.con !== undefined || body.siz !== undefined ||
+      body.dex !== undefined || body.app !== undefined || body.int !== undefined ||
+      body.pow !== undefined || body.edu !== undefined || body.age !== undefined
+    ) {
+      updateData.hp = derived.hp;
+      updateData.mp = derived.mp;
+      updateData.san = derived.san;
+      updateData.maxHp = derived.maxHp;
+      updateData.maxMp = derived.maxMp;
+      updateData.maxSan = derived.maxSan;
+      updateData.mov = derived.mov;
+      updateData.build = derived.build;
+      updateData.db = derived.db;
+    }
+
+    const character = await prisma.character.update({
+      where: { id },
+      data: updateData,
+    });
+
+    res.json({
+      success: true,
+      data: { character },
     });
   } catch (error) {
     next(error);
@@ -532,15 +681,31 @@ const broadcastNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1).max(5000),
   userId: z.string().optional(),
+  displayId: z.number().int().optional(),
 });
 
 router.post('/notifications/broadcast', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const { title, content, userId } = broadcastNotificationSchema.parse(req.body);
+    const { title, content, userId, displayId } = broadcastNotificationSchema.parse(req.body);
 
-    if (userId) {
+    let targetUserId = userId;
+    if (!targetUserId && displayId !== undefined) {
+      const targetUser = await prisma.user.findUnique({
+        where: { displayId },
+        select: { id: true },
+      });
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          error: { code: 'USER_NOT_FOUND', message: '目标用户不存在' },
+        });
+      }
+      targetUserId = targetUser.id;
+    }
+
+    if (targetUserId) {
       // 发送给指定用户
-      const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+      const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
       if (!targetUser) {
         return res.status(404).json({
           success: false,
@@ -550,7 +715,7 @@ router.post('/notifications/broadcast', authMiddleware, adminMiddleware, async (
 
       const notification = await prisma.notification.create({
         data: {
-          userId,
+          userId: targetUserId,
           type: 'system',
           title,
           content,

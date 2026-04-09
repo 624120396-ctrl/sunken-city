@@ -13,7 +13,8 @@ import {
   cancelRelicTrade,
   buyRelicTrade,
 } from './relics.service';
-import { RELIC_REGISTRY } from './relics.config';
+import { RELIC_REGISTRY, getAllRelics } from './relics.config';
+import { prisma } from '../../config/database';
 
 const router = Router();
 router.use(authMiddleware);

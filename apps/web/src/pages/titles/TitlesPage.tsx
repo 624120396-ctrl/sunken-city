@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Award, Lock, Sparkles, Filter, Check, Loader2 } from 'lucide-react';
+import {
+  ChevronLeft, Award, Lock, Sparkles, Filter, Check, Loader2,
+  Layers, Compass, Sword, Users, Waves, Star, HelpCircle, X
+} from 'lucide-react';
 import { RuneBorder } from '@components/ui/RuneBorder';
 import { useAuthStore } from '@stores/auth.store';
 import { 
@@ -24,13 +27,13 @@ const RARITY_CONFIG: Record<string, { label: string; color: string; bgColor: str
   mythical: { label: '神话', color: '#e8d4a0', bgColor: '#e8d4a020' },
 };
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: string }> = {
-  exploration: { label: '探索', icon: '🗺️' },
-  combat: { label: '战斗', icon: '⚔️' },
-  social: { label: '社交', icon: '🗣️' },
-  madness: { label: '疯狂', icon: '🌀' },
-  special: { label: '特殊', icon: '⭐' },
-  hidden: { label: '隐藏', icon: '❓' },
+const CATEGORY_CONFIG: Record<string, { label: string }> = {
+  exploration: { label: '探索' },
+  combat: { label: '战斗' },
+  social: { label: '社交' },
+  madness: { label: '疯狂' },
+  special: { label: '特殊' },
+  hidden: { label: '隐藏' },
 };
 
 export function TitlesPage() {
@@ -116,14 +119,14 @@ export function TitlesPage() {
   // 当前展示的印记
   const displayedTitleKey = rankInfo?.titleStats?.displayedTitleKey;
 
-  const categories: Array<{ id: TitleCategory; name: string; icon: string }> = [
-    { id: 'all', name: '全部', icon: '✦' },
-    { id: 'exploration', name: '探索', icon: '🗺️' },
-    { id: 'combat', name: '战斗', icon: '⚔️' },
-    { id: 'social', name: '社交', icon: '🗣️' },
-    { id: 'madness', name: '疯狂', icon: '🌀' },
-    { id: 'special', name: '特殊', icon: '⭐' },
-    { id: 'hidden', name: '隐藏', icon: '❓' },
+  const categories: Array<{ id: TitleCategory; name: string; icon: React.ElementType }> = [
+    { id: 'all', name: '全部', icon: Layers },
+    { id: 'exploration', name: '探索', icon: Compass },
+    { id: 'combat', name: '战斗', icon: Sword },
+    { id: 'social', name: '社交', icon: Users },
+    { id: 'madness', name: '疯狂', icon: Waves },
+    { id: 'special', name: '特殊', icon: Star },
+    { id: 'hidden', name: '隐藏', icon: HelpCircle },
   ];
 
   const rarities: Array<{ id: TitleRarity; name: string; color: string }> = [
@@ -263,7 +266,7 @@ export function TitlesPage() {
                     ? 'bg-coc-gold text-coc-abyss'
                     : 'bg-coc-void text-coc-parchment-dim hover:text-coc-parchment'}`}
               >
-                <span className="mr-1">{cat.icon}</span>
+                <cat.icon size={14} className="mr-1" />
                 {cat.name}
               </button>
             ))}
@@ -388,7 +391,7 @@ export function TitlesPage() {
                   onClick={() => setSelectedTitle(null)}
                   className="text-coc-parchment-faded hover:text-coc-parchment"
                 >
-                  ✕
+                  <X size={20} />
                 </button>
               </div>
 

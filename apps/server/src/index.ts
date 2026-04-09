@@ -30,11 +30,15 @@ import uploadRoutes from './modules/uploads/uploads.routes';
 import shopRoutes from './modules/shop/shop.routes';
 import adminShopRoutes from './modules/shop/admin-shop.routes';
 import aiRoutes from './modules/ai/ai.routes';
+import aiCharacterRoutes from './modules/ai/character.routes';
+import portraitRoutes from './modules/ai/portrait.routes';
 import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import relicsRoutes from './modules/relics/relics.routes';
 import adminRelicRoutes from './modules/relics/admin-relics.routes';
 import friendRoutes from './modules/friends/friend.routes';
+import { loadRelicOverrides } from './modules/relics/relics.config';
+import { prisma } from './config/database';
 
 // 加载环境变量
 dotenv.config();
@@ -93,6 +97,8 @@ app.use('/api/admin', adminAnnouncementRoutes);
 app.use('/api/admin', adminShopRoutes);
 app.use('/api/admin', adminRelicRoutes);
 app.use('/api', aiRoutes);
+app.use('/api', aiCharacterRoutes);
+app.use('/api', portraitRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', friendRoutes);
@@ -117,9 +123,17 @@ setupSocketHandlers(io);
 
 // 启动服务器
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
-  logger.info(`🎲 COC跑团平台服务器运行在端口 ${PORT}`);
-  logger.info(`📚 API文档: http://localhost:${PORT}/health`);
-});
 
-export { io };
+(async () => {
+  try {
+    await loadRelicOverrides(prisma);
+    logger.info('🧿 遗物配置覆盖已加载');
+  } catch (err) {
+    logger.error('遗物配置覆盖加载失败:', err);
+  }
+
+  httpServer.listen(PORT, () => {
+    logger.info(`🎲 COC跑团平台服务器运行在端口 ${PORT}`);
+    logger.info(`📚 API文档: http://localhost:${PORT}/health`);
+  });
+})();export { io };

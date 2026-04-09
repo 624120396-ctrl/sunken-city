@@ -3,12 +3,15 @@ import { User, Scroll, Crown, Sword, Eye, UserPlus, UserCheck, UserMinus, Clock,
 import { ExpBar } from './ui/ExpBar';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
+import { COC7E_SKILLS } from '@lib/coc7-data';
 
 export interface DisplayedCharacter {
   id: string;
+  displayId?: number;
   name: string;
   occupation?: string;
   avatarUrl?: string | null;
+  portraitUrl?: string | null;
   hp: number;
   maxHp: number;
   mp: number;
@@ -33,6 +36,7 @@ export interface DisplayedCharacter {
 
 export interface UserProfile {
   id?: string;
+  displayId?: number;
   nickname: string;
   avatarUrl?: string | null;
   frameUrl?: string | null;
@@ -130,13 +134,17 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
   const currentUser = useAuthStore((s) => s.user);
   const dc = user.displayedCharacter;
 
-  const parsedSkills: Array<{ name: string; value: number }> = (() => {
+  const parsedQuickSkills: Array<{ name: string; value: number }> = (() => {
     try {
-      const obj = JSON.parse(dc?.skills || '{}');
-      return Object.entries(obj)
-        .map(([name, value]) => ({ name, value: Number(value) || 0 }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+      const names = JSON.parse(dc?.quickSkills || '[]');
+      const skillsObj = JSON.parse(dc?.skills || '{}');
+      if (!Array.isArray(names)) return [];
+      return names.slice(0, 5).map((n: unknown) => {
+        const keyStr = String(n);
+        const skillMeta = COC7E_SKILLS.find((s) => s.key === keyStr);
+        const displayName = skillMeta?.name || keyStr;
+        return { name: displayName, value: Number(skillsObj[keyStr]) || 0 };
+      });
     } catch {
       return [];
     }
@@ -326,9 +334,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               {/* 角色头部 */}
               <div className="flex items-center gap-4">
                 <div className="relative w-20 h-20 flex-shrink-0">
-                  {dc.avatarUrl && !charImgError ? (
+                  {(dc.portraitUrl || dc.avatarUrl) && !charImgError ? (
                     <img
-                      src={dc.avatarUrl}
+                      src={dc.portraitUrl || dc.avatarUrl || ''}
                       onError={() => setCharImgError(true)}
                       className="w-20 h-20 rounded-full object-cover border-2 border-coc-border bg-coc-bg-secondary"
                       alt=""
@@ -351,6 +359,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
                     <Eye size={12} />
                     <span className="truncate">{dc.occupation || '未知职业'}</span>
                   </div>
+                  {dc.displayId != null && (
+                    <div className="mt-1 font-mono text-[10px] text-coc-gold">#{String(dc.displayId).padStart(8, '0')}</div>
+                  )}
                 </div>
               </div>
 
@@ -387,13 +398,13 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               </div>
 
               {/* 技能摘要 */}
-              {parsedSkills.length > 0 && (
+              {parsedQuickSkills.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-xs text-coc-text-muted flex items-center gap-1.5">
                     <Sword size={12} /> 擅长技能
                   </div>
                   <div className="space-y-2">
-                    {parsedSkills.map((s) => (
+                    {parsedQuickSkills.map((s) => (
                       <div key={s.name} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-coc-parchment">{s.name}</span>
@@ -459,6 +470,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
             <div>
               <div className="font-bold text-coc-text-primary text-lg">{user.nickname}</div>
               <div className="text-xs text-coc-text-muted">调查员 · 深渊广场居民</div>
+              {user.displayId != null && (
+                <div className="mt-0.5 font-mono text-[10px] text-coc-gold">#{String(user.displayId).padStart(8, '0')}</div>
+              )}
             </div>
           </div>
 

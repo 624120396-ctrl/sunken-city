@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
+import { generateImage } from '../../utils/image-gateway';
+import { saveImageFromUrl } from '../../utils/image-downloader';
 
 const router = Router();
 
-const API_KEY = process.env.SEEDREAM_API_KEY || '';
-const BASE_URL = process.env.SEEDREAM_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
-const MODEL = process.env.SEEDREAM_MODEL || 'doubao-seedream-5-0-260128';
+const ENDPOINT_ID = process.env.SEEDREAM_ENDPOINT_ID || '';
 
 interface GenerateImageBody {
   prompt: string;
@@ -24,43 +24,39 @@ router.post('/ai/generate-image', authMiddleware, async (req, res, next) => {
       throw new AppError('INVALID_INPUT', '描述不能超过 600 个字符', 400);
     }
 
-    if (!API_KEY) {
-      throw new AppError('CONFIG_ERROR', 'AI 生成服务未配置', 500);
+    if (!ENDPOINT_ID) {
+      throw new AppError('CONFIG_ERROR', 'AI 生成服务未配置端点 ID', 500);
     }
 
-    const response = await fetch(`${BASE_URL}/images/generations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        prompt: prompt.trim(),
-        n: 1,
-        size,
-      }),
+    const results = await generateImage({
+      endpointId: ENDPOINT_ID,
+      prompt: prompt.trim(),
+      size,
+      n: 1,
     });
 
-    const data = await response.json() as any;
-
-    if (!response.ok) {
-      const msg = data.error?.message || data.message || 'AI 生成失败';
-      throw new AppError('AI_GENERATION_ERROR', msg, 502);
-    }
-
-    const imageUrl = data.data?.[0]?.url as string | undefined;
-    const imageSize = data.data?.[0]?.size as string | undefined;
+    const imageUrl = results[0]?.url;
+    const imageSize = results[0]?.size as string | undefined;
 
     if (!imageUrl) {
       throw new AppError('AI_GENERATION_ERROR', '未获取到生成结果', 502);
     }
 
+    // 下载图片到本地并返回本地 URL
+    const localUrl = await saveImageFromUrl(imageUrl, 'ai-generated');
+    if (!localUrl) {
+      throw new AppError('AI_GENERATION_ERROR', '图片保存失败', 500);
+    }
+
     res.json({
       success: true,
-      data: { url: imageUrl, size: imageSize || size },
+      data: { url: localUrl, size: imageSize || size },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('Missing ARK_IMAGE_API_KEY')) {
+      next(new AppError('CONFIG_ERROR', 'AI 生成服务未配置 API Key', 500));
+      return;
+    }
     next(error);
   }
 });

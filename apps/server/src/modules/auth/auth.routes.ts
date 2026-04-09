@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { authMiddleware } from '../../middleware/auth';
+import { nextUserDisplayId } from '../../utils/display-id';
+import { authRateLimit, searchRateLimit } from '../../middleware/rate-limit';
 
 const router = Router();
 
@@ -31,7 +33,7 @@ const loginSchema = z.object({
 });
 
 // 注册
-router.post('/register', async (req, res, next) => {
+router.post('/register', authRateLimit, async (req, res, next) => {
   try {
     const { email, nickname, password } = registerSchema.parse(req.body);
 
@@ -45,25 +47,44 @@ router.post('/register', async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        nickname,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        avatarUrl: true,
-        exp: true,
-        displayedTitleKey: true,
-        isAdmin: true,
-        coins: true,
-        stardust: true,
-        equippedFrame: true,
-      },
-    });
+    let user: any;
+    let displayIdRetries = 5;
+    while (displayIdRetries-- > 0) {
+      const displayId = await nextUserDisplayId(prisma);
+      try {
+        user = await prisma.user.create({
+          data: {
+            email,
+            nickname,
+            password: hashedPassword,
+            displayId,
+          },
+          select: {
+            id: true,
+            displayId: true,
+            email: true,
+            nickname: true,
+            avatarUrl: true,
+            exp: true,
+            displayedTitleKey: true,
+            isAdmin: true,
+            coins: true,
+            stardust: true,
+            equippedFrame: true,
+          },
+        });
+        break;
+      } catch (e: any) {
+        if (e.code === 'P2002' && e.meta?.target?.includes('displayId')) {
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    if (!user) {
+      throw new AppError('SERVER_ERROR', '注册失败，请稍后重试', 500);
+    }
 
     const token = jwt.sign(
       {
@@ -85,7 +106,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 // 登录
-router.post('/login', async (req, res, next) => {
+router.post('/login', authRateLimit, async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
@@ -120,6 +141,7 @@ router.post('/login', async (req, res, next) => {
       data: {
         user: {
           id: user.id,
+          displayId: user.displayId,
           email: user.email,
           nickname: user.nickname,
           avatarUrl: user.avatarUrl,
@@ -148,7 +170,7 @@ router.get('/me', async (req, res, next) => {
       throw new AppError('UNAUTHORIZED', '未登录', 401);
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: string;
     };
 
@@ -156,11 +178,13 @@ router.get('/me', async (req, res, next) => {
       where: { id: decoded.userId },
       select: {
         id: true,
+        displayId: true,
         email: true,
         nickname: true,
         avatarUrl: true,
         exp: true,
         displayedTitleKey: true,
+        displayedCharacterId: true,
         isAdmin: true,
         coins: true,
         stardust: true,
@@ -205,6 +229,7 @@ router.patch('/me', authMiddleware, async (req, res, next) => {
       data: updateData,
       select: {
         id: true,
+        displayId: true,
         email: true,
         nickname: true,
         avatarUrl: true,
@@ -308,51 +333,51 @@ router.put('/me/displayed-character', authMiddleware, async (req, res, next) => 
 router.post('/daily-checkin', authMiddleware, async (req, res, next) => {
   try {
     const userId = req.user!.userId;
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { lastCheckinAt: true, coins: true, stardust: true },
-    });
-
-    if (!user) {
-      throw new AppError('USER_NOT_FOUND', '用户不存在', 404);
-    }
-
-    const now = new Date();
-    const last = user.lastCheckinAt;
-    if (last) {
-      const lastDate = new Date(last);
-      if (
-        lastDate.getFullYear() === now.getFullYear() &&
-        lastDate.getMonth() === now.getMonth() &&
-        lastDate.getDate() === now.getDate()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: '今日已签到',
-        });
-      }
-    }
-
     const dailyCoins = 10;
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        coins: { increment: dailyCoins },
-        lastCheckinAt: now,
-      },
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        avatarUrl: true,
-        exp: true,
-        displayedTitleKey: true,
-        isAdmin: true,
-        coins: true,
-        stardust: true,
-        equippedFrame: true,
-      },
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { lastCheckinAt: true },
+      });
+
+      if (!user) {
+        throw new AppError('USER_NOT_FOUND', '用户不存在', 404);
+      }
+
+      const now = new Date();
+      const last = user.lastCheckinAt;
+      if (last) {
+        const lastDate = new Date(last);
+        if (
+          lastDate.getFullYear() === now.getFullYear() &&
+          lastDate.getMonth() === now.getMonth() &&
+          lastDate.getDate() === now.getDate()
+        ) {
+          throw new AppError('ALREADY_CHECKED_IN', '今日已签到', 400);
+        }
+      }
+
+      return tx.user.update({
+        where: { id: userId },
+        data: {
+          coins: { increment: dailyCoins },
+          lastCheckinAt: now,
+        },
+        select: {
+          id: true,
+          displayId: true,
+          email: true,
+          nickname: true,
+          avatarUrl: true,
+          exp: true,
+          displayedTitleKey: true,
+          isAdmin: true,
+          coins: true,
+          stardust: true,
+          equippedFrame: true,
+        },
+      });
     });
 
     const frameUrl = await getFrameUrl(updated.equippedFrame);
@@ -371,7 +396,7 @@ router.post('/daily-checkin', authMiddleware, async (req, res, next) => {
 });
 
 // 搜索用户（按昵称模糊匹配，仅返回基本公开信息）
-router.get('/users/search', authMiddleware, async (req, res, next) => {
+router.get('/users/search', authMiddleware, searchRateLimit, async (req, res, next) => {
   try {
     const keyword = String(req.query.nickname || '').trim();
     if (!keyword || keyword.length < 1) {
@@ -383,6 +408,7 @@ router.get('/users/search', authMiddleware, async (req, res, next) => {
       take: 20,
       select: {
         id: true,
+        displayId: true,
         nickname: true,
         avatarUrl: true,
         displayedTitleKey: true,

@@ -151,8 +151,8 @@ router.get('/friends/requests', authMiddleware, async (req: AuthRequest, res, ne
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        sender: { select: { id: true, nickname: true, avatarUrl: true, displayedTitleKey: true } },
-        receiver: { select: { id: true, nickname: true, avatarUrl: true, displayedTitleKey: true } },
+        sender: { select: { id: true, displayId: true, nickname: true, avatarUrl: true, displayedTitleKey: true } },
+        receiver: { select: { id: true, displayId: true, nickname: true, avatarUrl: true, displayedTitleKey: true } },
       },
     });
 
@@ -252,6 +252,7 @@ router.get('/friends', authMiddleware, async (req: AuthRequest, res, next) => {
         userA: {
           select: {
             id: true,
+            displayId: true,
             nickname: true,
             avatarUrl: true,
             displayedTitleKey: true,
@@ -263,6 +264,7 @@ router.get('/friends', authMiddleware, async (req: AuthRequest, res, next) => {
         userB: {
           select: {
             id: true,
+            displayId: true,
             nickname: true,
             avatarUrl: true,
             displayedTitleKey: true,
@@ -280,6 +282,7 @@ router.get('/friends', authMiddleware, async (req: AuthRequest, res, next) => {
       return {
         friendshipId: f.id,
         userId: friend.id,
+        displayId: friend.displayId,
         nickname: friend.nickname,
         avatarUrl: friend.avatarUrl,
         displayedTitleKey: friend.displayedTitleKey,

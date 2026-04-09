@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, Globe, Wrench, Shield, Users } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
+import { Skeleton } from '@components/ui/Skeleton';
 
 interface SystemSettings {
   siteName: string;
@@ -60,8 +61,22 @@ export function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <div className="coc-card space-y-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4">
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-10 w-32" />
+            </div>
+          ))}
+          <div className="pt-4 border-t border-coc-void">
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
       </div>
     );
   }

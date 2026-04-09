@@ -71,6 +71,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
       <Route path="/admin/users" element={<AdminLayout><AdminUsersPage /></AdminLayout>} />
       <Route path="/admin/characters" element={<AdminLayout><AdminCharactersPage /></AdminLayout>} />
+      <Route path="/admin/characters/:id/edit" element={<AdminLayout><CharacterEditPage /></AdminLayout>} />
       <Route path="/admin/rooms" element={<AdminLayout><AdminRoomsPage /></AdminLayout>} />
       <Route path="/admin/settings" element={<AdminLayout><AdminSettingsPage /></AdminLayout>} />
       <Route path="/admin/rank-title" element={<AdminLayout><AdminRankTitlePage /></AdminLayout>} />
@@ -87,7 +88,7 @@ function App() {
             <Route path="/characters" element={<CharacterListPage />} />
             <Route path="/characters/new" element={<CharacterCreateV2Page />} />
             <Route path="/characters/:id" element={<CharacterDetailPage />} />
-            <Route path="/characters/:id/edit" element={<CharacterEditPage />} />
+            <Route path="/characters/:id/edit" element={<Navigate to="/characters/:id" replace />} />
             <Route path="/characters/:id/growth" element={<CharacterGrowthPage />} />
             <Route path="/rooms" element={<RoomListPage />} />
             <Route path="/rooms/:roomId" element={<RoomPage />} />

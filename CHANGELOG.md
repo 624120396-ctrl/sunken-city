@@ -4,6 +4,95 @@
 
 ---
 
+## [1.4.5] - 2026-04-07
+
+### 🎯 版本代号：位阶觉醒 (Rank Awakening) — 稳定补丁
+
+---
+
+### ✨ 新功能
+
+#### 好友系统 MVP
+- **关系检测**：在社交触点（论坛帖子/回复作者、房间成员资料卡）内置好友状态查询
+- **快捷操作**：加好友 / 接受请求 / 删除好友一键完成
+- **在线状态广播**：Socket.io `friend:status_update` 实时推送好友上下线/进房状态
+- **后台接口**：`GET/POST /api/friends/*` 全套关系管理 API
+- **通知集成**：好友请求、好友通过、房间邀请均已接入通知中心
+
+#### 论坛富文本编辑器
+- **Tiptap 编辑器**：全面替换原生 `textarea`
+- **支持格式**：粗体、斜体、删除线、H2/H3 标题、无序/有序列表、引用块、行内代码、代码块、水平分割线、插入链接
+- **旧帖兼容**：`HtmlContent` 组件自动检测纯文本内容，零破坏兼容历史帖子
+- **安全消毒**：DOMPurify 白名单过滤，防止 XSS 注入
+
+#### 管理后台增强
+- 新增 `POST /api/admin/notifications/broadcast` 接口，管理员可一键群发系统通知
+
+---
+
+### 🔧 修复与优化
+
+#### 角色卡系统
+- **修复技能点分配无上限**：`+` 按钮在点数耗尽后正确禁用，信用评级滑块联动剩余可用点数
+- **修复详情页显示异常**：技能展示数据源从旧版中文键迁移到新版 `COC7E_SKILLS` snake_case 键
+- **修复背景故事不展示**：正确解析并渲染 `backgroundEntries` 数组与 `keyConnection`
+- **修复角色编辑功能**：后端新增 `PATCH /:id`，编辑页兼容新版数据结构
+- **修复 QuickRollBar 和战后成长页**：彻底迁移到新版技能数据
+
+#### 通知中心
+- 弹窗宽度从 288px 扩展至 384px，解决左侧溢出裁切
+- 新增「通知详情」独立 Modal，长文本站内信可完整阅读
+- 系统通知支持展开/收起，无跳转目标时不再点击无反应
+
+#### 运维安全
+- **修复部署脚本**：彻底移除 `prisma/dev.db` 向生产环境的 rsync 同步，避免开发库覆盖生产库
+- **修复自动备份脚本**：解决 `$` 转义语法错误，恢复每 4 小时自动备份并保留最近 10 份
+- **将数据库文件移出 Git**：更新 `.gitignore`，`dev.db` 不再受版本控制
+
+---
+
+### 📁 文件变更
+
+```
+apps/server/
+├── src/modules/friends/friend.routes.ts      # 新增：好友系统路由
+├── src/modules/admin/admin.routes.ts         # 更新：新增群发通知接口
+├── src/config/socket.ts                      # 更新：好友状态广播
+├── prisma/schema.prisma                      # 更新：User/FriendRequest/Friendship/DirectMessage
+├── package.json                              # 版本：1.4.5
+
+apps/web/src/
+├── components/
+│   ├── RichTextEditor.tsx                    # 新增：Tiptap 富文本编辑器
+│   ├── HtmlContent.tsx                       # 新增：安全 HTML 渲染组件
+│   └── notifications/NotificationBell.tsx    # 重写：通知弹窗 + 详情 Modal
+├── pages/forum/
+│   ├── ForumNewPostPage.tsx                  # 更新：接入富文本编辑器
+│   └── ForumPostPage.tsx                     # 更新：帖子/回复展示与编辑均接入富文本
+├── pages/characters/
+│   ├── CharacterCreateV2Page.tsx             # 更新：修复技能点校验与信用评级滑块
+│   ├── CharacterDetailPage.tsx               # 更新：修复技能与背景展示
+│   └── CharacterEditPage.tsx                 # 重写：兼容新版数据结构
+├── package.json                              # 版本：1.4.5
+
+package.json                                   # 根项目版本：1.4.5
+CHANGELOG.md                                   # 更新
+```
+
+---
+
+### 🌐 部署信息
+
+| 项目 | 信息 |
+|------|------|
+| 服务器 IP | 43.254.167.183 |
+| 访问地址 | https://coc.city |
+| 管理后台 | https://coc.city/admin |
+| PM2 进程 | coc-server |
+| 数据库 | SQLite (prisma/dev.db) |
+
+---
+
 ## [1.2.0] - 2026-04-04
 
 ### 🎯 版本代号：位阶觉醒 (Rank Awakening)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Dice5, Sword, Shield, Save } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { apiFetch, handleApiResponse } from '@lib/api';
@@ -61,6 +61,8 @@ const BACKGROUND_TYPES = [
 export function CharacterEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminEdit = location.pathname.startsWith('/admin');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -105,7 +107,8 @@ export function CharacterEditPage() {
 
   const fetchCharacter = async () => {
     try {
-      const response = await apiFetch(`/characters/${id}`);
+      const endpoint = isAdminEdit ? `/admin/characters/${id}` : `/characters/${id}`;
+      const response = await apiFetch(endpoint);
       const data = await handleApiResponse<{ character: CharacterData }>(response);
       const char = data.character;
 
@@ -216,12 +219,12 @@ export function CharacterEditPage() {
         payload.occupationKey = formData.occupation || undefined;
       }
 
-      await apiFetch(`/characters/${id}`, {
+      await apiFetch(isAdminEdit ? `/admin/characters/${id}` : `/characters/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(payload),
       });
 
-      navigate(`/characters/${id}`);
+      navigate(isAdminEdit ? '/admin/characters' : `/characters/${id}`);
     } catch (err: any) {
       setError(err.message || '保存失败');
     } finally {
@@ -272,7 +275,7 @@ export function CharacterEditPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(`/characters/${id}`)}
+            onClick={() => navigate(isAdminEdit ? '/admin/characters' : `/characters/${id}`)}
             className="coc-btn-secondary p-2"
           >
             <ArrowLeft size={20} />

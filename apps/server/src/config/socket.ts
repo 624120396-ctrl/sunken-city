@@ -72,6 +72,7 @@ export async function getOnlineUsers() {
     where: { id: { in: userIds } },
     select: {
       id: true,
+      displayId: true,
       nickname: true,
       avatarUrl: true,
       equippedFrame: true,
@@ -106,6 +107,7 @@ export async function getOnlineUsers() {
           background: true,
           skills: true,
           quickSkills: true,
+          portraitUrl: true,
         },
       },
     },
@@ -140,6 +142,7 @@ export async function getOnlineUsers() {
     const nextRank = rank ? ranks.find(r => r.expRequired > rank.expRequired) : null;
     return {
       userId: u.id,
+      displayId: u.displayId,
       nickname: u.nickname,
       avatarUrl: u.avatarUrl || undefined,
       frameUrl: frameMap.get(u.equippedFrame || '') || null,
@@ -175,7 +178,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
         return next(new Error('未提供认证令牌'));
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
         userId: string;
         nickname: string;
         isAdmin: boolean;
@@ -229,6 +232,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
                     displayedCharacter: {
                       select: {
                         id: true,
+                        displayId: true,
                         name: true,
                         occupation: true,
                         avatarUrl: true,
@@ -252,6 +256,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
                         background: true,
                         skills: true,
                         quickSkills: true,
+                        portraitUrl: true,
                       },
                     },
                   },
@@ -312,6 +317,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           const dc = m.user.displayedCharacter;
           return {
             userId: m.userId,
+            displayId: m.user.displayId,
             nickname: m.user.nickname,
             avatarUrl: m.user.avatarUrl,
             frameUrl: frameMap.get(m.user.equippedFrame || '') || null,
@@ -329,9 +335,11 @@ export function setupSocketHandlers(io: SocketIOServer) {
             stardust: m.user.stardust,
             displayedCharacter: dc ? {
               id: dc.id,
+              displayId: dc.displayId,
               name: dc.name,
               occupation: dc.occupation,
               avatarUrl: dc.avatarUrl,
+              portraitUrl: dc.portraitUrl,
               hp: dc.hp,
               maxHp: dc.maxHp,
               mp: dc.mp,
@@ -363,6 +371,10 @@ export function setupSocketHandlers(io: SocketIOServer) {
             roomId: room.roomId,
             name: room.name,
             description: room.description,
+            atmosphere: room.atmosphere,
+            sceneDesc: room.sceneDesc,
+            sceneImageUrl: room.sceneImageUrl,
+            sceneMusicUrl: room.sceneMusicUrl,
           },
           members: room.members.map(buildMemberPayload),
           myCharacter: myCharacter ? {
@@ -398,6 +410,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
             characterId: m.characterId,
             isSecret: m.isSecret,
             type: m.type,
+            messageType: m.type,
             meta: m.meta ? JSON.parse(m.meta) : undefined,
             timestamp: m.createdAt.toISOString(),
           })),
@@ -438,15 +451,22 @@ export function setupSocketHandlers(io: SocketIOServer) {
     });
 
     // 发送消息
-    socket.on('message:send', async (data: { roomId: string; content: string; characterId?: string; isSecret?: boolean }) => {
+    socket.on('message:send', async (data: {
+      roomId: string;
+      content: string;
+      characterId?: string;
+      isSecret?: boolean;
+      messageType?: 'text' | 'ic' | 'oc' | 'narration';
+    }) => {
       try {
-        const { roomId, content, characterId, isSecret } = data;
+        const { roomId, content, characterId, isSecret, messageType } = data;
+        const type = messageType || 'text';
         
         const room = await prisma.room.findUnique({ where: { roomId } });
         if (!room) return;
 
         const messageId = Date.now().toString();
-        const messageData = {
+        const messageData: any = {
           id: messageId,
           sender: {
             userId: socket.user!.userId,
@@ -455,6 +475,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           content: isSecret ? '🔒 暗骰消息' : content,
           characterId,
           isSecret,
+          messageType: type,
           timestamp: new Date().toISOString(),
         };
 
@@ -467,7 +488,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
             content: isSecret ? content : content, // 存原始内容，暗骰也存真实内容
             characterId: characterId || null,
             isSecret: !!isSecret,
-            type: 'text',
+            type,
           },
         });
 
@@ -753,6 +774,20 @@ export function setupSocketHandlers(io: SocketIOServer) {
         }
 
         io.to(roomId).emit('sanity:deducted', { results });
+
+        // v1.5.0 SAN 危机视觉广播
+        for (const r of results) {
+          if (r.insanity && !(r.insanity as any).resisted) {
+            io.to(roomId).emit('sanity:crisis', {
+              userId: r.userId,
+              nickname: r.nickname,
+              characterName: r.characterName,
+              loss: r.loss,
+              insanity: r.insanity,
+            });
+          }
+        }
+
         logger.info(`KP ${socket.user?.nickname} 在房间 ${roomId} 扣除理智`, results.map(r => `${r.nickname} -${r.loss}`).join(', '));
       } catch (error) {
         logger.error('理智扣除失败:', error);

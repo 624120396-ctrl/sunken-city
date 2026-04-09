@@ -6,9 +6,11 @@ const prisma = new PrismaClient();
 export async function purchaseRelic(
   userId: string,
   itemKey: string,
-  characterId?: string
+  characterId?: string,
+  txClient?: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>
 ) {
-  const item = await prisma.shopItem.findUnique({ where: { key: itemKey } });
+  const db = txClient || prisma;
+  const item = await db.shopItem.findUnique({ where: { key: itemKey } });
   if (!item || !item.isActive || item.category !== 'relic') {
     throw new Error('商品不存在或不是遗物');
   }
@@ -24,17 +26,17 @@ export async function purchaseRelic(
     if (!characterId) {
       throw new Error('该遗物购买后立刻绑定，必须指定角色卡');
     }
-    const character = await prisma.character.findFirst({
+    const character = await db.character.findFirst({
       where: { id: characterId, userId },
     });
     if (!character) {
       throw new Error('角色卡不存在或不属于你');
     }
-    const count = await prisma.characterRelic.count({ where: { characterId } });
+    const count = await db.characterRelic.count({ where: { characterId } });
     if (count >= MAX_VAULT_SIZE) {
       throw new Error('角色保险箱已满（最多5件遗物）');
     }
-    const relic = await prisma.characterRelic.create({
+    const relic = await db.characterRelic.create({
       data: {
         characterId,
         userId,
@@ -48,16 +50,16 @@ export async function purchaseRelic(
   }
 
   // 非即绑：进入 UserInventory
-  const existing = await prisma.userInventory.findUnique({
+  const existing = await db.userInventory.findUnique({
     where: { userId_itemKey: { userId, itemKey } },
   });
   if (existing) {
-    await prisma.userInventory.update({
+    await db.userInventory.update({
       where: { id: existing.id },
       data: { quantity: { increment: 1 } },
     });
   } else {
-    await prisma.userInventory.create({
+    await db.userInventory.create({
       data: { userId, itemKey, quantity: 1 },
     });
   }
@@ -76,7 +78,8 @@ export async function bindRelicToCharacter(
   if (!inv) throw new Error('库存记录不存在');
 
   const item = await prisma.shopItem.findUnique({ where: { key: inv.itemKey } });
-  if (!item || item.category !== 'relic') throw new Error('不是遗物');
+  const registry = getRelicEffect(inv.itemKey);
+  if ((!item || item.category !== 'relic') && !registry) throw new Error('不是遗物');
 
   const character = await prisma.character.findFirst({
     where: { id: characterId, userId },
@@ -86,8 +89,7 @@ export async function bindRelicToCharacter(
   const count = await prisma.characterRelic.count({ where: { characterId } });
   if (count >= MAX_VAULT_SIZE) throw new Error('角色保险箱已满');
 
-  const registry = getRelicEffect(inv.itemKey);
-  const effectData = item.effectData ? JSON.parse(item.effectData) : null;
+  const effectData = item?.effectData ? JSON.parse(item.effectData) : null;
 
   const relic = await prisma.$transaction(async (tx) => {
     if (inv.quantity <= 1) {
@@ -137,12 +139,26 @@ export async function getUserUnboundRelics(userId: string) {
   });
   const itemMap = new Map(items.map((i) => [i.key, i]));
   return inventory
-    .filter((inv) => itemMap.has(inv.itemKey))
-    .map((inv) => ({
-      ...inv,
-      item: itemMap.get(inv.itemKey),
-      meta: getRelicEffect(inv.itemKey),
-    }));
+    .filter((inv) => itemMap.has(inv.itemKey) || getRelicEffect(inv.itemKey))
+    .map((inv) => {
+      const shopItem = itemMap.get(inv.itemKey);
+      const meta = getRelicEffect(inv.itemKey);
+      return {
+        ...inv,
+        item:
+          shopItem || meta
+            ? {
+                key: inv.itemKey,
+                name: shopItem?.name || meta?.name || inv.itemKey,
+                description: shopItem?.description || meta?.description || '',
+                category: 'relic',
+                rarity: shopItem?.rarity || meta?.rarity || 'common',
+                iconUrl: shopItem?.iconUrl || meta?.iconUrl || null,
+              }
+            : undefined,
+        meta,
+      };
+    });
 }
 
 export async function setRoomRelics(
@@ -284,12 +300,12 @@ export async function createRelicTrade(
 }
 
 export async function cancelRelicTrade(sellerId: string, tradeId: string) {
-  const trade = await prisma.relicTrade.findFirst({
-    where: { id: tradeId, sellerId, status: 'active' },
-  });
-  if (!trade) throw new Error('挂单不存在或已成交');
-
   await prisma.$transaction(async (tx) => {
+    const trade = await tx.relicTrade.findFirst({
+      where: { id: tradeId, sellerId, status: 'active' },
+    });
+    if (!trade) throw new Error('挂单不存在或已成交');
+
     await tx.relicTrade.update({
       where: { id: tradeId },
       data: { status: 'cancelled' },
@@ -310,34 +326,34 @@ export async function buyRelicTrade(
   tradeId: string,
   targetCharacterId: string
 ) {
-  const trade = await prisma.relicTrade.findFirst({
-    where: { id: tradeId, status: 'active' },
-  });
-  if (!trade) throw new Error('挂单不存在或已成交');
-  if (trade.sellerId === buyerId) throw new Error('不能购买自己的挂单');
-
-  const buyer = await prisma.user.findUnique({ where: { id: buyerId } });
-  if (!buyer) throw new Error('用户不存在');
-
-  if (trade.currency === 'coin') {
-    if (buyer.coins < trade.price) throw new Error('锈蚀硬币不足');
-  } else {
-    if (buyer.stardust < trade.price) throw new Error('星尘不足');
-  }
-
-  const targetCharacter = await prisma.character.findFirst({
-    where: { id: targetCharacterId, userId: buyerId },
-  });
-  if (!targetCharacter) throw new Error('目标角色卡不存在或不属于你');
-
-  const vaultCount = await prisma.characterRelic.count({
-    where: { characterId: targetCharacterId },
-  });
-  if (vaultCount >= MAX_VAULT_SIZE) throw new Error('角色保险箱已满');
-
-  const snapshot = trade.relicSnapshot ? JSON.parse(trade.relicSnapshot) : {};
-
   await prisma.$transaction(async (tx) => {
+    const trade = await tx.relicTrade.findFirst({
+      where: { id: tradeId, status: 'active' },
+    });
+    if (!trade) throw new Error('挂单不存在或已成交');
+    if (trade.sellerId === buyerId) throw new Error('不能购买自己的挂单');
+
+    const buyer = await tx.user.findUnique({ where: { id: buyerId } });
+    if (!buyer) throw new Error('用户不存在');
+
+    if (trade.currency === 'coin') {
+      if (buyer.coins < trade.price) throw new Error('锈蚀硬币不足');
+    } else {
+      if (buyer.stardust < trade.price) throw new Error('星尘不足');
+    }
+
+    const targetCharacter = await tx.character.findFirst({
+      where: { id: targetCharacterId, userId: buyerId },
+    });
+    if (!targetCharacter) throw new Error('目标角色卡不存在或不属于你');
+
+    const vaultCount = await tx.characterRelic.count({
+      where: { characterId: targetCharacterId },
+    });
+    if (vaultCount >= MAX_VAULT_SIZE) throw new Error('角色保险箱已满');
+
+    const snapshot = trade.relicSnapshot ? JSON.parse(trade.relicSnapshot) : {};
+
     // 扣买家货币
     if (trade.currency === 'coin') {
       await tx.user.update({

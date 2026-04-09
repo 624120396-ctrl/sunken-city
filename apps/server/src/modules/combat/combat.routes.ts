@@ -45,15 +45,58 @@ interface CombatLogEntry {
   timestamp: string;
 }
 
-// 内存中的战斗状态 (生产环境应使用Redis)
+// 内存中的战斗状态缓存
 const combatStates = new Map<string, CombatState>();
+
+async function persistCombatState(roomId: string, state: CombatState) {
+  try {
+    await prisma.room.update({
+      where: { roomId },
+      data: { combatState: JSON.stringify(state) },
+    });
+  } catch (err) {
+    logger.error(`持久化战斗状态失败 roomId=${roomId}:`, err);
+  }
+}
+
+async function loadCombatState(roomId: string): Promise<CombatState | null> {
+  const cached = combatStates.get(roomId);
+  if (cached) return cached;
+
+  try {
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      select: { combatState: true },
+    });
+    if (room?.combatState) {
+      const parsed = JSON.parse(room.combatState) as CombatState;
+      combatStates.set(roomId, parsed);
+      return parsed;
+    }
+  } catch (err) {
+    logger.error(`读取战斗状态失败 roomId=${roomId}:`, err);
+  }
+  return null;
+}
+
+async function clearCombatState(roomId: string) {
+  combatStates.delete(roomId);
+  try {
+    await prisma.room.update({
+      where: { roomId },
+      data: { combatState: null },
+    });
+  } catch (err) {
+    logger.error(`清除战斗状态失败 roomId=${roomId}:`, err);
+  }
+}
 
 // 获取战斗状态
 router.get('/rooms/:roomId/combat', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    
-    const state = combatStates.get(roomId);
+
+    const state = await loadCombatState(roomId);
     if (!state) {
       return res.json({
         success: true,
@@ -159,6 +202,7 @@ router.post('/rooms/:roomId/combat/start', authMiddleware, async (req: AuthReque
     };
 
     combatStates.set(roomId, state);
+    await persistCombatState(roomId, state);
 
     logger.info(`房间 ${roomId} 战斗开始`);
 
@@ -178,7 +222,7 @@ router.post('/rooms/:roomId/combat/attack', authMiddleware, async (req: AuthRequ
     const userId = req.userId!;
     const { targetUserId, useEquippedWeapon = true } = req.body;
 
-    const state = combatStates.get(roomId);
+    const state = await loadCombatState(roomId);
     if (!state || state.status !== 'IN_PROGRESS') {
       throw new AppError('NO_COMBAT', '当前没有进行中的战斗', 400);
     }
@@ -265,17 +309,20 @@ router.post('/rooms/:roomId/combat/attack', authMiddleware, async (req: AuthRequ
     state.log.push(logEntry);
 
     // 保存到数据库
-    await prisma.combatLog.create({
-      data: {
-        roomId,
-        userId,
-        round: state.currentRound,
-        actor: currentCombatant.nickname,
-        action: `使用 ${attackerWeapon.name || skillName} 攻击`,
-        target: targetCombatant?.nickname,
-        result: `${hitRoll}/${skillValue} ${hitLevel}${hitSuccess ? `, 伤害: ${damageRoll}=${damage}${armorValue > 0 ? `(护甲-${armorValue})` : ''}=${finalDamage}` : ''}`,
-      },
-    });
+    await Promise.all([
+      prisma.combatLog.create({
+        data: {
+          roomId,
+          userId,
+          round: state.currentRound,
+          actor: currentCombatant.nickname,
+          action: `使用 ${attackerWeapon.name || skillName} 攻击`,
+          target: targetCombatant?.nickname,
+          result: `${hitRoll}/${skillValue} ${hitLevel}${hitSuccess ? `, 伤害: ${damageRoll}=${damage}${armorValue > 0 ? `(护甲-${armorValue})` : ''}=${finalDamage}` : ''}`,
+        },
+      }),
+      persistCombatState(roomId, state),
+    ]);
 
     logger.info(`房间 ${roomId} 战斗: ${currentCombatant.nickname} 使用 ${attackerWeapon.name || skillName} 攻击 ${hitSuccess ? '命中' : '未命中'}`);
 
@@ -303,7 +350,7 @@ router.post('/rooms/:roomId/combat/next-turn', authMiddleware, async (req: AuthR
     const { roomId } = req.params;
     const userId = req.userId!;
 
-    const state = combatStates.get(roomId);
+    const state = await loadCombatState(roomId);
     if (!state || state.status !== 'IN_PROGRESS') {
       throw new AppError('NO_COMBAT', '当前没有进行中的战斗', 400);
     }
@@ -330,6 +377,8 @@ router.post('/rooms/:roomId/combat/next-turn', authMiddleware, async (req: AuthR
         timestamp: new Date().toISOString(),
       });
     }
+
+    await persistCombatState(roomId, state);
 
     const nextCombatant = state.turnOrder[state.currentTurnIndex];
 
@@ -366,7 +415,7 @@ router.post('/rooms/:roomId/combat/end', authMiddleware, async (req: AuthRequest
       throw new AppError('FORBIDDEN', '只有KP可以结束战斗', 403);
     }
 
-    const state = combatStates.get(roomId);
+    const state = await loadCombatState(roomId);
     if (state) {
       state.status = 'ENDED';
       state.log.push({
@@ -377,6 +426,7 @@ router.post('/rooms/:roomId/combat/end', authMiddleware, async (req: AuthRequest
         result: '战斗已结束',
         timestamp: new Date().toISOString(),
       });
+      await persistCombatState(roomId, state);
     }
 
     logger.info(`房间 ${roomId} 战斗结束`);
@@ -397,7 +447,7 @@ router.post('/rooms/:roomId/combat/heal', authMiddleware, async (req: AuthReques
     const userId = req.userId!;
     const { targetUserId, amount, type = 'hp' } = req.body;
 
-    const state = combatStates.get(roomId);
+    const state = await loadCombatState(roomId);
     if (!state || state.status !== 'IN_PROGRESS') {
       throw new AppError('NO_COMBAT', '当前没有进行中的战斗', 400);
     }
@@ -438,16 +488,19 @@ router.post('/rooms/:roomId/combat/heal', authMiddleware, async (req: AuthReques
     state.log.push(logEntry);
 
     // 保存到数据库
-    await prisma.combatLog.create({
-      data: {
-        roomId,
-        userId,
-        round: state.currentRound,
-        actor: currentCombatant.nickname,
-        action: `治疗 ${target.nickname}`,
-        result: `恢复 ${healAmount} 点${type.toUpperCase()}`,
-      },
-    });
+    await Promise.all([
+      prisma.combatLog.create({
+        data: {
+          roomId,
+          userId,
+          round: state.currentRound,
+          actor: currentCombatant.nickname,
+          action: `治疗 ${target.nickname}`,
+          result: `恢复 ${healAmount} 点${type.toUpperCase()}`,
+        },
+      }),
+      persistCombatState(roomId, state),
+    ]);
 
     res.json({
       success: true,

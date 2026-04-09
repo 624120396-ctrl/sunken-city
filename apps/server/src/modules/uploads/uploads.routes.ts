@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { authMiddleware } from '../../middleware/auth';
 import { uploadMiddleware, ensureUploadDir } from '../../config/upload';
+import { uploadRateLimit } from '../../middleware/rate-limit';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -14,7 +15,7 @@ ensureUploadDir();
  * POST /api/uploads
  * 上传文件
  */
-router.post('/uploads', authMiddleware, uploadMiddleware.single('file'), async (req: any, res) => {
+router.post('/uploads', authMiddleware, uploadRateLimit, uploadMiddleware.single('file'), async (req: any, res) => {
   try {
     const userId = req.user!.userId;
 

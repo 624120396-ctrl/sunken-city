@@ -27,6 +27,7 @@ const CATEGORIES = [
   { value: 'card_skin', label: '卡面皮肤' },
   { value: 'room_theme', label: '房间主题' },
   { value: 'title', label: '印记' },
+  { value: 'relic', label: '遗物' },
 ];
 
 export function ShopPage() {

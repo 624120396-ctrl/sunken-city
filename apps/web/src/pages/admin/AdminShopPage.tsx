@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit2, Save, X, ShoppingBag, Wand2 } from 'lucide-react';
 import { apiFetch } from '@lib/api';
 import { RuneBorder } from '@components/ui/RuneBorder';
 import { generateImage } from '@services/ai.service';
+import { AdminTableSkeleton } from '@components/admin/AdminTableSkeleton';
 
 interface ShopItem {
   id: string;
@@ -314,7 +315,7 @@ export function AdminShopPage() {
       <RuneBorder variant="madness" intensity="subtle">
         <div className="coc-bg-parchment p-5">
           {loading ? (
-            <div className="text-center py-10 text-coc-parchment-dim">加载中...</div>
+            <AdminTableSkeleton rows={5} cols={7} showSearch={false} showActions={false} />
           ) : items.length === 0 ? (
             <div className="text-center py-10 text-coc-parchment-dim">暂无商品</div>
           ) : (

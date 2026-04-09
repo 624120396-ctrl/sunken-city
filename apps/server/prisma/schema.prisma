@@ -9,6 +9,7 @@ datasource db {
 
 model User {
   id                String   @id @default(uuid())
+  displayId         Int      @unique
   email             String   @unique
   nickname          String
   password          String
@@ -62,6 +63,7 @@ model User {
 
 model Character {
   id          String   @id @default(uuid())
+  displayId   Int      @unique
   userId      String
   name        String
 
@@ -119,6 +121,12 @@ model Character {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // 调查员形象（AI 生成）
+  portraitUrl           String?
+  portraitPreviewUrl    String?
+  portraitGeneratedCount Int      @default(0)
+  portraitGeneratedAt   DateTime?
+
   user        User     @relation(fields: [userId], references: [id])
   displayedByUsers User[] @relation("UserDisplayedCharacter")
   roomMembers RoomMember[]
@@ -166,17 +174,21 @@ model Room {
   description String?
   creatorId   String
   status      String   @default("ACTIVE")
-  
+
   // 新增：氛围主题
   atmosphere  String   @default("normal") // normal, dark, horror, mystery, warm
-  
+
   // 新增：当前场景描述
   sceneDesc   String?
+
+  // v1.5.0 场景卡升级
+  sceneImageUrl String?
+  sceneMusicUrl String?
 
   // 新增：游戏开启锁定
   isGameStarted   Boolean  @default(false)
   gameStartedAt   DateTime?
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -185,6 +197,9 @@ model Room {
   privateMessages PrivateMessage[]
   countdowns  Countdown[]
   messages    RoomMessage[]
+  clues       RoomClue[]
+  npcs        RoomNpc[]
+  combatState String?
 }
 
 model RoomMember {
@@ -217,6 +232,40 @@ model RoomMember {
 }
 
 // 新增：房间公共聊天记录
+// v1.5.0 房间线索板
+model RoomClue {
+  id           String   @id @default(uuid())
+  roomId       String
+  title        String
+  content      String
+  imageUrl     String?
+  discoveredBy String   @default("all")
+  isHidden     Boolean  @default(false)
+  requiresSkill String?
+  requiresValue Int?
+  createdAt    DateTime @default(now())
+
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+// v1.5.0 房间 NPC
+model RoomNpc {
+  id          String   @id @default(uuid())
+  roomId      String
+  name        String
+  avatarUrl   String?
+  description String?
+  statsJson   String   @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
 model RoomMessage {
   id          String   @id @default(uuid())
   roomId      String
@@ -473,6 +522,17 @@ model ShopItem {
 
   @@index([category, isActive])
   @@index([sortOrder])
+}
+
+// 遗物配置覆盖表（用于后台编辑图鉴信息）
+model RelicOverride {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String?
+  description String?
+  type        String?
+  iconUrl     String?
+  updatedAt   DateTime @updatedAt
 }
 
 // 用户背包表

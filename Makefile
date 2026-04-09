@@ -1,4 +1,4 @@
-.PHONY: dev build down logs install migrate
+.PHONY: dev build down logs install migrate deploy
 
 # 开发命令
 dev:
@@ -32,6 +32,10 @@ migrate:
 # 数据库GUI
 studio:
 	cd apps/server && npx prisma studio
+
+# 部署到生产（安全模式：绝不同步 dev.db）
+deploy:
+	bash scripts/deploy.sh
 
 # 清理
 clean:

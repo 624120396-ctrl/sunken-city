@@ -137,12 +137,13 @@ export function useSocket({
   }, [token, roomId]);
 
   // 发送消息
-  const sendMessage = useCallback((content: string, characterId?: string, isSecret?: boolean) => {
+  const sendMessage = useCallback((content: string, characterId?: string, isSecret?: boolean, messageType?: string) => {
     socketRef.current?.emit('message:send', {
       roomId,
       content,
       characterId,
       isSecret,
+      messageType,
     });
   }, [roomId]);
 

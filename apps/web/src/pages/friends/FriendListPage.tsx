@@ -10,6 +10,7 @@ import { Modal } from '@components/ui/Modal';
 interface Friend {
   friendshipId: string;
   userId: string;
+  displayId: number;
   nickname: string;
   avatarUrl?: string;
   displayedTitleKey?: string;
@@ -28,12 +29,14 @@ interface FriendRequestItem {
   createdAt: string;
   sender: {
     id: string;
+    displayId: number;
     nickname: string;
     avatarUrl?: string;
     displayedTitleKey?: string;
   };
   receiver: {
     id: string;
+    displayId: number;
     nickname: string;
     avatarUrl?: string;
     displayedTitleKey?: string;
@@ -355,6 +358,7 @@ export function FriendListPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-bold truncate">{friend.nickname}</div>
+                        <div className="font-mono text-[10px] text-coc-gold">#{String(friend.displayId).padStart(8, '0')}</div>
                         <div className="text-xs text-coc-text-secondary truncate">
                           {isOnline ? (roomInfo ? `房间 ${roomInfo.roomId}` : '在线') : '离线'}
                         </div>
@@ -407,6 +411,7 @@ export function FriendListPage() {
                       </div>
                       <div>
                         <div className="font-bold">{req.sender.nickname}</div>
+                        <div className="font-mono text-[10px] text-coc-gold">#{String(req.sender.displayId).padStart(8, '0')}</div>
                         {req.message && <div className="text-xs text-coc-text-muted">附言：{req.message}</div>}
                         <div className="text-[10px] text-coc-text-muted">{formatTimeAgo(req.createdAt)}</div>
                       </div>
@@ -449,6 +454,7 @@ export function FriendListPage() {
                       </div>
                       <div>
                         <div className="font-bold">{req.receiver.nickname}</div>
+                        <div className="font-mono text-[10px] text-coc-gold">#{String(req.receiver.displayId).padStart(8, '0')}</div>
                         <div className="text-[10px] text-coc-text-muted">{formatTimeAgo(req.createdAt)} · 等待回应</div>
                       </div>
                     </div>
@@ -525,6 +531,7 @@ export function FriendListPage() {
               </div>
               <div>
                 <div className="text-lg font-bold">{selectedFriend.nickname}</div>
+                <div className="font-mono text-xs text-coc-gold">#{String(selectedFriend.displayId).padStart(8, '0')}</div>
                 <div className="text-sm text-coc-text-secondary">
                   {onlineFriends.has(selectedFriend.userId) ? '在线' : '离线'} · EXP {selectedFriend.exp}
                 </div>

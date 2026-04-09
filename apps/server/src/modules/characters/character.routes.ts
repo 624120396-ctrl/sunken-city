@@ -15,6 +15,7 @@ import {
 } from '../../utils/character-calc';
 import { COC7_OCCUPATIONS } from '../../data/occupations';
 import { getDefaultSkills, resolveDynamicBaseValues } from '../../data/coc7-skills';
+import { nextCharacterDisplayId } from '../../utils/display-id';
 
 const router = Router();
 
@@ -249,6 +250,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
+        displayId: true,
         name: true,
         occupation: true,
         occupationKey: true,
@@ -275,6 +277,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
         cash: true,
         assetsValue: true,
         updatedAt: true,
+        portraitUrl: true,
       },
     });
 
@@ -361,45 +364,63 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     // 自动设置快捷技能栏（如果未自定义）
     let quickSkills = ["spot_hidden", "listen", "library_use", "psychology", "fast_talk"];
 
-    const character = await prisma.character.create({
-      data: {
-        userId,
-        name: data.name,
-        occupation: occ.name,
-        occupationKey: data.occupationKey,
-        age: data.age,
-        gender: data.gender,
-        str: data.finalAttrs.str,
-        con: data.finalAttrs.con,
-        siz: data.finalAttrs.siz,
-        dex: data.finalAttrs.dex,
-        app: data.finalAttrs.app,
-        int: data.finalAttrs.int,
-        pow: data.finalAttrs.pow,
-        edu: data.finalAttrs.edu,
-        luck: data.luck,
-        creditRating: data.creditRating,
-        cash: financials.cash,
-        assetsValue: financials.assetsValue,
-        db: derived.db,
-        hp: derived.hp,
-        mp: derived.mp,
-        san: derived.san,
-        maxHp: derived.maxHp,
-        maxMp: derived.maxMp,
-        maxSan: derived.maxSan,
-        mov: derived.mov,
-        build: derived.build,
-        skills: JSON.stringify(finalSkills),
-        weapons: JSON.stringify(data.weapons),
-        armor: data.armor ? JSON.stringify(data.armor) : null,
-        background: data.background,
-        backgroundEntries: JSON.stringify(data.backgroundEntries || []),
-        keyConnection: data.keyConnection,
-        skillPointsJson: JSON.stringify(data.skillPointsJson),
-        quickSkills: JSON.stringify(quickSkills),
-      },
-    });
+    let character: any;
+    let displayIdRetries = 5;
+    while (displayIdRetries-- > 0) {
+      const displayId = await nextCharacterDisplayId(prisma);
+      try {
+        character = await prisma.character.create({
+          data: {
+            userId,
+            displayId,
+            name: data.name,
+            occupation: occ.name,
+            occupationKey: data.occupationKey,
+            age: data.age,
+            gender: data.gender,
+            str: data.finalAttrs.str,
+            con: data.finalAttrs.con,
+            siz: data.finalAttrs.siz,
+            dex: data.finalAttrs.dex,
+            app: data.finalAttrs.app,
+            int: data.finalAttrs.int,
+            pow: data.finalAttrs.pow,
+            edu: data.finalAttrs.edu,
+            luck: data.luck,
+            creditRating: data.creditRating,
+            cash: financials.cash,
+            assetsValue: financials.assetsValue,
+            db: derived.db,
+            hp: derived.hp,
+            mp: derived.mp,
+            san: derived.san,
+            maxHp: derived.maxHp,
+            maxMp: derived.maxMp,
+            maxSan: derived.maxSan,
+            mov: derived.mov,
+            build: derived.build,
+            skills: JSON.stringify(finalSkills),
+            weapons: JSON.stringify(data.weapons),
+            armor: data.armor ? JSON.stringify(data.armor) : null,
+            background: data.background,
+            backgroundEntries: JSON.stringify(data.backgroundEntries || []),
+            keyConnection: data.keyConnection,
+            skillPointsJson: JSON.stringify(data.skillPointsJson),
+            quickSkills: JSON.stringify(quickSkills),
+          },
+        });
+        break;
+      } catch (e: any) {
+        if (e.code === 'P2002' && e.meta?.target?.includes('displayId')) {
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    if (!character) {
+      throw new AppError('SERVER_ERROR', '角色创建失败，请稍后重试', 500);
+    }
 
     // 首次创建角色：授予「初次迈步」印记
     let unlockedTitle: any = null;

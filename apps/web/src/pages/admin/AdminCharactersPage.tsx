@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Trash2, UserCircle, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Trash2, UserCircle, AlertTriangle, Edit2 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
+import { AdminTableSkeleton } from '@components/admin/AdminTableSkeleton';
 
 interface Character {
   id: string;
+  displayId: number;
   name: string;
   occupation: string;
   age: number;
@@ -14,12 +17,14 @@ interface Character {
   createdAt: string;
   user: {
     id: string;
+    displayId: number;
     nickname: string;
     email: string;
   };
 }
 
 export function AdminCharactersPage() {
+  const navigate = useNavigate();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -65,11 +70,7 @@ export function AdminCharactersPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
-      </div>
-    );
+    return <AdminTableSkeleton rows={6} cols={5} />;
   }
 
   return (
@@ -87,7 +88,7 @@ export function AdminCharactersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="搜索角色名或职业..."
+            placeholder="搜索ID、角色名或职业..."
             className="w-full coc-input pl-10"
           />
         </div>
@@ -98,6 +99,7 @@ export function AdminCharactersPage() {
         <table className="w-full">
           <thead className="bg-coc-bg-tertiary">
             <tr>
+              <th className="text-left p-4 text-sm font-medium text-coc-text-secondary">ID</th>
               <th className="text-left p-4 text-sm font-medium text-coc-text-secondary">角色</th>
               <th className="text-left p-4 text-sm font-medium text-coc-text-secondary">属性</th>
               <th className="text-left p-4 text-sm font-medium text-coc-text-secondary">所属用户</th>
@@ -108,6 +110,9 @@ export function AdminCharactersPage() {
           <tbody className="divide-y divide-coc-border">
             {characters.map((char) => (
               <tr key={char.id} className="hover:bg-coc-bg-tertiary/50">
+                <td className="p-4">
+                  <span className="font-mono text-xs text-coc-gold">#{String(char.displayId).padStart(8, '0')}</span>
+                </td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-coc-accent-gold/20 flex items-center justify-center text-coc-accent-gold font-bold">
@@ -131,13 +136,20 @@ export function AdminCharactersPage() {
                     <UserCircle size={16} className="text-coc-text-muted" />
                     <span>{char.user.nickname}</span>
                   </div>
-                  <div className="text-xs text-coc-text-muted">{char.user.email}</div>
+                  <div className="text-xs text-coc-text-muted">#{String(char.user.displayId).padStart(8, '0')} · {char.user.email}</div>
                 </td>
                 <td className="p-4 text-sm text-coc-text-secondary">
                   {new Date(char.createdAt).toLocaleDateString()}
                 </td>
                 <td className="p-4">
                   <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => navigate(`/admin/characters/${char.id}/edit`)}
+                      className="p-2 text-coc-text-muted hover:text-coc-accent-gold hover:bg-coc-accent-gold/10 rounded transition-colors"
+                      title="编辑角色卡"
+                    >
+                      <Edit2 size={16} />
+                    </button>
                     <button
                       onClick={() => {
                         setSelectedCharacter(char);

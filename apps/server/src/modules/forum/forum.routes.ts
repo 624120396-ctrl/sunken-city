@@ -6,6 +6,8 @@ import { AppError } from '../../middleware/error';
 const router = Router();
 const prisma = new PrismaClient();
 
+type ForumTx = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
+
 // ==================== 奖励配置 ====================
 const REWARD_LIMITS = {
   create_post: { max: 3, exp: 10, coin: 2 },
@@ -47,7 +49,8 @@ async function isForumAdminOrModerator(userId: string, boardKey: string, isAdmin
   return isBoardModerator(userId, boardKey);
 }
 
-async function canRewardToday(userId: string, action: keyof typeof REWARD_LIMITS, postId?: string) {
+async function canRewardToday(userId: string, action: keyof typeof REWARD_LIMITS, postId?: string, txClient?: ForumTx) {
+  const db = txClient || prisma;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -60,19 +63,21 @@ async function canRewardToday(userId: string, action: keyof typeof REWARD_LIMITS
   };
   if (postId) where.postId = postId;
 
-  const count = await prisma.forumRewardLog.count({ where });
+  const count = await db.forumRewardLog.count({ where });
   return count < REWARD_LIMITS[action].max;
 }
 
 async function grantReward(
   userId: string,
   action: keyof typeof REWARD_LIMITS,
-  postId?: string
+  postId?: string,
+  txClient?: ForumTx
 ) {
+  const db = txClient || prisma;
   const cfg = REWARD_LIMITS[action];
-  if (!(await canRewardToday(userId, action, postId))) return null;
+  if (!(await canRewardToday(userId, action, postId, txClient))) return null;
 
-  await prisma.user.update({
+  await db.user.update({
     where: { id: userId },
     data: {
       exp: { increment: cfg.exp },
@@ -80,7 +85,7 @@ async function grantReward(
     },
   });
 
-  const log = await prisma.forumRewardLog.create({
+  const log = await db.forumRewardLog.create({
     data: {
       userId,
       action,
@@ -463,32 +468,37 @@ router.post('/forum/posts', authMiddleware, async (req: any, res, next) => {
     }
 
     const bounty = Math.max(0, parseInt(bountyCoin) || 0);
-    if (bounty > 0) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { coins: true },
-      });
-      if (!user || user.coins < bounty) {
-        throw new AppError('INSUFFICIENT_COINS', '锈蚀硬币不足以支付悬赏', 400);
+    let post: any;
+    let reward: any = null;
+
+    await prisma.$transaction(async (tx) => {
+      if (bounty > 0) {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { coins: true },
+        });
+        if (!user || user.coins < bounty) {
+          throw new AppError('INSUFFICIENT_COINS', '锈蚀硬币不足以支付悬赏', 400);
+        }
+        await tx.user.update({
+          where: { id: userId },
+          data: { coins: { decrement: bounty } },
+        });
       }
-      await prisma.user.update({
-        where: { id: userId },
-        data: { coins: { decrement: bounty } },
+
+      post = await tx.forumPost.create({
+        data: {
+          boardKey,
+          userId,
+          title: title.trim(),
+          content: content.trim(),
+          bountyCoin: bounty,
+        },
       });
-    }
 
-    const post = await prisma.forumPost.create({
-      data: {
-        boardKey,
-        userId,
-        title: title.trim(),
-        content: content.trim(),
-        bountyCoin: bounty,
-      },
+      // 发帖奖励（移入事务，保证原子性）
+      reward = await grantReward(userId, 'create_post', post.id, tx);
     });
-
-    // 发帖奖励
-    const reward = await grantReward(userId, 'create_post', post.id);
 
     res.json({
       success: true,

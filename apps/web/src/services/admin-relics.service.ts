@@ -101,3 +101,21 @@ export async function cancelAdminTrade(tradeId: string) {
   const res = await apiFetch(`/admin/relics/trades/${tradeId}/cancel`, { method: 'POST' });
   return res.json();
 }
+
+export async function updateRelicOverride(key: string, data: {
+  name?: string;
+  description?: string;
+  type?: string;
+  iconUrl?: string;
+}) {
+  const res = await apiFetch(`/admin/relics/overrides/${key}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function getRelicOverrides() {
+  const res = await apiFetch('/admin/relics/overrides');
+  return res.json();
+}

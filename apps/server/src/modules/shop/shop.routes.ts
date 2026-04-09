@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../../middleware/auth';
 import { purchaseRelic } from '../relics/relics.service';
+import { RELIC_REGISTRY, getRelicEffect } from '../relics/relics.config';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -121,9 +122,8 @@ router.post('/shop/items/:key/purchase', authMiddleware, async (req: any, res) =
         if (qty > 1) {
           throw new Error('遗物每次只能购买1件');
         }
-        // purchaseRelic 使用全局 prisma，但这里已经在 transaction 中完成扣款，
-        // purchaseRelic 只做入库/绑定，不重复扣款
-        purchaseResult = await purchaseRelic(userId, key, characterId);
+        // purchaseRelic 使用事务客户端，保证原子性
+        purchaseResult = await purchaseRelic(userId, key, characterId, tx);
         return;
       }
 
@@ -318,6 +318,120 @@ router.post('/shop/equip', authMiddleware, async (req: any, res) => {
     });
   } catch (error) {
     console.error('装备失败:', error);
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
+/**
+ * POST /api/shop/open-lootbox
+ * 打开旧日之盒：获得 500 硬币 + 2 个随机遗物（未绑定）
+ */
+router.post('/shop/open-lootbox', authMiddleware, async (req: any, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const LOOTBOX_KEY = 'old_one_lootbox';
+    const REWARD_COINS = 500;
+    const REWARD_RELIC_COUNT = 2;
+
+    // 随机抽奖逻辑（基于 RELIC_REGISTRY，含覆盖数据）
+    const allRelics = Object.values(RELIC_REGISTRY);
+    const rarityWeights: Record<string, number> = {
+      common: 60,
+      rare: 25,
+      epic: 10,
+      legendary: 4,
+      mythical: 1,
+    };
+
+    function drawRelic() {
+      const totalWeight = allRelics.reduce((sum, r) => sum + (rarityWeights[r.rarity] || 1), 0);
+      let rand = Math.random() * totalWeight;
+      for (const relic of allRelics) {
+        const w = rarityWeights[relic.rarity] || 1;
+        if (rand < w) return getRelicEffect(relic.key)!;
+        rand -= w;
+      }
+      return getRelicEffect(allRelics[allRelics.length - 1].key)!;
+    }
+
+    const drawnRelics: ReturnType<typeof drawRelic>[] = [];
+    for (let i = 0; i < REWARD_RELIC_COUNT; i++) {
+      drawnRelics.push(drawRelic());
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const lootbox = await tx.userInventory.findUnique({
+        where: { userId_itemKey: { userId, itemKey: LOOTBOX_KEY } },
+      });
+      if (!lootbox || lootbox.quantity < 1) {
+        throw new Error('没有旧日之盒');
+      }
+
+      // 扣减旧日之盒
+      if (lootbox.quantity <= 1) {
+        await tx.userInventory.delete({ where: { id: lootbox.id } });
+      } else {
+        await tx.userInventory.update({
+          where: { id: lootbox.id },
+          data: { quantity: { decrement: 1 } },
+        });
+      }
+
+      // 加硬币
+      await tx.user.update({
+        where: { id: userId },
+        data: { coins: { increment: REWARD_COINS } },
+      });
+
+      // 发放未绑定遗物（按 itemKey 聚合写入 UserInventory）
+      const counts = new Map<string, number>();
+      for (const meta of drawnRelics) {
+        counts.set(meta.key, (counts.get(meta.key) || 0) + 1);
+      }
+      for (const [relicKey, qty] of counts.entries()) {
+        const existing = await tx.userInventory.findUnique({
+          where: { userId_itemKey: { userId, itemKey: relicKey } },
+        });
+        if (existing) {
+          await tx.userInventory.update({
+            where: { id: existing.id },
+            data: { quantity: { increment: qty } },
+          });
+        } else {
+          await tx.userInventory.create({
+            data: { userId, itemKey: relicKey, quantity: qty },
+          });
+        }
+      }
+    });
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { coins: true },
+    });
+
+    res.json({
+      success: true,
+      message: '旧日之盒已开启',
+      data: {
+        coins: updatedUser!.coins,
+        gainedCoins: REWARD_COINS,
+        relics: drawnRelics.map((meta) => ({
+          id: `${meta.key}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          key: meta.key,
+          name: meta.name,
+          description: meta.description,
+          rarity: meta.rarity,
+          iconUrl: meta.iconUrl || null,
+        })),
+      },
+    });
+  } catch (error: any) {
+    console.error('打开旧日之盒失败:', error);
+    if (error.message === '没有旧日之盒') {
+      return res.status(403).json({ success: false, message: '没有旧日之盒' });
+    }
     res.status(500).json({ success: false, message: '服务器错误' });
   }
 });

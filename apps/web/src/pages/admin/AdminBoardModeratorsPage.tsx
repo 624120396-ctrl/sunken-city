@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Crown, Plus, Trash2, Search, Loader2 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
+import { Skeleton } from '@components/ui/Skeleton';
 import {
   getForumBoards,
   getBoardModerators,
@@ -38,7 +39,7 @@ export function AdminBoardModeratorsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<{ id: string; nickname: string; email: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<{ id: string; displayId: number; nickname: string; email: string }[]>([]);
   const [searching, setSearching] = useState(false);
   const [appointing, setAppointing] = useState(false);
 
@@ -69,7 +70,7 @@ export function AdminBoardModeratorsPage() {
     setSearching(true);
     try {
       const res = await apiFetch(`/admin/users?search=${encodeURIComponent(search.trim())}&limit=10&page=1`);
-      const data = await handleApiResponse<{ users: { id: string; nickname: string; email: string }[] }>(res);
+      const data = await handleApiResponse<{ users: { id: string; displayId: number; nickname: string; email: string }[] }>(res);
       setSearchResults(data.users);
     } catch (e) {
       console.error(e);
@@ -118,8 +119,22 @@ export function AdminBoardModeratorsPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 text-coc-gold animate-spin" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="coc-card space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-14" />
+                </div>
+                <Skeleton className="h-7 w-16" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton circle className="h-8 w-8" />
+                <Skeleton circle className="h-8 w-8" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -188,7 +203,7 @@ export function AdminBoardModeratorsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="输入用户昵称搜索..."
+                placeholder="输入用户ID或昵称搜索..."
                 className="flex-1 bg-coc-bg-primary border border-coc-border rounded px-3 py-2 text-sm text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
               />
               <button
@@ -208,7 +223,10 @@ export function AdminBoardModeratorsPage() {
                   className="flex items-center justify-between bg-coc-bg-primary border border-coc-border rounded px-3 py-2"
                 >
                   <div>
-                    <div className="text-sm text-coc-parchment">{u.nickname}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-coc-parchment">{u.nickname}</span>
+                      <span className="font-mono text-[10px] text-coc-gold">#{String(u.displayId).padStart(8, '0')}</span>
+                    </div>
                     <div className="text-xs text-coc-text-muted">{u.email}</div>
                   </div>
                   <button

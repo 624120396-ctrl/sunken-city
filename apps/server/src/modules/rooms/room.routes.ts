@@ -514,7 +514,7 @@ router.patch('/:roomId/atmosphere', authMiddleware, async (req: AuthRequest, res
   try {
     const { roomId } = req.params;
     const userId = req.userId!;
-    const { atmosphere, sceneDesc } = req.body;
+    const { atmosphere, sceneDesc, sceneImageUrl, sceneMusicUrl } = req.body;
 
     const room = await prisma.room.findUnique({
       where: { roomId },
@@ -533,8 +533,10 @@ router.patch('/:roomId/atmosphere', authMiddleware, async (req: AuthRequest, res
     const updatedRoom = await prisma.room.update({
       where: { id: room.id },
       data: {
-        ...(atmosphere && { atmosphere }),
+        ...(atmosphere !== undefined && { atmosphere }),
         ...(sceneDesc !== undefined && { sceneDesc }),
+        ...(sceneImageUrl !== undefined && { sceneImageUrl }),
+        ...(sceneMusicUrl !== undefined && { sceneMusicUrl }),
       },
     });
 
@@ -543,6 +545,8 @@ router.patch('/:roomId/atmosphere', authMiddleware, async (req: AuthRequest, res
       data: {
         atmosphere: updatedRoom.atmosphere,
         sceneDesc: updatedRoom.sceneDesc,
+        sceneImageUrl: updatedRoom.sceneImageUrl,
+        sceneMusicUrl: updatedRoom.sceneMusicUrl,
       },
     });
   } catch (error) {
@@ -650,6 +654,236 @@ router.get('/:roomId/stats', authMiddleware, async (req: AuthRequest, res, next)
         mostUsedSkill,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========== v1.5.0 房间线索板 ==========
+
+// 获取房间线索列表
+router.get('/:roomId/clues', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.userId!;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const isKP = room.members.some(m => m.userId === userId && m.role === 'KP');
+
+    const allClues = await prisma.roomClue.findMany({
+      where: { roomId: room.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 非KP只能看到非隐藏线索，或已满足条件的线索（简化：先只过滤 isHidden）
+    const visibleClues = isKP
+      ? allClues
+      : allClues.filter(c => !c.isHidden);
+
+    res.json({ success: true, data: visibleClues });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 创建线索 (KP only)
+router.post('/:roomId/clues', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.userId!;
+    const { title, content, imageUrl, isHidden, requiresSkill, requiresValue } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以创建线索', 403);
+
+    const clue = await prisma.roomClue.create({
+      data: {
+        roomId: room.id,
+        title: title?.trim() || '未命名线索',
+        content: content?.trim() || '',
+        imageUrl: imageUrl || null,
+        isHidden: !!isHidden,
+        requiresSkill: requiresSkill || null,
+        requiresValue: requiresValue ? parseInt(requiresValue, 10) : null,
+      },
+    });
+
+    res.json({ success: true, data: clue });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 更新线索 (KP only)
+router.patch('/:roomId/clues/:clueId', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId, clueId } = req.params;
+    const userId = req.userId!;
+    const { title, content, imageUrl, isHidden, requiresSkill, requiresValue } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以编辑线索', 403);
+
+    const clue = await prisma.roomClue.update({
+      where: { id: clueId },
+      data: {
+        ...(title !== undefined && { title: title.trim() }),
+        ...(content !== undefined && { content: content.trim() }),
+        ...(imageUrl !== undefined && { imageUrl }),
+        ...(isHidden !== undefined && { isHidden: !!isHidden }),
+        ...(requiresSkill !== undefined && { requiresSkill: requiresSkill || null }),
+        ...(requiresValue !== undefined && { requiresValue: requiresValue ? parseInt(requiresValue, 10) : null }),
+      },
+    });
+
+    res.json({ success: true, data: clue });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 删除线索 (KP only)
+router.delete('/:roomId/clues/:clueId', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId, clueId } = req.params;
+    const userId = req.userId!;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以删除线索', 403);
+
+    await prisma.roomClue.delete({ where: { id: clueId } });
+    res.json({ success: true, data: null });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========== v1.5.0 房间 NPC ==========
+
+// 获取房间 NPC 列表
+router.get('/:roomId/npcs', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const room = await prisma.room.findUnique({ where: { roomId } });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const npcs = await prisma.roomNpc.findMany({
+      where: { roomId: room.id, isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: npcs });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 创建 NPC (KP only)
+router.post('/:roomId/npcs', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.userId!;
+    const { name, avatarUrl, description, statsJson } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以创建NPC', 403);
+
+    const npc = await prisma.roomNpc.create({
+      data: {
+        roomId: room.id,
+        name: name?.trim() || '未命名NPC',
+        avatarUrl: avatarUrl || null,
+        description: description?.trim() || '',
+        statsJson: statsJson ? JSON.stringify(statsJson) : '{}',
+      },
+    });
+
+    res.json({ success: true, data: npc });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 更新 NPC (KP only)
+router.patch('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId, npcId } = req.params;
+    const userId = req.userId!;
+    const { name, avatarUrl, description, statsJson, isActive } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以编辑NPC', 403);
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
+    if (description !== undefined) updateData.description = description.trim();
+    if (statsJson !== undefined) updateData.statsJson = JSON.stringify(statsJson);
+    if (isActive !== undefined) updateData.isActive = !!isActive;
+
+    const npc = await prisma.roomNpc.update({
+      where: { id: npcId },
+      data: updateData,
+    });
+
+    res.json({ success: true, data: npc });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 删除 NPC (KP only)
+router.delete('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { roomId, npcId } = req.params;
+    const userId = req.userId!;
+
+    const room = await prisma.room.findUnique({
+      where: { roomId },
+      include: { members: true },
+    });
+    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+
+    const member = room.members.find(m => m.userId === userId);
+    if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以删除NPC', 403);
+
+    await prisma.roomNpc.delete({ where: { id: npcId } });
+    res.json({ success: true, data: null });
   } catch (error) {
     next(error);
   }

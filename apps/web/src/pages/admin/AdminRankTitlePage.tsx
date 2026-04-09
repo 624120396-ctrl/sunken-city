@@ -4,8 +4,8 @@ import { Crown, Award, Users, Sparkles, ChevronLeft, Edit, Trash2, Plus } from '
 import { RuneBorder } from '@components/ui/RuneBorder';
 import { RankEditModal } from './components/RankEditModal';
 import { TitleEditModal } from './components/TitleEditModal';
-import { 
-  getAdminRanks, 
+import {
+  getAdminRanks,
   getAdminTitles,
   updateRank,
   updateTitle,
@@ -14,13 +14,14 @@ import {
   type Rank,
   type Title
 } from '@services/rank-title.service';
+import { AdminTableSkeleton } from '@components/admin/AdminTableSkeleton';
 
 export function AdminRankTitlePage() {
   const [ranks, setRanks] = useState<AdminRank[]>([]);
   const [titles, setTitles] = useState<AdminTitle[]>([]);
   const [activeTab, setActiveTab] = useState<'ranks' | 'titles'>('ranks');
   const [loading, setLoading] = useState(true);
-  
+
   // 编辑状态
   const [editingRank, setEditingRank] = useState<Rank | null>(null);
   const [editingTitle, setEditingTitle] = useState<Title | null>(null);
@@ -59,7 +60,7 @@ export function AdminRankTitlePage() {
 
   const handleSaveRank = async (data: Partial<Rank>) => {
     if (!editingRank) return;
-    
+
     try {
       await updateRank(editingRank.id, data);
       await loadData();
@@ -73,7 +74,7 @@ export function AdminRankTitlePage() {
 
   const handleSaveTitle = async (data: Partial<Title>) => {
     if (!editingTitle) return;
-    
+
     try {
       await updateTitle(editingTitle.id, data);
       await loadData();
@@ -115,8 +116,8 @@ export function AdminRankTitlePage() {
       {/* 头部 */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link 
-            to="/admin" 
+          <Link
+            to="/admin"
             className="flex items-center gap-2 text-coc-parchment-dim hover:text-coc-gold transition-colors"
           >
             <ChevronLeft size={20} />
@@ -137,7 +138,7 @@ export function AdminRankTitlePage() {
             <p className="text-sm text-coc-parchment-dim">位阶数量</p>
           </div>
         </RuneBorder>
-        
+
         <RuneBorder variant="madness" intensity="subtle">
           <div className="coc-bg-parchment p-4 text-center">
             <Award className="w-8 h-8 text-coc-madness-glow mx-auto mb-2" />
@@ -145,7 +146,7 @@ export function AdminRankTitlePage() {
             <p className="text-sm text-coc-parchment-dim">印记数量</p>
           </div>
         </RuneBorder>
-        
+
         <RuneBorder variant="blood" intensity="subtle">
           <div className="coc-bg-parchment p-4 text-center">
             <Users className="w-8 h-8 text-coc-blood mx-auto mb-2" />
@@ -155,7 +156,7 @@ export function AdminRankTitlePage() {
             <p className="text-sm text-coc-parchment-dim">总用户数</p>
           </div>
         </RuneBorder>
-        
+
         <RuneBorder variant="default" intensity="subtle">
           <div className="coc-bg-parchment p-4 text-center">
             <Sparkles className="w-8 h-8 text-coc-parchment mx-auto mb-2" />
@@ -206,7 +207,7 @@ export function AdminRankTitlePage() {
             </div>
             
             {loading ? (
-              <p className="text-coc-parchment-dim text-center py-8">加载中...</p>
+              <AdminTableSkeleton rows={5} cols={6} showSearch={false} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -239,7 +240,7 @@ export function AdminRankTitlePage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button 
+                          <button
                             onClick={() => handleEditRank(rank)}
                             className="text-coc-parchment-dim hover:text-coc-gold mr-3"
                           >
@@ -270,9 +271,9 @@ export function AdminRankTitlePage() {
                 新增印记
               </button>
             </div>
-            
+
             {loading ? (
-              <p className="text-coc-parchment-dim text-center py-8">加载中...</p>
+              <AdminTableSkeleton rows={5} cols={6} showSearch={false} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -301,9 +302,9 @@ export function AdminRankTitlePage() {
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          <span 
+                          <span
                             className="px-2 py-1 rounded text-sm"
-                            style={{ 
+                            style={{
                               backgroundColor: `${rarityColors[title.rarity]}20`,
                               color: rarityColors[title.rarity]
                             }}
@@ -317,7 +318,7 @@ export function AdminRankTitlePage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button 
+                          <button
                             onClick={() => handleEditTitle(title)}
                             className="text-coc-parchment-dim hover:text-coc-gold mr-3"
                           >

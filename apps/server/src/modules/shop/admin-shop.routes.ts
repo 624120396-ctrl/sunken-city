@@ -185,4 +185,78 @@ router.post('/users/:userId/currency/adjust', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/items/grant
+ * 向指定用户发放道具
+ */
+router.post('/items/grant', async (req, res) => {
+  try {
+    const { userId, displayId, itemKey, quantity = 1, reason } = req.body;
+    const adminId = req.user!.userId;
+    const qty = Math.max(1, Math.min(999, parseInt(quantity) || 1));
+
+    let targetUserId = userId;
+    if (!targetUserId && displayId !== undefined) {
+      const targetUser = await prisma.user.findUnique({
+        where: { displayId: parseInt(displayId, 10) },
+        select: { id: true },
+      });
+      if (!targetUser) {
+        return res.status(404).json({ success: false, message: '目标用户不存在' });
+      }
+      targetUserId = targetUser.id;
+    }
+
+    if (!targetUserId) {
+      return res.status(400).json({ success: false, message: '必须提供 userId 或 displayId' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, nickname: true },
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, message: '用户不存在' });
+    }
+
+    const item = await prisma.shopItem.findUnique({
+      where: { key: itemKey },
+    });
+    if (!item) {
+      return res.status(404).json({ success: false, message: '商品不存在' });
+    }
+
+    const existing = await prisma.userInventory.findUnique({
+      where: { userId_itemKey: { userId: targetUserId, itemKey } },
+    });
+
+    if (existing) {
+      await prisma.userInventory.update({
+        where: { id: existing.id },
+        data: { quantity: { increment: qty } },
+      });
+    } else {
+      await prisma.userInventory.create({
+        data: { userId: targetUserId, itemKey, quantity: qty },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `已向 ${user.nickname} 发放 ${item.name} ×${qty}`,
+      data: {
+        userId: targetUserId,
+        itemKey,
+        itemName: item.name,
+        quantity: qty,
+        reason,
+        changedBy: adminId,
+      },
+    });
+  } catch (error) {
+    console.error('发放道具失败:', error);
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
 export default router;
