@@ -20,8 +20,11 @@ echo "=== 同步后端代码（排除 dev.db）==="
 sshpass -p "$PASS" rsync -avz --delete --exclude='dev.db' --exclude='.env' -e "ssh $SSH_OPTS" \
   apps/server/dist/ "$HOST:$REMOTE_DIR/apps/server/dist/"
 
-echo "=== 同步 Prisma schema 和迁移（排除 dev.db）==="
-sshpass -p "$PASS" rsync -avz --delete --exclude='dev.db' --exclude='.env' -e "ssh $SSH_OPTS" \
+echo "=== 同步 Prisma schema 和迁移（多重保护：exclude + .rsync-filter merge）==="
+sshpass -p "$PASS" rsync -avz --delete \
+  --exclude='dev.db' --exclude='*.db' --exclude='.env' \
+  --filter='merge apps/server/prisma/.rsync-filter' \
+  -e "ssh $SSH_OPTS" \
   apps/server/prisma/ "$HOST:$REMOTE_DIR/apps/server/prisma/"
 
 echo "=== 同步前端构建产物 ==="

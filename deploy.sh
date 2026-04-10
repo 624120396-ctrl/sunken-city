@@ -24,15 +24,18 @@ sshpass -p "$PASS" rsync -avz --delete \
   "$LOCAL_BASE/apps/web/dist/" \
   "$HOST:$REMOTE_BASE/apps/web/dist/"
 
-echo "[4/6] 同步后端产物与关键 schema/db..."
+echo "[4/6] 同步后端产物..."
 sshpass -p "$PASS" rsync -avz --delete \
   "$LOCAL_BASE/apps/server/dist/" \
   "$HOST:$REMOTE_BASE/apps/server/dist/"
 
 # ⚠️ 关键：schema 必须同步，但 db 绝不能从开发环境覆盖到生产环境
-sshpass -p "$PASS" rsync -avz \
-  "$LOCAL_BASE/apps/server/prisma/schema.prisma" \
-  "$HOST:$REMOTE_BASE/apps/server/prisma/schema.prisma"
+# 多重保护：1) rsync --exclude  2) .rsync-filter merge  3) 只同步目录，不单独传文件
+sshpass -p "$PASS" rsync -avz --delete \
+  --exclude='dev.db' --exclude='*.db' --exclude='.env' \
+  --filter="merge $LOCAL_BASE/apps/server/prisma/.rsync-filter" \
+  "$LOCAL_BASE/apps/server/prisma/" \
+  "$HOST:$REMOTE_BASE/apps/server/prisma/"
 
 # 注意：数据库结构变更后，在 remote 上执行 `npx prisma db push` 或 `migrate deploy`，
 # 而不是从本地同步 dev.db。

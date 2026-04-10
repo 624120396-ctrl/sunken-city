@@ -1,0 +1,4 @@
+protect dev.db
+protect *.db
+protect .env
+protect backups/
