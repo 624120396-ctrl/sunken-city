@@ -413,6 +413,15 @@ export function RoomPage() {
         setSelectedCharacter({ ...selectedCharacter, san: myUpdate.newSan });
       }
     },
+    onCombatTurnChanged: (data) => {
+      console.log('Turn changed:', data);
+    },
+    onCountdownUpdated: (data) => {
+      setCountdowns(data.countdowns || []);
+    },
+    onPrivateMessageReceived: () => {
+      fetchPrivateUnreadCount();
+    },
   });
 
   useEffect(() => {
@@ -425,7 +434,6 @@ export function RoomPage() {
       if (roomId && !pollingRef.current) {
         pollingRef.current = true;
         Promise.all([
-          fetchCountdowns(),
           fetchPrivateUnreadCount(),
           fetchRoomNpcs(),
           fetchRoomClues(),
@@ -470,8 +478,8 @@ export function RoomPage() {
       // 加载倒计时
       fetchCountdowns();
 
-      if (!data.room.isMember) {
-        fetchMyCharacters();
+      if (!data.room.isMember && !data.room.isCreator) {
+        // 非成员且非创建者：只读浏览，不自动弹窗
       }
 
       // KP 加载待审核列表
@@ -734,6 +742,7 @@ export function RoomPage() {
 
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
+    if (!room?.isApproved && !room?.isCreator) return;
     if (!inputMessage.trim() || !connected) return;
 
     // 解析快捷命令
@@ -822,6 +831,7 @@ export function RoomPage() {
   };
 
   const handleRollDice = (skillName: string, skillValue: number) => {
+    if (!room?.isApproved && !room?.isCreator) return;
     if (!connected) return;
 
     socketRollDice({
@@ -834,6 +844,7 @@ export function RoomPage() {
   };
 
   const handleGenericRoll = (rollType: string, skillName?: string, skillValue?: number) => {
+    if (!room?.isApproved && !room?.isCreator) return;
     if (!connected) return;
 
     socketRollDice({
@@ -1284,6 +1295,19 @@ export function RoomPage() {
                 </div>
               )}
 
+              {/* 只读模式提示 */}
+              {!room?.isApproved && !room?.isCreator && (
+                <div className="mx-4 mt-4 p-3 bg-coc-bg-tertiary border border-coc-accent-gold/40 rounded text-sm text-coc-text-secondary flex items-center justify-between">
+                  <span>你尚未加入该房间，当前为只读浏览模式</span>
+                  <button
+                    onClick={() => { fetchMyCharacters(); setShowCharacterModal(true); }}
+                    className="px-3 py-1 rounded bg-coc-accent-gold/20 text-coc-accent-gold hover:bg-coc-accent-gold/30 transition-colors"
+                  >
+                    申请加入
+                  </button>
+                </div>
+              )}
+
               {/* 消息列表 */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 ? (
@@ -1581,7 +1605,7 @@ export function RoomPage() {
       {/* 选择角色弹窗 */}
       <Modal
         isOpen={showCharacterModal}
-        onClose={() => navigate('/rooms')}
+        onClose={() => setShowCharacterModal(false)}
         title="申请加入房间"
       >
         <div className="space-y-4">

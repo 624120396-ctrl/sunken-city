@@ -2,8 +2,17 @@ import { Router } from 'express';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
+import { io } from '../../index';
 
 const router = Router();
+
+async function broadcastCountdowns(roomId: string, roomInternalId: string) {
+  const countdowns = await prisma.countdown.findMany({
+    where: { roomId: roomInternalId, isActive: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  io.to(roomId).emit('countdown:updated', { countdowns });
+}
 
 // 获取房间倒计时列表
 router.get('/rooms/:roomId/countdowns', authMiddleware, async (req: AuthRequest, res, next) => {
@@ -67,6 +76,8 @@ router.post('/rooms/:roomId/countdowns', authMiddleware, async (req: AuthRequest
       },
     });
 
+    await broadcastCountdowns(roomId, room.id);
+
     res.status(201).json({
       success: true,
       data: { countdown },
@@ -103,6 +114,8 @@ router.post('/rooms/:roomId/countdowns/:countdownId/stop', authMiddleware, async
         endedAt: new Date(),
       },
     });
+
+    await broadcastCountdowns(roomId, room.id);
 
     res.json({
       success: true,

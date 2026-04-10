@@ -14,9 +14,12 @@ interface UseSocketOptions {
   onCombatStarted?: (state: any) => void;
   onCombatUpdated?: (state: any) => void;
   onCombatEnded?: (state: any) => void;
+  onCombatTurnChanged?: (data: any) => void;
   onAttackResult?: (result: any) => void;
   onSanityDeducted?: (data: any) => void;
   onHistoryMessages?: (messages: any[]) => void;
+  onCountdownUpdated?: (data: any) => void;
+  onPrivateMessageReceived?: (data: any) => void;
 }
 
 export function useSocket({
@@ -32,8 +35,11 @@ export function useSocket({
   onCombatStarted,
   onCombatUpdated,
   onCombatEnded,
+  onCombatTurnChanged,
   onAttackResult,
   onSanityDeducted,
+  onCountdownUpdated,
+  onPrivateMessageReceived,
 }: UseSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
   const token = useAuthStore(state => state.token);
@@ -54,14 +60,18 @@ export function useSocket({
       onCombatStarted,
       onCombatUpdated,
       onCombatEnded,
+      onCombatTurnChanged,
       onAttackResult,
       onSanityDeducted,
       onHistoryMessages,
+      onCountdownUpdated,
+      onPrivateMessageReceived,
     };
   }, [
     onMessage, onDiceRoll, onMemberJoined, onMemberLeft, onMemberOnline,
     onMemberOffline, onRoomJoined, onCombatStarted, onCombatUpdated,
-    onCombatEnded, onAttackResult, onSanityDeducted, onHistoryMessages,
+    onCombatEnded, onCombatTurnChanged, onAttackResult, onSanityDeducted, onHistoryMessages,
+    onCountdownUpdated, onPrivateMessageReceived,
   ]);
 
   // 组件挂载状态
@@ -177,6 +187,10 @@ export function useSocket({
       callbacksRef.current.onCombatUpdated?.(data);
     });
 
+    socket.on('combat:turn_changed', (data) => {
+      callbacksRef.current.onCombatTurnChanged?.(data);
+    });
+
     socket.on('combat:ended', (data) => {
       callbacksRef.current.onCombatEnded?.(data);
     });
@@ -187,6 +201,14 @@ export function useSocket({
 
     socket.on('sanity:deducted', (data) => {
       callbacksRef.current.onSanityDeducted?.(data);
+    });
+
+    socket.on('countdown:updated', (data) => {
+      callbacksRef.current.onCountdownUpdated?.(data);
+    });
+
+    socket.on('private_message:received', (data) => {
+      callbacksRef.current.onPrivateMessageReceived?.(data);
     });
 
     socket.on('error', (data) => {

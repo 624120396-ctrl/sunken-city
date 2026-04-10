@@ -71,6 +71,7 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
       where: { roomId },
       include: {
         members: {
+          where: { leftAt: null },
           include: {
             user: {
               select: {
@@ -192,23 +193,40 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     const { name, description, password } = req.body;
     const userId = req.userId!;
 
-    // 生成短ID (6位字母数字)
-    const roomId = generateRoomId();
-
-    const room = await prisma.room.create({
-      data: {
-        roomId,
-        name,
-        description,
-        creatorId: userId,
-        members: {
-          create: {
-            userId,
-            role: 'KP',
+    // 生成短ID (6位字母数字)，带碰撞重试
+    let roomId = generateRoomId();
+    let room;
+    let attempts = 0;
+    while (attempts < 5) {
+      try {
+        room = await prisma.room.create({
+          data: {
+            roomId,
+            name,
+            description,
+            creatorId: userId,
+            members: {
+              create: {
+                userId,
+                role: 'KP',
+              },
+            },
           },
-        },
-      },
-    });
+        });
+        break;
+      } catch (e: any) {
+        if (e.code === 'P2002' && e.meta?.target?.includes('roomId')) {
+          roomId = generateRoomId();
+          attempts++;
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    if (!room) {
+      throw new AppError('ROOM_ID_COLLISION', '房间ID生成失败，请重试', 500);
+    }
 
     res.status(201).json({
       success: true,
@@ -915,7 +933,10 @@ router.delete('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, r
     const member = room.members.find(m => m.userId === userId);
     if (!member || member.role !== 'KP') throw new AppError('FORBIDDEN', '只有KP可以删除NPC', 403);
 
-    await prisma.roomNpc.delete({ where: { id: npcId } });
+    await prisma.roomNpc.update({
+      where: { id: npcId },
+      data: { isActive: false },
+    });
     res.json({ success: true, data: null });
   } catch (error) {
     next(error);
