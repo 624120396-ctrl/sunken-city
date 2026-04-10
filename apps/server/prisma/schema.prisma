@@ -61,6 +61,7 @@ model User {
   fishingDaily           UserFishingDaily?
   dreamDraws             UserDreamDraw[]
   dreamDaily             UserDreamDaily?
+  authoredScenarios      Scenario[]
 
   @@index([exp])
 }
@@ -207,6 +208,7 @@ model Room {
   clues           RoomClue[]
   npcs            RoomNpc[]
   combatState     String?
+  scenarioSession ScenarioSession?
 }
 
 model RoomMember {
@@ -869,4 +871,212 @@ model UserDreamDaily {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
+}
+
+// ========== Phantom Scripts - KP剧本编排与单人自动化剧本系统 ==========
+
+
+
+
+
+
+model Scenario {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  
+  coverImage  String?
+
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  difficulty  String    @default("NORMAL")
+  estimatedDuration Int @default(120)
+  maxPlayers  Int       @default(6)
+  minPlayers  Int       @default(1)
+
+  supportsKPLess Boolean @default(true)
+  supportsKPMode Boolean @default(true)
+
+  status      String    @default("DRAFT")
+  version     Int       @default(1)
+
+  tags        String?  
+  era         String?
+  location    String?
+
+  playCount   Int       @default(0)
+  rating      Float     @default(0)
+  ratingCount Int       @default(0)
+
+  startNodeId String?   @unique
+  startNode   ScenarioNode? @relation("ScenarioStart", fields: [startNodeId], references: [id])
+
+  nodes       ScenarioNode[]
+  edges       ScenarioEdge[]
+  sessions    ScenarioSession[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([status])
+  @@index([difficulty])
+}
+
+model ScenarioNode {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  nodeId      String
+  title       String
+  type        String
+  content     String   
+
+  positionX   Float     @default(0)
+  positionY   Float     @default(0)
+  metadata    String?  
+
+  outgoingEdges ScenarioEdge[]  @relation("EdgeFrom")
+  incomingEdges ScenarioEdge[]  @relation("EdgeTo")
+  sessionsAsCurrent ScenarioSession[] @relation("CurrentNode")
+  sessionStates   ScenarioSessionState[]
+  scenariosAsStart Scenario? @relation("ScenarioStart")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([scenarioId, nodeId])
+  @@index([scenarioId])
+  @@index([type])
+}
+
+model ScenarioEdge {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  fromNodeId  String
+  fromNode    ScenarioNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNodeId    String
+  toNode      ScenarioNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  type        String    @default("DEFAULT")
+  conditions  String?  
+  priority    Int       @default(0)
+  label       String?
+  isDefault   Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([scenarioId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+model ScenarioSession {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  roomId      String   @unique
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  mode        String
+  status      String    @default("ACTIVE")
+  currentNodeId String?
+  currentNode   ScenarioNode? @relation("CurrentNode", fields: [currentNodeId], references: [id])
+
+  globalState String?  
+  visitedNodes String? 
+
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  duration    Int       @default(0)
+  outcome     String?
+  endingNodeId String?
+
+  nodeStates  ScenarioSessionState[]
+  playerChoices ScenarioPlayerChoice[]
+  diceResults ScenarioDiceResult[]
+  playerStates ScenarioSessionPlayerState[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([scenarioId])
+  @@index([roomId])
+  @@index([status])
+}
+
+model ScenarioSessionState {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  nodeId      String
+  node        ScenarioNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  status      String    @default("PENDING")
+  visitedAt   DateTime?
+  completedAt DateTime?
+  stateData   String?  
+  result      String?  
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([sessionId, nodeId])
+  @@index([sessionId])
+}
+
+model ScenarioPlayerChoice {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  nodeId      String
+  edgeId      String?
+  choiceLabel String?
+  createdAt   DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model ScenarioDiceResult {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  nodeId      String
+  skill       String
+  difficulty  Int
+  rolledValue Int
+  isSuccess   Boolean
+  successLevel String?
+  createdAt   DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model ScenarioSessionPlayerState {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String   @unique
+  characterId String?
+
+  // 该玩家在此剧本中的运行时状态（如临时 SAN 变更、剧本私有变量等）
+  runtimeState String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([sessionId])
+  @@index([userId])
 }
