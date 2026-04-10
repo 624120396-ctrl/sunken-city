@@ -301,10 +301,10 @@ export function FishingPage() {
             ) : (
               <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {logs.map((log) => (
-                  <li key={log.id} className="text-sm border-b border-coc-void pb-2 last:border-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium truncate max-w-[8rem]">{log.itemName}</span>
-                      <span className="text-coc-gold text-xs">{log.rarity}</span>
+                  <li key={log.id} className="text-sm border-b border-coc-void pb-2 last:border-0 min-w-0">
+                    <div className="flex items-center justify-between min-w-0 gap-2">
+                      <span className="font-medium truncate max-w-[8rem] block">{log.itemName}</span>
+                      <span className="text-coc-gold text-xs truncate">{log.rarity}</span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <div className="text-xs text-coc-text-muted">
@@ -332,7 +332,7 @@ export function FishingPage() {
       </div>
 
       {message && (
-        <div className="text-center text-coc-accent-red text-sm">{message}</div>
+        <div className="text-center text-coc-accent-red text-sm break-words px-2">{message}</div>
       )}
     </div>
   );
