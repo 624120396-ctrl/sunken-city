@@ -306,10 +306,15 @@ export async function cancelRelicTrade(sellerId: string, tradeId: string) {
     });
     if (!trade) throw new Error('挂单不存在或已成交');
 
-    await tx.relicTrade.update({
-      where: { id: tradeId },
+    const updateResult = await tx.relicTrade.updateMany({
+      where: { id: tradeId, status: 'active' },
       data: { status: 'cancelled' },
     });
+
+    if (updateResult.count === 0) {
+      throw new Error('交易状态已变更，取消失败');
+    }
+
     if (trade.sellerCharacterRelicId) {
       await tx.characterRelic.update({
         where: { id: trade.sellerCharacterRelicId },
@@ -339,7 +344,7 @@ export async function buyRelicTrade(
     if (trade.currency === 'coin') {
       if (buyer.coins < trade.price) throw new Error('锈蚀硬币不足');
     } else {
-      if (buyer.stardust < trade.price) throw new Error('星尘不足');
+      if (buyer.stardust < trade.price) throw new Error('虚银不足');
     }
 
     const targetCharacter = await tx.character.findFirst({
@@ -402,10 +407,14 @@ export async function buyRelicTrade(
     }
 
     // 更新交易状态
-    await tx.relicTrade.update({
-      where: { id: tradeId },
+    const updateResult = await tx.relicTrade.updateMany({
+      where: { id: tradeId, status: 'active' },
       data: { status: 'sold', buyerId, soldAt: new Date() },
     });
+
+    if (updateResult.count === 0) {
+      throw new Error('交易状态已变更，购买失败');
+    }
   });
 
   return { success: true };

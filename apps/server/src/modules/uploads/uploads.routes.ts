@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
+import { fromFile } from 'file-type';
 import { authMiddleware } from '../../middleware/auth';
 import { uploadMiddleware, ensureUploadDir } from '../../config/upload';
 import { uploadRateLimit } from '../../middleware/rate-limit';
@@ -10,6 +12,14 @@ const router = Router();
 const prisma = new PrismaClient();
 
 ensureUploadDir();
+
+const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
 
 /**
  * POST /api/uploads
@@ -23,20 +33,48 @@ router.post('/uploads', authMiddleware, uploadRateLimit, uploadMiddleware.single
       return res.status(400).json({ success: false, message: '未提供文件' });
     }
 
-    const { originalname, filename, mimetype, size } = req.file;
+    const tempPath = req.file.path;
+
+    // 1. 读取文件头魔数校验真实 MIME 类型
+    const detected = await fromFile(tempPath);
+    if (!detected || !ALLOWED_MIMES.includes(detected.mime)) {
+      // 校验失败，立即删除已上传的临时文件
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_FILE_TYPE',
+          message: '不支持的文件类型，仅允许 jpg, png, gif, webp 图片',
+        },
+      });
+    }
+
+    // 2. 服务端重命名为 UUID + 安全扩展名，彻底剥离 originalname
+    const safeExt = MIME_TO_EXT[detected.mime];
+    const newFilename = `${crypto.randomUUID()}${safeExt}`;
+    const destDir = path.dirname(tempPath);
+    const newPath = path.join(destDir, newFilename);
+
+    // 重命名物理文件
+    fs.renameSync(tempPath, newPath);
+
+    // 计算相对路径和访问 URL
     const relativePath = path.relative(
       path.join(process.cwd(), 'public'),
-      req.file.path
+      newPath
     ).replace(/\\/g, '/');
     const url = `/${relativePath}`;
 
+    // 3. 存入数据库
     const upload = await prisma.upload.create({
       data: {
         userId,
-        originalName: originalname,
-        filename,
-        mimeType: mimetype,
-        size,
+        originalName: req.file.originalname, // 保留原始名称供前端展示，物理文件已安全重命名
+        filename: newFilename,
+        mimeType: detected.mime,
+        size: fs.statSync(newPath).size,
         url,
       },
     });
@@ -116,9 +154,10 @@ router.delete('/uploads/:id', authMiddleware, async (req: any, res) => {
       return res.status(404).json({ success: false, message: '文件不存在或无权限' });
     }
 
-    // 删除物理文件
-    const filePath = path.join(process.cwd(), 'public', upload.url);
-    if (fs.existsSync(filePath)) {
+    // 删除物理文件（安全路径拼接）
+    const filePath = path.resolve(process.cwd(), 'public', upload.url.replace(/^\//, ''));
+    const publicRoot = path.resolve(process.cwd(), 'public');
+    if (filePath.startsWith(publicRoot + path.sep) && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 

@@ -221,17 +221,29 @@ router.delete('/friends/requests/:id', authMiddleware, async (req: AuthRequest, 
     const userId = req.userId!;
     const { id } = req.params;
 
-    const request = await prisma.friendRequest.findFirst({
-      where: {
-        id,
-        OR: [{ senderId: userId }, { receiverId: userId }],
-      },
+    const request = await prisma.friendRequest.findUnique({
+      where: { id },
     });
     if (!request) {
       throw new AppError('REQUEST_NOT_FOUND', '好友请求不存在', 404);
     }
 
-    await prisma.friendRequest.delete({ where: { id } });
+    // 验证用户权限：必须是发送者或接收者
+    if (request.senderId !== userId && request.receiverId !== userId) {
+      throw new AppError('FORBIDDEN', '无权操作此请求', 403);
+    }
+
+    // 如果是 pending 状态且删除者是 receiver，改为 rejected（防止骚扰绕过）
+    if (request.status === 'pending' && request.receiverId === userId) {
+      await prisma.friendRequest.update({
+        where: { id },
+        data: { status: 'rejected', updatedAt: new Date() },
+      });
+    } else {
+      // 其他情况：发送者撤回或非 pending 状态，执行删除
+      await prisma.friendRequest.delete({ where: { id } });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
