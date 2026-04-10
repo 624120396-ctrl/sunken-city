@@ -1,0 +1,198 @@
+/* Fishing system animations */
+
+.fishing-stage {
+  background: radial-gradient(ellipse at 50% 0%, #0f1218 0%, #0a0a10 100%);
+}
+
+/* Water surface */
+.fishing-water {
+  background: radial-gradient(ellipse at 50% 0%, #0f1218 0%, #1a1e28 100%);
+}
+
+.water-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  margin-left: -100px;
+  margin-top: -100px;
+  border-radius: 50%;
+  border: 1px solid rgba(200,200,200,0.08);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.ripple-1 { animation: water-ripple-anim 4s linear infinite; }
+.ripple-2 { animation: water-ripple-anim 4s linear infinite 1.3s; }
+.ripple-3 { animation: water-ripple-anim 4s linear infinite 2.6s; }
+
+@keyframes water-ripple-anim {
+  0% { transform: scale(0); opacity: 0.4; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* Fishing rod */
+.fishing-rod {
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+}
+
+/* Bobber */
+.fishing-bobber {
+  width: 24px;
+  height: 32px;
+  transition: opacity 0.3s ease;
+}
+
+.bobber-body {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #8B3A3A 50%, #2a2a2a 50%);
+  border-radius: 9999px;
+  border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.fishing-bobber.floating .bobber-body {
+  animation: bobber-float 2.5s ease-in-out infinite;
+}
+
+.fishing-bobber.biting .bobber-body {
+  animation: bobber-bite 0.2s ease-in-out infinite;
+  background: linear-gradient(180deg, #FF4444 50%, #2a2a2a 50%);
+  box-shadow: 0 0 12px #FF4444;
+}
+
+@keyframes bobber-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes bobber-bite {
+  0%, 100% { transform: translateY(0) scale(1.2); }
+  50% { transform: translateY(3px) scale(1.2); }
+}
+
+/* Ripple rings on bite */
+.ripple-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 68, 68, 0.5);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.ripple-ring.ring-1 { animation: ripple-ring-anim 1s ease-out infinite; }
+.ripple-ring.ring-2 { animation: ripple-ring-anim 1s ease-out infinite 0.33s; }
+.ripple-ring.ring-3 { animation: ripple-ring-anim 1s ease-out infinite 0.66s; }
+
+@keyframes ripple-ring-anim {
+  0% { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Fishing line */
+.fishing-line-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Catch reveal card */
+.catch-reveal-card {
+  background: #15151c;
+  border: 1px solid #2a2a35;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  pointer-events: auto;
+  animation: catch-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards, card-flip 500ms ease-out 200ms forwards;
+  opacity: 0;
+  transform: translateY(120%) scale(0.8);
+}
+
+@keyframes catch-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(0.8);
+  }
+}
+
+@keyframes card-flip {
+  from { transform: translateY(0) scale(0.8) rotateY(-90deg); }
+  to { transform: translateY(0) scale(1) rotateY(0deg); }
+}
+
+.reveal-inner {
+  transform-style: preserve-3d;
+}
+
+.item-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 0.5rem;
+  background: #0d0d12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.item-name {
+  font-family: 'Cinzel', 'Noto Serif SC', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e8d4a0;
+  margin-bottom: 0.25rem;
+}
+
+.item-rarity {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.item-desc {
+  font-size: 0.875rem;
+  color: #a69b85;
+  margin-bottom: 1rem;
+}
+
+/* Rarity glows */
+.glow-common { box-shadow: 0 0 20px rgba(74, 222, 128, 0.25); border-color: rgba(74, 222, 128, 0.5); }
+.glow-common .item-rarity { color: #4ade80; }
+
+.glow-uncommon { box-shadow: 0 0 20px rgba(167, 139, 250, 0.25); border-color: rgba(167, 139, 250, 0.5); }
+.glow-uncommon .item-rarity { color: #a78bfa; }
+
+.glow-rare { box-shadow: 0 0 20px rgba(251, 191, 36, 0.25); border-color: rgba(251, 191, 36, 0.5); }
+.glow-rare .item-rarity { color: #fbbf24; }
+
+.glow-eldritch { box-shadow: 0 0 24px rgba(239, 68, 68, 0.35); border-color: rgba(239, 68, 68, 0.6); }
+.glow-eldritch .item-rarity { color: #ef4444; }
+
+.eldritch-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(139, 38, 53, 0.15);
+  animation: eldritch-flash-anim 800ms ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes eldritch-flash-anim {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}

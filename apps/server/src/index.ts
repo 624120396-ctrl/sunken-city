@@ -36,7 +36,10 @@ import forumRoutes from './modules/forum/forum.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import relicsRoutes from './modules/relics/relics.routes';
 import adminRelicRoutes from './modules/relics/admin-relics.routes';
+import adminDreamingRoutes from './modules/dreaming/admin-dreaming.routes';
 import friendRoutes from './modules/friends/friend.routes';
+import fishingRoutes from './modules/fishing/fishing.routes';
+import dreamingRoutes from './modules/dreaming/dreaming.routes';
 import { loadRelicOverrides } from './modules/relics/relics.config';
 import { prisma } from './config/database';
 
@@ -96,12 +99,15 @@ app.use('/api/admin', adminRankTitleRoutes);
 app.use('/api/admin', adminAnnouncementRoutes);
 app.use('/api/admin', adminShopRoutes);
 app.use('/api/admin', adminRelicRoutes);
+app.use('/api/admin', adminDreamingRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', aiCharacterRoutes);
 app.use('/api', portraitRoutes);
 app.use('/api', forumRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', friendRoutes);
+app.use('/api', fishingRoutes);
+app.use('/api', dreamingRoutes);
 app.use('/api', relicsRoutes);
 
 // 404处理

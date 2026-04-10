@@ -3,6 +3,7 @@
  * Base URL: https://tokenhub.tencentmaas.com/v1/chat/completions
  * 模型: glm-5
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const GLM5_API_KEY = process.env.GLM5_API_KEY || '';
 const GLM5_BASE_URL = 'https://tokenhub.tencentmaas.com/v1/chat/completions';
@@ -38,7 +39,7 @@ export async function codingChat(
   }
   bodyMessages.push(...messages);
 
-  const response = await fetch(GLM5_BASE_URL, {
+  const response = await fetchWithResilience(GLM5_BASE_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

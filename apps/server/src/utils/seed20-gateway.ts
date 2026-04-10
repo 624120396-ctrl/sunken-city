@@ -6,6 +6,7 @@
  * 核心定位：复杂推理、长上下文理解、结构化生成、多步规划
  * 适用场景：AI KP 助手、战役总结、复杂规则裁决、长链路任务执行
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const SEED20_API_KEY = process.env.SEED20_API_KEY || process.env.ARK_API_KEY || '';
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
@@ -34,7 +35,7 @@ export async function seed20Chat(options: Seed20ChatOptions): Promise<Seed20Chat
     throw new Error('Missing SEED20_API_KEY or ARK_API_KEY environment variable');
   }
 
-  const response = await fetch(`${ARK_BASE_URL}/chat/completions`, {
+  const response = await fetchWithResilience(`${ARK_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

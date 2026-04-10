@@ -8,244 +8,254 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(uuid())
-  displayId         Int      @unique
-  email             String   @unique
+  id                String  @id @default(uuid())
+  displayId         Int     @unique
+  email             String  @unique
   nickname          String
   password          String
   avatarUrl         String?
-  exp               Int      @default(0)
-  displayedTitleKey String?  // 当前展示的印记key
-  isAdmin           Boolean  @default(false)
+  exp               Int     @default(0)
+  displayedTitleKey String? // 当前展示的印记key
+  isAdmin           Boolean @default(false)
 
   // 货币系统
-  coins             Int      @default(0)   // 锈蚀硬币
-  stardust          Int      @default(0)   // 虚银
+  coins    Int @default(0) // 锈蚀硬币
+  stardust Int @default(0) // 虚银
 
   // 装备
-  equippedFrame     String?  // 当前装备的头像框 key
+  equippedFrame String? // 当前装备的头像框 key
 
   // 展示角色（社交资料卡使用，与房间内绑定角色解耦）
   displayedCharacterId String?
-  displayedCharacter   Character? @relation("UserDisplayedCharacter", fields: [displayedCharacterId], references: [id])
+  displayedCharacter   Character? @relation("UserDisplayedCharacter", fields: [displayedCharacterId], references: [id], onDelete: SetNull)
 
   // 用户交易所挂单（未来扩展）
   // relicTradesSeller RelicTrade[] @relation("Seller")
   // relicTradesBuyer  RelicTrade[] @relation("Buyer")
 
   // 每日签到
-  lastCheckinAt     DateTime?
+  lastCheckinAt DateTime?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  characters      Character[]
-  roomMembers     RoomMember[]
-  diceRolls       DiceRoll[]
-  unlockedTitles  UserTitle[]
-  uploads         Upload[]
-  inventory       UserInventory[]
-  forumPosts      ForumPost[]
-  forumReplies    ForumReply[]
-  forumLikes      ForumPostLike[]
-  lastReplyPosts  ForumPost[] @relation("LastReplyAuthor")
-  notifications        Notification[]
-  boardModerators      ForumBoardModerator[]
-  sentFriendRequests   FriendRequest[]    @relation("SentRequests")
-  receivedFriendRequests FriendRequest[]  @relation("ReceivedRequests")
-  friendshipsA         Friendship[]       @relation("FriendshipsA")
-  friendshipsB         Friendship[]       @relation("FriendshipsB")
-  directMessagesSent   DirectMessage[]    @relation("SentDirectMessages")
-  directMessagesReceived DirectMessage[]  @relation("ReceivedDirectMessages")
+  characters             Character[]
+  roomMembers            RoomMember[]
+  diceRolls              DiceRoll[]
+  unlockedTitles         UserTitle[]
+  uploads                Upload[]
+  inventory              UserInventory[]
+  forumPosts             ForumPost[]
+  forumReplies           ForumReply[]
+  forumLikes             ForumPostLike[]
+  lastReplyPosts         ForumPost[]           @relation("LastReplyAuthor")
+  notifications          Notification[]
+  boardModerators        ForumBoardModerator[]
+  sentFriendRequests     FriendRequest[]       @relation("SentRequests")
+  receivedFriendRequests FriendRequest[]       @relation("ReceivedRequests")
+  friendshipsA           Friendship[]          @relation("FriendshipsA")
+  friendshipsB           Friendship[]          @relation("FriendshipsB")
+  directMessagesSent     DirectMessage[]       @relation("SentDirectMessages")
+  directMessagesReceived DirectMessage[]       @relation("ReceivedDirectMessages")
+  fishingLogs            UserFishingLog[]
+  fishingDaily           UserFishingDaily?
+  dreamDraws             UserDreamDraw[]
+  dreamDaily             UserDreamDaily?
 
   @@index([exp])
 }
 
 model Character {
-  id          String   @id @default(uuid())
-  displayId   Int      @unique
-  userId      String
-  name        String
+  id        String @id @default(uuid())
+  displayId Int    @unique
+  userId    String
+  name      String
 
   // COC7e 职业系统（职业名称与绑定）
-  occupation  String   // 职业显示名称
+  occupation    String // 职业显示名称
   occupationKey String? // 绑定职业模板的key
 
-  age         Int      @default(25)
-  gender      String?
-  avatarUrl   String?
+  age       Int     @default(25)
+  gender    String?
+  avatarUrl String?
 
   // 快捷技能栏
-  quickSkills String   @default("[\"侦查\",\"聆听\",\"图书馆使用\",\"心理学\",\"话术\"]")
+  quickSkills String @default("[\"侦查\",\"聆听\",\"图书馆使用\",\"心理学\",\"话术\"]")
 
   // 8项基本属性（COC7e 规则值范围 15-90 左右）
-  str         Int      @default(50)
-  con         Int      @default(50)
-  siz         Int      @default(50)
-  dex         Int      @default(50)
-  app         Int      @default(50)
-  int         Int      @default(50)
-  pow         Int      @default(50)
-  edu         Int      @default(50)
-  luck        Int      @default(50)
+  str  Int @default(50)
+  con  Int @default(50)
+  siz  Int @default(50)
+  dex  Int @default(50)
+  app  Int @default(50)
+  int  Int @default(50)
+  pow  Int @default(50)
+  edu  Int @default(50)
+  luck Int @default(50)
 
   // COC7e 新增：信用评级与资产
-  creditRating Int     @default(0) // 信用评级 0-99
-  cash         Int     @default(0) // 现金（美元）
-  assetsValue  Int     @default(0) // 其他资产（美元）
+  creditRating Int @default(0) // 信用评级 0-99
+  cash         Int @default(0) // 现金（美元）
+  assetsValue  Int @default(0) // 其他资产（美元）
 
   // 背景系统（结构化存储）
-  background  String?  // 旧版兼容性保留
-  backgroundEntries String @default("[]") // 6种背景条目 JSON
-  keyConnection String? // 关键背景连接类型
+  background        String? // 旧版兼容性保留
+  backgroundEntries String  @default("[]") // 6种背景条目 JSON
+  keyConnection     String? // 关键背景连接类型
 
   // 派生属性
-  hp          Int      @default(10)
-  mp          Int      @default(10)
-  san         Int      @default(50)
-  maxHp       Int      @default(10)
-  maxMp       Int      @default(10)
-  maxSan      Int      @default(50)
-  mov         Int      @default(8)
-  build       Int      @default(0)
-  db          String?  // 伤害加值，如 "+1d4", "-1", "+2d6"
+  hp     Int     @default(10)
+  mp     Int     @default(10)
+  san    Int     @default(50)
+  maxHp  Int     @default(10)
+  maxMp  Int     @default(10)
+  maxSan Int     @default(50)
+  mov    Int     @default(8)
+  build  Int     @default(0)
+  db     String? // 伤害加值，如 "+1d4", "-1", "+2d6"
 
   // 技能与战斗
-  skills      String   @default("{}") // 标准COC7技能JSON
-  weapons     String   @default("[]")
-  armor       String?
+  skills  String  @default("{}") // 标准COC7技能JSON
+  weapons String  @default("[]")
+  armor   String?
 
   // 技能点分配记录（用于校验和展示）
   skillPointsJson String @default("{}") // { occupationPoints: number, interestPoints: number, usedOccupation: number, usedInterest: number }
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // 调查员形象（AI 生成）
-  portraitUrl           String?
-  portraitPreviewUrl    String?
-  portraitGeneratedCount Int      @default(0)
-  portraitGeneratedAt   DateTime?
+  portraitUrl            String?
+  portraitPreviewUrl     String?
+  portraitGeneratedCount Int       @default(0)
+  portraitGeneratedAt    DateTime?
 
-  user        User     @relation(fields: [userId], references: [id])
-  displayedByUsers User[] @relation("UserDisplayedCharacter")
-  roomMembers RoomMember[]
-  privateMessagesSent   PrivateMessage[] @relation("SentMessages")
+  user                    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayedByUsers        User[]           @relation("UserDisplayedCharacter")
+  roomMembers             RoomMember[]
+  privateMessagesSent     PrivateMessage[] @relation("SentMessages")
   privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
-  relics      CharacterRelic[]
+  relics                  CharacterRelic[]
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 // COC7e 职业模板表
 model Occupation {
-  id                String @id @default(uuid())
-  key               String @unique
-  name              String
-  nameEn            String?
-  description       String?
-  category          String @default("general") // general | academic | criminal | military | artistic
+  id          String  @id @default(uuid())
+  key         String  @unique
+  name        String
+  nameEn      String?
+  description String?
+  category    String  @default("general") // general | academic | criminal | military | artistic
 
   // 技能点公式，如 "EDU*4", "EDU*2+APP*2", "EDU*2+DEX*2", "EDU*2+STR*2", "EDU*2+POW*2"
   skillPointFormula String @default("EDU*4")
 
   // 信用评级范围
-  creditRatingMin   Int    @default(0)
-  creditRatingMax   Int    @default(99)
+  creditRatingMin Int @default(0)
+  creditRatingMax Int @default(99)
 
   // 本职技能列表（JSON 字符串数组）
-  coreSkills        String @default("[]")
+  coreSkills String @default("[]")
 
   // 可选技能选择配置：例如 "自选一技能", "选四:估价,易容,格斗,射击,锁匠,机械维修,妙手"
   // 前端按此渲染选择器
-  electiveSkills    String @default("[]")
+  electiveSkills String @default("[]")
 
-  isActive          Boolean @default(true)
-  sortOrder         Int    @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([isActive])
   @@index([sortOrder])
 }
 
 model Room {
-  id          String   @id @default(uuid())
-  roomId      String   @unique
+  id          String  @id @default(uuid())
+  roomId      String  @unique
   name        String
   description String?
   creatorId   String
-  status      String   @default("ACTIVE")
+  status      String  @default("ACTIVE")
 
   // 新增：氛围主题
-  atmosphere  String   @default("normal") // normal, dark, horror, mystery, warm
+  atmosphere String @default("normal") // normal, dark, horror, mystery, warm
 
   // 新增：当前场景描述
-  sceneDesc   String?
+  sceneDesc String?
 
   // v1.5.0 场景卡升级
   sceneImageUrl String?
   sceneMusicUrl String?
 
   // 新增：游戏开启锁定
-  isGameStarted   Boolean  @default(false)
-  gameStartedAt   DateTime?
+  isGameStarted Boolean   @default(false)
+  gameStartedAt DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  members     RoomMember[]
-  diceRolls   DiceRoll[]
+  members         RoomMember[]
+  diceRolls       DiceRoll[]
   privateMessages PrivateMessage[]
-  countdowns  Countdown[]
-  messages    RoomMessage[]
-  clues       RoomClue[]
-  npcs        RoomNpc[]
-  combatState String?
+  countdowns      Countdown[]
+  messages        RoomMessage[]
+  clues           RoomClue[]
+  npcs            RoomNpc[]
+  combatState     String?
 }
 
 model RoomMember {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   roomId      String
   userId      String
   characterId String?
-  role        String   @default("PLAYER")
-  joinedAt    DateTime @default(now())
+  role        String    @default("PLAYER")
+  joinedAt    DateTime  @default(now())
   leftAt      DateTime?
-  
+  lastSeenAt  DateTime?
+
   // 新增：角色状态标记（JSON数组：injured, poisoned, insane, unconscious, dying）
-  statusTags  String   @default("[]")
+  statusTags String @default("[]")
 
   // 新增：遗物携带（最多2件的JSON key数组）
-  broughtRelics   String   @default("[]")
+  broughtRelics String @default("[]")
 
   // 新增：KP审核机制
-  joinStatus      String   @default("pending") // pending | approved | rejected
-  applyNote       String?  // 入团申请备注
-  joinReason      String?  // 拒绝理由
-  submittedAt     DateTime @default(now())     // 提交申请时间
-  reviewedAt      DateTime?                    // KP审核时间
+  joinStatus  String    @default("pending") // pending | approved | rejected
+  applyNote   String? // 入团申请备注
+  joinReason  String? // 拒绝理由
+  submittedAt DateTime  @default(now()) // 提交申请时间
+  reviewedAt  DateTime? // KP审核时间
 
-  room        Room      @relation(fields: [roomId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-  character   Character? @relation(fields: [characterId], references: [id])
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
 
   @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
 }
 
 // 新增：房间公共聊天记录
 // v1.5.0 房间线索板
 model RoomClue {
-  id           String   @id @default(uuid())
-  roomId       String
-  title        String
-  content      String
-  imageUrl     String?
-  discoveredBy String   @default("all")
-  isHidden     Boolean  @default(false)
+  id            String   @id @default(uuid())
+  roomId        String
+  title         String
+  content       String
+  imageUrl      String?
+  discoveredBy  String   @default("all")
+  isHidden      Boolean  @default(false)
   requiresSkill String?
   requiresValue Int?
-  createdAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
 
-  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId])
 }
@@ -261,7 +271,7 @@ model RoomNpc {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId])
 }
@@ -278,7 +288,7 @@ model RoomMessage {
   meta        String   @default("{}")
   createdAt   DateTime @default(now())
 
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId, createdAt])
   @@index([createdAt])
@@ -315,38 +325,38 @@ model CombatLog {
 }
 
 model SessionReport {
-  id            String   @id @default(uuid())
-  roomId        String
-  title         String
-  summary       String?
-  startTime     DateTime @default(now())
-  endTime       DateTime?
-  duration      Int?     // 分钟
-  participantCount Int  @default(0)
-  combatRounds  Int      @default(0)
-  diceRollCount Int      @default(0)
-  keyEvents     String   @default("[]")  // JSON array
-  characterGrowth String @default("[]")  // JSON array
-  lootedRelics  String   @default("[]")  // JSON array: 本场掉落的遗物实例
-  exportedAt    DateTime?
-  createdAt     DateTime @default(now())
+  id               String    @id @default(uuid())
+  roomId           String
+  title            String
+  summary          String?
+  startTime        DateTime  @default(now())
+  endTime          DateTime?
+  duration         Int? // 分钟
+  participantCount Int       @default(0)
+  combatRounds     Int       @default(0)
+  diceRollCount    Int       @default(0)
+  keyEvents        String    @default("[]") // JSON array
+  characterGrowth  String    @default("[]") // JSON array
+  lootedRelics     String    @default("[]") // JSON array: 本场掉落的遗物实例
+  exportedAt       DateTime?
+  createdAt        DateTime  @default(now())
 
   @@index([roomId])
 }
 
 // 新增：私聊消息表
 model PrivateMessage {
-  id          String   @id @default(uuid())
-  roomId      String
-  senderId    String
-  receiverId  String
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  roomId     String
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-  room        Room     @relation(fields: [roomId], references: [id])
-  sender      Character @relation("SentMessages", fields: [senderId], references: [id])
-  receiver    Character @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  room     Room      @relation(fields: [roomId], references: [id])
+  sender   Character @relation("SentMessages", fields: [senderId], references: [id])
+  receiver Character @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
   @@index([roomId, receiverId])
   @@index([createdAt])
@@ -354,17 +364,17 @@ model PrivateMessage {
 
 // 新增：倒计时表
 model Countdown {
-  id          String   @id @default(uuid())
-  roomId      String
-  title       String   // 倒计时标题
-  duration    Int      // 秒数
-  remaining   Int      // 剩余秒数
-  isActive    Boolean  @default(true)
-  createdBy   String   // 创建者userId
-  createdAt   DateTime @default(now())
-  endedAt     DateTime?
+  id        String    @id @default(uuid())
+  roomId    String
+  title     String // 倒计时标题
+  duration  Int // 秒数
+  remaining Int // 剩余秒数
+  isActive  Boolean   @default(true)
+  createdBy String // 创建者userId
+  createdAt DateTime  @default(now())
+  endedAt   DateTime?
 
-  room        Room     @relation(fields: [roomId], references: [id])
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId])
 }
@@ -392,43 +402,43 @@ model RankConfig {
 
 // 印记配置表（管理员可配置）
 model TitleConfig {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  name        String
-  description String
-  category    String
-  rarity      String
-  condition   String
+  id            String   @id @default(uuid())
+  key           String   @unique
+  name          String
+  description   String
+  category      String
+  rarity        String
+  condition     String
   conditionCode String?
-  expReward   Int
-  icon        String
-  color       String
-  hint        String?
-  isActive    Boolean  @default(true)
-  isHidden    Boolean  @default(false)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  expReward     Int
+  icon          String
+  color         String
+  hint          String?
+  isActive      Boolean  @default(true)
+  isHidden      Boolean  @default(false)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  unlockedByUsers UserTitle[]
 
   @@index([category])
   @@index([rarity])
   @@index([isActive])
-
-  unlockedByUsers UserTitle[]
 }
 
 // 用户已解锁的印记
 model UserTitle {
-  id          String   @id @default(uuid())
-  userId      String
-  titleKey    String
-  unlockedAt  DateTime @default(now())
-  unlockedBy  String   @default("system")
-  grantedBy   String?
-  note        String?
+  id         String   @id @default(uuid())
+  userId     String
+  titleKey   String
+  unlockedAt DateTime @default(now())
+  unlockedBy String   @default("system")
+  grantedBy  String?
+  note       String?
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  titleConfig TitleConfig  @relation(fields: [titleKey], references: [key], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titleConfig TitleConfig @relation(fields: [titleKey], references: [key], onDelete: Cascade)
 
   @@unique([userId, titleKey])
   @@index([userId])
@@ -437,15 +447,15 @@ model UserTitle {
 
 // 用户位阶变更历史
 model UserRankHistory {
-  id          String   @id @default(uuid())
-  userId      String
-  oldLevel    Int
-  newLevel    Int
-  oldExp      Int
-  newExp      Int
-  reason      String
-  changedBy   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  oldLevel  Int
+  newLevel  Int
+  oldExp    Int
+  newExp    Int
+  reason    String
+  changedBy String?
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -453,14 +463,14 @@ model UserRankHistory {
 
 // 印记解锁日志
 model TitleUnlockLog {
-  id          String   @id @default(uuid())
-  userId      String
-  titleKey    String
-  expReward   Int
-  unlockedBy  String
-  grantedBy   String?
-  note        String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  titleKey   String
+  expReward  Int
+  unlockedBy String
+  grantedBy  String?
+  note       String?
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -483,16 +493,16 @@ model Announcement {
 
 // 附件上传记录表
 model Upload {
-  id          String   @id @default(uuid())
-  userId      String
+  id           String   @id @default(uuid())
+  userId       String
   originalName String
-  filename    String   @unique
-  mimeType    String
-  size        Int
-  url         String
-  createdAt   DateTime @default(now())
+  filename     String   @unique
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -500,25 +510,25 @@ model Upload {
 
 // 商店商品表
 model ShopItem {
-  id          String   @id @default(uuid())
-  key         String   @unique  // 唯一标识，如 "rusted_chain"
+  id          String  @id @default(uuid())
+  key         String  @unique // 唯一标识，如 "rusted_chain"
   name        String
   description String
-  category    String   // avatar_frame, dice_skin, card_skin, room_theme, title, relic
-  price       Int      @default(0)
-  currency    String   @default("coin") // coin | stardust
-  rarity      String   @default("common") // common | rare | epic | legendary | mythical
+  category    String // avatar_frame, dice_skin, card_skin, room_theme, title, relic
+  price       Int     @default(0)
+  currency    String  @default("coin") // coin | stardust
+  rarity      String  @default("common") // common | rare | epic | legendary | mythical
   iconUrl     String?
 
   // 新增：遗物专用字段
-  effectType    String?  // narrative | micro_buff | tool | consumable
-  effectData    String?  // JSON 配置（技能、数值、阈值等）
-  tradable      Boolean  @default(true)
-  bindOnAcquire Boolean  @default(false)
+  effectType    String? // narrative | micro_buff | tool | consumable
+  effectData    String? // JSON 配置（技能、数值、阈值等）
+  tradable      Boolean @default(true)
+  bindOnAcquire Boolean @default(false)
 
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   @@index([category, isActive])
   @@index([sortOrder])
@@ -543,7 +553,7 @@ model UserInventory {
   quantity    Int      @default(1)
   purchasedAt DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, itemKey])
   @@index([userId])
@@ -551,19 +561,19 @@ model UserInventory {
 
 // 新增：角色绑定遗物表（保险箱）
 model CharacterRelic {
-  id              String   @id @default(uuid())
-  characterId     String
-  userId          String   // 冗余索引，方便按用户查询
-  relicKey        String   // 对应 ShopItem.key
-  source          String   @default("shop") // shop | room_drop | trade | gift
-  durability      Int?     // 当前耐久
-  maxDurability   Int?     // 最大耐久
-  usedCount       Int      @default(0)     // 已使用次数（consumable）
-  isEquipped      Boolean  @default(false) // 是否标记为常备（展示用）
-  tradeLockId     String?                 // 若正在挂单，记录 RelicTrade.id
-  acquiredAt      DateTime @default(now())
+  id            String   @id @default(uuid())
+  characterId   String
+  userId        String // 冗余索引，方便按用户查询
+  relicKey      String // 对应 ShopItem.key
+  source        String   @default("shop") // shop | room_drop | trade | gift
+  durability    Int? // 当前耐久
+  maxDurability Int? // 最大耐久
+  usedCount     Int      @default(0) // 已使用次数（consumable）
+  isEquipped    Boolean  @default(false) // 是否标记为常备（展示用）
+  tradeLockId   String? // 若正在挂单，记录 RelicTrade.id
+  acquiredAt    DateTime @default(now())
 
-  character       Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([characterId])
   @@index([userId])
@@ -572,17 +582,17 @@ model CharacterRelic {
 
 // 新增：遗物玩家交易市场（v1.5.0 Phase 3）
 model RelicTrade {
-  id            String   @id @default(uuid())
-  sellerId      String
+  id                     String    @id @default(uuid())
+  sellerId               String
   sellerCharacterRelicId String? // 若从角色上解绑交易，记录来源
-  relicKey      String
-  price         Int
-  currency      String   @default("coin")
-  status        String   @default("active") // active | sold | cancelled
-  buyerId       String?
-  relicSnapshot String?  // JSON: { durability, usedCount, maxDurability, isEquipped }
-  createdAt     DateTime @default(now())
-  soldAt        DateTime?
+  relicKey               String
+  price                  Int
+  currency               String    @default("coin")
+  status                 String    @default("active") // active | sold | cancelled
+  buyerId                String?
+  relicSnapshot          String? // JSON: { durability, usedCount, maxDurability, isEquipped }
+  createdAt              DateTime  @default(now())
+  soldAt                 DateTime?
 
   @@index([status, createdAt])
   @@index([relicKey])
@@ -600,8 +610,8 @@ model ForumBoard {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  posts       ForumPost[]
-  moderators  ForumBoardModerator[]
+  posts      ForumPost[]
+  moderators ForumBoardModerator[]
 
   @@index([isActive])
   @@index([sortOrder])
@@ -613,8 +623,8 @@ model ForumBoardModerator {
   userId    String
   createdAt DateTime @default(now())
 
-  board     ForumBoard @relation(fields: [boardKey], references: [key], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board ForumBoard @relation(fields: [boardKey], references: [key], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([boardKey, userId])
   @@index([boardKey])
@@ -622,23 +632,23 @@ model ForumBoardModerator {
 }
 
 model ForumPost {
-  id          String   @id @default(uuid())
-  boardKey    String
-  userId      String
-  title       String
-  content     String
-  isPinned    Boolean  @default(false)
-  isEssence   Boolean  @default(false)
-  isLocked    Boolean  @default(false)
-  viewCount   Int      @default(0)
-  likeCount   Int      @default(0)
-  replyCount  Int      @default(0)
-  bountyCoin  Int      @default(0) // 悬赏金额（锈蚀硬币）
-  bestReplyId String?  // 最佳回复ID
-  lastReplyAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  boardKey      String
+  userId        String
+  title         String
+  content       String
+  isPinned      Boolean  @default(false)
+  isEssence     Boolean  @default(false)
+  isLocked      Boolean  @default(false)
+  viewCount     Int      @default(0)
+  likeCount     Int      @default(0)
+  replyCount    Int      @default(0)
+  bountyCoin    Int      @default(0) // 悬赏金额（锈蚀硬币）
+  bestReplyId   String? // 最佳回复ID
+  lastReplyAt   DateTime @default(now())
   lastReplyById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   board       ForumBoard      @relation(fields: [boardKey], references: [key], onDelete: Cascade)
   author      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -661,11 +671,12 @@ model ForumReply {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  post        ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([postId, createdAt])
   @@index([userId])
+  @@index([postId])
 }
 
 model ForumPostLike {
@@ -673,22 +684,23 @@ model ForumPostLike {
   userId    String
   createdAt DateTime @default(now())
 
-  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
+  @@unique([userId, postId])
   @@index([postId])
   @@index([userId])
 }
 
 model ForumRewardLog {
-  id        String   @id @default(uuid())
-  userId    String
-  action    String   // create_post | create_reply | receive_like | best_reply
-  postId    String?
-  rewardExp Int      @default(0)
-  rewardCoin Int     @default(0)
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  action     String // create_post | create_reply | receive_like | best_reply
+  postId     String?
+  rewardExp  Int      @default(0)
+  rewardCoin Int      @default(0)
+  createdAt  DateTime @default(now())
 
   @@index([userId, action, createdAt])
 }
@@ -696,7 +708,7 @@ model ForumRewardLog {
 model Notification {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // mention | reply | like | best_reply | system | friend_request | friend_accept | room_invite
+  type      String // mention | reply | like | best_reply | system | friend_request | friend_accept | room_invite
   title     String
   content   String?
   postId    String?
@@ -704,7 +716,7 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
 }
@@ -720,12 +732,14 @@ model FriendRequest {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  sender     User     @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver   User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([receiverId, status])
   @@index([senderId, status])
+  @@index([senderId])
+  @@index([receiverId])
 }
 
 model Friendship {
@@ -734,8 +748,8 @@ model Friendship {
   userBId   String
   createdAt DateTime @default(now())
 
-  userA     User     @relation("FriendshipsA", fields: [userAId], references: [id], onDelete: Cascade)
-  userB     User     @relation("FriendshipsB", fields: [userBId], references: [id], onDelete: Cascade)
+  userA User @relation("FriendshipsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendshipsB", fields: [userBId], references: [id], onDelete: Cascade)
 
   @@unique([userAId, userBId])
   @@index([userAId])
@@ -750,10 +764,109 @@ model DirectMessage {
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
 
-  sender     User     @relation("SentDirectMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver   User     @relation("ReceivedDirectMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User @relation("SentDirectMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedDirectMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId, createdAt])
   @@index([receiverId, isRead, createdAt])
 }
 
+// ========== 深渊垂钓系统 ==========
+
+model FishingConfig {
+  id         String   @id @default(uuid())
+  dailyLimit Int      @default(5)
+  extraCost  Int      @default(10)
+  updatedAt  DateTime @updatedAt
+}
+
+model FishingItem {
+  id                 String   @id @default(uuid())
+  key                String   @unique
+  name               String
+  description        String
+  rarity             String // JUNK | COMMON | UNCOMMON | RARE | ELDRITCH
+  sellPrice          Int      @default(0)
+  sellCurrency       String   @default("coin") // coin | stardust
+  isCollection       Boolean  @default(false)
+  collectionCategory String?
+  iconUrl            String?
+  weight             Int      @default(100)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+}
+
+model UserFishingLog {
+  id           String   @id @default(uuid())
+  userId       String
+  itemKey      String
+  itemName     String
+  rarity       String
+  sellPrice    Int
+  sellCurrency String
+  isSold       Boolean  @default(false)
+  caughtAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, caughtAt])
+  @@index([userId])
+}
+
+model UserFishingDaily {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  freeUsed      Int      @default(0)
+  extraUsed     Int      @default(0)
+  lastRefreshAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ========== 溺者之牌（梦境占卜）系统 ==========
+
+model DreamCard {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  rarity    String   @default("common") // common | rare | epic | legendary
+  imageUrl  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserDreamDraw {
+  id       String   @id @default(uuid())
+  userId   String
+  cardKey  String
+  position String // upright | reversed
+  drawnAt  DateTime @default(now())
+
+  isRevealed Boolean   @default(false)
+  revealedAt DateTime?
+  revealText String?
+
+  isDeepRevealed Boolean   @default(false)
+  deepRevealedAt DateTime?
+  deepRevealText String?
+  tentacleBuff   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, drawnAt])
+  @@index([userId])
+}
+
+model UserDreamDaily {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  date       String // YYYY-MM-DD
+  drawCount  Int      @default(0)
+  lastDrawAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}

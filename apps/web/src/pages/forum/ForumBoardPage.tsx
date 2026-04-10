@@ -83,7 +83,7 @@ function PostBadges({ post }: { post: ForumPostSummary }) {
         </Badge>
       )}
       {post.bountyCoin > 0 && (
-        <Badge variant="bounty">悬赏 {post.bountyCoin} 硬币</Badge>
+        <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
       )}
     </>
   );

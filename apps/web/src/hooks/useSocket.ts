@@ -8,6 +8,8 @@ interface UseSocketOptions {
   onDiceRoll?: (roll: any) => void;
   onMemberJoined?: (member: any) => void;
   onMemberLeft?: (member: any) => void;
+  onMemberOnline?: (data: any) => void;
+  onMemberOffline?: (data: any) => void;
   onRoomJoined?: (data: any) => void;
   onCombatStarted?: (state: any) => void;
   onCombatUpdated?: (state: any) => void;
@@ -23,6 +25,8 @@ export function useSocket({
   onDiceRoll,
   onMemberJoined,
   onMemberLeft,
+  onMemberOnline,
+  onMemberOffline,
   onRoomJoined,
   onHistoryMessages,
   onCombatStarted,
@@ -32,100 +36,161 @@ export function useSocket({
   onSanityDeducted,
 }: UseSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
-  const { token } = useAuthStore();
+  const token = useAuthStore(state => state.token);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 回调 ref：避免闭包陈旧问题
+  const callbacksRef = useRef<Partial<UseSocketOptions>>({});
+  useEffect(() => {
+    callbacksRef.current = {
+      onMessage,
+      onDiceRoll,
+      onMemberJoined,
+      onMemberLeft,
+      onMemberOnline,
+      onMemberOffline,
+      onRoomJoined,
+      onCombatStarted,
+      onCombatUpdated,
+      onCombatEnded,
+      onAttackResult,
+      onSanityDeducted,
+      onHistoryMessages,
+    };
+  }, [
+    onMessage, onDiceRoll, onMemberJoined, onMemberLeft, onMemberOnline,
+    onMemberOffline, onRoomJoined, onCombatStarted, onCombatUpdated,
+    onCombatEnded, onAttackResult, onSanityDeducted, onHistoryMessages,
+  ]);
+
+  // 组件挂载状态
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // 重连状态
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!token || !roomId) return;
 
-    // 连接Socket.io - 使用当前域名
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
     const socketUrl = import.meta.env.VITE_WS_URL || window.location.origin;
     console.log('Connecting to Socket.io:', socketUrl);
-    
+
     const socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       path: '/socket.io',
+      reconnection: false, // 手动控制重连
     });
 
     socketRef.current = socket;
 
+    const handleReconnect = () => {
+      if (reconnectAttemptsRef.current >= 5) {
+        if (mountedRef.current) {
+          setError('连接失败，已达到最大重试次数');
+        }
+        return;
+      }
+      const delay = 1000 * Math.pow(2, reconnectAttemptsRef.current);
+      console.log(`Socket 尝试重连，第${reconnectAttemptsRef.current + 1}次，延迟${delay}ms`);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectAttemptsRef.current += 1;
+        socket.connect();
+      }, delay);
+    };
+
     socket.on('connect', () => {
+      if (!mountedRef.current) return;
       console.log('Socket connected, ID:', socket.id);
       setConnected(true);
       setError(null);
-      
-      // 加入房间
+      reconnectAttemptsRef.current = 0;
       socket.emit('room:join', { roomId });
     });
 
     socket.on('connect_error', (err) => {
+      if (!mountedRef.current) return;
       console.error('Socket connection error:', err);
       setError('连接失败: ' + err.message);
       setConnected(false);
+      handleReconnect();
     });
 
     socket.on('disconnect', (reason) => {
+      if (!mountedRef.current) return;
       console.log('Socket disconnected:', reason);
       setConnected(false);
+      if (reason !== 'io client disconnect') {
+        handleReconnect();
+      }
     });
 
-    // 监听事件
     socket.on('room:joined', (data) => {
-      console.log('Joined room:', data);
       if (data.messages?.length > 0) {
-        onHistoryMessages?.(data.messages);
+        callbacksRef.current.onHistoryMessages?.(data.messages);
       }
-      onRoomJoined?.(data);
+      callbacksRef.current.onRoomJoined?.(data);
     });
 
     socket.on('room:member_joined', (data) => {
-      console.log('Member joined:', data);
-      onMemberJoined?.(data);
+      callbacksRef.current.onMemberJoined?.(data);
     });
 
     socket.on('room:member_left', (data) => {
-      console.log('Member left:', data);
-      onMemberLeft?.(data);
+      callbacksRef.current.onMemberLeft?.(data);
+    });
+
+    socket.on('room:member_online', (data) => {
+      callbacksRef.current.onMemberOnline?.(data);
+    });
+
+    socket.on('room:member_offline', (data) => {
+      callbacksRef.current.onMemberOffline?.(data);
     });
 
     socket.on('message:received', (data) => {
-      console.log('Message received:', data);
-      onMessage?.(data);
+      callbacksRef.current.onMessage?.(data);
     });
 
     socket.on('dice:result', (data) => {
-      console.log('Dice result:', data);
-      onDiceRoll?.(data);
+      callbacksRef.current.onDiceRoll?.(data);
     });
 
     socket.on('combat:started', (data) => {
-      console.log('Combat started:', data);
-      onCombatStarted?.(data);
+      callbacksRef.current.onCombatStarted?.(data);
     });
 
     socket.on('combat:updated', (data) => {
-      console.log('Combat updated:', data);
-      onCombatUpdated?.(data);
+      callbacksRef.current.onCombatUpdated?.(data);
     });
 
     socket.on('combat:ended', (data) => {
-      console.log('Combat ended:', data);
-      onCombatEnded?.(data);
+      callbacksRef.current.onCombatEnded?.(data);
     });
 
     socket.on('combat:attack_result', (data) => {
-      console.log('Attack result:', data);
-      onAttackResult?.(data);
+      callbacksRef.current.onAttackResult?.(data);
     });
 
     socket.on('sanity:deducted', (data) => {
-      console.log('Sanity deducted:', data);
-      onSanityDeducted?.(data);
+      callbacksRef.current.onSanityDeducted?.(data);
     });
 
     socket.on('error', (data) => {
+      if (!mountedRef.current) return;
       console.error('Socket error:', data);
       setError(data.message);
     });
@@ -133,10 +198,12 @@ export function useSocket({
     return () => {
       socket.emit('room:leave', { roomId });
       socket.disconnect();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
     };
   }, [token, roomId]);
 
-  // 发送消息
   const sendMessage = useCallback((content: string, characterId?: string, isSecret?: boolean, messageType?: string) => {
     socketRef.current?.emit('message:send', {
       roomId,
@@ -147,7 +214,6 @@ export function useSocket({
     });
   }, [roomId]);
 
-  // 投骰
   const rollDice = useCallback((data: {
     rollType: string;
     targetName?: string;

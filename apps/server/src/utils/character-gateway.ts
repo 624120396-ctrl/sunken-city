@@ -7,6 +7,7 @@
  * - NPC 虚拟陪伴对话（情感递进、互动自然）
  * - 强格式遵循（稳定输出 JSON / Markdown 结构）
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const ARK_CHARACTER_API_KEY = process.env.ARK_CHARACTER_API_KEY || process.env.ARK_API_KEY || '';
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
@@ -34,7 +35,7 @@ async function characterChat(options: CharacterChatOptions): Promise<CharacterCh
     throw new Error('Missing ARK_CHARACTER_API_KEY or ARK_API_KEY environment variable');
   }
 
-  const response = await fetch(`${ARK_BASE_URL}/chat/completions`, {
+  const response = await fetchWithResilience(`${ARK_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

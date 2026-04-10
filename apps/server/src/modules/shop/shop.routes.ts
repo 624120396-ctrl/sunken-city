@@ -378,7 +378,7 @@ router.post('/shop/open-lootbox', authMiddleware, async (req: any, res) => {
         });
       }
 
-      // 加硬币
+      // 加锈蚀硬币
       await tx.user.update({
         where: { id: userId },
         data: { coins: { increment: REWARD_COINS } },

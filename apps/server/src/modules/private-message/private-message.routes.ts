@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
+import { io } from '../../index';
 
 const router = Router();
 
@@ -26,8 +27,8 @@ router.get('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthRe
     }
 
     const myMember = room.members[0];
-    if (!myMember?.character) {
-      throw new AppError('NO_CHARACTER', '请先选择角色', 400);
+    if (!myMember?.character || myMember.leftAt || myMember.joinStatus !== 'approved') {
+      throw new AppError('NO_CHARACTER', '请先加入房间并选择角色', 400);
     }
 
     const characterId = myMember.character.id;
@@ -94,22 +95,24 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
     }
 
     const myMember = room.members[0];
-    if (!myMember?.character) {
-      throw new AppError('NO_CHARACTER', '请先选择角色', 400);
+    if (!myMember?.character || myMember.leftAt || myMember.joinStatus !== 'approved') {
+      throw new AppError('NO_CHARACTER', '请先加入房间并选择角色', 400);
     }
 
     const senderId = myMember.character.id;
 
-    // 验证接收者是否在同一房间
+    // 验证接收者是否在同一房间且为有效成员
     const receiverMember = await prisma.roomMember.findFirst({
       where: {
         roomId: room.id,
         characterId: receiverCharacterId,
+        leftAt: null,
+        joinStatus: 'approved',
       },
     });
 
     if (!receiverMember) {
-      throw new AppError('RECEIVER_NOT_FOUND', '接收者不在房间中', 404);
+      throw new AppError('RECEIVER_NOT_FOUND', '接收者不在房间中或尚未通过审核', 404);
     }
 
     const message = await prisma.privateMessage.create({
@@ -127,6 +130,14 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
           select: { id: true, name: true, avatarUrl: true },
         },
       },
+    });
+
+    // Socket 实时推送给接收者（按 userId + roomId 匹配在线 socket）
+    const receiverUserId = receiverMember.userId;
+    io.sockets.sockets.forEach((s: any) => {
+      if (s.user?.userId === receiverUserId && s.rooms.has(roomId)) {
+        s.emit('private_message:received', { roomId, message });
+      }
     });
 
     res.status(201).json({
@@ -154,7 +165,7 @@ router.get('/rooms/:roomId/private-messages/unread', authMiddleware, async (req:
       },
     });
 
-    if (!room || !room.members[0]?.character) {
+    if (!room || !room.members[0]?.character || room.members[0].leftAt || room.members[0].joinStatus !== 'approved') {
       return res.json({ success: true, data: { count: 0 } });
     }
 

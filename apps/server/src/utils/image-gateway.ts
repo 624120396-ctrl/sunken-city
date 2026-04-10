@@ -5,6 +5,7 @@
  * 注意：调用图像生成 API 时必须使用您在火山方舟控制台创建的 Endpoint ID
  * （格式如 ep-2026xxxxxx-xxxxx），而不是模型名称 doubao-seedream-4.5
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const ARK_IMAGE_API_KEY = process.env.ARK_IMAGE_API_KEY || '';
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
@@ -36,7 +37,7 @@ export async function generateImage(
     throw new Error('Missing ARK_IMAGE_API_KEY environment variable');
   }
 
-  const response = await fetch(`${ARK_BASE_URL}/images/generations`, {
+  const response = await fetchWithResilience(`${ARK_BASE_URL}/images/generations`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -81,7 +82,7 @@ export async function editImage(
     throw new Error('Missing ARK_IMAGE_API_KEY environment variable');
   }
 
-  const response = await fetch(`${ARK_BASE_URL}/images/edits`, {
+  const response = await fetchWithResilience(`${ARK_BASE_URL}/images/edits`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -141,7 +142,7 @@ export async function generateCharacterAvatar(
   if (!url) return null;
 
   // 下载图片并返回 Buffer
-  const imgRes = await fetch(url);
+  const imgRes = await fetchWithResilience(url);
   if (!imgRes.ok) return null;
   const arrayBuffer = await imgRes.arrayBuffer();
   return Buffer.from(arrayBuffer);
@@ -180,7 +181,7 @@ export async function generateSceneImage(
   const url = results[0]?.url;
   if (!url) return null;
 
-  const imgRes = await fetch(url);
+  const imgRes = await fetchWithResilience(url);
   if (!imgRes.ok) return null;
   const arrayBuffer = await imgRes.arrayBuffer();
   return Buffer.from(arrayBuffer);

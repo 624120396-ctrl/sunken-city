@@ -6,6 +6,7 @@
  * 核心优势：人设贴合、口语化、情感陪伴、剧情推进力强
  * 适用场景：NPC 对话、角色扮演、情感化叙事、剧情分支互动
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const HUNYUAN_API_KEY = process.env.HUNYUAN_API_KEY || '';
 const HUNYUAN_BASE_URL = 'https://tokenhub.tencentmaas.com/v1/chat/completions';
@@ -34,7 +35,7 @@ export async function hunyuanChat(options: HunyuanChatOptions): Promise<HunyuanC
     throw new Error('Missing HUNYUAN_API_KEY environment variable');
   }
 
-  const response = await fetch(HUNYUAN_BASE_URL, {
+  const response = await fetchWithResilience(HUNYUAN_BASE_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

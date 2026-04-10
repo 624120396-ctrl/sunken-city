@@ -310,6 +310,36 @@ export function setupSocketHandlers(io: SocketIOServer) {
         // 加入Socket房间
         socket.join(roomId);
 
+        // 恢复战斗状态
+        if (room.combatState) {
+          try {
+            const parsed = JSON.parse(room.combatState);
+            if (parsed.status === 'IN_PROGRESS') {
+              combatStates.set(roomId, parsed);
+            }
+          } catch {
+            // ignore invalid combatState JSON
+          }
+        }
+
+        // 更新最后活跃时间并获取当前在线用户列表
+        await prisma.roomMember.updateMany({
+          where: { roomId: room.id, userId, leftAt: null },
+          data: { lastSeenAt: new Date() },
+        });
+        const roomSockets = io.sockets.adapter.rooms.get(roomId);
+        const onlineUserIds = [...(roomSockets || [])]
+          .map((sid) => (io.sockets.sockets.get(sid) as any)?.user?.userId)
+          .filter(Boolean);
+        const uniqueOnlineUserIds = [...new Set(onlineUserIds)];
+
+        // 通知房间内其他用户自己上线了
+        socket.to(roomId).emit('room:member_online', {
+          userId,
+          nickname: socket.user!.nickname,
+          timestamp: new Date().toISOString(),
+        });
+
         const buildMemberPayload = (m: (typeof room.members)[0]) => {
           const rank = ranks.find(r => r.expRequired <= m.user.exp);
           const nextRank = rank ? ranks.find(r => r.expRequired > rank.expRequired) : null;
@@ -377,6 +407,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
             sceneMusicUrl: room.sceneMusicUrl,
           },
           members: room.members.map(buildMemberPayload),
+          onlineUserIds: uniqueOnlineUserIds,
           myCharacter: myCharacter ? {
             id: myCharacter.id,
             name: myCharacter.name,
@@ -433,21 +464,15 @@ export function setupSocketHandlers(io: SocketIOServer) {
       }
     });
 
-    // 离开房间
+    // 离开房间（仅 socket 房间，不涉及数据库 leftAt）
     socket.on('room:leave', async (data: { roomId: string }) => {
       const { roomId } = data;
       socket.leave(roomId);
 
-      socket.to(roomId).emit('room:member_left', {
-        userId: socket.user!.userId,
-        nickname: socket.user!.nickname,
-        timestamp: new Date().toISOString(),
-      });
-
       // 向好友广播离开房间（恢复为仅在线）
       await broadcastFriendStatus(io, socket.user!.userId, true);
 
-      logger.info(`用户 ${socket.user?.nickname} 离开房间 ${roomId}`);
+      logger.info(`用户 ${socket.user?.nickname} 离开 socket 房间 ${roomId}`);
     });
 
     // 发送消息
@@ -461,15 +486,30 @@ export function setupSocketHandlers(io: SocketIOServer) {
       try {
         const { roomId, content, characterId, isSecret, messageType } = data;
         const type = messageType || 'text';
-        
+        const userId = socket.user!.userId;
+
         const room = await prisma.room.findUnique({ where: { roomId } });
         if (!room) return;
+
+        // 验证成员身份
+        const member = await prisma.roomMember.findFirst({
+          where: { roomId: room.id, userId, leftAt: null, joinStatus: 'approved' },
+        });
+        if (!member) {
+          return socket.emit('error', { message: '你不在该房间中或尚未通过审核' });
+        }
+
+        // 刷新最后活跃时间
+        await prisma.roomMember.updateMany({
+          where: { roomId: room.id, userId, leftAt: null },
+          data: { lastSeenAt: new Date() },
+        });
 
         const messageId = Date.now().toString();
         const messageData: any = {
           id: messageId,
           sender: {
-            userId: socket.user!.userId,
+            userId,
             nickname: socket.user!.nickname,
           },
           content: isSecret ? '🔒 暗骰消息' : content,
@@ -545,6 +585,23 @@ export function setupSocketHandlers(io: SocketIOServer) {
         const { roomId, rollType, targetName, targetValue, characterId, isSecret } = data;
         const userId = socket.user!.userId;
 
+        const room = await prisma.room.findUnique({ where: { roomId } });
+        if (!room) return;
+
+        // 验证成员身份
+        const member = await prisma.roomMember.findFirst({
+          where: { roomId: room.id, userId, leftAt: null, joinStatus: 'approved' },
+        });
+        if (!member) {
+          return socket.emit('error', { message: '你不在该房间中或尚未通过审核' });
+        }
+
+        // 刷新最后活跃时间
+        await prisma.roomMember.updateMany({
+          where: { roomId: room.id, userId, leftAt: null },
+          data: { lastSeenAt: new Date() },
+        });
+
         // 通用骰子解析 NdM
         let count = 1;
         let sides = 100;
@@ -576,85 +633,82 @@ export function setupSocketHandlers(io: SocketIOServer) {
           : '-';
 
         // 保存到数据库
-        const room = await prisma.room.findUnique({ where: { roomId } });
-        if (room) {
-          await prisma.diceRoll.create({
-            data: {
-              roomId: room.id,
-              userId,
-              rollType,
-              targetName,
-              targetValue,
-              rollResult,
-              rolls: JSON.stringify(rolls),
-              successLevel,
-            },
-          });
-
-          // 同时保存到聊天记录
-          const diceContent = targetName
-            ? `🎲 ${targetName} 检定: ${rollResult}/${targetValue} ${successLevel}`
-            : `🎲 ${rollType}: ${rollResult}`;
-
-          await prisma.roomMessage.create({
-            data: {
-              roomId: room.id,
-              userId,
-              nickname: socket.user!.nickname,
-              content: diceContent,
-              isSecret: !!isSecret,
-              type: 'dice',
-              meta: JSON.stringify({ rollType, targetName, targetValue, rollResult, successLevel }),
-            },
-          });
-
-          const rollData = {
-            id: Date.now().toString(),
-            sender: {
-              userId,
-              nickname: socket.user!.nickname,
-            },
+        await prisma.diceRoll.create({
+          data: {
+            roomId: room.id,
+            userId,
             rollType,
             targetName,
             targetValue,
             rollResult,
-            rolls,
+            rolls: JSON.stringify(rolls),
             successLevel,
-            timestamp: new Date().toISOString(),
-          };
+          },
+        });
 
-          if (isSecret) {
-            // 暗骰：发送者和 KP 看到真实结果
-            socket.emit('dice:result', rollData);
-            const kpMembers = await prisma.roomMember.findMany({
-              where: { roomId: room.id, role: 'KP' },
-            });
-            const kpUserIds = new Set(kpMembers.map(m => m.userId));
-            const roomMembers = io.sockets.adapter.rooms.get(roomId);
-            if (roomMembers) {
-              roomMembers.forEach((socketId) => {
-                const memberSocket = io.sockets.sockets.get(socketId);
-                if (memberSocket && memberSocket !== socket) {
-                  if (kpUserIds.has((memberSocket as any).user!.userId)) {
-                    memberSocket.emit('dice:result', rollData);
-                  } else {
-                    memberSocket.emit('dice:result', {
-                      ...rollData,
-                      rollResult: 0,
-                      rolls: [],
-                      successLevel: '-',
-                      targetName: undefined,
-                      targetValue: undefined,
-                      content: '🔒 KP进行了一次暗骰',
-                    });
-                  }
+        // 同时保存到聊天记录
+        const diceContent = targetName
+          ? `🎲 ${targetName} 检定: ${rollResult}/${targetValue} ${successLevel}`
+          : `🎲 ${rollType}: ${rollResult}`;
+
+        await prisma.roomMessage.create({
+          data: {
+            roomId: room.id,
+            userId,
+            nickname: socket.user!.nickname,
+            content: diceContent,
+            isSecret: !!isSecret,
+            type: 'dice',
+            meta: JSON.stringify({ rollType, targetName, targetValue, rollResult, successLevel }),
+          },
+        });
+
+        const rollData = {
+          id: Date.now().toString(),
+          sender: {
+            userId,
+            nickname: socket.user!.nickname,
+          },
+          rollType,
+          targetName,
+          targetValue,
+          rollResult,
+          rolls,
+          successLevel,
+          timestamp: new Date().toISOString(),
+        };
+
+        if (isSecret) {
+          // 暗骰：发送者和 KP 看到真实结果
+          socket.emit('dice:result', rollData);
+          const kpMembers = await prisma.roomMember.findMany({
+            where: { roomId: room.id, role: 'KP' },
+          });
+          const kpUserIds = new Set(kpMembers.map(m => m.userId));
+          const roomMembers = io.sockets.adapter.rooms.get(roomId);
+          if (roomMembers) {
+            roomMembers.forEach((socketId) => {
+              const memberSocket = io.sockets.sockets.get(socketId);
+              if (memberSocket && memberSocket !== socket) {
+                if (kpUserIds.has((memberSocket as any).user!.userId)) {
+                  memberSocket.emit('dice:result', rollData);
+                } else {
+                  memberSocket.emit('dice:result', {
+                    ...rollData,
+                    rollResult: 0,
+                    rolls: [],
+                    successLevel: '-',
+                    targetName: undefined,
+                    targetValue: undefined,
+                    content: '🔒 KP进行了一次暗骰',
+                  });
                 }
-              });
-            }
+              }
+            });
+          }
           } else {
             io.to(roomId).emit('dice:result', rollData);
           }
-        }
 
         logger.info(`用户 ${socket.user?.nickname} 在房间 ${roomId} 投骰: ${rollResult}`);
       } catch (error) {
@@ -689,7 +743,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           return;
         }
 
-        const member = room.members.find(m => m.userId === userId);
+        const member = room.members.find(m => m.userId === userId && !m.leftAt && m.joinStatus === 'approved');
         if (!member || member.role !== 'KP') {
           socket.emit('error', { message: '只有KP可以操作理智' });
           return;
@@ -818,7 +872,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           return;
         }
 
-        const member = room.members.find(m => m.userId === userId);
+        const member = room.members.find(m => m.userId === userId && !m.leftAt && m.joinStatus === 'approved');
         if (!member || member.role !== 'KP') {
           socket.emit('error', { message: '只有KP可以开始战斗' });
           return;
@@ -856,6 +910,10 @@ export function setupSocketHandlers(io: SocketIOServer) {
         };
 
         combatStates.set(roomId, state);
+        await prisma.room.update({
+          where: { id: room.id },
+          data: { combatState: JSON.stringify(state) },
+        });
         io.to(roomId).emit('combat:started', state);
         logger.info(`房间 ${roomId} 战斗开始`);
       } catch (error) {
@@ -876,6 +934,18 @@ export function setupSocketHandlers(io: SocketIOServer) {
       try {
         const { roomId, targetUserId, skillName = '格斗', skillValue = 50, weaponDamage = '1D6', armorValue = 0 } = data;
         const userId = socket.user!.userId;
+
+        const room = await prisma.room.findUnique({ where: { roomId } });
+        if (!room) {
+          socket.emit('error', { message: '房间不存在' });
+          return;
+        }
+        const member = await prisma.roomMember.findFirst({
+          where: { roomId: room.id, userId, leftAt: null, joinStatus: 'approved' },
+        });
+        if (!member) {
+          return socket.emit('error', { message: '你不在该房间中或尚未通过审核' });
+        }
 
         const state = combatStates.get(roomId);
         if (!state || state.status !== 'IN_PROGRESS') {
@@ -931,9 +1001,24 @@ export function setupSocketHandlers(io: SocketIOServer) {
 
           const targetIndex = state.turnOrder.findIndex((c: any) => c.userId === targetUserId);
           if (targetIndex >= 0) {
-            state.turnOrder[targetIndex].hp = Math.max(0, state.turnOrder[targetIndex].hp - finalDamage);
+            const newHp = Math.max(0, state.turnOrder[targetIndex].hp - finalDamage);
+            state.turnOrder[targetIndex].hp = newHp;
+            // 同步更新数据库中的角色 HP
+            const targetCharacterId = state.turnOrder[targetIndex].characterId;
+            if (targetCharacterId) {
+              await prisma.character.update({
+                where: { id: targetCharacterId },
+                data: { hp: newHp },
+              });
+            }
           }
         }
+
+        // 持久化战斗状态
+        await prisma.room.update({
+          where: { roomId },
+          data: { combatState: JSON.stringify(state) },
+        });
 
         const result = {
           hitRoll,
@@ -971,6 +1056,18 @@ export function setupSocketHandlers(io: SocketIOServer) {
         const { roomId } = data;
         const userId = socket.user!.userId;
 
+        const room = await prisma.room.findUnique({ where: { roomId } });
+        if (!room) {
+          socket.emit('error', { message: '房间不存在' });
+          return;
+        }
+        const member = await prisma.roomMember.findFirst({
+          where: { roomId: room.id, userId, leftAt: null, joinStatus: 'approved' },
+        });
+        if (!member) {
+          return socket.emit('error', { message: '你不在该房间中或尚未通过审核' });
+        }
+
         const state = combatStates.get(roomId);
         if (!state || state.status !== 'IN_PROGRESS') {
           socket.emit('error', { message: '当前没有进行中的战斗' });
@@ -1000,6 +1097,11 @@ export function setupSocketHandlers(io: SocketIOServer) {
 
         const nextCombatant = state.turnOrder[state.currentTurnIndex];
 
+        await prisma.room.update({
+          where: { roomId },
+          data: { combatState: JSON.stringify(state) },
+        });
+
         io.to(roomId).emit('combat:turn_changed', {
           nextTurn: nextCombatant.nickname,
           round: state.currentRound,
@@ -1027,7 +1129,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           return;
         }
 
-        const member = room.members.find(m => m.userId === userId);
+        const member = room.members.find(m => m.userId === userId && !m.leftAt && m.joinStatus === 'approved');
         if (!member || member.role !== 'KP') {
           socket.emit('error', { message: '只有KP可以结束战斗' });
           return;
@@ -1044,6 +1146,10 @@ export function setupSocketHandlers(io: SocketIOServer) {
             result: '战斗已结束',
             timestamp: new Date().toISOString(),
           });
+          await prisma.room.update({
+            where: { roomId },
+            data: { combatState: JSON.stringify(state) },
+          });
         }
 
         io.to(roomId).emit('combat:ended', state);
@@ -1059,6 +1165,18 @@ export function setupSocketHandlers(io: SocketIOServer) {
       try {
         const { roomId, weaponIndex } = data;
         const userId = socket.user!.userId;
+
+        const room = await prisma.room.findUnique({ where: { roomId } });
+        if (!room) {
+          socket.emit('error', { message: '房间不存在' });
+          return;
+        }
+        const member = await prisma.roomMember.findFirst({
+          where: { roomId: room.id, userId, leftAt: null, joinStatus: 'approved' },
+        });
+        if (!member) {
+          return socket.emit('error', { message: '你不在该房间中或尚未通过审核' });
+        }
 
         const state = combatStates.get(roomId);
         if (!state || state.status !== 'IN_PROGRESS') {
@@ -1113,6 +1231,38 @@ export function setupSocketHandlers(io: SocketIOServer) {
         io.emit('online:update', await getOnlineUsers());
         // 向好友广播下线状态
         await broadcastFriendStatus(io, userId, false);
+      }
+
+      // 检查用户加入过的所有房间，若该房间已无其他连接，则广播离线并更新 lastSeenAt
+      if (socket.user) {
+        const userId = socket.user.userId;
+        for (const rId of socket.rooms) {
+          if (rId === socket.id) continue; // 跳过 socket 自身房间
+          const roomSockets = io.sockets.adapter.rooms.get(rId);
+          let stillOnline = false;
+          if (roomSockets) {
+            for (const sid of roomSockets) {
+              const s = io.sockets.sockets.get(sid);
+              if (s && s !== socket && (s as any).user?.userId === userId) {
+                stillOnline = true;
+                break;
+              }
+            }
+          }
+          if (!stillOnline) {
+            const room = await prisma.room.findUnique({ where: { roomId: rId } });
+            if (room) {
+              await prisma.roomMember.updateMany({
+                where: { roomId: room.id, userId, leftAt: null },
+                data: { lastSeenAt: new Date() },
+              });
+              io.to(rId).emit('room:member_offline', {
+                userId,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        }
       }
     });
   });

@@ -320,7 +320,7 @@ export function ForumPostPage() {
                       </Badge>
                     )}
                     {post.bountyCoin > 0 && (
-                      <Badge variant="bounty">悬赏 {post.bountyCoin} 硬币</Badge>
+                      <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
                     )}
                   </div>
                   <div className="text-xs text-coc-text-muted whitespace-nowrap">

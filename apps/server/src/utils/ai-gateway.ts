@@ -3,6 +3,7 @@
  * Base URL: https://ark.cn-beijing.volces.com/api/coding/v3
  * 模型: ark-code-latest (Auto 路由，底层可切 Kimi-K2.5 / DeepSeek-V3.2 / Doubao-Seed-Code 等)
  */
+import { fetchWithResilience } from './fetch-with-resilience';
 
 const CODING_PLAN_API_KEY = process.env.ARK_API_KEY || '';
 const CODING_PLAN_BASE_URL = 'https://ark.cn-beijing.volces.com/api/coding/v3';
@@ -38,7 +39,7 @@ export async function codingChat(
   }
   bodyMessages.push(...messages);
 
-  const response = await fetch(`${CODING_PLAN_BASE_URL}/chat/completions`, {
+  const response = await fetchWithResilience(`${CODING_PLAN_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

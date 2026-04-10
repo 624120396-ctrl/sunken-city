@@ -115,11 +115,11 @@ export function ForumNewPostPage() {
               onChange={(e) => setBounty(Math.max(0, parseInt(e.target.value) || 0))}
               className="w-32 bg-coc-bg-primary border border-coc-border rounded p-2 text-coc-parchment focus:border-coc-gold focus:outline-none"
             />
-            <span className="text-sm text-coc-text-muted">当前余额：{user?.coins || 0} 硬币</span>
+            <span className="text-sm text-coc-text-muted">当前余额：{user?.coins || 0} 锈蚀硬币</span>
           </div>
           {bounty > 0 && (
             <p className="text-xs text-amber-400 mt-1">
-              最佳回复者将获得 {bounty} 硬币悬赏。
+              最佳回复者将获得 {bounty} 锈蚀硬币悬赏。
             </p>
           )}
         </div>

@@ -27,11 +27,22 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
         name: true,
         description: true,
         creatorId: true,
-        _count: {
-          select: { members: true },
-        },
       },
     });
+
+    const roomIds = rooms.map(r => r.id);
+    const memberCounts = roomIds.length > 0
+      ? await prisma.roomMember.groupBy({
+          by: ['roomId'],
+          where: {
+            roomId: { in: roomIds },
+            leftAt: null,
+            joinStatus: 'approved',
+          },
+          _count: { userId: true },
+        })
+      : [];
+    const countMap = new Map(memberCounts.map(m => [m.roomId, m._count.userId]));
 
     res.json({
       success: true,
@@ -41,7 +52,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
           roomId: r.roomId,
           name: r.name,
           description: r.description,
-          memberCount: r._count.members,
+          memberCount: countMap.get(r.id) || 0,
           isCreator: r.creatorId === req.userId,
         })),
       },
@@ -108,7 +119,7 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
 
     // 检查用户是否在房间中
     const isMember = room.members.some(m => m.userId === req.userId && !m.leftAt);
-    const isApproved = room.members.some(m => m.userId === req.userId && m.joinStatus === 'approved');
+    const isApproved = room.members.some(m => m.userId === req.userId && m.joinStatus === 'approved' && !m.leftAt);
     const isCreator = room.creatorId === req.userId;
 
     // 批量获取头像框图片URL
@@ -234,8 +245,8 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
       throw new AppError('ALREADY_MEMBER', '你已在该房间中', 400);
     }
 
-    // 检查是否已有 pending 申请（同一房间）
-    const pendingMember = room.members.find(m => m.userId === userId && m.joinStatus === 'pending');
+    // 检查是否已有 pending 申请（未退出的）
+    const pendingMember = room.members.find(m => m.userId === userId && m.joinStatus === 'pending' && !m.leftAt);
     if (pendingMember) {
       throw new AppError('PENDING_APPLICATION', '你已提交申请，等待 KP 审核', 400);
     }
@@ -259,6 +270,27 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
       }
     }
 
+    // 如果之前加入过并已通过审核，直接恢复成员资格
+    const previousApproved = room.members.find(m => m.userId === userId && m.joinStatus === 'approved' && m.leftAt);
+    if (previousApproved) {
+      const member = await prisma.roomMember.update({
+        where: { id: previousApproved.id },
+        data: {
+          leftAt: null,
+          lastSeenAt: new Date(),
+          characterId: characterId || previousApproved.characterId,
+          broughtRelics: JSON.stringify(carriedRelics),
+          applyNote: applyNote || previousApproved.applyNote || null,
+          submittedAt: new Date(),
+        },
+      });
+      return res.json({
+        success: true,
+        data: { member },
+        message: '欢迎回来，调查员',
+      });
+    }
+
     // 加入房间（pending 状态）
     const member = await prisma.roomMember.create({
       data: {
@@ -269,6 +301,7 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
         joinStatus: 'pending',
         applyNote: applyNote || null,
         broughtRelics: JSON.stringify(carriedRelics),
+        lastSeenAt: new Date(),
       },
     });
 

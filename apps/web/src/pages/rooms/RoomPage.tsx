@@ -161,7 +161,7 @@ interface CombatState {
 export function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -178,6 +178,8 @@ export function RoomPage() {
   const [attackTarget, setAttackTarget] = useState('');
   const [isSecretDice, setIsSecretDice] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const cluesSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingRef = useRef(false);
 
   // 成员详情弹窗
   const [showMemberDetail, setShowMemberDetail] = useState(false);
@@ -196,6 +198,7 @@ export function RoomPage() {
   const [sceneDesc, setSceneDesc] = useState<string>('');
   const [atmosphere, setAtmosphere] = useState<string>('normal');
   const [memberStatuses, setMemberStatuses] = useState<Record<string, string[]>>({});
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [showPrivateChat, setShowPrivateChat] = useState(false);
   const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
   const [countdowns, setCountdowns] = useState<Array<{
@@ -249,7 +252,12 @@ export function RoomPage() {
   const addClue = (clue: any) => {
     const newClues = [clue, ...clues];
     setClues(newClues);
-    localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
+    if (cluesSaveTimeoutRef.current) {
+      clearTimeout(cluesSaveTimeoutRef.current);
+    }
+    cluesSaveTimeoutRef.current = setTimeout(() => {
+      localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
+    }, 300);
   };
 
   // Socket连接
@@ -293,13 +301,26 @@ export function RoomPage() {
         rollResult: roll.rollResult,
         successLevel: roll.successLevel,
         timestamp: roll.timestamp,
-      }]);
+      }].slice(-50));
     },
     onRoomJoined: (data) => {
       // 保存当前用户的角色数据
       if (data.myCharacter) {
         setSelectedCharacter(data.myCharacter);
       }
+      if (data.onlineUserIds) {
+        setOnlineUserIds(new Set(data.onlineUserIds));
+      }
+    },
+    onMemberOnline: ({ userId }) => {
+      setOnlineUserIds(prev => new Set([...prev, userId]));
+    },
+    onMemberOffline: ({ userId }) => {
+      setOnlineUserIds(prev => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
     },
     onHistoryMessages: (history) => {
       const formatted = history.map((msg: any) => {
@@ -401,11 +422,16 @@ export function RoomPage() {
 
     // 定期轮询倒计时和未读数
     const interval = setInterval(() => {
-      if (roomId) {
-        fetchCountdowns();
-        fetchPrivateUnreadCount();
-        fetchRoomNpcs();
-        fetchRoomClues();
+      if (roomId && !pollingRef.current) {
+        pollingRef.current = true;
+        Promise.all([
+          fetchCountdowns(),
+          fetchPrivateUnreadCount(),
+          fetchRoomNpcs(),
+          fetchRoomClues(),
+        ]).catch(() => {}).finally(() => {
+          pollingRef.current = false;
+        });
       }
     }, 5000);
 
@@ -1012,6 +1038,11 @@ export function RoomPage() {
                   <div>
                     <div className="flex items-center gap-1">
                       <span className="font-medium">{member.nickname}</span>
+                      {onlineUserIds.has(member.userId) ? (
+                        <span className="h-2 w-2 rounded-full bg-green-500" title="在线" />
+                      ) : (
+                        <span className="h-2 w-2 rounded-full bg-gray-500" title="离线" />
+                      )}
                       {member.role === 'KP' && (
                         <Crown size={12} className="text-coc-accent-gold" />
                       )}

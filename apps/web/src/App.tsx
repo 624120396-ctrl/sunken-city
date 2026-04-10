@@ -39,6 +39,8 @@ import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
 
 // 好友
 import { FriendListPage } from '@pages/friends/FriendListPage';
+import { FishingPage } from '@pages/fishing/FishingPage';
+import { DreamingPage } from '@pages/dreaming/DreamingPage';
 
 // 管理后台
 import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
@@ -51,6 +53,7 @@ import { AdminAnnouncementsPage } from '@pages/admin/AdminAnnouncementsPage';
 import { AdminShopPage } from '@pages/admin/AdminShopPage';
 import { AdminBoardModeratorsPage } from '@pages/admin/AdminBoardModeratorsPage';
 import { AdminRelicMarketPage } from '@pages/admin/AdminRelicMarketPage';
+import { AdminDreamCardPage } from '@pages/admin/AdminDreamCardPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -79,6 +82,7 @@ function App() {
       <Route path="/admin/shop" element={<AdminLayout><AdminShopPage /></AdminLayout>} />
       <Route path="/admin/board-moderators" element={<AdminLayout><AdminBoardModeratorsPage /></AdminLayout>} />
       <Route path="/admin/relic-market" element={<AdminLayout><AdminRelicMarketPage /></AdminLayout>} />
+      <Route path="/admin/dream-cards" element={<AdminLayout><AdminDreamCardPage /></AdminLayout>} />
 
       {/* 主站路由 */}
       <Route path="*" element={
@@ -104,6 +108,8 @@ function App() {
             <Route path="/forums/new" element={<ForumNewPostPage />} />
             <Route path="/forums/:postId" element={<ForumPostPage />} />
             <Route path="/friends" element={<FriendListPage />} />
+            <Route path="/fishing" element={<FishingPage />} />
+            <Route path="/dream" element={<DreamingPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
