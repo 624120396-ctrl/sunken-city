@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { User, Scroll, Sparkles, Crown, Award, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users } from 'lucide-react';
+import { User, Scroll, Sparkles, Crown, Award, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users, Ghost } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -400,6 +400,36 @@ export function DashboardPage() {
                     </h3>
                     <p className="text-sm text-coc-parchment-dim">
                       加入已有的跑团
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </RuneBorder>
+          </Link>
+
+          <Link 
+            to="/solo" 
+            className="group"
+          >
+            <RuneBorder 
+              variant="blood" 
+              intensity="subtle"
+              className="coc-card-hover"
+            >
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-lg bg-coc-blood/10 border border-coc-blood/20 
+                                  flex items-center justify-center 
+                                  group-hover:bg-coc-blood/20 group-hover:scale-110
+                                  transition-all duration-300">
+                    <Ghost className="text-coc-blood" size={28} />
+                  </div>
+                  <div>
+                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-blood-glow transition-colors">
+                      幻影脚本
+                    </h3>
+                    <p className="text-sm text-coc-parchment-dim">
+                      进入单人剧本模式
                     </p>
                   </div>
                 </div>

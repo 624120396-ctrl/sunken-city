@@ -40,6 +40,7 @@ import adminDreamingRoutes from './modules/dreaming/admin-dreaming.routes';
 import friendRoutes from './modules/friends/friend.routes';
 import fishingRoutes from './modules/fishing/fishing.routes';
 import dreamingRoutes from './modules/dreaming/dreaming.routes';
+import scenarioRoutes from './modules/scenario/scenario.routes';
 import { loadRelicOverrides } from './modules/relics/relics.config';
 import { prisma } from './config/database';
 
@@ -108,6 +109,7 @@ app.use('/api', notificationRoutes);
 app.use('/api', friendRoutes);
 app.use('/api', fishingRoutes);
 app.use('/api', dreamingRoutes);
+app.use('/api', scenarioRoutes);
 app.use('/api', relicsRoutes);
 
 // 404处理

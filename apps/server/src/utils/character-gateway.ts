@@ -29,7 +29,7 @@ export interface CharacterChatResult {
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
 }
 
-async function characterChat(options: CharacterChatOptions): Promise<CharacterChatResult> {
+export async function characterChat(options: CharacterChatOptions): Promise<CharacterChatResult> {
   const apiKey = ARK_CHARACTER_API_KEY;
   if (!apiKey) {
     throw new Error('Missing ARK_CHARACTER_API_KEY or ARK_API_KEY environment variable');

@@ -41,6 +41,10 @@ import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
 import { FriendListPage } from '@pages/friends/FriendListPage';
 import { FishingPage } from '@pages/fishing/FishingPage';
 import { DreamingPage } from '@pages/dreaming/DreamingPage';
+import { SoloStartPage } from '@pages/solo/SoloStartPage';
+import { SoloPlayerPage } from '@pages/solo/SoloPlayerPage';
+import ScenarioSelectPage from '@pages/scenarios/select';
+import ScenarioEditorPage from '@pages/scenarios/editor';
 
 // 管理后台
 import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
@@ -110,6 +114,12 @@ function App() {
             <Route path="/friends" element={<FriendListPage />} />
             <Route path="/fishing" element={<FishingPage />} />
             <Route path="/dream" element={<DreamingPage />} />
+            <Route path="/solo" element={<SoloStartPage />} />
+            <Route path="/solo/:scenarioId" element={<SoloPlayerPage />} />
+            <Route path="/solo/session/:sessionId" element={<SoloPlayerPage />} />
+            <Route path="/scenarios" element={<ScenarioSelectPage />} />
+            <Route path="/scenarios/new" element={<ScenarioEditorPage />} />
+            <Route path="/scenarios/:id/edit" element={<ScenarioEditorPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

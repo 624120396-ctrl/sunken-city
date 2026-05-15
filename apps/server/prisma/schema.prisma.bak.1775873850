@@ -62,7 +62,6 @@ model User {
   dreamDraws             UserDreamDraw[]
   dreamDaily             UserDreamDaily?
   authoredScenarios      Scenario[]
-  achievements           UserAchievement[]
 
   @@index([exp])
 }
@@ -916,17 +915,6 @@ model Scenario {
   edges       ScenarioEdge[]
   sessions    ScenarioSession[]
 
-  // 2.0 新增
-  galleryImages String?
-  assets        ScenarioAsset[]
-  items         ScenarioItem[]
-  achievements  UserAchievement[]
-
-  // 3.0 新增
-  characters    ScenarioCharacter[]
-  doubts        Doubt[]
-  clues         Clue[]
-
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -941,7 +929,6 @@ model ScenarioNode {
   scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   nodeId      String
-  worldState  String    @default("normal")
   title       String
   type        String
   content     String   
@@ -950,34 +937,18 @@ model ScenarioNode {
   positionY   Float     @default(0)
   metadata    String?  
 
-  // 2.0 新增
-  generatedImageUrl String?
-
-  // 3.0 新增：AVG 演出字段
-  bgUrl             String? // 场景背景图
-  cgUrl             String? // CG 图
-  bgmUrl            String? // 节点默认 BGM
-  sfxUrl            String? // 节点入场音效
-  transitionType    String  @default("fade") // fade | dissolve | wipe | glitch | ripple
-  speakerId         String? // 当前说话角色的 ScenarioCharacter.id
-  speakerExpression String? // 如 "fear"
-  speakerPosition   String  @default("center") // left | center | right | custom
-  speakerPositionX  Float?  // 当 position 为 custom 时生效（百分比 0-1）
-
   outgoingEdges ScenarioEdge[]  @relation("EdgeFrom")
   incomingEdges ScenarioEdge[]  @relation("EdgeTo")
   sessionsAsCurrent ScenarioSession[] @relation("CurrentNode")
   sessionStates   ScenarioSessionState[]
   scenariosAsStart Scenario? @relation("ScenarioStart")
-  doubts          Doubt[] // 3.0 新增：关联的疑点
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  @@unique([scenarioId, nodeId, worldState])
+  @@unique([scenarioId, nodeId])
   @@index([scenarioId])
   @@index([type])
-  @@index([scenarioId, worldState])
 }
 
 model ScenarioEdge {
@@ -1009,8 +980,8 @@ model ScenarioSession {
   scenarioId  String
   scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
-  roomId      String?   @unique
-  room        Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId      String   @unique
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   mode        String
   status      String    @default("ACTIVE")
@@ -1030,9 +1001,6 @@ model ScenarioSession {
   playerChoices ScenarioPlayerChoice[]
   diceResults ScenarioDiceResult[]
   playerStates ScenarioSessionPlayerState[]
-
-  // 3.0 新增：论证记录
-  argumentRecords ArgumentRecord[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -1100,161 +1068,15 @@ model ScenarioSessionPlayerState {
   sessionId   String
   session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  userId      String
+  userId      String   @unique
   characterId String?
 
   // 该玩家在此剧本中的运行时状态（如临时 SAN 变更、剧本私有变量等）
   runtimeState String?
 
-  // 2.0 新增：剧本内物品栏
-  inventory String? @default("[]")
-
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  @@unique([sessionId, userId])
   @@index([sessionId])
   @@index([userId])
-}
-
-model AiNarrativeCache {
-  id         String   @id @default(cuid())
-  sessionId  String
-  nodeId     String
-  cacheKey   String
-  promptHash String
-  cachedText String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@unique([sessionId, nodeId, cacheKey])
-  @@index([promptHash])
-}
-
-// ================= Phantom Scripts 2.0 新增模型 =================
-
-model ScenarioAsset {
-  id          String   @id @default(cuid())
-  scenarioId  String
-  nodeId      String?
-  npcName     String?
-  itemName    String?
-  type        String   // scene | npc_portrait | item_icon | ending_image
-  imageUrl    String
-  prompt      String?
-  worldState  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-
-  @@index([scenarioId, type])
-  @@index([scenarioId, nodeId, worldState])
-}
-
-model ScenarioItem {
-  id          String   @id @default(cuid())
-  scenarioId  String
-  key         String
-  name        String
-  description String?
-  type        String   // consumable | key | clue
-  iconUrl     String?
-  effects     String   @default("[]")
-  usableAt    String   @default("[]")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-
-  @@unique([scenarioId, key])
-  @@index([scenarioId])
-}
-
-model UserAchievement {
-  id             String   @id @default(cuid())
-  userId         String
-  scenarioId     String
-  achievementKey String
-  unlockedAt     DateTime @default(now())
-  metadata       String?
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, scenarioId, achievementKey])
-  @@index([userId])
-  @@index([scenarioId])
-}
-
-// ================= Phantom Scripts 3.0 新增模型 =================
-
-// 剧本角色表，供立绘与差分绑定
-model ScenarioCharacter {
-  id          String   @id @default(cuid())
-  scenarioId  String
-  name        String
-  description String?
-  avatar      String?  // 小头像/关系图头像
-  sprites     String   // JSON string: { "calm": "url", "surprised": "url", ... }
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-
-  @@index([scenarioId])
-}
-
-// 疑点表
-model Doubt {
-  id                String   @id @default(cuid())
-  scenarioId        String
-  nodeId            String
-  title             String
-  description       String
-  requiredClueCount Int      @default(3)
-  correctClueIds    String   // JSON array string
-  successNodeId     String
-  failNodeId        String
-  maxRetry          Int      @default(3)
-  modePunishment    String?  // JSON string
-  createdAt         DateTime @default(now())
-
-  scenario Scenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  node     ScenarioNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
-
-  @@index([scenarioId])
-  @@index([nodeId])
-}
-
-// 线索（情报）表
-model Clue {
-  id              String   @id @default(cuid())
-  scenarioId      String
-  name            String
-  description     String
-  icon            String?
-  type            String   // PERSON | ITEM | EVENT | LOCATION
-  unlockCondition String?  // JSON string
-  createdAt       DateTime @default(now())
-
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-
-  @@index([scenarioId])
-  @@index([type])
-}
-
-// 论证记录表
-model ArgumentRecord {
-  id              String   @id @default(cuid())
-  sessionId       String
-  doubtId         String
-  selectedClueIds String   // JSON array string
-  result          String   // SUCCESS | FAIL | ABORT
-  createdAt       DateTime @default(now())
-
-  session ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  @@index([sessionId])
-  @@index([doubtId])
 }
