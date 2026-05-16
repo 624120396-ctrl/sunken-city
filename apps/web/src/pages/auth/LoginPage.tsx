@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
-import { AbyssBackground, TentacleSilhouette } from '@components/ui/AbyssEffects';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -39,13 +38,24 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* 深渊背景 */}
-      <AbyssBackground variant="calm" />
-      
-      {/* 触手装饰 */}
-      <TentacleSilhouette position="bottom" />
-      
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-coc-abyss">
+      {/* 电影级视频背景 */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source
+          src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4"
+          type="video/mp4"
+        />
+      </video>
+
+      {/* 暗色遮罩 — 保证文字可读性 */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-coc-abyss/70 via-coc-abyss/50 to-coc-abyss/80" />
+
       {/* 主卡片 */}
       <div className="relative z-10 w-full max-w-md mx-4">
         {/* 外发光边框 */}
