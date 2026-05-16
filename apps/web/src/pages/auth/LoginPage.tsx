@@ -48,7 +48,7 @@ export function LoginPage() {
         className="absolute inset-0 w-full h-full object-cover z-0"
       >
         <source
-          src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4"
+          src="/videos/01bgv.mp4"
           type="video/mp4"
         />
       </video>
