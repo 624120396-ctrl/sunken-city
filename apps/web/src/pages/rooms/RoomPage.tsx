@@ -15,6 +15,8 @@ import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
 import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import { MagneticButton } from '@components/ui/MagneticButton';
 
 // ===== 新增沉浸式体验组件 =====
 import { SceneCard } from '@components/room/SceneCard';
@@ -995,9 +997,14 @@ export function RoomPage() {
               </h3>
               <div className="space-y-2">
                 {(!combatState || combatState.status === 'IDLE' || combatState.status === 'ENDED') ? (
-                  <button onClick={handleStartCombat} className="w-full coc-btn-primary flex items-center justify-center gap-2">
+                  <MagneticButton
+                    variant="blood"
+                    size="sm"
+                    onClick={handleStartCombat}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
                     <Play size={16} /> 开始战斗
-                  </button>
+                  </MagneticButton>
                 ) : (
                   <>
                     <div className="text-sm text-coc-text-secondary">
@@ -1053,7 +1060,13 @@ export function RoomPage() {
               {/* 消息列表 */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 ? (
-                  <p className="text-center text-coc-text-muted">还没有消息，开始聊天吧</p>
+                  <EmptyState
+                    icon={EmptyIcons.Messages}
+                    title="还没有消息"
+                    description="开始聊天吧，声音会在深渊中回响……"
+                    size="sm"
+                    animate={false}
+                  />
                 ) : (
                   messages.map((msg) => {
                     const isSystem = msg.userId === 'system';
@@ -1335,7 +1348,13 @@ export function RoomPage() {
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
             {myCharacters.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-coc-text-muted">你还没有创建调查员</p>
+                <EmptyState
+                  icon={EmptyIcons.Investigator}
+                  title="你还没有创建调查员"
+                  description="先创建一位调查员，才能踏入房间。"
+                  size="sm"
+                  animate={false}
+                />
                 <Link
                   to="/characters/new"
                   className="text-coc-accent-red hover:underline mt-2 inline-block"

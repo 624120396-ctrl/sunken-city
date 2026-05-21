@@ -1,4 +1,5 @@
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, Users, Sword, Brain, Heart, Save, Download, Gift } from 'lucide-react';
@@ -297,7 +298,13 @@ export function RoomReportPage() {
             战斗记录
           </h3>
           {report.combatRecords.length === 0 ? (
-            <p className="text-coc-text-muted text-center py-8">暂无战斗记录</p>
+            <EmptyState
+              icon={EmptyIcons.Combat}
+              title="暂无战斗记录"
+              description="这场调查尚未发生战斗。"
+              size="sm"
+              animate={false}
+            />
           ) : (
             <div className="space-y-3">
               {report.combatRecords.map((r, i) => (
@@ -330,7 +337,13 @@ export function RoomReportPage() {
             技能检定记录
           </h3>
           {report.skillChecks.length === 0 ? (
-            <p className="text-coc-text-muted text-center py-8">暂无技能检定记录</p>
+            <EmptyState
+              icon={EmptyIcons.Dice}
+              title="暂无技能检定记录"
+              description="还没有人进行过技能检定。"
+              size="sm"
+              animate={false}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -377,7 +390,13 @@ export function RoomReportPage() {
             角色成长
           </h3>
           {report.characterProgress.length === 0 ? (
-            <p className="text-coc-text-muted text-center py-8">暂无成长记录</p>
+            <EmptyState
+              icon={EmptyIcons.Investigator}
+              title="暂无成长记录"
+              description="调查员们尚未获得成长。"
+              size="sm"
+              animate={false}
+            />
           ) : (
             <div className="space-y-4">
               {report.characterProgress.map((c, i) => (

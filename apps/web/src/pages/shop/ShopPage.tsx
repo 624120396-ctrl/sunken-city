@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
@@ -122,7 +123,13 @@ export function ShopPage() {
           ))
         ) : items.length === 0 ? (
           <div className="col-span-full text-center py-16 text-coc-parchment-dim">
-            暂无商品，过段时间再来看看吧。
+            <EmptyState
+              icon={EmptyIcons.Shop}
+              title="暂无商品"
+              description="过段时间再来看看吧，深渊的货架从不空置太久。"
+              size="sm"
+              animate={false}
+            />
           </div>
         ) : (
           items.map((item) => (

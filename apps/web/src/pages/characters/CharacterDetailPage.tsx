@@ -1,4 +1,5 @@
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X } from 'lucide-react';
@@ -500,7 +501,13 @@ export function CharacterDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-coc-text-muted">暂无武器</p>
+                <EmptyState
+                  icon={EmptyIcons.Combat}
+                  title="暂无武器"
+                  description="调查员尚未装备任何武器。"
+                  size="sm"
+                  animate={false}
+                />
               )}
             </div>
 
