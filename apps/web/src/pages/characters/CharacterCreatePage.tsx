@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Dice5, Sword, Shield } from 'lucide-react';
@@ -138,7 +139,7 @@ export function CharacterCreatePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 基本信息 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <span>📋</span> 基本信息
           </h2>
@@ -234,10 +235,10 @@ export function CharacterCreatePage() {
               />
             </div>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 属性 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <span>🎲</span> 属性
@@ -369,7 +370,7 @@ export function CharacterCreatePage() {
               <p className="text-xs text-coc-text-muted">未装备护甲</p>
             )}
           </div>
-        </div>
+        </DoubleBezelCard>
 
         <div className="flex gap-4">
           <button

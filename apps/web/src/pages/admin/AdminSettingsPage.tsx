@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import { Save, Globe, Wrench, Shield, Users } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
@@ -63,7 +64,7 @@ export function AdminSettingsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-32" />
-        <div className="coc-card space-y-6">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 space-y-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between gap-4">
               <div className="space-y-2 flex-1">
@@ -76,7 +77,7 @@ export function AdminSettingsPage() {
           <div className="pt-4 border-t border-coc-void">
             <Skeleton className="h-10 w-24" />
           </div>
-        </div>
+        </DoubleBezelCard>
       </div>
     );
   }
@@ -86,18 +87,18 @@ export function AdminSettingsPage() {
       <h1 className="text-2xl font-serif font-bold mb-6">系统设置</h1>
 
       {message && (
-        <div className={`coc-card mb-6 ${
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 mb-6" className={`
           message.type === 'success' ? 'border-l-4 border-green-400' : 'border-l-4 border-red-400'
         }`}>
           <p className={message.type === 'success' ? 'text-green-400' : 'text-red-400'}>
             {message.text}
           </p>
-        </div>
+        </DoubleBezelCard>
       )}
 
       <div className="space-y-6">
         {/* 网站信息 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Globe size={18} className="text-coc-accent-cyan" />
             <h2 className="font-bold">网站信息</h2>
@@ -129,10 +130,10 @@ export function AdminSettingsPage() {
               />
             </div>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 系统模式 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Wrench size={18} className="text-coc-accent-gold" />
             <h2 className="font-bold">系统模式</h2>
@@ -165,10 +166,10 @@ export function AdminSettingsPage() {
               />
             </label>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 用户限制 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Users size={18} className="text-purple-400" />
             <h2 className="font-bold">用户限制</h2>
@@ -203,10 +204,10 @@ export function AdminSettingsPage() {
               />
             </div>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 管理员信息 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Shield size={18} className="text-coc-accent-red" />
             <h2 className="font-bold">管理员信息</h2>
@@ -220,7 +221,7 @@ export function AdminSettingsPage() {
               如需永久保存设置，请在服务器环境变量中配置。
             </p>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 保存按钮 */}
         <div className="flex justify-end">

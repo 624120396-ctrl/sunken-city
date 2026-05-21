@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Check, X } from 'lucide-react';
@@ -105,7 +106,7 @@ export function CharacterGrowthPage() {
         <h1 className="text-2xl font-serif font-bold">战后技能成长 - {character.name}</h1>
       </div>
 
-      <div className="coc-card mb-6">
+      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 mb-6">
         <h2 className="font-bold mb-4">使用说明</h2>
         <div className="text-sm text-coc-text-secondary space-y-2">
           <p>1. 选择本局游戏中<strong>成功使用过</strong>的技能</p>
@@ -113,11 +114,11 @@ export function CharacterGrowthPage() {
           <p>3. COC7成长规则：掷1D100，结果<strong>大于</strong>当前技能值则成长成功</p>
           <p>4. 成长成功时，技能提升1D10点</p>
         </div>
-      </div>
+      </DoubleBezelCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 技能选择 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h3 className="font-bold mb-4">选择成长技能 ({selectedSkills.size})</h3>
           <div className="space-y-4 max-h-[500px] overflow-y-auto">
             {(() => {
@@ -173,11 +174,11 @@ export function CharacterGrowthPage() {
               ));
             })()}
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 成长结果 */}
         <div className="space-y-4">
-          <div className="coc-card">
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-4">操作</h3>
             <div className="space-y-3">
               <button
@@ -226,11 +227,11 @@ export function CharacterGrowthPage() {
                 </div>
               </div>
             )}
-          </div>
+          </DoubleBezelCard>
 
           {/* 详细结果 */}
           {growthResults.length > 0 && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h4 className="font-bold mb-3">详细结果</h4>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {growthResults.map((result, idx) => (
@@ -259,7 +260,7 @@ export function CharacterGrowthPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
       </div>

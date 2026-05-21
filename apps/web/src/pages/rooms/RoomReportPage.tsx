@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, Users, Sword, Brain, Heart, Save, Download, Gift } from 'lucide-react';
@@ -178,26 +179,26 @@ export function RoomReportPage() {
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="coc-card text-center">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 text-center">
           <Clock size={20} className="mx-auto mb-2 text-coc-accent-gold" />
           <div className="text-2xl font-bold">{report.duration}</div>
           <div className="text-xs text-coc-text-muted">分钟</div>
-        </div>
-        <div className="coc-card text-center">
+        </DoubleBezelCard>
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 text-center">
           <Users size={20} className="mx-auto mb-2 text-coc-accent-cyan" />
           <div className="text-2xl font-bold">{report.participants.length}</div>
           <div className="text-xs text-coc-text-muted">参与者</div>
-        </div>
-        <div className="coc-card text-center">
+        </DoubleBezelCard>
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 text-center">
           <Sword size={20} className="mx-auto mb-2 text-coc-accent-red" />
           <div className="text-2xl font-bold">{report.combatRecords.length}</div>
           <div className="text-xs text-coc-text-muted">战斗记录</div>
-        </div>
-        <div className="coc-card text-center">
+        </DoubleBezelCard>
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 text-center">
           <Brain size={20} className="mx-auto mb-2 text-coc-accent-gold" />
           <div className="text-2xl font-bold">{report.skillChecks.length}</div>
           <div className="text-xs text-coc-text-muted">技能检定</div>
-        </div>
+        </DoubleBezelCard>
       </div>
 
       {/* Tab导航 */}
@@ -228,7 +229,7 @@ export function RoomReportPage() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* 参与者 */}
-          <div className="coc-card">
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-4 flex items-center gap-2">
               <Users size={18} />
               参与者
@@ -244,10 +245,10 @@ export function RoomReportPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </DoubleBezelCard>
 
           {/* 故事概要 */}
-          <div className="coc-card">
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold flex items-center gap-2">
                 <FileText size={18} />
@@ -268,11 +269,11 @@ export function RoomReportPage() {
               placeholder="记录这次跑团的故事概要..."
               className="w-full h-32 coc-input resize-none"
             />
-          </div>
+          </DoubleBezelCard>
 
           {/* 关键事件 */}
           {report.keyEvents.length > 0 && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-4">关键事件</h3>
               <div className="space-y-2">
                 {report.keyEvents.map((e, i) => (
@@ -284,13 +285,13 @@ export function RoomReportPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
       )}
 
       {activeTab === 'combat' && (
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Sword size={18} />
             战斗记录
@@ -319,11 +320,11 @@ export function RoomReportPage() {
               ))}
             </div>
           )}
-        </div>
+        </DoubleBezelCard>
       )}
 
       {activeTab === 'skills' && (
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Brain size={18} />
             技能检定记录
@@ -366,11 +367,11 @@ export function RoomReportPage() {
               </table>
             </div>
           )}
-        </div>
+        </DoubleBezelCard>
       )}
 
       {activeTab === 'growth' && (
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Heart size={18} />
             角色成长
@@ -418,10 +419,10 @@ export function RoomReportPage() {
               ))}
             </div>
           )}
-        </div>
+        </DoubleBezelCard>
       )}
       {activeTab === 'relics' && (
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Gift size={18} />
             遗物发放
@@ -498,7 +499,7 @@ export function RoomReportPage() {
           ) : (
             <p className="text-sm text-coc-text-muted">只有 KP 可以发放遗物。</p>
           )}
-        </div>
+        </DoubleBezelCard>
       )}
     </div>
   );

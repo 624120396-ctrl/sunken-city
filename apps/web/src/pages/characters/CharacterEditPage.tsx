@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Dice5, Sword, Shield, Save } from 'lucide-react';
@@ -303,7 +304,7 @@ export function CharacterEditPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 基本信息 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h2 className="text-lg font-bold mb-4">基本信息</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -395,10 +396,10 @@ export function CharacterEditPage() {
               />
             </div>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 背景条目 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <h2 className="text-lg font-bold mb-4">背景条目</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {backgroundEntries.map((entry) => (
@@ -427,10 +428,10 @@ export function CharacterEditPage() {
               </select>
             </div>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 属性 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">属性</h2>
             <div className="text-sm text-coc-text-secondary">
@@ -472,10 +473,10 @@ export function CharacterEditPage() {
               </div>
             ))}
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 武器 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Sword size={20} />
@@ -510,10 +511,10 @@ export function CharacterEditPage() {
               + 添加武器
             </button>
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 护甲 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Shield size={20} />
@@ -545,7 +546,7 @@ export function CharacterEditPage() {
               + 选择护甲
             </button>
           )}
-        </div>
+        </DoubleBezelCard>
       </form>
 
       {/* 武器选择弹窗 */}

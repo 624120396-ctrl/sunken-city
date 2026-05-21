@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import {
   Users,
@@ -87,7 +88,7 @@ export function AdminDashboardPage() {
         <Skeleton className="h-8 w-40" />
         <AdminCardGridSkeleton count={4} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="coc-card space-y-4">
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 space-y-4">
             <Skeleton className="h-5 w-24" />
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -98,8 +99,8 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="coc-card space-y-4">
+          </DoubleBezelCard>
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 space-y-4">
             <Skeleton className="h-5 w-24" />
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -110,7 +111,7 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </DoubleBezelCard>
         </div>
       </div>
     );
@@ -160,7 +161,7 @@ export function AdminDashboardPage() {
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-coc-text-secondary">{card.title}</p>
@@ -171,7 +172,7 @@ export function AdminDashboardPage() {
                   <Icon className={card.color} size={24} />
                 </div>
               </div>
-            </div>
+            </DoubleBezelCard>
           );
         })}
       </div>
@@ -179,7 +180,7 @@ export function AdminDashboardPage() {
       {/* 两列布局 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 最近注册 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Clock size={18} className="text-coc-accent-cyan" />
             <h2 className="font-bold">最近注册用户</h2>
@@ -211,10 +212,10 @@ export function AdminDashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </DoubleBezelCard>
 
         {/* 活跃用户 */}
-        <div className="coc-card">
+        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center gap-2 mb-4">
             <Activity size={18} className="text-coc-accent-red" />
             <h2 className="font-bold">最活跃用户 (按投骰)</h2>
@@ -240,11 +241,11 @@ export function AdminDashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </DoubleBezelCard>
       </div>
 
       {/* 周增长趋势 */}
-      <div className="coc-card mt-6">
+      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 mt-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={18} className="text-green-400" />
           <h2 className="font-bold">本周增长</h2>
@@ -267,7 +268,7 @@ export function AdminDashboardPage() {
             <div className="text-sm text-coc-text-muted">活跃房间</div>
           </div>
         </div>
-      </div>
+      </DoubleBezelCard>
     </div>
   );
 }
