@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X } from 'lucide-react';
@@ -405,7 +406,7 @@ export function CharacterDetailPage() {
       </div>
 
       {/* ===== 内容区域 ===== */}
-      <div className="coc-card">
+      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
         {activeTab === 'attributes' && (
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
             {[
@@ -550,7 +551,7 @@ export function CharacterDetailPage() {
             )}
           </div>
         )}
-      </div>
+      </DoubleBezelCard>
 
       {/* ===== 形象铸造弹窗 ===== */}
       {showPortraitModal && (

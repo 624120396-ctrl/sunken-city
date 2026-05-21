@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useEffect, useRef, useState } from 'react';
 import { Fish } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
@@ -283,7 +284,7 @@ export function FishingPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <div className="coc-card">
+          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-2">收集进度</h3>
             <div className="w-full bg-coc-abyss rounded-full h-2 mb-2">
               <div
@@ -292,9 +293,9 @@ export function FishingPage() {
               />
             </div>
             <p className="text-sm text-coc-text-secondary">{collectionPct.toFixed(1)}% 已解锁</p>
-          </div>
+          </DoubleBezelCard>
 
-          <div className="coc-card">
+          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-2">最近钓获</h3>
             {logs.length === 0 ? (
               <p className="text-sm text-coc-text-muted">还没有钓获记录</p>
@@ -327,7 +328,7 @@ export function FishingPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </DoubleBezelCard>
         </div>
       </div>
 

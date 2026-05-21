@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, Palette } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
 import { Tooltip } from '@components/ui/Tooltip';
+import { StatusBar } from '@components/ui/StatusBar';
 import { UserProfileCard } from '@components/UserProfileCard';
 import { useSocket } from '@hooks/useSocket';
 import { getSuccessExplanation, getSkillExplanation } from '@lib/dice-explanations';
@@ -13,10 +14,7 @@ import { MentionInput } from '@components/room/MentionInput';
 import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
 import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
-
-import { RoomRelicSelector } from '@components/rooms/RoomRelicSelector';
-import { KpReviewPanel } from '@components/rooms/KpReviewPanel';
-import { RoomSkeleton } from '@components/room/RoomSkeleton';
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 
 // ===== 新增沉浸式体验组件 =====
 import { SceneCard } from '@components/room/SceneCard';
@@ -25,11 +23,6 @@ import { PrivateChatPanel } from '@components/room/PrivateChatPanel';
 import { QuickRollBar } from '@components/room/QuickRollBar';
 import { CountdownPanel } from '@components/room/CountdownPanel';
 import { RoomStatsPanel } from '@components/room/RoomStatsPanel';
-import { PlayerHud } from '@components/room/PlayerHud';
-import { DiceTheater } from '@components/room/DiceTheater';
-import { NpcQuickPanel } from '@components/room/NpcQuickPanel';
-import { RoomCluePanel } from '@components/room/RoomCluePanel';
-import { MessageModeToggle } from '@components/room/MessageModeToggle';
 
 interface Room {
   id: string;
@@ -39,7 +32,6 @@ interface Room {
   status: string;
   isCreator: boolean;
   isMember: boolean;
-  isApproved: boolean;
   members: RoomMember[];
   // 新增字段
   atmosphere?: string;
@@ -49,7 +41,6 @@ interface Room {
 interface RoomMember {
   id: string;
   userId: string;
-  displayId?: number;
   nickname: string;
   avatarUrl?: string;
   frameUrl?: string;
@@ -64,16 +55,11 @@ interface RoomMember {
   titleColor?: string | null;
   expToNext?: number;
   nextRankName?: string | null;
-  joinStatus?: string;
-  applyNote?: string | null;
-  broughtRelics?: string[];
   displayedCharacter?: {
     id: string;
-    displayId?: number;
     name: string;
     occupation: string;
     avatarUrl?: string;
-    portraitUrl?: string;
     hp: number;
     maxHp: number;
     mp: number;
@@ -161,7 +147,7 @@ interface CombatState {
 export function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const user = useAuthStore(s => s.user);
+  const { user } = useAuthStore();
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -169,17 +155,12 @@ export function RoomPage() {
   const [showCharacterModal, setShowCharacterModal] = useState(false);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
-  const [applyNote, setApplyNote] = useState('');
-  const [broughtRelicIds, setBroughtRelicIds] = useState<string[]>([]);
-  const [applications, setApplications] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'combat'>('chat');
   const [combatState, setCombatState] = useState<CombatState | null>(null);
   const [showAttackModal, setShowAttackModal] = useState(false);
   const [attackTarget, setAttackTarget] = useState('');
   const [isSecretDice, setIsSecretDice] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const cluesSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pollingRef = useRef(false);
 
   // 成员详情弹窗
   const [showMemberDetail, setShowMemberDetail] = useState(false);
@@ -196,9 +177,7 @@ export function RoomPage() {
 
   // ===== 新增沉浸式体验状态 =====
   const [sceneDesc, setSceneDesc] = useState<string>('');
-  const [atmosphere, setAtmosphere] = useState<string>('normal');
   const [memberStatuses, setMemberStatuses] = useState<Record<string, string[]>>({});
-  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [showPrivateChat, setShowPrivateChat] = useState(false);
   const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
   const [countdowns, setCountdowns] = useState<Array<{
@@ -216,21 +195,6 @@ export function RoomPage() {
     failRolls: 0,
     mostUsedSkill: null as string | null,
   });
-
-  // ===== v1.5 房间升级组件状态 =====
-  const [roomNpcs, setRoomNpcs] = useState<any[]>([]);
-  const [roomClues, setRoomClues] = useState<any[]>([]);
-  const [messageMode, setMessageMode] = useState<'text' | 'ic' | 'oc' | 'narration'>('text');
-  const [diceRolls, setDiceRolls] = useState<{
-    id: string;
-    nickname: string;
-    rollType: string;
-    targetName?: string;
-    targetValue?: number;
-    rollResult: number;
-    successLevel: string;
-    timestamp: string;
-  }[]>([]);
 
   // ===== SAN 扣除弹窗状态 =====
   const [showSanityModal, setShowSanityModal] = useState(false);
@@ -252,12 +216,7 @@ export function RoomPage() {
   const addClue = (clue: any) => {
     const newClues = [clue, ...clues];
     setClues(newClues);
-    if (cluesSaveTimeoutRef.current) {
-      clearTimeout(cluesSaveTimeoutRef.current);
-    }
-    cluesSaveTimeoutRef.current = setTimeout(() => {
-      localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
-    }, 300);
+    localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
   };
 
   // Socket连接
@@ -292,35 +251,12 @@ export function RoomPage() {
           successLevel: roll.successLevel,
         },
       }]);
-      setDiceRolls(prev => [...prev, {
-        id: roll.id,
-        nickname: roll.sender.nickname,
-        rollType: roll.rollType,
-        targetName: roll.targetName,
-        targetValue: roll.targetValue,
-        rollResult: roll.rollResult,
-        successLevel: roll.successLevel,
-        timestamp: roll.timestamp,
-      }].slice(-50));
     },
     onRoomJoined: (data) => {
       // 保存当前用户的角色数据
       if (data.myCharacter) {
         setSelectedCharacter(data.myCharacter);
       }
-      if (data.onlineUserIds) {
-        setOnlineUserIds(new Set(data.onlineUserIds));
-      }
-    },
-    onMemberOnline: ({ userId }) => {
-      setOnlineUserIds(prev => new Set([...prev, userId]));
-    },
-    onMemberOffline: ({ userId }) => {
-      setOnlineUserIds(prev => {
-        const next = new Set(prev);
-        next.delete(userId);
-        return next;
-      });
     },
     onHistoryMessages: (history) => {
       const formatted = history.map((msg: any) => {
@@ -413,33 +349,16 @@ export function RoomPage() {
         setSelectedCharacter({ ...selectedCharacter, san: myUpdate.newSan });
       }
     },
-    onCombatTurnChanged: (data) => {
-      console.log('Turn changed:', data);
-    },
-    onCountdownUpdated: (data) => {
-      setCountdowns(data.countdowns || []);
-    },
-    onPrivateMessageReceived: () => {
-      fetchPrivateUnreadCount();
-    },
   });
 
   useEffect(() => {
     fetchRoom();
-    fetchRoomNpcs();
-    fetchRoomClues();
 
     // 定期轮询倒计时和未读数
     const interval = setInterval(() => {
-      if (roomId && !pollingRef.current) {
-        pollingRef.current = true;
-        Promise.all([
-          fetchPrivateUnreadCount(),
-          fetchRoomNpcs(),
-          fetchRoomClues(),
-        ]).catch(() => {}).finally(() => {
-          pollingRef.current = false;
-        });
+      if (roomId) {
+        fetchCountdowns();
+        fetchPrivateUnreadCount();
       }
     }, 5000);
 
@@ -459,8 +378,6 @@ export function RoomPage() {
       // 加载场景描述和氛围
       // @ts-ignore - 等待后端类型更新
       setSceneDesc(data.room.sceneDesc || '');
-      // @ts-ignore
-      setAtmosphere(data.room.atmosphere || 'normal');
 
       // 加载成员状态标记
       const statuses: Record<string, string[]> = {};
@@ -478,19 +395,8 @@ export function RoomPage() {
       // 加载倒计时
       fetchCountdowns();
 
-      if (!data.room.isMember && !data.room.isCreator) {
-        // 非成员且非创建者：只读浏览，不自动弹窗
-      }
-
-      // KP 加载待审核列表
-      if (data.room.isCreator) {
-        fetchApplications();
-      }
-
-      // 初始化当前角色
-      const myMember = data.room.members.find((m: RoomMember) => m.userId === user?.id);
-      if (myMember?.character) {
-        setSelectedCharacter(myMember.character);
+      if (!data.room.isMember) {
+        fetchMyCharacters();
       }
     } catch (error: any) {
       if (error.message?.includes('不存在')) {
@@ -499,26 +405,6 @@ export function RoomPage() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchApplications = async () => {
-    try {
-      const res = await apiFetch(`/rooms/${roomId}/applications`);
-      const data = await handleApiResponse<{ applications: any[] }>(res);
-      setApplications(data.applications || []);
-    } catch (err) {
-      console.error('获取审核列表失败', err);
-    }
-  };
-
-  const handleStartGame = async () => {
-    if (!confirm('开启游戏后，玩家将无法更换角色和携带遗物。确定吗？')) return;
-    try {
-      await apiFetch(`/rooms/${roomId}/start`, { method: 'POST' });
-      fetchRoom();
-    } catch (error: any) {
-      alert(error.message || '开启游戏失败');
     }
   };
 
@@ -568,28 +454,6 @@ export function RoomPage() {
     }
   };
 
-  // 加载房间NPC
-  const fetchRoomNpcs = async () => {
-    try {
-      const response = await apiFetch(`/rooms/${roomId}/npcs`);
-      const data = await handleApiResponse<{ npcs: any[] }>(response);
-      setRoomNpcs(data.npcs || []);
-    } catch (error) {
-      console.error('获取NPC失败:', error);
-    }
-  };
-
-  // 加载房间线索
-  const fetchRoomClues = async () => {
-    try {
-      const response = await apiFetch(`/rooms/${roomId}/clues`);
-      const data = await handleApiResponse<{ clues: any[] }>(response);
-      setRoomClues(data.clues || []);
-    } catch (error) {
-      console.error('获取线索失败:', error);
-    }
-  };
-
   // 更新场景描述
   const updateSceneDesc = async (desc: string) => {
     try {
@@ -600,19 +464,6 @@ export function RoomPage() {
       setSceneDesc(desc);
     } catch (error) {
       console.error('更新场景描述失败:', error);
-    }
-  };
-
-  // 更新氛围主题
-  const updateAtmosphere = async (next: string) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/atmosphere`, {
-        method: 'PATCH',
-        body: JSON.stringify({ atmosphere: next }),
-      });
-      setAtmosphere(next);
-    } catch (error) {
-      console.error('更新氛围失败:', error);
     }
   };
 
@@ -669,11 +520,9 @@ export function RoomPage() {
     try {
       await apiFetch(`/rooms/${roomId}/join`, {
         method: 'POST',
-        body: JSON.stringify({ characterId, applyNote, broughtRelicIds }),
+        body: JSON.stringify({ characterId }),
       });
       setShowCharacterModal(false);
-      setApplyNote('');
-      setBroughtRelicIds([]);
       fetchRoom();
     } catch (error: any) {
       alert(error.message || '加入房间失败');
@@ -700,49 +549,8 @@ export function RoomPage() {
     }
   };
 
-  // NPC CRUD
-  const createNpc = async (payload: any) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/npcs`, { method: 'POST', body: JSON.stringify(payload) });
-      fetchRoomNpcs();
-    } catch (error) { console.error('创建NPC失败:', error); }
-  };
-  const updateNpc = async (id: string, payload: any) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/npcs/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-      fetchRoomNpcs();
-    } catch (error) { console.error('更新NPC失败:', error); }
-  };
-  const deleteNpc = async (id: string) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/npcs/${id}`, { method: 'DELETE' });
-      fetchRoomNpcs();
-    } catch (error) { console.error('删除NPC失败:', error); }
-  };
-
-  // RoomClue CRUD
-  const createRoomClue = async (payload: any) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/clues`, { method: 'POST', body: JSON.stringify(payload) });
-      fetchRoomClues();
-    } catch (error) { console.error('创建线索失败:', error); }
-  };
-  const updateRoomClue = async (id: string, payload: any) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/clues/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-      fetchRoomClues();
-    } catch (error) { console.error('更新线索失败:', error); }
-  };
-  const deleteRoomClue = async (id: string) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/clues/${id}`, { method: 'DELETE' });
-      fetchRoomClues();
-    } catch (error) { console.error('删除线索失败:', error); }
-  };
-
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!room?.isApproved && !room?.isCreator) return;
     if (!inputMessage.trim() || !connected) return;
 
     // 解析快捷命令
@@ -822,16 +630,11 @@ export function RoomPage() {
       }
     }
 
-    let finalMessage = inputMessage;
-    if (messageMode === 'ic') finalMessage = `「${inputMessage}」`;
-    else if (messageMode === 'oc') finalMessage = `(${inputMessage})`;
-    else if (messageMode === 'narration') finalMessage = `【旁白】${inputMessage}`;
-    socketSendMessage(finalMessage, selectedCharacter?.id, isSecretDice, messageMode);
+    socketSendMessage(inputMessage, selectedCharacter?.id, isSecretDice);
     setInputMessage('');
   };
 
   const handleRollDice = (skillName: string, skillValue: number) => {
-    if (!room?.isApproved && !room?.isCreator) return;
     if (!connected) return;
 
     socketRollDice({
@@ -844,7 +647,6 @@ export function RoomPage() {
   };
 
   const handleGenericRoll = (rollType: string, skillName?: string, skillValue?: number) => {
-    if (!room?.isApproved && !room?.isCreator) return;
     if (!connected) return;
 
     socketRollDice({
@@ -884,15 +686,15 @@ export function RoomPage() {
   const isMyTurn = combatState?.status === 'IN_PROGRESS' && combatState.turnOrder[combatState.currentTurnIndex]?.userId === user?.id;
 
   if (loading) {
-    return <RoomSkeleton />;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+      </div>
+    );
   }
 
   return (
-    <div
-      className={`h-[calc(100vh-8rem)] flex flex-col atmosphere-${atmosphere}`}
-      data-atmosphere={atmosphere}
-      style={{ backgroundColor: 'var(--atm-bg, #0d0d12)' }}
-    >
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* 头部 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
@@ -959,32 +761,6 @@ export function RoomPage() {
             <DoorOpen size={14} />
             离开
           </button>
-          {room?.isCreator && room?.status !== 'PLAYING' && (
-            <button
-              onClick={handleStartGame}
-              className="rounded bg-coc-gold px-3 py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow flex items-center gap-1"
-            >
-              <Play size={14} />
-              开启游戏
-            </button>
-          )}
-          {room?.isCreator && (
-            <div className="flex items-center gap-1 text-sm">
-              <Palette size={14} className="text-coc-text-secondary" />
-              <select
-                value={atmosphere}
-                onChange={(e) => updateAtmosphere(e.target.value)}
-                className="bg-coc-surface border border-coc-void rounded px-2 py-1.5 text-coc-parchment outline-none focus:border-coc-gold hover:border-coc-rift transition-colors cursor-pointer"
-                style={{ backgroundColor: 'var(--atm-bg-tertiary, #1a1a24)', borderColor: 'var(--atm-border, #2a2a35)' }}
-              >
-                <option value="normal">宁静</option>
-                <option value="dark">深邃</option>
-                <option value="horror">恐惧</option>
-                <option value="mystery">诡秘</option>
-                <option value="warm">温暖</option>
-              </select>
-            </div>
-          )}
           {room?.isCreator && (
             <button
               onClick={handleCloseRoom}
@@ -1000,38 +776,43 @@ export function RoomPage() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
         {/* 左侧：成员列表 */}
         <div className="lg:col-span-1 space-y-4">
-          {/* KP 审核面板 */}
-          {room?.isCreator && applications.length > 0 && (
-            <KpReviewPanel
-              applications={applications}
-              onRefresh={fetchApplications}
-              roomId={room.roomId}
-            />
-          )}
-
-          {/* v1.5 PlayerHud */}
+          {/* 当前状态条 - 自己的角色 */}
           {selectedCharacter && (
-            <PlayerHud
-              character={selectedCharacter}
-              statusTags={memberStatuses[room?.members?.find(m => m.userId === user?.id)?.id || ''] || []}
-              quickSkills={(() => {
-                const qs = selectedCharacter.quickSkills
-                  ? typeof selectedCharacter.quickSkills === 'string'
-                    ? JSON.parse(selectedCharacter.quickSkills)
-                    : selectedCharacter.quickSkills
-                  : [];
-                const skills = selectedCharacter.skills
-                  ? typeof selectedCharacter.skills === 'string'
-                    ? JSON.parse(selectedCharacter.skills)
-                    : selectedCharacter.skills
-                  : {};
-                return qs.map((name: string) => ({ name, value: skills[name] || 0 })).filter((s: any) => s.value > 0);
-              })()}
-              onQuickRoll={handleRollDice}
-            />
+            <DoubleBezelCard variant="blood" runeCorners glow innerClassName="p-4">
+              <h3 className="font-bold mb-3 flex items-center gap-2">
+                <Shield size={16} />
+                我的状态
+              </h3>
+              <div className="space-y-3">
+                <Tooltip content="生命值。归零时昏迷，负值时濒死">
+                  <StatusBar
+                    label="HP"
+                    current={selectedCharacter.hp}
+                    max={selectedCharacter.maxHp || selectedCharacter.hp || 10}
+                    color="red"
+                  />
+                </Tooltip>
+                <Tooltip content="魔法值。施法消耗，每8小时恢复1点">
+                  <StatusBar
+                    label="MP"
+                    current={selectedCharacter.mp}
+                    max={selectedCharacter.maxMp || selectedCharacter.mp || 10}
+                    color="cyan"
+                  />
+                </Tooltip>
+                <Tooltip content="理智值。遭遇恐怖事件时检定，归零时疯狂">
+                  <StatusBar
+                    label="SAN"
+                    current={selectedCharacter.san}
+                    max={selectedCharacter.maxSan || selectedCharacter.san || 50}
+                    color="gold"
+                  />
+                </Tooltip>
+              </div>
+            </DoubleBezelCard>
           )}
 
-          <div className="coc-card">
+          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-3 flex items-center gap-2">
               <Users size={16} />
               调查员 ({room?.members.length || 0})
@@ -1049,11 +830,6 @@ export function RoomPage() {
                   <div>
                     <div className="flex items-center gap-1">
                       <span className="font-medium">{member.nickname}</span>
-                      {onlineUserIds.has(member.userId) ? (
-                        <span className="h-2 w-2 rounded-full bg-green-500" title="在线" />
-                      ) : (
-                        <span className="h-2 w-2 rounded-full bg-gray-500" title="离线" />
-                      )}
                       {member.role === 'KP' && (
                         <Crown size={12} className="text-coc-accent-gold" />
                       )}
@@ -1101,11 +877,11 @@ export function RoomPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </DoubleBezelCard>
 
           {/* 快捷投骰 - 基于角色技能 */}
           {activeTab === 'chat' && selectedCharacter && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Dice5 size={16} />
                 快捷检定
@@ -1182,43 +958,22 @@ export function RoomPage() {
                   </div>
                 );
               })()}
-            </div>
+            </DoubleBezelCard>
           )}
 
           {/* 快捷投骰 - 无角色时显示默认 */}
           {activeTab === 'chat' && !selectedCharacter && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Dice5 size={16} />
                 快捷检定
               </h3>
               <p className="text-sm text-coc-text-muted">加入房间后使用角色技能</p>
-            </div>
+            </DoubleBezelCard>
           )}
 
-          {/* ===== v1.5 骰子剧场 ===== */}
-          <DiceTheater rolls={diceRolls} />
-
-          {/* ===== v1.5 NPC 快速面板 ===== */}
-          <NpcQuickPanel
-            npcs={roomNpcs}
-            isKP={!!room?.isCreator}
-            onCreate={createNpc}
-            onUpdate={updateNpc}
-            onDelete={deleteNpc}
-          />
-
-          {/* ===== v1.5 线索板 ===== */}
-          <RoomCluePanel
-            clues={roomClues}
-            isKP={!!room?.isCreator}
-            onCreate={createRoomClue}
-            onUpdate={updateRoomClue}
-            onDelete={deleteRoomClue}
-          />
-
           {/* ===== 新增：倒计时器 ===== */}
-          <div className="coc-card">
+          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Timer size={16} className="text-coc-accent-gold" />
               <h3 className="font-bold">倒计时</h3>
@@ -1229,11 +984,11 @@ export function RoomPage() {
               onCreate={createCountdown}
               onStop={stopCountdown}
             />
-          </div>
+          </DoubleBezelCard>
 
           {/* 战斗控制 */}
           {activeTab === 'combat' && room?.isCreator && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Swords size={16} />
                 战斗控制
@@ -1276,14 +1031,14 @@ export function RoomPage() {
                   </>
                 )}
               </div>
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
 
         {/* 右侧：聊天/战斗区 */}
         <div className="lg:col-span-3 flex flex-col min-h-0">
           {activeTab === 'chat' ? (
-            <div className="coc-card flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {/* ===== 新增：场景描述卡片 ===== */}
               {(sceneDesc || room?.isCreator) && (
                 <div className="px-4 pt-4">
@@ -1292,19 +1047,6 @@ export function RoomPage() {
                     isKP={!!room?.isCreator}
                     onUpdate={updateSceneDesc}
                   />
-                </div>
-              )}
-
-              {/* 只读模式提示 */}
-              {!room?.isApproved && !room?.isCreator && (
-                <div className="mx-4 mt-4 p-3 bg-coc-bg-tertiary border border-coc-accent-gold/40 rounded text-sm text-coc-text-secondary flex items-center justify-between">
-                  <span>你尚未加入该房间，当前为只读浏览模式</span>
-                  <button
-                    onClick={() => { fetchMyCharacters(); setShowCharacterModal(true); }}
-                    className="px-3 py-1 rounded bg-coc-accent-gold/20 text-coc-accent-gold hover:bg-coc-accent-gold/30 transition-colors"
-                  >
-                    申请加入
-                  </button>
                 </div>
               )}
 
@@ -1417,76 +1159,54 @@ export function RoomPage() {
               </div>
 
               {/* 输入框 */}
-              {(() => {
-                const myMember = room?.members.find((m) => m.userId === user?.id);
-                if (myMember?.joinStatus === 'pending') {
-                  return (
-                    <div className="border-t border-coc-border p-4 text-center text-sm text-coc-parchment-dim">
-                      你的入团申请正在等待 KP 审核...
-                    </div>
-                  );
-                }
-                if (!room?.isApproved && !room?.isCreator) {
-                  return (
-                    <div className="border-t border-coc-border p-4 text-center text-sm text-coc-parchment-dim">
-                      你尚未正式加入该房间
-                    </div>
-                  );
-                }
-                return (
-                  <form
-                    onSubmit={handleSendMessage}
-                    className="p-4 border-t border-coc-border space-y-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <QuickPhrases
-                        onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <MessageModeToggle mode={messageMode} onChange={setMessageMode} />
-                      {room?.isCreator && (
-                        <div className="flex items-center gap-2">
-                          <SecretDiceToggle
-                            isSecret={isSecretDice}
-                            onToggle={() => setIsSecretDice(!isSecretDice)}
-                            disabled={!connected}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const initial: Record<string, number> = {};
-                              room?.members.forEach(m => {
-                                if (m.character) initial[m.userId] = 0;
-                              });
-                              setSanityTargets(initial);
-                              setSanityDescription('');
-                              setShowSanityModal(true);
-                            }}
-                            disabled={!connected}
-                            className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
-                          >
-                            理智侵蚀
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <MentionInput
-                        value={inputMessage}
-                        onChange={setInputMessage}
-                        members={room?.members.map(m => ({ userId: m.userId, nickname: m.nickname })) || []}
-                        onSubmit={handleSendMessage}
-                        placeholder={connected ? "输入消息..." : "连接中..."}
+              <form
+                onSubmit={handleSendMessage}
+                className="p-4 border-t border-coc-border space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  <QuickPhrases
+                    onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
+                  />
+                  {room?.isCreator && (
+                    <>
+                      <SecretDiceToggle
+                        isSecret={isSecretDice}
+                        onToggle={() => setIsSecretDice(!isSecretDice)}
                         disabled={!connected}
                       />
-                      <button type="submit" className="coc-btn-primary" disabled={!connected}>
-                        <Send size={18} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const initial: Record<string, number> = {};
+                          room?.members.forEach(m => {
+                            if (m.character) initial[m.userId] = 0;
+                          });
+                          setSanityTargets(initial);
+                          setSanityDescription('');
+                          setShowSanityModal(true);
+                        }}
+                        disabled={!connected}
+                        className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
+                      >
+                        理智侵蚀
                       </button>
-                    </div>
-                  </form>
-                );
-              })()}
+                    </>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <MentionInput
+                    value={inputMessage}
+                    onChange={setInputMessage}
+                    members={room?.members.map(m => ({ userId: m.userId, nickname: m.nickname })) || []}
+                    onSubmit={handleSendMessage}
+                    placeholder={connected ? "输入消息..." : "连接中..."}
+                    disabled={!connected}
+                  />
+                  <button type="submit" className="coc-btn-primary" disabled={!connected}>
+                    <Send size={18} />
+                  </button>
+                </div>
+              </form>
 
               {/* ===== 新增：快捷掷骰栏 ===== */}
               {selectedCharacter && (
@@ -1496,7 +1216,7 @@ export function RoomPage() {
                       ? typeof selectedCharacter.quickSkills === 'string'
                         ? JSON.parse(selectedCharacter.quickSkills)
                         : selectedCharacter.quickSkills
-                      : ['spot_hidden', 'listen', 'library_use', 'psychology', 'fast_talk'];
+                      : ['侦查', '聆听', '图书馆使用', '心理学', '话术'];
                     return qs;
                   })()}
                   characterSkills={(() => {
@@ -1522,10 +1242,10 @@ export function RoomPage() {
                   isEditable={true}
                 />
               )}
-            </div>
+            </DoubleBezelCard>
           ) : (
             /* 战斗面板 */
-            <div className="coc-card flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
@@ -1597,7 +1317,7 @@ export function RoomPage() {
                   </div>
                 </>
               )}
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
       </div>
@@ -1605,14 +1325,14 @@ export function RoomPage() {
       {/* 选择角色弹窗 */}
       <Modal
         isOpen={showCharacterModal}
-        onClose={() => setShowCharacterModal(false)}
-        title="申请加入房间"
+        onClose={() => navigate('/rooms')}
+        title="选择调查员"
       >
         <div className="space-y-4">
           <p className="text-sm text-coc-text-secondary">
-            选择调查员和携带遗物，提交后等待 KP 审核
+            进入房间需要绑定一个调查员角色卡
           </p>
-          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
             {myCharacters.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-coc-text-muted">你还没有创建调查员</p>
@@ -1627,51 +1347,25 @@ export function RoomPage() {
               myCharacters.map((char) => (
                 <button
                   key={char.id}
-                  onClick={() => setSelectedCharacter(char)}
-                  className={`w-full p-3 rounded text-left transition-colors ${
-                    selectedCharacter?.id === char.id
-                      ? 'bg-coc-gold/20 border border-coc-gold'
-                      : 'bg-coc-bg-tertiary hover:bg-coc-accent-red/20'
-                  }`}
+                  onClick={() => {
+                    setSelectedCharacter(char);
+                    handleJoinRoom(char.id);
+                  }}
+                  className="w-full p-3 bg-coc-bg-tertiary rounded hover:bg-coc-accent-red/20 transition-colors text-left"
                 >
                   <div className="font-medium">{char.name}</div>
                   <div className="text-sm text-coc-text-secondary">
                     {char.occupation} | HP:{char.hp} MP:{char.mp} SAN:{char.san}
                   </div>
                 </button>
-              )))
-            }
+              ))
+            )}
           </div>
-
-          {selectedCharacter && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs text-coc-text-muted">携带遗物（最多2件）</label>
-                <RoomRelicSelector
-                  characterId={selectedCharacter.id}
-                  selectedIds={broughtRelicIds}
-                  onChange={setBroughtRelicIds}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-coc-text-muted">入团备注（可选）</label>
-                <textarea
-                  value={applyNote}
-                  onChange={(e) => setApplyNote(e.target.value)}
-                  placeholder="告诉 KP 你想要扮演什么..."
-                  className="w-full rounded border border-coc-void bg-coc-bg-tertiary p-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
-                  rows={2}
-                />
-              </div>
-            </>
-          )}
-
           <button
-            onClick={() => handleJoinRoom(selectedCharacter?.id)}
-            disabled={!selectedCharacter}
-            className="w-full rounded bg-coc-gold py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow disabled:opacity-50"
+            onClick={() => handleJoinRoom()}
+            className="w-full coc-btn-secondary"
           >
-            提交申请
+            以观察者身份加入
           </button>
         </div>
       </Modal>
@@ -1775,8 +1469,6 @@ export function RoomPage() {
         {selectedMember && (
           <UserProfileCard
             user={{
-              id: selectedMember.userId,
-              displayId: selectedMember.displayId,
               nickname: selectedMember.nickname,
               avatarUrl: selectedMember.avatarUrl,
               frameUrl: selectedMember.frameUrl,
@@ -1792,11 +1484,9 @@ export function RoomPage() {
               displayedCharacter: selectedMember.displayedCharacter
                 ? {
                     id: selectedMember.displayedCharacter.id,
-                    displayId: selectedMember.displayedCharacter.displayId,
                     name: selectedMember.displayedCharacter.name,
                     occupation: selectedMember.displayedCharacter.occupation,
                     avatarUrl: selectedMember.displayedCharacter.avatarUrl,
-                    portraitUrl: selectedMember.displayedCharacter.portraitUrl,
                     hp: selectedMember.displayedCharacter.hp,
                     maxHp: selectedMember.displayedCharacter.maxHp,
                     mp: selectedMember.displayedCharacter.mp,

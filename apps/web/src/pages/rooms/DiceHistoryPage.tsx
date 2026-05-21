@@ -1,3 +1,4 @@
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Dice5, Filter, Clock } from 'lucide-react';
@@ -123,7 +124,7 @@ export function DiceHistoryPage() {
       </div>
 
       {/* 投骰列表 */}
-      <div className="coc-card">
+      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
         {filteredRolls.length === 0 ? (
           <div className="text-center py-12">
             <Dice5 size={48} className="mx-auto text-coc-text-muted mb-4" />
@@ -166,7 +167,7 @@ export function DiceHistoryPage() {
             ))}
           </div>
         )}
-      </div>
+      </DoubleBezelCard>
     </div>
   );
 }
