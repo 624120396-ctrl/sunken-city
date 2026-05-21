@@ -69,10 +69,24 @@ export const getMotionConfig = () =>
  */
 export function animateDrawer(
   element: HTMLElement,
-  direction: 'left' | 'right',
+  direction: 'left' | 'right' | 'bottom',
   open: boolean,
   onComplete?: () => void
 ) {
+  // 底部抽屉使用 y 轴动画
+  if (direction === 'bottom') {
+    const fromY = open ? '100%' : '0%';
+    const toY = open ? '0%' : '100%';
+
+    return animate(element, {
+      translateY: [fromY, toY],
+      opacity: open ? [0, 1] : [1, 0],
+      duration: getMotionConfig().defaultDuration,
+      ease: abyssEasings.drawerSpring,
+      onComplete,
+    });
+  }
+
   const fromX = open ? (direction === 'left' ? '-100%' : '100%') : '0%';
   const toX = open ? '0%' : direction === 'left' ? '-100%' : '100%';
 
