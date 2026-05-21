@@ -259,7 +259,7 @@ export function CharacterCreateV2Page() {
   const prevStep = () => { if (step > 1) setStep(step - 1); };
 
   return (
-    <div className="min-h-screen bg-coc-bg-primary text-coc-text-primary font-body pb-20">
+    <div className="min-h-[100dvh] bg-coc-bg-primary text-coc-text-primary font-body pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-coc-bg-primary/95 backdrop-blur border-b border-coc-border">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">

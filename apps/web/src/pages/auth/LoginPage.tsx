@@ -38,7 +38,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-coc-abyss">
+    <div className="min-h-[100dvh] flex items-center justify-center relative overflow-hidden bg-coc-abyss">
       {/* 电影级视频背景 */}
       <video
         autoPlay

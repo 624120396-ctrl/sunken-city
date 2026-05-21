@@ -25,7 +25,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-coc-bg-primary">
+    <div className="flex min-h-[100dvh] bg-coc-bg-primary">
       {/* 侧边栏 */}
       <aside className="w-64 bg-coc-bg-secondary border-r border-coc-border flex flex-col">
         {/* Logo */}

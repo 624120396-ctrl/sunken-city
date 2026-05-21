@@ -24,7 +24,7 @@
   }
 
   body {
-    @apply bg-coc-deep text-coc-parchment min-h-screen;
+    @apply bg-coc-deep text-coc-parchment min-h-[100dvh];
     font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
     /* 全局噪点纹理 */
     position: relative;

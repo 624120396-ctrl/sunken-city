@@ -63,7 +63,7 @@ export function RanksPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-coc-deep flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-coc-deep flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-coc-gold animate-spin" />
       </div>
     );
@@ -71,7 +71,7 @@ export function RanksPage() {
 
   if (error || ranks.length === 0) {
     return (
-      <div className="min-h-screen bg-coc-deep flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-coc-deep flex items-center justify-center">
         <div className="text-coc-parchment text-center">
           <p className="mb-4">{error || '暂无位阶数据'}</p>
           <button 
@@ -86,7 +86,7 @@ export function RanksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-coc-deep pb-12">
+    <div className="min-h-[100dvh] bg-coc-deep pb-12">
       {/* 顶部导航 */}
       <div className="sticky top-0 z-40 bg-coc-abyss/95 backdrop-blur-sm border-b border-coc-void">
         <div className="max-w-6xl mx-auto px-4 py-4">

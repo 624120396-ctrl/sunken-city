@@ -64,6 +64,10 @@ export default {
         },
       },
       fontFamily: {
+      // 数据/数值：科技字体
+        mono: ['Geist Mono', 'JetBrains Mono', 'Fira Code', 'monospace'],
+        // 正文 + 技术 UI
+        geist: ['Geist', 'Inter', 'Noto Sans SC', 'sans-serif'],
         // 标题：仪式感的衬线体
         ritual: ['Cinzel', 'Noto Serif SC', 'Georgia', 'serif'],
         // 正文：清晰的现代体
@@ -74,7 +78,6 @@ export default {
         whisper: ['Caveat', 'KaiTi', 'cursive'],
         // 兼容旧版
         serif: ['Georgia', 'Noto Serif SC', 'serif'],
-        mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
         // 呼吸效果
