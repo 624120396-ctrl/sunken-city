@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, XCircle, Users, Crown, AlertTriangle } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
+import { AdminTableSkeleton } from '@components/admin/AdminTableSkeleton';
 
 interface Room {
   id: string;
@@ -67,11 +68,7 @@ export function AdminRoomsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
-      </div>
-    );
+    return <AdminTableSkeleton rows={5} cols={5} />;
   }
 
   return (

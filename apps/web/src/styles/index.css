@@ -470,3 +470,129 @@
 .animate-abyss-drift {
   animation: abyss-drift 20s linear infinite;
 }
+
+/* ===== 房间氛围主题系统 v1.5 ===== */
+
+.atmosphere-normal {
+  --atm-bg: #0d0d12;
+  --atm-bg-tertiary: #1a1a24;
+  --atm-border: #2a2a35;
+  --atm-accent: #c9a227;
+  --atm-glow: rgba(201, 162, 39, 0.12);
+  --atm-text-secondary: #a69b85;
+}
+
+.atmosphere-dark {
+  --atm-bg: #08080c;
+  --atm-bg-tertiary: #101018;
+  --atm-border: #1f1f28;
+  --atm-accent: #8b7355;
+  --atm-glow: rgba(139, 115, 85, 0.1);
+  --atm-text-secondary: #7a7365;
+}
+
+.atmosphere-horror {
+  --atm-bg: #0a0808;
+  --atm-bg-tertiary: #161010;
+  --atm-border: #3d1f24;
+  --atm-accent: #a63848;
+  --atm-glow: rgba(166, 56, 72, 0.18);
+  --atm-text-secondary: #a08078;
+}
+
+.atmosphere-mystery {
+  --atm-bg: #0b0910;
+  --atm-bg-tertiary: #151220;
+  --atm-border: #2d2440;
+  --atm-accent: #9b7aad;
+  --atm-glow: rgba(155, 122, 173, 0.18);
+  --atm-text-secondary: #9a8fa8;
+}
+
+.atmosphere-warm {
+  --atm-bg: #120f0a;
+  --atm-bg-tertiary: #1e1810;
+  --atm-border: #3d3020;
+  --atm-accent: #d4a84b;
+  --atm-glow: rgba(212, 168, 75, 0.15);
+  --atm-text-secondary: #b8a080;
+}
+
+/* 应用氛围变量的容器 */
+[data-atmosphere] {
+  transition: background-color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+[data-atmosphere] .coc-card,
+[data-atmosphere] .coc-btn-secondary {
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+[data-atmosphere="horror"] .coc-card {
+  box-shadow: inset 0 0 60px rgba(139, 38, 53, 0.04);
+}
+
+[data-atmosphere="mystery"] .coc-card {
+  box-shadow: inset 0 0 60px rgba(107, 76, 122, 0.04);
+}
+
+[data-atmosphere="warm"] .coc-card {
+  box-shadow: inset 0 0 50px rgba(212, 168, 75, 0.03);
+}
+
+/* 氛围辅助动画 */
+@keyframes horror-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(166, 56, 72, 0); }
+  50% { box-shadow: 0 0 20px 2px rgba(166, 56, 72, 0.15); }
+}
+
+@keyframes mystery-mist {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
+@keyframes warm-flicker {
+  0%, 100% { opacity: 0.02; }
+  50% { opacity: 0.05; }
+}
+
+.atmosphere-horror::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(circle at 30% 30%, rgba(139, 38, 53, 0.06), transparent 60%);
+  animation: horror-pulse 6s ease-in-out infinite;
+}
+
+.atmosphere-mystery::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(circle at 70% 40%, rgba(107, 76, 122, 0.05), transparent 55%);
+  animation: mystery-mist 10s ease-in-out infinite;
+}
+
+.atmosphere-warm::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(circle at 50% 80%, rgba(212, 168, 75, 0.04), transparent 50%);
+  animation: warm-flicker 5s ease-in-out infinite;
+}
+
+/* ===== 骨架屏 shimmer 动画 ===== */
+@keyframes skeleton-shimmer {
+  0%, 100% { background-color: #1a1a24; }
+  50% { background-color: #252532; }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 2.2s ease-in-out infinite;
+}
+

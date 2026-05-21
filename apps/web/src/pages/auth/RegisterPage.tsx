@@ -41,7 +41,7 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center coc-bg-abyss relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center coc-bg-abyss relative overflow-hidden">
       {/* 背景装饰层 */}
       <div className="absolute inset-0 pointer-events-none">
         {/* 右侧血色微光 */}

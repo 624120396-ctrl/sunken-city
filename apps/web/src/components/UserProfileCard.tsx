@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import { User, Scroll, Crown, Sword, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Scroll, Crown, Sword, Eye, UserPlus, UserCheck, UserMinus, Clock, Mail } from 'lucide-react';
 import { ExpBar } from './ui/ExpBar';
+import { apiFetch, handleApiResponse } from '@lib/api';
+import { useAuthStore } from '@stores/auth.store';
+import { COC7E_SKILLS } from '@lib/coc7-data';
 
 export interface DisplayedCharacter {
   id: string;
+  displayId?: number;
   name: string;
   occupation?: string;
   avatarUrl?: string | null;
+  portraitUrl?: string | null;
   hp: number;
   maxHp: number;
   mp: number;
@@ -31,6 +36,7 @@ export interface DisplayedCharacter {
 
 export interface UserProfile {
   id?: string;
+  displayId?: number;
   nickname: string;
   avatarUrl?: string | null;
   frameUrl?: string | null;
@@ -120,19 +126,174 @@ function AvatarPlaceholder({ name, color }: { name: string; color?: string }) {
 export function UserProfileCard({ user }: { user: UserProfile }) {
   const [tab, setTab] = useState<'character' | 'user'>('character');
   const [charImgError, setCharImgError] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<
+    'loading' | 'none' | 'friend' | 'pending_sent' | 'pending_received' | 'self' | 'error'
+  >('loading');
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const currentUser = useAuthStore((s) => s.user);
   const dc = user.displayedCharacter;
 
-  const parsedSkills: Array<{ name: string; value: number }> = (() => {
+  const parsedQuickSkills: Array<{ name: string; value: number }> = (() => {
     try {
-      const obj = JSON.parse(dc?.skills || '{}');
-      return Object.entries(obj)
-        .map(([name, value]) => ({ name, value: Number(value) || 0 }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+      const names = JSON.parse(dc?.quickSkills || '[]');
+      const skillsObj = JSON.parse(dc?.skills || '{}');
+      if (!Array.isArray(names)) return [];
+      return names.slice(0, 5).map((n: unknown) => {
+        const keyStr = String(n);
+        const skillMeta = COC7E_SKILLS.find((s) => s.key === keyStr);
+        const displayName = skillMeta?.name || keyStr;
+        return { name: displayName, value: Number(skillsObj[keyStr]) || 0 };
+      });
     } catch {
       return [];
     }
   })();
+
+  useEffect(() => {
+    if (!user.id || !currentUser) {
+      setFriendStatus('error');
+      return;
+    }
+    if (user.id === currentUser.id) {
+      setFriendStatus('self');
+      return;
+    }
+    let cancelled = false;
+    setFriendStatus('loading');
+    apiFetch(`/friends/check/${user.id}`)
+      .then(async (res) => {
+        const json = await handleApiResponse<{ status: string; requestId?: string }>(res);
+        if (cancelled) return;
+        if (json.status === 'friend') setFriendStatus('friend');
+        else if (json.status === 'pending_sent') {
+          setFriendStatus('pending_sent');
+          if (json.requestId) setRequestId(json.requestId);
+        }
+        else if (json.status === 'pending_received') {
+          setFriendStatus('pending_received');
+          if (json.requestId) setRequestId(json.requestId);
+        }
+        else setFriendStatus('none');
+      })
+      .catch(() => {
+        if (!cancelled) setFriendStatus('error');
+      });
+    return () => { cancelled = true; };
+  }, [user.id, currentUser?.id]);
+
+  const handleAddFriend = async () => {
+    if (!user.id) return;
+    setActionLoading(true);
+    try {
+      const res = await apiFetch('/friends/requests', {
+        method: 'POST',
+        body: JSON.stringify({ targetUserId: user.id }),
+      });
+      const json = await handleApiResponse<{ autoAccepted?: boolean; request?: { id: string } }>(res);
+      if (json.autoAccepted) {
+        setFriendStatus('friend');
+      } else if (json.request) {
+        setFriendStatus('pending_sent');
+        setRequestId(json.request.id);
+      }
+    } catch (e: any) {
+      alert(e?.message || '发送失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!requestId) return;
+    setActionLoading(true);
+    try {
+      await apiFetch(`/friends/requests/${requestId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'accepted' }),
+      });
+      setFriendStatus('friend');
+    } catch (e: any) {
+      alert(e?.message || '操作失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteFriend = async () => {
+    if (!user.id) return;
+    if (!confirm('确定要删除这位好友吗？')) return;
+    setActionLoading(true);
+    try {
+      await apiFetch(`/friends/${user.id}`, { method: 'DELETE' });
+      setFriendStatus('none');
+    } catch (e: any) {
+      alert(e?.message || '删除失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const renderFriendButton = () => {
+    if (friendStatus === 'loading') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-50">
+          加载中...
+        </button>
+      );
+    }
+    if (friendStatus === 'self') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-50">
+          这是你本人
+        </button>
+      );
+    }
+    if (friendStatus === 'friend') {
+      return (
+        <div className="flex gap-2">
+          <button disabled className="flex-1 coc-btn-primary opacity-80 flex items-center justify-center gap-2">
+            <UserCheck size={16} /> 已是好友
+          </button>
+          <button
+            onClick={handleDeleteFriend}
+            disabled={actionLoading}
+            className="px-3 py-2 text-red-400 hover:bg-red-400/10 rounded border border-coc-border text-sm"
+            title="删除好友"
+          >
+            <UserMinus size={16} />
+          </button>
+        </div>
+      );
+    }
+    if (friendStatus === 'pending_sent') {
+      return (
+        <button disabled className="w-full coc-btn-secondary opacity-70 flex items-center justify-center gap-2">
+          <Clock size={16} /> 已发送请求
+        </button>
+      );
+    }
+    if (friendStatus === 'pending_received') {
+      return (
+        <button
+          onClick={handleAccept}
+          disabled={actionLoading}
+          className="w-full coc-btn-primary flex items-center justify-center gap-2"
+        >
+          <Mail size={16} /> 接受好友请求
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={handleAddFriend}
+        disabled={actionLoading}
+        className="w-full coc-btn-primary flex items-center justify-center gap-2"
+      >
+        <UserPlus size={16} /> 加为好友
+      </button>
+    );
+  };
 
   return (
     <div className="bg-coc-bg-tertiary rounded-xl border border-coc-border overflow-hidden max-w-md w-full">
@@ -173,9 +334,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               {/* 角色头部 */}
               <div className="flex items-center gap-4">
                 <div className="relative w-20 h-20 flex-shrink-0">
-                  {dc.avatarUrl && !charImgError ? (
+                  {(dc.portraitUrl || dc.avatarUrl) && !charImgError ? (
                     <img
-                      src={dc.avatarUrl}
+                      src={dc.portraitUrl || dc.avatarUrl || ''}
                       onError={() => setCharImgError(true)}
                       className="w-20 h-20 rounded-full object-cover border-2 border-coc-border bg-coc-bg-secondary"
                       alt=""
@@ -198,6 +359,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
                     <Eye size={12} />
                     <span className="truncate">{dc.occupation || '未知职业'}</span>
                   </div>
+                  {dc.displayId != null && (
+                    <div className="mt-1 font-mono text-[10px] text-coc-gold">#{String(dc.displayId).padStart(8, '0')}</div>
+                  )}
                 </div>
               </div>
 
@@ -234,13 +398,13 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               </div>
 
               {/* 技能摘要 */}
-              {parsedSkills.length > 0 && (
+              {parsedQuickSkills.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-xs text-coc-text-muted flex items-center gap-1.5">
                     <Sword size={12} /> 擅长技能
                   </div>
                   <div className="space-y-2">
-                    {parsedSkills.map((s) => (
+                    {parsedQuickSkills.map((s) => (
                       <div key={s.name} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-coc-parchment">{s.name}</span>
@@ -306,6 +470,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
             <div>
               <div className="font-bold text-coc-text-primary text-lg">{user.nickname}</div>
               <div className="text-xs text-coc-text-muted">调查员 · 深渊广场居民</div>
+              {user.displayId != null && (
+                <div className="mt-0.5 font-mono text-[10px] text-coc-gold">#{String(user.displayId).padStart(8, '0')}</div>
+              )}
             </div>
           </div>
 
@@ -346,6 +513,9 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
               <div className="text-lg font-bold text-coc-parchment">{user.stardust ?? 0}</div>
             </div>
           </div>
+
+          {/* 好友操作 */}
+          {renderFriendButton()}
         </div>
       )}
     </div>

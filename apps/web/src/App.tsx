@@ -6,7 +6,7 @@ import { useAuthStore } from '@stores/auth.store';
 import { MainLayout } from '@components/layout/MainLayout';
 import { AdminLayout } from '@components/layout/AdminLayout';
 
-// 页面 — 核心页面直接加载
+// 页面
 import { LoginPage } from '@pages/auth/LoginPage';
 import { RegisterPage } from '@pages/auth/RegisterPage';
 import { DashboardPage } from '@pages/dashboard/DashboardPage';
@@ -16,6 +16,7 @@ import { CharacterEditPage } from '@pages/characters/CharacterEditPage';
 import { CharacterDetailPage } from '@pages/characters/CharacterDetailPage';
 import { CharacterGrowthPage } from '@pages/characters/CharacterGrowthPage';
 import { RoomListPage } from '@pages/rooms/RoomListPage';
+// import { RoomPage } from '@pages/rooms/RoomPage'; // 懒加载
 import { RoomReportPage } from '@pages/rooms/RoomReportPage';
 import { DiceHistoryPage } from '@pages/rooms/DiceHistoryPage';
 
@@ -37,7 +38,7 @@ import { ForumBoardPage } from '@pages/forum/ForumBoardPage';
 import { ForumPostPage } from '@pages/forum/ForumPostPage';
 import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
 
-// 好友 / 钓鱼 / 梦境 / 单人 / 幻影脚本
+// 好友
 import { FriendListPage } from '@pages/friends/FriendListPage';
 import { FishingPage } from '@pages/fishing/FishingPage';
 import { DreamingPage } from '@pages/dreaming/DreamingPage';
@@ -45,9 +46,6 @@ import { SoloStartPage } from '@pages/solo/SoloStartPage';
 import { SoloPlayerPage } from '@pages/solo/SoloPlayerPage';
 import ScenarioSelectPage from '@pages/scenarios/select';
 import ScenarioEditorPage from '@pages/scenarios/editor';
-
-// 消息中心
-import { MessageCenterPage } from '@pages/messages/MessageCenterPage';
 
 // 管理后台
 import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
@@ -132,7 +130,6 @@ function App() {
             <Route path="/scenarios/new" element={<ScenarioEditorPage />} />
             <Route path="/scenarios/:id/edit" element={<ScenarioEditorPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/messages" element={<MessageCenterPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </MainLayout>

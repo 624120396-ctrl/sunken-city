@@ -29,6 +29,8 @@ import {
 } from '../../services/forum.service';
 import { useAuthStore } from '../../stores/auth.store';
 import { formatTimeAgo } from '../../lib/utils';
+import { HtmlContent } from '../../components/HtmlContent';
+import { RichTextEditor } from '../../components/RichTextEditor';
 
 function Badge({
   children,
@@ -318,7 +320,7 @@ export function ForumPostPage() {
                       </Badge>
                     )}
                     {post.bountyCoin > 0 && (
-                      <Badge variant="bounty">悬赏 {post.bountyCoin} 硬币</Badge>
+                      <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
                     )}
                   </div>
                   <div className="text-xs text-coc-text-muted whitespace-nowrap">
@@ -337,11 +339,10 @@ export function ForumPostPage() {
 
             {editingPost ? (
               <div className="space-y-2">
-                <textarea
+                <RichTextEditor
                   value={editPostContent}
-                  onChange={(e) => setEditPostContent(e.target.value)}
-                  rows={6}
-                  className="w-full bg-coc-bg-primary border border-coc-border rounded p-3 text-coc-parchment focus:border-coc-gold focus:outline-none resize-none"
+                  onChange={setEditPostContent}
+                  minHeight="160px"
                 />
                 <div className="flex items-center gap-2">
                   <button onClick={handleUpdatePost} className="coc-btn-primary">保存</button>
@@ -355,7 +356,7 @@ export function ForumPostPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-coc-parchment leading-relaxed whitespace-pre-wrap">{post.content}</div>
+              <HtmlContent html={post.content} />
             )}
 
             <div className="flex items-center justify-between pt-2">
@@ -442,12 +443,11 @@ export function ForumPostPage() {
           {/* 回复框 */}
           {!post.isLocked && (
             <div className="p-4 bg-coc-bg-tertiary border border-coc-border rounded-lg space-y-3">
-              <textarea
+              <RichTextEditor
                 value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
+                onChange={setReplyContent}
                 placeholder="写下你的回复..."
-                rows={4}
-                className="w-full bg-coc-bg-primary border border-coc-border rounded p-3 text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+                minHeight="160px"
               />
               <div className="flex justify-end">
                 <button
@@ -561,11 +561,10 @@ function ReplyItem({
 
           {editing ? (
             <div className="mt-2 space-y-2">
-              <textarea
+              <RichTextEditor
                 value={editContent}
-                onChange={(e) => onChangeEdit(e.target.value)}
-                rows={4}
-                className="w-full bg-coc-bg-primary border border-coc-border rounded p-3 text-coc-parchment focus:border-coc-gold focus:outline-none resize-none"
+                onChange={onChangeEdit}
+                minHeight="120px"
               />
               <div className="flex items-center gap-2">
                 <button onClick={onSaveEdit} className="coc-btn-primary text-xs">保存</button>
@@ -573,7 +572,7 @@ function ReplyItem({
               </div>
             </div>
           ) : (
-            <div className="mt-2 text-coc-parchment leading-relaxed whitespace-pre-wrap">{reply.content}</div>
+            <HtmlContent className="mt-2" html={reply.content} />
           )}
 
           {!editing && (

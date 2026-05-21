@@ -22,11 +22,13 @@ const rarityText: Record<string, string> = {
 
 const CATEGORIES = [
   { value: '', label: '全部' },
+  { value: 'consumable', label: '消耗品' },
   { value: 'avatar_frame', label: '头像框' },
   { value: 'dice_skin', label: '骰子皮肤' },
   { value: 'card_skin', label: '卡面皮肤' },
   { value: 'room_theme', label: '房间主题' },
   { value: 'title', label: '印记' },
+  { value: 'relic', label: '遗物' },
 ];
 
 export function ShopPage() {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Settings, X, GripVertical } from 'lucide-react';
-import { COC7_SKILLS } from '@lib/coc-data';
+import { COC7E_SKILLS } from '@lib/coc7-data';
 import { Modal } from '@components/ui/Modal';
 
 interface QuickRollBarProps {
@@ -11,32 +11,31 @@ interface QuickRollBarProps {
   isEditable?: boolean;
 }
 
-export function QuickRollBar({ 
-  quickSkills, 
-  characterSkills, 
-  onRoll, 
+export function QuickRollBar({
+  quickSkills,
+  characterSkills,
+  onRoll,
   onUpdateQuickSkills,
-  isEditable 
+  isEditable,
 }: QuickRollBarProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [tempSkills, setTempSkills] = useState(quickSkills);
 
-  // 获取所有可用技能
-  const allSkills = Object.values(COC7_SKILLS).flat();
+  const getSkillDef = (key: string) => COC7E_SKILLS.find((s) => s.key === key);
 
   const handleSave = () => {
     onUpdateQuickSkills?.(tempSkills.slice(0, 6));
     setShowSettings(false);
   };
 
-  const handleAdd = (skillName: string) => {
-    if (tempSkills.length < 6 && !tempSkills.includes(skillName)) {
-      setTempSkills([...tempSkills, skillName]);
+  const handleAdd = (skillKey: string) => {
+    if (tempSkills.length < 6 && !tempSkills.includes(skillKey)) {
+      setTempSkills([...tempSkills, skillKey]);
     }
   };
 
-  const handleRemove = (skillName: string) => {
-    setTempSkills(tempSkills.filter(s => s !== skillName));
+  const handleRemove = (skillKey: string) => {
+    setTempSkills(tempSkills.filter((s) => s !== skillKey));
   };
 
   const handleMove = (index: number, direction: number) => {
@@ -51,13 +50,14 @@ export function QuickRollBar({
   return (
     <>
       <div className="flex items-center gap-2 px-4 py-2 bg-coc-bg-secondary border-t border-coc-border overflow-x-auto">
-        {quickSkills.map(skillName => {
-          const skillValue = characterSkills[skillName] || 
-            allSkills.find(s => s.name === skillName)?.base || 0;
-          
+        {quickSkills.map((skillKey) => {
+          const def = getSkillDef(skillKey);
+          const skillName = def?.name || skillKey;
+          const skillValue = characterSkills[skillKey] ?? def?.baseValue ?? 0;
+
           return (
             <button
-              key={skillName}
+              key={skillKey}
               onClick={() => onRoll(skillName, skillValue)}
               className="flex-shrink-0 px-3 py-1.5 bg-coc-bg-tertiary hover:bg-coc-accent-gold/20 border border-coc-border hover:border-coc-accent-gold rounded text-sm transition-colors"
             >
@@ -87,37 +87,38 @@ export function QuickRollBar({
           <div>
             <p className="text-sm text-coc-text-secondary mb-2">已选择的技能 ({tempSkills.length}/6)</p>
             <div className="space-y-1">
-              {tempSkills.map((skillName, index) => (
-                <div 
-                  key={skillName} 
-                  className="flex items-center gap-2 p-2 bg-coc-bg-tertiary rounded"
-                >
-                  <GripVertical size={16} className="text-coc-text-muted" />
-                  <span className="flex-1">{skillName}</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleMove(index, -1)}
-                      disabled={index === 0}
-                      className="p-1 text-coc-text-muted hover:text-coc-text-primary disabled:opacity-30"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      onClick={() => handleMove(index, 1)}
-                      disabled={index === tempSkills.length - 1}
-                      className="p-1 text-coc-text-muted hover:text-coc-text-primary disabled:opacity-30"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      onClick={() => handleRemove(skillName)}
-                      className="p-1 text-coc-text-muted hover:text-coc-accent-red"
-                    >
-                      <X size={14} />
-                    </button>
+              {tempSkills.map((skillKey, index) => {
+                const def = getSkillDef(skillKey);
+                const skillName = def?.name || skillKey;
+                return (
+                  <div key={skillKey} className="flex items-center gap-2 p-2 bg-coc-bg-tertiary rounded">
+                    <GripVertical size={16} className="text-coc-text-muted" />
+                    <span className="flex-1">{skillName}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleMove(index, -1)}
+                        disabled={index === 0}
+                        className="p-1 text-coc-text-muted hover:text-coc-text-primary disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMove(index, 1)}
+                        disabled={index === tempSkills.length - 1}
+                        className="p-1 text-coc-text-muted hover:text-coc-text-primary disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        onClick={() => handleRemove(skillKey)}
+                        className="p-1 text-coc-text-muted hover:text-coc-accent-red"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -125,33 +126,25 @@ export function QuickRollBar({
             <div>
               <p className="text-sm text-coc-text-secondary mb-2">添加技能</p>
               <div className="max-h-48 overflow-y-auto border border-coc-border rounded">
-                {allSkills
-                  .filter(s => !tempSkills.includes(s.name))
-                  .map(skill => (
-                    <button
-                      key={skill.name}
-                      onClick={() => handleAdd(skill.name)}
-                      className="w-full text-left px-3 py-2 hover:bg-coc-bg-tertiary transition-colors border-b border-coc-border last:border-b-0"
-                    >
-                      <span>{skill.name}</span>
-                      <span className="ml-2 text-xs text-coc-text-muted">基础 {skill.base}%</span>
-                    </button>
-                  ))}
+                {COC7E_SKILLS.filter((s) => !tempSkills.includes(s.key)).map((skill) => (
+                  <button
+                    key={skill.key}
+                    onClick={() => handleAdd(skill.key)}
+                    className="w-full text-left px-3 py-2 hover:bg-coc-bg-tertiary transition-colors border-b border-coc-border last:border-b-0"
+                  >
+                    <span>{skill.name}</span>
+                    <span className="ml-2 text-xs text-coc-text-muted">基础 {skill.baseValue}%</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setShowSettings(false)}
-              className="coc-btn-secondary flex-1"
-            >
+            <button onClick={() => setShowSettings(false)} className="coc-btn-secondary flex-1">
               取消
             </button>
-            <button
-              onClick={handleSave}
-              className="coc-btn-primary flex-1"
-            >
+            <button onClick={handleSave} className="coc-btn-primary flex-1">
               保存
             </button>
           </div>

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getForumBoards, createPost } from '../../services/forum.service';
 import { useAuthStore } from '../../stores/auth.store';
+import { RichTextEditor } from '../../components/RichTextEditor';
 
 export function ForumNewPostPage() {
   const navigate = useNavigate();
@@ -95,12 +96,11 @@ export function ForumNewPostPage() {
 
         <div>
           <label className="block text-sm text-coc-text-muted mb-1">内容</label>
-          <textarea
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={10}
+            onChange={setContent}
             placeholder="写下你想分享的内容..."
-            className="w-full bg-coc-bg-primary border border-coc-border rounded p-3 text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+            minHeight="240px"
           />
         </div>
 
@@ -115,11 +115,11 @@ export function ForumNewPostPage() {
               onChange={(e) => setBounty(Math.max(0, parseInt(e.target.value) || 0))}
               className="w-32 bg-coc-bg-primary border border-coc-border rounded p-2 text-coc-parchment focus:border-coc-gold focus:outline-none"
             />
-            <span className="text-sm text-coc-text-muted">当前余额：{user?.coins || 0} 硬币</span>
+            <span className="text-sm text-coc-text-muted">当前余额：{user?.coins || 0} 锈蚀硬币</span>
           </div>
           {bounty > 0 && (
             <p className="text-xs text-amber-400 mt-1">
-              最佳回复者将获得 {bounty} 硬币悬赏。
+              最佳回复者将获得 {bounty} 锈蚀硬币悬赏。
             </p>
           )}
         </div>

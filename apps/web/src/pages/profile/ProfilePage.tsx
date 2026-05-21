@@ -295,6 +295,10 @@ export function ProfilePage() {
               </div>
             </div>
 
+            {user?.displayId != null && (
+              <div className="font-mono text-xs text-coc-gold mb-2">用户编号：#{String(user.displayId).padStart(8, '0')}</div>
+            )}
+
             <div>
               <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">头像 URL（可选）</label>
               <input
