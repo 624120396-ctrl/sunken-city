@@ -1,11 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 
 // 布局
 import { MainLayout } from '@components/layout/MainLayout';
 import { AdminLayout } from '@components/layout/AdminLayout';
 
-// 页面
+// 页面 — 核心页面直接加载
 import { LoginPage } from '@pages/auth/LoginPage';
 import { RegisterPage } from '@pages/auth/RegisterPage';
 import { DashboardPage } from '@pages/dashboard/DashboardPage';
@@ -15,7 +16,6 @@ import { CharacterEditPage } from '@pages/characters/CharacterEditPage';
 import { CharacterDetailPage } from '@pages/characters/CharacterDetailPage';
 import { CharacterGrowthPage } from '@pages/characters/CharacterGrowthPage';
 import { RoomListPage } from '@pages/rooms/RoomListPage';
-import { RoomPage } from '@pages/rooms/RoomPage';
 import { RoomReportPage } from '@pages/rooms/RoomReportPage';
 import { DiceHistoryPage } from '@pages/rooms/DiceHistoryPage';
 
@@ -28,12 +28,23 @@ import { ProfilePage } from '@pages/profile/ProfilePage';
 
 // 商店
 import { ShopPage } from '@pages/shop/ShopPage';
+import { InventoryPage } from '@pages/inventory/InventoryPage';
+import { RelicMarketPage } from '@pages/market/RelicMarketPage';
 
 // 论坛
 import { ForumListPage } from '@pages/forum/ForumListPage';
 import { ForumBoardPage } from '@pages/forum/ForumBoardPage';
 import { ForumPostPage } from '@pages/forum/ForumPostPage';
 import { ForumNewPostPage } from '@pages/forum/ForumNewPostPage';
+
+// 好友 / 钓鱼 / 梦境 / 单人 / 幻影脚本
+import { FriendListPage } from '@pages/friends/FriendListPage';
+import { FishingPage } from '@pages/fishing/FishingPage';
+import { DreamingPage } from '@pages/dreaming/DreamingPage';
+import { SoloStartPage } from '@pages/solo/SoloStartPage';
+import { SoloPlayerPage } from '@pages/solo/SoloPlayerPage';
+import ScenarioSelectPage from '@pages/scenarios/select';
+import ScenarioEditorPage from '@pages/scenarios/editor';
 
 // 消息中心
 import { MessageCenterPage } from '@pages/messages/MessageCenterPage';
@@ -48,6 +59,12 @@ import { AdminRankTitlePage } from '@pages/admin/AdminRankTitlePage';
 import { AdminAnnouncementsPage } from '@pages/admin/AdminAnnouncementsPage';
 import { AdminShopPage } from '@pages/admin/AdminShopPage';
 import { AdminBoardModeratorsPage } from '@pages/admin/AdminBoardModeratorsPage';
+import { AdminRelicMarketPage } from '@pages/admin/AdminRelicMarketPage';
+import { AdminDreamCardPage } from '@pages/admin/AdminDreamCardPage';
+
+// 懒加载 — 重页面
+import { PageSkeleton } from '@components/ui/Skeleton';
+const RoomPage = lazy(() => import('@pages/rooms/RoomPage').then(m => ({ default: m.RoomPage })));
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -68,12 +85,15 @@ function App() {
       <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
       <Route path="/admin/users" element={<AdminLayout><AdminUsersPage /></AdminLayout>} />
       <Route path="/admin/characters" element={<AdminLayout><AdminCharactersPage /></AdminLayout>} />
+      <Route path="/admin/characters/:id/edit" element={<AdminLayout><CharacterEditPage /></AdminLayout>} />
       <Route path="/admin/rooms" element={<AdminLayout><AdminRoomsPage /></AdminLayout>} />
       <Route path="/admin/settings" element={<AdminLayout><AdminSettingsPage /></AdminLayout>} />
       <Route path="/admin/rank-title" element={<AdminLayout><AdminRankTitlePage /></AdminLayout>} />
       <Route path="/admin/announcements" element={<AdminLayout><AdminAnnouncementsPage /></AdminLayout>} />
       <Route path="/admin/shop" element={<AdminLayout><AdminShopPage /></AdminLayout>} />
       <Route path="/admin/board-moderators" element={<AdminLayout><AdminBoardModeratorsPage /></AdminLayout>} />
+      <Route path="/admin/relic-market" element={<AdminLayout><AdminRelicMarketPage /></AdminLayout>} />
+      <Route path="/admin/dream-cards" element={<AdminLayout><AdminDreamCardPage /></AdminLayout>} />
 
       {/* 主站路由 */}
       <Route path="*" element={
@@ -83,19 +103,34 @@ function App() {
             <Route path="/characters" element={<CharacterListPage />} />
             <Route path="/characters/new" element={<CharacterCreateV2Page />} />
             <Route path="/characters/:id" element={<CharacterDetailPage />} />
-            <Route path="/characters/:id/edit" element={<CharacterEditPage />} />
+            <Route path="/characters/:id/edit" element={<Navigate to="/characters/:id" replace />} />
             <Route path="/characters/:id/growth" element={<CharacterGrowthPage />} />
             <Route path="/rooms" element={<RoomListPage />} />
-            <Route path="/rooms/:roomId" element={<RoomPage />} />
+            <Route path="/rooms/:roomId" element={
+              <Suspense fallback={<PageSkeleton />}>
+                <RoomPage />
+              </Suspense>
+            } />
             <Route path="/rooms/:roomId/report" element={<RoomReportPage />} />
             <Route path="/rooms/:roomId/dice-history" element={<DiceHistoryPage />} />
             <Route path="/ranks" element={<RanksPage />} />
             <Route path="/titles" element={<TitlesPage />} />
             <Route path="/shop" element={<ShopPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/market" element={<RelicMarketPage />} />
             <Route path="/forums" element={<ForumListPage />} />
             <Route path="/forums/board/:boardKey" element={<ForumBoardPage />} />
             <Route path="/forums/new" element={<ForumNewPostPage />} />
             <Route path="/forums/:postId" element={<ForumPostPage />} />
+            <Route path="/friends" element={<FriendListPage />} />
+            <Route path="/fishing" element={<FishingPage />} />
+            <Route path="/dream" element={<DreamingPage />} />
+            <Route path="/solo" element={<SoloStartPage />} />
+            <Route path="/solo/:scenarioId" element={<SoloPlayerPage />} />
+            <Route path="/solo/session/:sessionId" element={<SoloPlayerPage />} />
+            <Route path="/scenarios" element={<ScenarioSelectPage />} />
+            <Route path="/scenarios/new" element={<ScenarioEditorPage />} />
+            <Route path="/scenarios/:id/edit" element={<ScenarioEditorPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/messages" element={<MessageCenterPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

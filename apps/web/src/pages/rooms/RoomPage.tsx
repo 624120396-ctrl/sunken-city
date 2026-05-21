@@ -14,6 +14,7 @@ import { MentionInput } from '@components/room/MentionInput';
 import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
 import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
+import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 
 // ===== 新增沉浸式体验组件 =====
 import { SceneCard } from '@components/room/SceneCard';
@@ -777,7 +778,7 @@ export function RoomPage() {
         <div className="lg:col-span-1 space-y-4">
           {/* 当前状态条 - 自己的角色 */}
           {selectedCharacter && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="blood" runeCorners glow innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Shield size={16} />
                 我的状态
@@ -808,7 +809,7 @@ export function RoomPage() {
                   />
                 </Tooltip>
               </div>
-            </div>
+            </DoubleBezelCard>
           )}
 
           <div className="coc-card">

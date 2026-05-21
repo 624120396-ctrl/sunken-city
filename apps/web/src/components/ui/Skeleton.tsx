@@ -5,6 +5,7 @@ interface SkeletonProps {
   variant?: 'text' | 'card' | 'circle' | 'rect';
   lines?: number;
   shimmer?: boolean;
+  style?: React.CSSProperties;
 }
 
 export function Skeleton({
@@ -12,6 +13,7 @@ export function Skeleton({
   variant = 'text',
   lines = 1,
   shimmer = true,
+  style,
 }: SkeletonProps) {
   if (variant === 'text' && lines > 1) {
     return (
@@ -45,6 +47,7 @@ export function Skeleton({
         shimmer && 'animate-pulse',
         className
       )}
+      style={style}
     />
   );
 }

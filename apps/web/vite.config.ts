@@ -31,5 +31,23 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 核心 vendor 分离
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-ui': ['lucide-react', 'clsx', 'tailwind-merge'],
+          // 动画引擎单独 chunk
+          'animejs': ['animejs'],
+          'motion': ['motion'],
+          // 表单相关
+          'forms': ['react-hook-form', 'zod'],
+          // Socket
+          'socket': ['socket.io-client'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
   },
 });
