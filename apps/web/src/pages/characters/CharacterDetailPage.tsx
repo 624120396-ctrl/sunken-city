@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit2, Trash2, Heart, Brain, Sparkles, Zap, Shield, Save, X, Plus, Download, Upload } from 'lucide-react';
-import { COC7_SKILLS } from '@lib/coc-data';
-import { apiFetch, handleApiResponse } from '@lib/api';
-import { Modal } from '@components/ui/Modal';
+import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X } from 'lucide-react';
+import { COC7E_SKILLS, SKILL_CATEGORIES } from '@lib/coc7-data';
+import { apiFetch } from '@lib/api';
 import { cn } from '@lib/utils';
+import { useAuthStore } from '@stores/auth.store';
 
 interface Character {
   id: string;
+  displayId: number;
+  userId: string;
   name: string;
   occupation: string;
   age: number;
@@ -26,6 +28,7 @@ interface Character {
   san: number;
   mov: number;
   build: number;
+  portraitUrl?: string;
   skills: Record<string, number>;
   weapons: any[];
   armor: any;
@@ -38,18 +41,46 @@ interface Character {
   woundsAndScars?: string;
   phobiasAndMania?: string;
   background?: string;
+  backgroundEntries?: { type: string; content: string }[];
+  keyConnection?: string;
+}
+
+interface PortraitQuota {
+  maxCount: number;
+  generatedCount: number;
+  remainingCount: number;
+  inCooldown: boolean;
+  nextAvailableAt: string | null;
 }
 
 export function CharacterDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('attributes');
 
+  // 形象生成
+  const [showPortraitModal, setShowPortraitModal] = useState(false);
+  const [portraitLoading, setPortraitLoading] = useState(false);
+  const [portraitPreviewUrl, setPortraitPreviewUrl] = useState<string | null>(null);
+  const [portraitCustomDesc, setPortraitCustomDesc] = useState('');
+  const [portraitQuota, setPortraitQuota] = useState<PortraitQuota | null>(null);
+
+  const isOwner = character?.userId === user?.id;
+  const isAdmin = user?.isAdmin === true;
+  const canManagePortrait = isOwner || isAdmin;
+
   useEffect(() => {
     fetchCharacter();
   }, [id]);
+
+  useEffect(() => {
+    if (character && canManagePortrait) {
+      fetchPortraitQuota();
+    }
+  }, [character, canManagePortrait]);
 
   const fetchCharacter = async () => {
     try {
@@ -57,14 +88,62 @@ export function CharacterDetailPage() {
       const data = await response.json();
       if (data.success) {
         const char = data.data.character;
+
+        let parsedSkills: Record<string, number> = {};
+        try {
+          parsedSkills = typeof char.skills === 'string'
+            ? JSON.parse(char.skills || '{}')
+            : (char.skills || {});
+          if (typeof parsedSkills !== 'object' || parsedSkills === null) {
+            parsedSkills = {};
+          }
+        } catch {
+          console.error('skills JSON 解析失败:', char.skills);
+          parsedSkills = {};
+        }
+
+        let parsedWeapons: any[] = [];
+        try {
+          parsedWeapons = typeof char.weapons === 'string'
+            ? JSON.parse(char.weapons || '[]')
+            : (char.weapons || []);
+          if (!Array.isArray(parsedWeapons)) parsedWeapons = [];
+        } catch {
+          console.error('weapons JSON 解析失败:', char.weapons);
+          parsedWeapons = [];
+        }
+
+        let parsedArmor = null;
+        try {
+          parsedArmor = typeof char.armor === 'string'
+            ? (char.armor ? JSON.parse(char.armor) : null)
+            : char.armor;
+          if (parsedArmor !== null && typeof parsedArmor !== 'object') parsedArmor = null;
+        } catch {
+          console.error('armor JSON 解析失败:', char.armor);
+          parsedArmor = null;
+        }
+
+        let parsedBackgroundEntries: { type: string; content: string }[] = [];
+        try {
+          parsedBackgroundEntries = Array.isArray(char.backgroundEntries)
+            ? char.backgroundEntries
+            : (typeof char.backgroundEntries === 'string'
+                ? JSON.parse(char.backgroundEntries || '[]')
+                : []);
+          if (!Array.isArray(parsedBackgroundEntries)) parsedBackgroundEntries = [];
+        } catch {
+          console.error('backgroundEntries JSON 解析失败:', char.backgroundEntries);
+          parsedBackgroundEntries = [];
+        }
+
         setCharacter({
           ...char,
-          // 处理可能是字符串或对象的 skills
-          skills: typeof char.skills === 'string' ? JSON.parse(char.skills || '{}') : (char.skills || {}),
-          // 处理可能是字符串或数组的 weapons  
-          weapons: typeof char.weapons === 'string' ? JSON.parse(char.weapons || '[]') : (char.weapons || []),
-          // 处理 armor
-          armor: typeof char.armor === 'string' ? (char.armor ? JSON.parse(char.armor) : null) : char.armor,
+          skills: parsedSkills,
+          weapons: parsedWeapons,
+          armor: parsedArmor,
+          backgroundEntries: parsedBackgroundEntries,
+          keyConnection: char.keyConnection,
         });
       }
     } catch (error) {
@@ -74,97 +153,29 @@ export function CharacterDetailPage() {
     }
   };
 
+  const fetchPortraitQuota = async () => {
+    try {
+      const res = await apiFetch(`/characters/${id}/portrait/quota`);
+      const data = await res.json();
+      if (data.success) setPortraitQuota(data.data);
+    } catch (err) {
+      console.error('获取形象配额失败:', err);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm('确定要删除这个调查员吗？此操作不可撤销。')) return;
-    
     try {
       const response = await fetch(`/api/characters/${id}`, { method: 'DELETE' });
       const data = await response.json();
-      if (data.success) {
-        navigate('/characters');
-      }
+      if (data.success) navigate('/characters');
     } catch (error) {
       console.error('删除失败:', error);
     }
   };
 
-  const [editingSkill, setEditingSkill] = useState<string | null>(null);
-  const [editSkillValue, setEditSkillValue] = useState<number>(0);
-  const [showAddSkillModal, setShowAddSkillModal] = useState(false);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillValue, setNewSkillValue] = useState(0);
-
-  const handleEditSkill = (skillName: string, currentValue: number) => {
-    setEditingSkill(skillName);
-    setEditSkillValue(currentValue);
-  };
-
-  const handleSaveSkill = async () => {
-    if (!editingSkill || !character) return;
-
-    const updatedSkills = {
-      ...character.skills,
-      [editingSkill]: editSkillValue,
-    };
-
-    try {
-      const response = await apiFetch(`/characters/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ skills: updatedSkills }),
-      });
-      await handleApiResponse(response);
-      setCharacter({ ...character, skills: updatedSkills });
-      setEditingSkill(null);
-    } catch (error) {
-      console.error('保存技能失败:', error);
-    }
-  };
-
-  const handleAddSkill = async () => {
-    if (!newSkillName || !character) return;
-
-    const updatedSkills = {
-      ...character.skills,
-      [newSkillName]: newSkillValue,
-    };
-
-    try {
-      const response = await apiFetch(`/characters/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ skills: updatedSkills }),
-      });
-      await handleApiResponse(response);
-      setCharacter({ ...character, skills: updatedSkills });
-      setShowAddSkillModal(false);
-      setNewSkillName('');
-      setNewSkillValue(0);
-    } catch (error) {
-      console.error('添加技能失败:', error);
-    }
-  };
-
-  const handleDeleteSkill = async (skillName: string) => {
-    if (!confirm(`确定要删除技能 "${skillName}" 吗？`)) return;
-    if (!character) return;
-
-    const updatedSkills = { ...character.skills };
-    delete updatedSkills[skillName];
-
-    try {
-      const response = await apiFetch(`/characters/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ skills: updatedSkills }),
-      });
-      await handleApiResponse(response);
-      setCharacter({ ...character, skills: updatedSkills });
-    } catch (error) {
-      console.error('删除技能失败:', error);
-    }
-  };
-
   const handleExport = () => {
     if (!character) return;
-
     const exportData = {
       version: '1.0',
       exportDate: new Date().toISOString(),
@@ -175,7 +186,6 @@ export function CharacterDetailPage() {
         armor: character.armor,
       },
     };
-
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -187,37 +197,51 @@ export function CharacterDetailPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = JSON.parse(e.target?.result as string);
-        if (data.character) {
-          const imported = data.character;
-          // 更新角色数据
-          const updateData = {
-            skills: imported.skills,
-            weapons: imported.weapons,
-            armor: imported.armor,
-          };
-          const response = await apiFetch(`/characters/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(updateData),
-          });
-          await handleApiResponse(response);
-          // 刷新角色数据
-          fetchCharacter();
-          alert('导入成功');
-        }
-      } catch (error) {
-        alert('导入失败：文件格式错误');
+  const handlePortraitGenerate = async () => {
+    if (!character) return;
+    try {
+      setPortraitLoading(true);
+      const res = await apiFetch(`/characters/${character.id}/portrait/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customDesc: portraitCustomDesc.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || '生成失败');
       }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+      setPortraitPreviewUrl(data.data.previewUrl);
+      setPortraitQuota((prev) =>
+        prev
+          ? { ...prev, remainingCount: data.data.remainingCount, generatedCount: prev.generatedCount + 1 }
+          : prev
+      );
+    } catch (err: any) {
+      alert('形象生成失败：' + err.message);
+    } finally {
+      setPortraitLoading(false);
+    }
+  };
+
+  const handlePortraitConfirm = async () => {
+    if (!character || !portraitPreviewUrl) return;
+    try {
+      const res = await apiFetch(`/characters/${character.id}/portrait/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: portraitPreviewUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || '保存失败');
+      }
+      setCharacter((prev) => (prev ? { ...prev, portraitUrl: portraitPreviewUrl } : prev));
+      setShowPortraitModal(false);
+      setPortraitPreviewUrl(null);
+      setPortraitCustomDesc('');
+    } catch (err: any) {
+      alert('形象保存失败：' + err.message);
+    }
   };
 
   if (loading) {
@@ -246,86 +270,118 @@ export function CharacterDetailPage() {
     { id: 'background', label: '背景', icon: Sparkles },
   ];
 
+  const cooldownText = portraitQuota?.inCooldown && portraitQuota.nextAvailableAt
+    ? new Date(portraitQuota.nextAvailableAt).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : null;
+
+  const statItems = [
+    { key: 'hp', maxKey: 'maxHp', label: 'HP', icon: Heart, color: 'text-coc-accent-red' },
+    { key: 'mp', maxKey: 'maxMp', label: 'MP', icon: Sparkles, color: 'text-coc-accent-cyan' },
+    { key: 'san', maxKey: 'maxSan', label: 'SAN', icon: Brain, color: 'text-coc-accent-gold' },
+    { key: 'mov', label: 'MOV', icon: Zap, color: 'text-coc-text-secondary' },
+    { key: 'build', label: '体格', icon: Shield, color: 'text-coc-text-secondary' },
+  ];
+
   return (
-    <div>
-      {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Link to="/characters" className="coc-btn-secondary p-2">
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-serif font-bold">{character.name}</h1>
-            <p className="text-coc-text-secondary">{character.occupation} | {character.age}岁 {character.gender}</p>
+    <div className="space-y-6">
+      {/* ===== 焦点图顶部：角色卡 Hero ===== */}
+      <div className="relative overflow-hidden rounded-xl border border-coc-void bg-coc-surface p-4 md:p-5">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+          {/* 左侧：形象立绘 */}
+          <div className="w-full md:w-40 lg:w-44 flex-shrink-0">
+            <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-coc-void bg-coc-abyss">
+              {character.portraitUrl ? (
+                <img
+                  src={character.portraitUrl}
+                  alt={character.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-coc-text-muted">
+                  <svg className="w-14 h-14 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="text-xs tracking-widest">暂无形象</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 右侧：信息与属性 */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between">
+            <div>
+                  <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Link to="/characters" className="coc-btn-secondary p-1 rounded-md">
+                      <ArrowLeft size={16} />
+                    </Link>
+                    <h1 className="text-xl md:text-2xl font-ritual font-bold text-coc-parchment">{character.name}</h1>
+                  </div>
+                  <p className="text-sm text-coc-text-secondary">
+                    {character.occupation} · {character.age}岁 · {character.gender}
+                  </p>
+                  <div className="mt-1.5 font-mono text-xs text-coc-gold">#{String(character.displayId).padStart(8, '0')}</div>
+                </div>
+              </div>
+
+              {character.appearance && (
+                <p className="mt-3 text-sm text-coc-parchment-dim line-clamp-3">{character.appearance}</p>
+              )}
+            </div>
+
+            {/* 中部：派生属性 */}
+            <div className="mt-4">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                {statItems.map((s) => {
+                  const Icon = s.icon;
+                  const val = (character as any)[s.key];
+                  const maxVal = s.maxKey ? (character as any)[s.maxKey] : null;
+                  return (
+                    <div key={s.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-coc-abyss border border-coc-void transition-colors hover:border-coc-rift">
+                      <Icon size={14} className={cn(s.color)} />
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-bold text-coc-parchment">{val}</span>
+                        <span className="text-[10px] text-coc-text-muted">{s.label}{maxVal ? `/${maxVal}` : ''}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 下部：操作按钮 */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {canManagePortrait && (
+                <button
+                  onClick={() => { setShowPortraitModal(true); setPortraitPreviewUrl(null); setPortraitCustomDesc(''); }}
+                  className="coc-btn-gold flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                >
+                  <Wand2 size={14} />
+                  塑造形象
+                </button>
+              )}
+              <button
+                onClick={handleExport}
+                className="coc-btn-void flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <Download size={14} />
+                导出
+              </button>
+              <button
+                onClick={handleDelete}
+                className="coc-btn-void text-red-400 hover:text-red-300 flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <Trash2 size={14} />
+                删除
+              </button>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={handleExport}
-            className="coc-btn-secondary flex items-center gap-1"
-          >
-            <Download size={16} />
-            导出
-          </button>
-          <label className="coc-btn-secondary flex items-center gap-1 cursor-pointer"
-          >
-            <Upload size={16} />
-            导入
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-          <Link 
-            to={`/characters/${id}/edit`}
-            className="coc-btn-secondary flex items-center gap-1"
-          >
-            <Edit2 size={16} />
-            编辑
-          </Link>
-          <button 
-            onClick={handleDelete}
-            className="coc-btn-secondary text-red-400 hover:text-red-300 flex items-center gap-1"
-          >
-            <Trash2 size={16} />
-            删除
-          </button>
-        </div>
       </div>
 
-      {/* 派生属性卡片 */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="coc-card text-center">
-          <Heart size={20} className="mx-auto mb-2 text-coc-accent-red" />
-          <div className="text-2xl font-bold">{character.hp}</div>
-          <div className="text-xs text-coc-text-muted">HP</div>
-        </div>
-        <div className="coc-card text-center">
-          <Sparkles size={20} className="mx-auto mb-2 text-coc-accent-cyan" />
-          <div className="text-2xl font-bold">{character.mp}</div>
-          <div className="text-xs text-coc-text-muted">MP</div>
-        </div>
-        <div className="coc-card text-center">
-          <Brain size={20} className="mx-auto mb-2 text-coc-accent-gold" />
-          <div className="text-2xl font-bold">{character.san}</div>
-          <div className="text-xs text-coc-text-muted">SAN</div>
-        </div>
-        <div className="coc-card text-center">
-          <Zap size={20} className="mx-auto mb-2 text-coc-text-secondary" />
-          <div className="text-2xl font-bold">{character.mov}</div>
-          <div className="text-xs text-coc-text-muted">MOV</div>
-        </div>
-        <div className="coc-card text-center">
-          <Shield size={20} className="mx-auto mb-2 text-coc-text-secondary" />
-          <div className="text-2xl font-bold">{character.build}</div>
-          <div className="text-xs text-coc-text-muted">体格</div>
-        </div>
-      </div>
-
-      {/* 标签页 */}
-      <div className="border-b border-coc-border mb-6">
+      {/* ===== 标签页 ===== */}
+      <div className="border-b border-coc-void">
         <div className="flex gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -334,7 +390,7 @@ export function CharacterDetailPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'px-4 py-3 flex items-center gap-2 border-b-2 transition-colors',
+                  'px-4 py-3 flex items-center gap-2 border-b-2 transition-colors text-sm md:text-base',
                   activeTab === tab.id
                     ? 'border-coc-accent-red text-coc-accent-red'
                     : 'border-transparent text-coc-text-secondary hover:text-coc-text-primary'
@@ -348,7 +404,7 @@ export function CharacterDetailPage() {
         </div>
       </div>
 
-      {/* 内容区域 */}
+      {/* ===== 内容区域 ===== */}
       <div className="coc-card">
         {activeTab === 'attributes' && (
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
@@ -376,87 +432,48 @@ export function CharacterDetailPage() {
 
         {activeTab === 'skills' && (
           <div className="space-y-6">
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowAddSkillModal(true)}
-                className="coc-btn-secondary text-sm flex items-center gap-1"
-              >
-                <Plus size={14} />
-                添加技能
-              </button>
-            </div>
-            {Object.entries(COC7_SKILLS).map(([category, skills]) => (
-              <div key={category}>
-                <h3 className="font-bold mb-3 text-coc-accent-gold capitalize">{category}</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {skills.map((skill) => {
-                    const value = character.skills[skill.name] || skill.base;
-                    const isEditing = editingSkill === skill.name;
-                    return (
-                      <div key={skill.name} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
-                        <span className="text-sm">{skill.name}</span>
-                        {isEditing ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              value={editSkillValue}
-                              onChange={(e) => setEditSkillValue(parseInt(e.target.value) || 0)}
-                              className="w-14 coc-input text-center text-sm py-1"
-                              min={0}
-                              max={99}
-                            />
-                            <button onClick={handleSaveSkill} className="text-green-400">
-                              <Save size={14} />
-                            </button>
-                            <button onClick={() => setEditingSkill(null)} className="text-red-400">
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
+            {(() => {
+              const groups = COC7E_SKILLS.reduce((acc, skill) => {
+                acc[skill.category] = acc[skill.category] || [];
+                acc[skill.category].push(skill);
+                return acc;
+              }, {} as Record<string, typeof COC7E_SKILLS>);
+              return Object.entries(groups).map(([category, skills]) => (
+                <div key={category}>
+                  <h3 className="font-bold mb-3 text-coc-accent-gold capitalize">{SKILL_CATEGORIES[category] || category}</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {skills.map((skill) => {
+                      const value = character.skills[skill.key] ?? skill.baseValue;
+                      return (
+                        <div key={skill.key} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
+                          <span className="text-sm">{skill.name}</span>
                           <div className="flex items-center gap-2 text-xs">
                             <span className="text-coc-accent-cyan">{value}%</span>
                             <span className="text-coc-text-muted">½{Math.floor(value/2)}</span>
                             <span className="text-coc-text-muted">⅕{Math.floor(value/5)}</span>
-                            <button 
-                              onClick={() => handleEditSkill(skill.name, value)}
-                              className="text-coc-text-muted hover:text-coc-accent-red"
-                            >
-                              <Edit2 size={12} />
-                            </button>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {/* 自定义技能 */}
-            {Object.entries(character.skills || {}).filter(([name]) => 
-              !Object.values(COC7_SKILLS).flat().some(s => s.name === name)
+              ));
+            })()}
+            {Object.entries(character.skills || {}).filter(([name]) =>
+              !COC7E_SKILLS.some(s => s.key === name)
             ).length > 0 && (
               <div>
                 <h3 className="font-bold mb-3 text-coc-accent-gold">自定义技能</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {Object.entries(character.skills || {}).filter(([name]) => 
-                    !Object.values(COC7_SKILLS).flat().some(s => s.name === name)
+                  {Object.entries(character.skills || {}).filter(([name]) =>
+                    !COC7E_SKILLS.some(s => s.key === name)
                   ).map(([name, value]) => (
                     <div key={name} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
                       <span className="text-sm">{name}</span>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-coc-accent-cyan">{value}%</span>
-                        <button 
-                          onClick={() => handleEditSkill(name, value as number)}
-                          className="text-coc-text-muted hover:text-coc-accent-red"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteSkill(name)}
-                          className="text-coc-text-muted hover:text-red-400"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <span className="text-coc-text-muted">½{Math.floor((value as number)/2)}</span>
+                        <span className="text-coc-text-muted">⅕{Math.floor((value as number)/5)}</span>
                       </div>
                     </div>
                   ))}
@@ -504,77 +521,114 @@ export function CharacterDetailPage() {
 
         {activeTab === 'background' && (
           <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-bold text-coc-text-secondary mb-2">背景故事</h4>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {character.background || '未填写背景故事'}
-              </p>
-            </div>
-            <hr className="border-coc-void" />
-            {[
-              { key: 'appearance', label: '形象描述' },
-              { key: 'beliefs', label: '思想与信念' },
-              { key: 'significantPeople', label: '重要之人' },
-              { key: 'meaningfulLocations', label: '意义非凡之地' },
-              { key: 'treasuredPossessions', label: '宝贵之物' },
-              { key: 'traits', label: '特质' },
-              { key: 'woundsAndScars', label: '伤口与疤痕' },
-              { key: 'phobiasAndMania', label: '恐惧症与躁狂症' },
-            ].map((item) => (
-              <div key={item.key}>
-                <h4 className="text-sm font-bold text-coc-text-secondary mb-1">{item.label}</h4>
-                <p className="text-sm">{(character as any)[item.key] || '未填写'}</p>
+            {character.background ? (
+              <div>
+                <h4 className="text-sm font-bold text-coc-text-secondary mb-2">背景故事</h4>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {character.background}
+                </p>
               </div>
-            ))}
+            ) : null}
+
+            {character.backgroundEntries && character.backgroundEntries.length > 0 ? (
+              <>
+                {character.backgroundEntries.map((entry) => (
+                  <div key={entry.type}>
+                    <h4 className="text-sm font-bold text-coc-text-secondary mb-1">{entry.type}</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{entry.content}</p>
+                  </div>
+                ))}
+                {character.keyConnection ? (
+                  <div className="pt-2 border-t border-coc-void">
+                    <h4 className="text-sm font-bold text-coc-accent-gold mb-1">关键背景连接</h4>
+                    <p className="text-sm">{character.keyConnection}</p>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              !character.background && <p className="text-coc-text-muted">未填写背景信息</p>
+            )}
           </div>
         )}
       </div>
 
-      {/* 添加技能弹窗 */}
-      <Modal
-        isOpen={showAddSkillModal}
-        onClose={() => setShowAddSkillModal(false)}
-        title="添加自定义技能"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-coc-text-secondary mb-1">技能名称</label>
-            <input
-              type="text"
-              value={newSkillName}
-              onChange={(e) => setNewSkillName(e.target.value)}
-              className="w-full coc-input"
-              placeholder="输入技能名称"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-coc-text-secondary mb-1">初始值 (%)</label>
-            <input
-              type="number"
-              value={newSkillValue}
-              onChange={(e) => setNewSkillValue(parseInt(e.target.value) || 0)}
-              className="w-full coc-input"
-              min={0}
-              max={99}
-            />
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowAddSkillModal(false)}
-              className="coc-btn-secondary flex-1"
-            >
-              取消
-            </button>
-            <button
-              onClick={handleAddSkill}
-              disabled={!newSkillName}
-              className="coc-btn-primary flex-1"
-            >
-              添加
-            </button>
+      {/* ===== 形象铸造弹窗 ===== */}
+      {showPortraitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-lg bg-coc-bg-secondary border border-coc-void shadow-xl space-y-4 p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-ritual font-bold text-coc-parchment">塑造调查员形象</h3>
+              <button onClick={() => setShowPortraitModal(false)} className="text-coc-text-muted hover:text-coc-parchment">
+                <X size={20} />
+              </button>
+            </div>
+
+            {portraitQuota && (
+              <div className="text-sm text-coc-text-secondary flex items-center justify-between">
+                <span>剩余次数：<span className="text-coc-accent-gold">{portraitQuota.remainingCount}</span> / {portraitQuota.maxCount}</span>
+                {cooldownText && <span className="text-xs">下次可生成：{cooldownText}</span>}
+              </div>
+            )}
+
+            {character.portraitUrl && !portraitPreviewUrl && (
+              <div className="flex items-center gap-3">
+                <img src={character.portraitUrl} alt="当前形象" className="w-16 h-16 rounded object-cover border border-coc-void" />
+                <span className="text-sm text-coc-text-muted">当前形象</span>
+              </div>
+            )}
+
+            {portraitPreviewUrl ? (
+              <div className="space-y-3">
+                <img src={portraitPreviewUrl} alt="预览" className="w-full rounded border border-coc-void" />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePortraitConfirm}
+                    className="flex-1 px-4 py-2 bg-coc-accent-gold text-coc-abyss rounded font-medium hover:opacity-90"
+                  >
+                    采用此形象
+                  </button>
+                  <button
+                    onClick={() => setPortraitPreviewUrl(null)}
+                    className="flex-1 px-4 py-2 bg-coc-bg-tertiary border border-coc-void rounded hover:bg-coc-void"
+                  >
+                    重新生成
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-coc-text-muted space-y-1">
+                  <p>系统将基于角色信息自动生成英文提示词。您可以在下方补充自定义描述（如服装、神态、背景等）。</p>
+                </div>
+                <textarea
+                  value={portraitCustomDesc}
+                  onChange={(e) => setPortraitCustomDesc(e.target.value)}
+                  placeholder="例如：戴着单片眼镜，左手有伤疤，背景是雨夜码头"
+                  className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none min-h-[80px]"
+                  maxLength={200}
+                />
+                <button
+                  onClick={handlePortraitGenerate}
+                  disabled={portraitLoading || (portraitQuota !== null && portraitQuota.remainingCount <= 0) || !!cooldownText}
+                  className="w-full px-4 py-2 bg-coc-accent-gold text-coc-abyss rounded font-medium hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {portraitLoading ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-coc-abyss border-t-transparent rounded-full animate-spin" />
+                      铸造中...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 size={18} />
+                      开始铸造
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }

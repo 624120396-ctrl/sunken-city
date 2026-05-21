@@ -3,6 +3,7 @@ import { cn } from '@lib/utils';
 interface SkeletonProps {
   className?: string;
   variant?: 'text' | 'card' | 'circle' | 'rect';
+  circle?: boolean;
   lines?: number;
   shimmer?: boolean;
   style?: React.CSSProperties;
@@ -11,10 +12,12 @@ interface SkeletonProps {
 export function Skeleton({
   className,
   variant = 'text',
+  circle,
   lines = 1,
   shimmer = true,
   style,
 }: SkeletonProps) {
+  const actualVariant = circle ? 'circle' : variant;
   if (variant === 'text' && lines > 1) {
     return (
       <div className={cn('space-y-2', className)}>
@@ -43,7 +46,7 @@ export function Skeleton({
     <div
       className={cn(
         'bg-coc-void/50',
-        variantStyles[variant],
+        variantStyles[actualVariant],
         shimmer && 'animate-pulse',
         className
       )}

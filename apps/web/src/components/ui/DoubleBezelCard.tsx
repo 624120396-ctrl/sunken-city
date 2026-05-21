@@ -41,7 +41,7 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
       <div
         ref={ref}
         className={cn(
-          'relative rounded-[2rem] p-[1px]',
+          'relative rounded-xl p-[1px]',
           'ring-1 ring-inset',
           styles.outer,
           glow && 'shadow-lg',
@@ -57,7 +57,7 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
       >
         <div
           className={cn(
-            'relative rounded-[calc(2rem-1px)]',
+            'relative rounded-[calc(0.75rem-1px)]',
             'bg-coc-surface/95',
             'border border-inset',
             styles.inner,
