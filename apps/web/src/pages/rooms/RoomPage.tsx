@@ -812,7 +812,7 @@ export function RoomPage() {
             </DoubleBezelCard>
           )}
 
-          <div className="coc-card">
+          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-3 flex items-center gap-2">
               <Users size={16} />
               调查员 ({room?.members.length || 0})
@@ -877,11 +877,11 @@ export function RoomPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </DoubleBezelCard>
 
           {/* 快捷投骰 - 基于角色技能 */}
           {activeTab === 'chat' && selectedCharacter && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Dice5 size={16} />
                 快捷检定
@@ -958,22 +958,22 @@ export function RoomPage() {
                   </div>
                 );
               })()}
-            </div>
+            </DoubleBezelCard>
           )}
 
           {/* 快捷投骰 - 无角色时显示默认 */}
           {activeTab === 'chat' && !selectedCharacter && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Dice5 size={16} />
                 快捷检定
               </h3>
               <p className="text-sm text-coc-text-muted">加入房间后使用角色技能</p>
-            </div>
+            </DoubleBezelCard>
           )}
 
           {/* ===== 新增：倒计时器 ===== */}
-          <div className="coc-card">
+          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Timer size={16} className="text-coc-accent-gold" />
               <h3 className="font-bold">倒计时</h3>
@@ -984,11 +984,11 @@ export function RoomPage() {
               onCreate={createCountdown}
               onStop={stopCountdown}
             />
-          </div>
+          </DoubleBezelCard>
 
           {/* 战斗控制 */}
           {activeTab === 'combat' && room?.isCreator && (
-            <div className="coc-card">
+            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <Swords size={16} />
                 战斗控制
@@ -1031,14 +1031,14 @@ export function RoomPage() {
                   </>
                 )}
               </div>
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
 
         {/* 右侧：聊天/战斗区 */}
         <div className="lg:col-span-3 flex flex-col min-h-0">
           {activeTab === 'chat' ? (
-            <div className="coc-card flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {/* ===== 新增：场景描述卡片 ===== */}
               {(sceneDesc || room?.isCreator) && (
                 <div className="px-4 pt-4">
@@ -1242,10 +1242,10 @@ export function RoomPage() {
                   isEditable={true}
                 />
               )}
-            </div>
+            </DoubleBezelCard>
           ) : (
             /* 战斗面板 */
-            <div className="coc-card flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
@@ -1317,7 +1317,7 @@ export function RoomPage() {
                   </div>
                 </>
               )}
-            </div>
+            </DoubleBezelCard>
           )}
         </div>
       </div>
