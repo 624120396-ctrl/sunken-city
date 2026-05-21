@@ -1,4 +1,5 @@
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useRef, useState } from 'react';
 import { Fish } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
@@ -298,7 +299,13 @@ export function FishingPage() {
           <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-2">最近钓获</h3>
             {logs.length === 0 ? (
-              <p className="text-sm text-coc-text-muted">还没有钓获记录</p>
+              <EmptyState
+                icon={EmptyIcons.Fishing}
+                title="还没有钓获记录"
+                description="前往水域，抛下钓线，等待深渊的回应……"
+                size="sm"
+                animate={false}
+              />
             ) : (
               <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {logs.map((log) => (

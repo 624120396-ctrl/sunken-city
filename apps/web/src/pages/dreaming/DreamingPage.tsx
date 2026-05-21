@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Sparkles, BookOpen, History, Loader2, Coins, Gem } from 'lucide-react';
@@ -336,9 +337,15 @@ export function DreamingPage() {
 
       {tab === 'history' && (
         <div className="space-y-3">
-          {history.length === 0 && (
-            <p className="text-coc-text-muted text-sm">还没有任何梦境记录。</p>
-          )}
+          {history.length === 0 ? (
+            <EmptyState
+              icon={EmptyIcons.Dreams}
+              title="还没有任何梦境记录"
+              description="梦境是通往深层真理的门户。当你完成调查后，潜意识将在此显现……"
+              size="sm"
+              animate={false}
+            />
+          ) : null}
           {history.map((h) => (
             <div key={h.id} className="bg-coc-bg-secondary border border-coc-border rounded-lg p-4 flex items-center justify-between">
               <div>

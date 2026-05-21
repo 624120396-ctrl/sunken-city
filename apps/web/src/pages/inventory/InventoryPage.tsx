@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { RuneBorder } from '@components/ui/RuneBorder';
@@ -226,7 +227,13 @@ export function InventoryPage() {
             {loading ? (
               <div className="py-10 text-center text-coc-text-muted">加载中...</div>
             ) : generalItems.length === 0 ? (
-              <div className="py-10 text-center text-coc-text-muted">暂无道具</div>
+              <EmptyState
+                icon={EmptyIcons.Inventory}
+                title="暂无道具"
+                description="背包空空如也……前往商店或完成调查以获取物品。"
+                size="sm"
+                animate={false}
+              />
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {generalItems.map((i) => (
@@ -264,7 +271,13 @@ export function InventoryPage() {
             {loading ? (
               <div className="py-10 text-center text-coc-text-muted">加载中...</div>
             ) : titleItems.length === 0 ? (
-              <div className="py-10 text-center text-coc-text-muted">暂无印记</div>
+              <EmptyState
+                icon={EmptyIcons.Investigator}
+                title="暂无印记"
+                description="完成特定成就，调查员的传说将被铭记。"
+                size="sm"
+                animate={false}
+              />
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {titleItems.map((i) => (

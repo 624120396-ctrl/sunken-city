@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, Trash2, Check, X, Search, BookOpen, User } from 'lucide-react';
@@ -326,9 +327,13 @@ export function FriendListPage() {
           </div>
 
           {filteredFriends.length === 0 ? (
-            <div className="text-center py-12 text-coc-text-muted">
-              {activeTab === 'online' ? '暂无在线好友' : search ? '未找到匹配的好友' : '暂无好友，快去添加吧'}
-            </div>
+            <EmptyState
+              icon={EmptyIcons.Friends}
+              title={activeTab === 'online' ? '暂无在线好友' : search ? '未找到匹配的好友' : '暂无好友'}
+              description={search ? '尝试搜索其他关键词' : '快去添加好友，一起踏入深渊吧'}
+              size="sm"
+              animate={false}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredFriends.map((friend) => {
