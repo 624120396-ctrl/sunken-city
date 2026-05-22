@@ -131,9 +131,13 @@
   }
 
   /* 卡片hover效果 */
+  .coc-card-hover {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  }
   .coc-card-hover:hover {
     @apply border-coc-rift;
-    box-shadow: 0 0 20px rgba(139, 38, 53, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(139, 38, 53, 0.15), 0 0 20px rgba(139, 38, 53, 0.1);
   }
 
   /* ===== v1.1 输入框系统 ===== */

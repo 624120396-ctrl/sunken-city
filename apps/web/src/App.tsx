@@ -1,6 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
+import { AnimatePresence } from 'motion/react';
+
+// 动画
+import { PageTransition } from '@components/ui/Animation';
 
 // 布局
 import { MainLayout } from '@components/layout/MainLayout';
@@ -66,6 +70,7 @@ const RoomPage = lazy(() => import('@pages/rooms/RoomPage').then(m => ({ default
 
 function App() {
   const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return (
@@ -96,42 +101,44 @@ function App() {
       {/* 主站路由 */}
       <Route path="*" element={
         <MainLayout>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/characters" element={<CharacterListPage />} />
-            <Route path="/characters/new" element={<CharacterCreateV2Page />} />
-            <Route path="/characters/:id" element={<CharacterDetailPage />} />
-            <Route path="/characters/:id/edit" element={<Navigate to="/characters/:id" replace />} />
-            <Route path="/characters/:id/growth" element={<CharacterGrowthPage />} />
-            <Route path="/rooms" element={<RoomListPage />} />
-            <Route path="/rooms/:roomId" element={
-              <Suspense fallback={<PageSkeleton />}>
-                <RoomPage />
-              </Suspense>
-            } />
-            <Route path="/rooms/:roomId/report" element={<RoomReportPage />} />
-            <Route path="/rooms/:roomId/dice-history" element={<DiceHistoryPage />} />
-            <Route path="/ranks" element={<RanksPage />} />
-            <Route path="/titles" element={<TitlesPage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/market" element={<RelicMarketPage />} />
-            <Route path="/forums" element={<ForumListPage />} />
-            <Route path="/forums/board/:boardKey" element={<ForumBoardPage />} />
-            <Route path="/forums/new" element={<ForumNewPostPage />} />
-            <Route path="/forums/:postId" element={<ForumPostPage />} />
-            <Route path="/friends" element={<FriendListPage />} />
-            <Route path="/fishing" element={<FishingPage />} />
-            <Route path="/dream" element={<DreamingPage />} />
-            <Route path="/solo" element={<SoloStartPage />} />
-            <Route path="/solo/:scenarioId" element={<SoloPlayerPage />} />
-            <Route path="/solo/session/:sessionId" element={<SoloPlayerPage />} />
-            <Route path="/scenarios" element={<ScenarioSelectPage />} />
-            <Route path="/scenarios/new" element={<ScenarioEditorPage />} />
-            <Route path="/scenarios/:id/edit" element={<ScenarioEditorPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<PageTransition><DashboardPage /></PageTransition>} />
+              <Route path="/characters" element={<PageTransition><CharacterListPage /></PageTransition>} />
+              <Route path="/characters/new" element={<PageTransition><CharacterCreateV2Page /></PageTransition>} />
+              <Route path="/characters/:id" element={<PageTransition><CharacterDetailPage /></PageTransition>} />
+              <Route path="/characters/:id/edit" element={<Navigate to="/characters/:id" replace />} />
+              <Route path="/characters/:id/growth" element={<PageTransition><CharacterGrowthPage /></PageTransition>} />
+              <Route path="/rooms" element={<PageTransition><RoomListPage /></PageTransition>} />
+              <Route path="/rooms/:roomId" element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <PageTransition><RoomPage /></PageTransition>
+                </Suspense>
+              } />
+              <Route path="/rooms/:roomId/report" element={<PageTransition><RoomReportPage /></PageTransition>} />
+              <Route path="/rooms/:roomId/dice-history" element={<PageTransition><DiceHistoryPage /></PageTransition>} />
+              <Route path="/ranks" element={<PageTransition><RanksPage /></PageTransition>} />
+              <Route path="/titles" element={<PageTransition><TitlesPage /></PageTransition>} />
+              <Route path="/shop" element={<PageTransition><ShopPage /></PageTransition>} />
+              <Route path="/inventory" element={<PageTransition><InventoryPage /></PageTransition>} />
+              <Route path="/market" element={<PageTransition><RelicMarketPage /></PageTransition>} />
+              <Route path="/forums" element={<PageTransition><ForumListPage /></PageTransition>} />
+              <Route path="/forums/board/:boardKey" element={<PageTransition><ForumBoardPage /></PageTransition>} />
+              <Route path="/forums/new" element={<PageTransition><ForumNewPostPage /></PageTransition>} />
+              <Route path="/forums/:postId" element={<PageTransition><ForumPostPage /></PageTransition>} />
+              <Route path="/friends" element={<PageTransition><FriendListPage /></PageTransition>} />
+              <Route path="/fishing" element={<PageTransition><FishingPage /></PageTransition>} />
+              <Route path="/dream" element={<PageTransition><DreamingPage /></PageTransition>} />
+              <Route path="/solo" element={<PageTransition><SoloStartPage /></PageTransition>} />
+              <Route path="/solo/:scenarioId" element={<PageTransition><SoloPlayerPage /></PageTransition>} />
+              <Route path="/solo/session/:sessionId" element={<PageTransition><SoloPlayerPage /></PageTransition>} />
+              <Route path="/scenarios" element={<PageTransition><ScenarioSelectPage /></PageTransition>} />
+              <Route path="/scenarios/new" element={<PageTransition><ScenarioEditorPage /></PageTransition>} />
+              <Route path="/scenarios/:id/edit" element={<PageTransition><ScenarioEditorPage /></PageTransition>} />
+              <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
         </MainLayout>
       } />
     </Routes>

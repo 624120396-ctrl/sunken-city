@@ -26,6 +26,7 @@ import { PrivateChatPanel } from '@components/room/PrivateChatPanel';
 import { QuickRollBar } from '@components/room/QuickRollBar';
 import { CountdownPanel } from '@components/room/CountdownPanel';
 import { RoomStatsPanel } from '@components/room/RoomStatsPanel';
+import { StaggerList, StaggerItem } from '@components/ui/Animation';
 
 interface Room {
   id: string;
@@ -1087,15 +1088,17 @@ export function RoomPage() {
               )}
 
               {/* 消息列表 */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+              <StaggerList className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0" staggerDelay={0.03}>
                 {messages.length === 0 ? (
-                  <EmptyState
-                    icon={EmptyIcons.Messages}
-                    title="还没有消息"
-                    description="开始聊天吧，声音会在深渊中回响……"
-                    size="sm"
-                    animate={false}
-                  />
+                  <StaggerItem>
+                    <EmptyState
+                      icon={EmptyIcons.Messages}
+                      title="还没有消息"
+                      description="开始聊天吧，声音会在深渊中回响……"
+                      size="sm"
+                      animate={false}
+                    />
+                  </StaggerItem>
                 ) : (
                   messages.map((msg) => {
                     const isSystem = msg.userId === 'system';
@@ -1129,76 +1132,80 @@ export function RoomPage() {
 
                     if (isSystem) {
                       return (
-                        <div key={msg.id} className="flex justify-center">
-                          <div className="max-w-[85%] px-4 py-2 rounded-lg bg-coc-accent-gold/15 border border-coc-accent-gold/40 italic text-sm text-coc-text-primary text-center">
-                            {msg.content}
-                            <span className="ml-2 text-xs text-coc-text-muted not-italic">
-                              {new Date(msg.timestamp).toLocaleTimeString()}
-                            </span>
+                        <StaggerItem key={msg.id}>
+                          <div className="flex justify-center">
+                            <div className="max-w-[85%] px-4 py-2 rounded-lg bg-coc-accent-gold/15 border border-coc-accent-gold/40 italic text-sm text-coc-text-primary text-center">
+                              {msg.content}
+                              <span className="ml-2 text-xs text-coc-text-muted not-italic">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        </StaggerItem>
                       );
                     }
 
                     return (
-                      <div key={msg.id} className="flex justify-start gap-3">
-                        <Avatar />
-                        <div
-                          className={`max-w-[75%] px-3 py-2 rounded-lg relative group ${
-                            msg.type === 'dice'
-                              ? 'bg-coc-bg-tertiary border border-coc-accent-gold/30'
-                              : isMe
-                              ? 'bg-coc-bg-tertiary border-l-2 border-coc-accent-gold'
-                              : 'bg-coc-bg-tertiary'
-                          }`}
-                        >
-                          <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
-                            {isKPMessage ? (
-                              <>
-                                <Crown size={14} className="text-coc-accent-gold" />
-                                <span className="text-coc-accent-gold">{msg.nickname}</span>
-                              </>
-                            ) : (
-                              <span className="text-coc-text-primary">{msg.nickname}</span>
-                            )}
-                            {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
-                            <span className="text-xs font-normal text-coc-text-muted ml-auto">
-                              {new Date(msg.timestamp).toLocaleTimeString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-coc-text-primary">{msg.content}</p>
-
-                          {msg.type === 'dice' && msg.rollData?.successLevel && (
-                            <div className="text-xs mt-1 pt-1 border-t border-coc-border text-coc-text-muted">
-                              <Tooltip content={getSuccessExplanation(msg.rollData.successLevel)}>
-                                <span className="cursor-help">{msg.rollData.successLevel} → {getSuccessExplanation(msg.rollData.successLevel)}</span>
-                              </Tooltip>
-                              {msg.rollData.targetName && (
-                                <div className="mt-0.5 opacity-70">
-                                  {getSkillExplanation(msg.rollData.targetName)}
-                                </div>
+                      <StaggerItem key={msg.id}>
+                        <div className="flex justify-start gap-3">
+                          <Avatar />
+                          <div
+                            className={`max-w-[75%] px-3 py-2 rounded-lg relative group ${
+                              msg.type === 'dice'
+                                ? 'bg-coc-bg-tertiary border border-coc-accent-gold/30'
+                                : isMe
+                                ? 'bg-coc-bg-tertiary border-l-2 border-coc-accent-gold'
+                                : 'bg-coc-bg-tertiary'
+                            }`}
+                          >
+                            <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
+                              {isKPMessage ? (
+                                <>
+                                  <Crown size={14} className="text-coc-accent-gold" />
+                                  <span className="text-coc-accent-gold">{msg.nickname}</span>
+                                </>
+                              ) : (
+                                <span className="text-coc-text-primary">{msg.nickname}</span>
                               )}
+                              {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
+                              <span className="text-xs font-normal text-coc-text-muted ml-auto">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </span>
                             </div>
-                          )}
+                            <p className="text-sm text-coc-text-primary">{msg.content}</p>
 
-                          {msg.type === 'text' && (
-                            <div className="absolute -right-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <ClueMarker
-                                messageId={msg.id}
-                                messageContent={msg.content}
-                                nickname={msg.nickname}
-                                timestamp={msg.timestamp}
-                                onMarkAsClue={addClue}
-                              />
-                            </div>
-                          )}
+                            {msg.type === 'dice' && msg.rollData?.successLevel && (
+                              <div className="text-xs mt-1 pt-1 border-t border-coc-border text-coc-text-muted">
+                                <Tooltip content={getSuccessExplanation(msg.rollData.successLevel)}>
+                                  <span className="cursor-help">{msg.rollData.successLevel} → {getSuccessExplanation(msg.rollData.successLevel)}</span>
+                                </Tooltip>
+                                {msg.rollData.targetName && (
+                                  <div className="mt-0.5 opacity-70">
+                                    {getSkillExplanation(msg.rollData.targetName)}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {msg.type === 'text' && (
+                              <div className="absolute -right-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ClueMarker
+                                  messageId={msg.id}
+                                  messageContent={msg.content}
+                                  nickname={msg.nickname}
+                                  timestamp={msg.timestamp}
+                                  onMarkAsClue={addClue}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      </StaggerItem>
                     );
                   })
                 )}
                 <div ref={messagesEndRef} />
-              </div>
+              </StaggerList>
 
               {/* 输入框 */}
               <form
