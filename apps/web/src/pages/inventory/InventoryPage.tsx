@@ -1,10 +1,11 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { RuneBorder } from '@components/ui/RuneBorder';
 import { ItemCard } from '@components/items/ItemCard';
 import { Backpack } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
@@ -52,34 +53,6 @@ interface InventoryItem {
   };
 }
 
-interface TitleItem {
-  id: string;
-  itemKey: string;
-  quantity: number;
-  item?: {
-    id: string;
-    key: string;
-    name: string;
-    description: string;
-    category: string;
-    rarity: string;
-    iconUrl?: string;
-  };
-}
-
-interface RelicMeta {
-  key: string;
-  name: string;
-  description: string;
-  rarity: string;
-}
-
-interface BoundRelic {
-  id: string;
-  relicKey: string;
-  meta?: RelicMeta;
-}
-
 interface LootboxResult {
   coins: number;
   gainedCoins: number;
@@ -93,105 +66,127 @@ interface LootboxResult {
   }[];
 }
 
+async function fetchInventory() {
+  const res = await apiFetch('/shop/inventory');
+  return handleApiResponse<{ inventory: InventoryItem[] }>(res);
+}
+
+async function fetchCharacters() {
+  const res = await apiFetch('/characters');
+  return handleApiResponse<{ characters: any[] }>(res);
+}
+
+async function fetchBoundRelics() {
+  const charsRes = await apiFetch('/characters');
+  const charsData = await handleApiResponse<{ characters: any[] }>(charsRes);
+  const chars = charsData.characters || [];
+  const relicLists = await Promise.all(
+    chars.map((c) =>
+      apiFetch(`/relics/character/${c.id}`)
+        .then((r) => r.json())
+        .then((d) => ({ characterId: c.id, characterName: c.name, list: d.data?.relics || [] }))
+        .catch(() => ({ characterId: c.id, characterName: c.name, list: [] }))
+    )
+  );
+  return relicLists.flatMap((r) =>
+    r.list.map((rel: any) => ({ ...rel, characterName: r.characterName }))
+  );
+}
+
+async function fetchUnboundRelics() {
+  const res = await apiFetch('/relics/unbound');
+  const data = await res.json();
+  return data.data?.items || [];
+}
+
 export function InventoryPage() {
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<'general' | 'titles' | 'relics'>('general');
-  const [generalItems, setGeneralItems] = useState<InventoryItem[]>([]);
-  const [titleItems, setTitleItems] = useState<TitleItem[]>([]);
-  const [boundRelics, setBoundRelics] = useState<BoundRelic[]>([]);
-  const [unboundRelics, setUnboundRelics] = useState<any[]>([]);
-  const [characters, setCharacters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [lootboxResult, setLootboxResult] = useState<LootboxResult | null>(null);
   const [visibleRelics, setVisibleRelics] = useState<number>(0);
   const [flash, setFlash] = useState(false);
 
-  useEffect(() => {
-    fetchInventory();
-    fetchCharacters();
-  }, []);
+  // Queries
+  const { data: inventoryData, isLoading: inventoryLoading } = useQuery({
+    queryKey: ['inventory'],
+    queryFn: fetchInventory,
+    staleTime: 30 * 1000,
+  });
+  const allItems = inventoryData?.inventory || [];
+  const generalItems = allItems.filter((i) => i.item?.category !== 'title' && i.item?.category !== 'relic');
+  const titleItems = allItems.filter((i) => i.item?.category === 'title');
 
-  useEffect(() => {
-    if (!lootboxResult) {
-      setVisibleRelics(0);
-      setFlash(false);
-      return;
-    }
-    const maxRarity = lootboxResult.relics.reduce((max, r) => {
-      return RARITY_ORDER.indexOf(r.rarity) > RARITY_ORDER.indexOf(max) ? r.rarity : max;
-    }, 'common');
-    if (['legendary', 'mythical'].includes(maxRarity)) {
-      setFlash(true);
-      setTimeout(() => setFlash(false), 600);
-    }
-    setVisibleRelics(0);
-    lootboxResult.relics.forEach((_, idx) => {
-      setTimeout(() => {
-        setVisibleRelics((v) => v + 1);
-      }, 400 + idx * 600);
-    });
-  }, [lootboxResult]);
+  const { data: charactersData } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+    staleTime: 60 * 1000,
+  });
+  const characters = charactersData?.characters || [];
 
-  const fetchInventory = async () => {
-    try {
-      setLoading(true);
-      const res = await apiFetch('/shop/inventory');
-      const data = await handleApiResponse<{ inventory: InventoryItem[] }>(res);
-      const all = data.inventory || [];
-      setGeneralItems(all.filter((i) => i.item?.category !== 'title' && i.item?.category !== 'relic'));
-      setTitleItems(all.filter((i) => i.item?.category === 'title'));
+  const { data: boundRelics, isLoading: boundRelicsLoading } = useQuery({
+    queryKey: ['relics', 'bound'],
+    queryFn: fetchBoundRelics,
+    staleTime: 30 * 1000,
+  });
 
-      // 获取已绑定遗物（所有角色的聚合）
-      const charsRes = await apiFetch('/characters');
-      const charsData = await handleApiResponse<{ characters: any[] }>(charsRes);
-      const chars = charsData.characters || [];
-      const relicLists = await Promise.all(
-        chars.map((c) =>
-          apiFetch(`/relics/character/${c.id}`)
-            .then((r) => r.json())
-            .then((d) => ({ characterId: c.id, characterName: c.name, list: d.data?.relics || [] }))
-            .catch(() => ({ characterId: c.id, characterName: c.name, list: [] })))
-      );
-      const bound = relicLists.flatMap((r) =>
-        r.list.map((rel: any) => ({ ...rel, characterName: r.characterName }))
-      );
-      setBoundRelics(bound);
+  const { data: unboundRelics, isLoading: unboundRelicsLoading } = useQuery<any[]>({
+    queryKey: ['relics', 'unbound'],
+    queryFn: fetchUnboundRelics,
+    staleTime: 30 * 1000,
+  });
 
-      // 获取未绑定遗物
-      const unboundRes = await apiFetch('/relics/unbound');
-      const unboundData = await unboundRes.json();
-      setUnboundRelics(unboundData.data?.items || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = inventoryLoading || boundRelicsLoading || unboundRelicsLoading;
 
-  const fetchCharacters = async () => {
-    const res = await apiFetch('/characters');
-    const data = await res.json();
-    setCharacters(data.data?.characters || []);
-  };
-
-  const bindRelic = async (inventoryId: string, characterId: string) => {
-    const res = await apiFetch('/relics/bind', {
-      method: 'POST',
-      body: JSON.stringify({ inventoryId, characterId }),
-    });
-    await handleApiResponse(res);
-    fetchInventory();
-  };
-
-  const openLootbox = async () => {
-    try {
-      const res = await apiFetch('/shop/open-lootbox', {
+  // Mutations
+  const bindMutation = useMutation({
+    mutationFn: ({ inventoryId, characterId }: { inventoryId: string; characterId: string }) =>
+      apiFetch('/relics/bind', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ inventoryId, characterId }),
+      }).then((r) => handleApiResponse(r)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['relics'] });
+    },
+    onError: (err: any) => {
+      alert(err?.message || '绑定失败');
+    },
+  });
+
+  const openLootboxMutation = useMutation({
+    mutationFn: () =>
+      apiFetch('/shop/open-lootbox', { method: 'POST', body: JSON.stringify({}) })
+        .then((r) => handleApiResponse<{ data: LootboxResult }>(r)),
+    onSuccess: (data) => {
+      const result = data.data;
+      setLootboxResult(result);
+      // 开箱动画
+      const maxRarity = result.relics.reduce((max: string, r) => {
+        return RARITY_ORDER.indexOf(r.rarity) > RARITY_ORDER.indexOf(max) ? r.rarity : max;
+      }, 'common');
+      if (['legendary', 'mythical'].includes(maxRarity)) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 600);
+      }
+      setVisibleRelics(0);
+      result.relics.forEach((_, idx) => {
+        setTimeout(() => {
+          setVisibleRelics((v) => v + 1);
+        }, 400 + idx * 600);
       });
-      const data = await handleApiResponse<{ data: LootboxResult }>(res);
-      setLootboxResult(data.data);
-      fetchInventory();
-    } catch (err: any) {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (err: any) => {
       alert(err?.message || '开启失败');
-    }
+    },
+  });
+
+  const openLootbox = () => {
+    openLootboxMutation.mutate();
+  };
+
+  const bindRelic = (inventoryId: string, characterId: string) => {
+    bindMutation.mutate({ inventoryId, characterId });
   };
 
   return (
@@ -250,7 +245,7 @@ export function InventoryPage() {
                       i.itemKey === 'old_one_lootbox'
                         ? [
                             {
-                              label: '打开',
+                              label: openLootboxMutation.isPending ? '开启中...' : '打开',
                               onClick: openLootbox,
                               variant: 'primary',
                             } as const,
@@ -303,7 +298,9 @@ export function InventoryPage() {
           <RuneBorder variant="gold" intensity="subtle">
             <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">已绑定遗物（角色保险箱）</h2>
-              {boundRelics.length === 0 ? (
+              {boundRelicsLoading ? (
+                <div className="py-6 text-center text-sm text-coc-text-muted">加载中...</div>
+              ) : !boundRelics || boundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-coc-text-muted">还没有遗物绑定到角色卡上</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -315,7 +312,7 @@ export function InventoryPage() {
                       description={r.meta?.description}
                       rarity={r.meta?.rarity || 'common'}
                       category="遗物"
-                      badge={(r as any).characterName}
+                      badge={r.characterName}
                     />
                   ))}
                 </div>
@@ -326,7 +323,9 @@ export function InventoryPage() {
           <RuneBorder variant="madness" intensity="subtle">
             <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">未绑定遗物</h2>
-              {unboundRelics.length === 0 ? (
+              {unboundRelicsLoading ? (
+                <div className="py-6 text-center text-sm text-coc-text-muted">加载中...</div>
+              ) : !unboundRelics || unboundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-coc-text-muted">暂无有可绑定的遗物</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -340,7 +339,7 @@ export function InventoryPage() {
                       category="遗物"
                       quantity={r.quantity}
                       actions={characters.map((c) => ({
-                        label: `绑定到 ${c.name}`,
+                        label: bindMutation.isPending ? '绑定中...' : `绑定到 ${c.name}`,
                         onClick: () => bindRelic(r.id, c.id),
                         variant: 'primary',
                       }))}
