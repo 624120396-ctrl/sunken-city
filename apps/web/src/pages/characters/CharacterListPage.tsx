@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Heart, Brain, Zap, TrendingUp, Eye, User } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
+import { FlipCard } from '@components/ui/FlipCard';
 
 interface Character {
   id: string;
@@ -110,18 +111,19 @@ export function CharacterListPage() {
       ) : (
         <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
           {characters.map((char) => (
-            <div
+            <FlipCard
               key={char.id}
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-coc-void bg-coc-surface transition-all duration-300 hover:border-coc-rift hover:shadow-[0_0_24px_rgba(139,38,53,0.18)] hover:-translate-y-1"
-            >
-              {/* 形象大图区 */}
-              <Link to={`/characters/${char.id}`} className="block w-full h-full">
+              width="100%"
+              height="100%"
+              className="aspect-[3/4]"
+              front={
                 <div className="relative w-full h-full">
+                  {/* 形象大图 */}
                   {char.portraitUrl ? (
                     <img
                       src={char.portraitUrl}
                       alt={char.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-coc-abyss flex flex-col items-center justify-center text-coc-text-muted">
@@ -129,92 +131,112 @@ export function CharacterListPage() {
                       <span className="text-xs tracking-widest opacity-60">暂无形象</span>
                     </div>
                   )}
-                </div>
-              </Link>
 
-              {/* 顶部徽章：是否为当前展示角色 */}
-              {displayedId === char.id && (
-                <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-coc-gold/90 text-coc-abyss text-[10px] font-bold tracking-wide">
-                  <Eye size={10} /> 展示中
-                </div>
-              )}
-              
-              {/* 右上角：角色编号 */}
-              <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-coc-abyss/80 border border-coc-void text-coc-gold text-[10px] font-mono truncate max-w-[45%]">
-                #{String(char.displayId).padStart(8, '0')}
-              </div>
-
-              {/* 底部常驻信息浮层 */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-coc-abyss via-coc-abyss/80 to-transparent pt-8 pb-2 px-2">
-                <div className="space-y-1">
-                  <h3 className="font-ritual font-bold text-base text-coc-parchment drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">{char.name}</h3>
-                  <p className="text-xs text-coc-parchment-dim truncate">{char.occupation} · {char.age}岁</p>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-[10px]">
-                      <Heart size={10} className="text-coc-accent-red" />
-                      <span className="text-coc-parchment">{char.hp}</span>
-                      <span className="text-coc-text-muted">/{char.maxHp}</span>
+                  {/* 顶部徽章 */}
+                  {displayedId === char.id && (
+                    <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-coc-gold/90 text-coc-abyss text-[10px] font-bold tracking-wide z-10">
+                      <Eye size={10} /> 展示中
                     </div>
-                    <div className="flex items-center gap-1 text-[10px]">
-                      <Zap size={10} className="text-coc-accent-cyan" />
-                      <span className="text-coc-parchment">{char.mp}</span>
-                      <span className="text-coc-text-muted">/{char.maxMp}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px]">
-                      <Brain size={10} className="text-coc-accent-gold" />
-                      <span className="text-coc-parchment">{char.san}</span>
-                      <span className="text-coc-text-muted">/{char.maxSan}</span>
-                    </div>
-                  </div>
-                  <div className="text-[10px] text-coc-text-muted">
-                    {new Date(char.updatedAt).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Hover 操作层 */}
-              <div className="absolute inset-0 bg-coc-abyss/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-1.5 p-2 pointer-events-none group-hover:pointer-events-auto">
-                <Link
-                  to={`/characters/${char.id}`}
-                  className="w-full max-w-[5rem] text-center py-1.5 bg-coc-gold text-coc-abyss rounded text-xs font-medium hover:opacity-90 transition-opacity"
-                >
-                  查看详情
-                </Link>
-                <Link
-                  to={`/characters/${char.id}/growth`}
-                  className="w-full max-w-[5rem] text-center py-1.5 bg-coc-surface border border-coc-void text-coc-parchment rounded text-xs hover:border-coc-rift transition-colors flex items-center justify-center gap-1"
-                >
-                  <TrendingUp size={14} />
-                  战后成长
-                </Link>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSetDisplayed(displayedId === char.id ? null : char.id);
-                  }}
-                  disabled={settingId === char.id || settingId === 'null'}
-                  className={cn(
-                    'w-full max-w-[5rem] text-center py-1.5 rounded text-xs flex items-center justify-center gap-1 transition-colors border',
-                    displayedId === char.id
-                      ? 'bg-coc-gold/20 text-coc-gold border-coc-gold/50 hover:bg-coc-gold/30'
-                      : 'bg-coc-surface text-coc-parchment-dim border-coc-void hover:border-coc-rift hover:text-coc-parchment'
                   )}
-                >
-                  <Eye size={14} />
-                  {displayedId === char.id
-                    ? settingId === char.id
-                      ? '取消中...'
-                      : '取消展示'
-                    : settingId === char.id
-                    ? '设置中...'
-                    : '设为展示'}
-                </button>
-              </div>
-            </div>
+
+                  {/* 右上角编号 */}
+                  <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-coc-abyss/80 border border-coc-void text-coc-gold text-[10px] font-mono truncate max-w-[45%] z-10">
+                    #{String(char.displayId).padStart(8, '0')}
+                  </div>
+
+                  {/* 底部信息浮层 */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-coc-abyss via-coc-abyss/80 to-transparent pt-8 pb-2 px-2 z-10">
+                    <div className="space-y-1">
+                      <h3 className="font-ritual font-bold text-base text-coc-parchment drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">{char.name}</h3>
+                      <p className="text-xs text-coc-parchment-dim truncate">{char.occupation} · {char.age}岁</p>
+                    </div>
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <Heart size={10} className="text-coc-accent-red" />
+                        <span className="text-coc-parchment">{char.hp}</span>
+                        <span className="text-coc-text-muted">/{char.maxHp}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <Zap size={10} className="text-coc-accent-cyan" />
+                        <span className="text-coc-parchment">{char.mp}</span>
+                        <span className="text-coc-text-muted">/{char.maxMp}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <Brain size={10} className="text-coc-accent-gold" />
+                        <span className="text-coc-parchment">{char.san}</span>
+                        <span className="text-coc-text-muted">/{char.maxSan}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+              back={
+                <div className="flex flex-col items-center gap-3 w-full px-3">
+                  {/* 背面标题 */}
+                  <h3 className="font-ritual font-bold text-coc-gold text-sm truncate w-full text-center">{char.name}</h3>
+                  
+                  {/* 属性网格 */}
+                  <div className="grid grid-cols-3 gap-2 w-full">
+                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
+                      <Heart size={14} className="text-coc-accent-red" />
+                      <span className="text-xs text-coc-parchment font-bold">{char.hp}</span>
+                      <span className="text-[9px] text-coc-text-muted">HP</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
+                      <Zap size={14} className="text-coc-accent-cyan" />
+                      <span className="text-xs text-coc-parchment font-bold">{char.mp}</span>
+                      <span className="text-[9px] text-coc-text-muted">MP</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
+                      <Brain size={14} className="text-coc-accent-gold" />
+                      <span className="text-xs text-coc-parchment font-bold">{char.san}</span>
+                      <span className="text-[9px] text-coc-text-muted">SAN</span>
+                    </div>
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div className="flex flex-col gap-1.5 w-full mt-1">
+                    <Link
+                      to={`/characters/${char.id}`}
+                      className="w-full text-center py-1.5 bg-coc-gold text-coc-abyss rounded text-xs font-medium hover:opacity-90 transition-opacity"
+                    >
+                      查看详情
+                    </Link>
+                    <Link
+                      to={`/characters/${char.id}/growth`}
+                      className="w-full text-center py-1.5 bg-coc-surface border border-coc-void text-coc-parchment rounded text-xs hover:border-coc-rift transition-colors flex items-center justify-center gap-1"
+                    >
+                      <TrendingUp size={12} />
+                      战后成长
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleSetDisplayed(displayedId === char.id ? null : char.id);
+                      }}
+                      disabled={settingId === char.id || settingId === 'null'}
+                      className={cn(
+                        'w-full text-center py-1.5 rounded text-xs flex items-center justify-center gap-1 transition-colors border',
+                        displayedId === char.id
+                          ? 'bg-coc-gold/20 text-coc-gold border-coc-gold/50'
+                          : 'bg-coc-surface text-coc-parchment-dim border-coc-void hover:border-coc-rift hover:text-coc-parchment'
+                      )}
+                    >
+                      <Eye size={12} />
+                      {displayedId === char.id
+                        ? settingId === char.id
+                          ? '取消中...'
+                          : '取消展示'
+                        : settingId === char.id
+                        ? '设置中...'
+                        : '设为展示'}
+                    </button>
+                  </div>
+                </div>
+              }
+            />
           ))}
         </div>
       )}
