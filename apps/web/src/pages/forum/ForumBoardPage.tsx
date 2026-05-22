@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   MessageSquare,
@@ -23,6 +23,7 @@ import {
 } from '../../services/forum.service';
 import { formatTimeAgo } from '../../lib/utils';
 import { CompactPagination } from '../../components/forum/CompactPagination';
+import { useQuery } from '@tanstack/react-query';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -137,39 +138,45 @@ function PostRow({
 export function ForumBoardPage() {
   const { boardKey } = useParams<{ boardKey: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [boards, setBoards] = useState<{ key: string; name: string }[]>([]);
-  const [pinnedPosts, setPinnedPosts] = useState<ForumPostSummary[]>([]);
-  const [essencePosts, setEssencePosts] = useState<ForumPostSummary[]>([]);
-  const [posts, setPosts] = useState<ForumPostSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
-  const [moderators, setModerators] = useState<{ id: string; userId: string; nickname: string; avatarUrl?: string }[]>([]);
+  const [sort] = useState<'newest' | 'last_reply'>(
+    (searchParams.get('sort') as 'newest' | 'last_reply') || 'last_reply'
+  );
 
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-  const sort = (searchParams.get('sort') as 'newest' | 'last_reply') || 'last_reply';
 
-  useEffect(() => {
-    getForumBoards().then((res) => setBoards(res.boards));
-  }, []);
+  const { data: boardsData } = useQuery({
+    queryKey: ['forumBoards'],
+    queryFn: getForumBoards,
+    staleTime: 5 * 60 * 1000,
+  });
+  const boards = boardsData?.boards || [];
 
-  useEffect(() => {
-    if (!boardKey) return;
-    setLoading(true);
-    setModerators([]);
-    getBoardPosts(boardKey, page, 20, sort)
-      .then((res) => {
-        setPinnedPosts(res.pinnedPosts);
-        setEssencePosts(res.essencePosts);
-        setPosts(res.posts);
-        setPagination(res.pagination);
-      })
-      .finally(() => setLoading(false));
-    getBoardModerators(boardKey)
-      .then((res) => setModerators(res.moderators))
-      .catch(() => setModerators([]));
-  }, [boardKey, page, sort]);
+  const {
+    data: boardData,
+    isLoading: loading,
+  } = useQuery({
+    queryKey: ['boardPosts', boardKey, page, sort],
+    queryFn: () =>
+      boardKey ? getBoardPosts(boardKey, page, 20, sort) : Promise.resolve(null),
+    enabled: !!boardKey,
+    staleTime: 30 * 1000,
+  });
 
-  const boardName = boards.find((b) => b.key === boardKey)?.name || boardKey;
+  const { data: modData } = useQuery({
+    queryKey: ['boardModerators', boardKey],
+    queryFn: () =>
+      boardKey ? getBoardModerators(boardKey).catch(() => ({ moderators: [] })) : Promise.resolve({ moderators: [] }),
+    enabled: !!boardKey,
+    staleTime: 60 * 1000,
+  });
+
+  const pinnedPosts = boardData?.pinnedPosts || [];
+  const essencePosts = boardData?.essencePosts || [];
+  const posts = boardData?.posts || [];
+  const pagination = boardData?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 };
+  const moderators = modData?.moderators || [];
+
+  const boardName = boards.find((b: any) => b.key === boardKey)?.name || boardKey;
   const BoardIcon = boardIconMap[boardKey || ''] || LayoutGrid;
 
   const handlePageChange = (newPage: number) => {
@@ -178,7 +185,7 @@ export function ForumBoardPage() {
     setSearchParams(sp);
   };
 
-  const setSort = (value: 'newest' | 'last_reply') => {
+  const setSortValue = (value: 'newest' | 'last_reply') => {
     const sp = new URLSearchParams(searchParams);
     sp.set('sort', value);
     sp.set('page', '1');
@@ -210,7 +217,7 @@ export function ForumBoardPage() {
       <div className="rounded-lg border border-coc-gold/30 bg-gradient-to-r from-coc-gold/10 to-transparent px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
           {moderators.length > 0 ? (
-            moderators.map((mod) => (
+            moderators.map((mod: any) => (
               <div
                 key={mod.id}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/50 bg-coc-bg-primary shadow-sm"
@@ -235,7 +242,7 @@ export function ForumBoardPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 ml-auto">
           <button
-            onClick={() => setSort('last_reply')}
+            onClick={() => setSortValue('last_reply')}
             className={`px-3 py-1.5 rounded border text-sm transition-colors ${
               sort === 'last_reply'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
@@ -245,7 +252,7 @@ export function ForumBoardPage() {
             最后回复
           </button>
           <button
-            onClick={() => setSort('newest')}
+            onClick={() => setSortValue('newest')}
             className={`px-3 py-1.5 rounded border text-sm transition-colors ${
               sort === 'newest'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'

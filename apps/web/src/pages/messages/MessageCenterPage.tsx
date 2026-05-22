@@ -26,9 +26,8 @@ import {
   getMessagesWithUser,
   sendMessageToUser,
   markMessageAsRead,
-  Conversation,
-  UserMessage,
 } from '@services/user-messages.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 type Tab = 'notifications' | 'messages';
 
@@ -67,22 +66,49 @@ function typeLabel(type: NotificationItem['type']) {
 }
 
 export function MessageCenterPage() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>('notifications');
   const navigate = useNavigate();
   const { token, user } = useAuthStore();
 
-  // ===== 通知状态 =====
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [notifLoading, setNotifLoading] = useState(false);
+  // ===== 通知 =====
+  const {
+    data: notificationsData,
+    isLoading: notifLoading,
+  } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => getNotifications(50),
+    staleTime: 30 * 1000,
+  });
+  const notifications = notificationsData?.notifications || [];
 
-  // ===== 私信状态 =====
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<UserMessage[]>([]);
+  // ===== 私信会话 =====
+  const {
+    data: convData,
+    isLoading: msgLoading,
+  } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: getConversations,
+    staleTime: 30 * 1000,
+  });
+  const conversations = convData?.conversations || [];
+
+  // ===== 选中会话消息 =====
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
-  const [msgLoading, setMsgLoading] = useState(false);
-  const [sendLoading, setSendLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const {
+    data: messagesData,
+    isLoading: messagesLoading,
+  } = useQuery({
+    queryKey: ['messages', selectedPartnerId],
+    queryFn: () =>
+      selectedPartnerId ? getMessagesWithUser(selectedPartnerId, 100) : Promise.resolve({ messages: [] }),
+    enabled: !!selectedPartnerId,
+    staleTime: 15 * 1000,
+  });
+  const messages = messagesData?.messages || [];
 
   // ===== Socket =====
   useEffect(() => {
@@ -95,121 +121,72 @@ export function MessageCenterPage() {
     });
 
     socket.on('notification:new', () => {
-      if (activeTab === 'notifications') fetchNotifications();
-      else fetchNotificationsSilent();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     });
 
     socket.on('user_message:new', () => {
-      if (activeTab === 'messages') {
-        fetchConversations();
-        if (selectedPartnerId) fetchMessages(selectedPartnerId);
-      } else {
-        fetchConversationsSilent();
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      if (selectedPartnerId) {
+        queryClient.invalidateQueries({ queryKey: ['messages', selectedPartnerId] });
       }
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [token, activeTab, selectedPartnerId]);
+  }, [token, selectedPartnerId, queryClient]);
 
-  // ===== 数据获取 =====
-  const fetchNotifications = async () => {
-    setNotifLoading(true);
-    try {
-      const res = await getNotifications(50);
-      setNotifications(res.notifications);
-    } finally {
-      setNotifLoading(false);
-    }
-  };
-
-  const fetchNotificationsSilent = async () => {
-    try {
-      const res = await getNotifications(50);
-      setNotifications(res.notifications);
-    } catch {}
-  };
-
-  const fetchConversations = async () => {
-    setMsgLoading(true);
-    try {
-      const res = await getConversations();
-      setConversations(res.conversations);
-    } finally {
-      setMsgLoading(false);
-    }
-  };
-
-  const fetchConversationsSilent = async () => {
-    try {
-      const res = await getConversations();
-      setConversations(res.conversations);
-    } catch {}
-  };
-
-  const fetchMessages = async (partnerId: string) => {
-    try {
-      const res = await getMessagesWithUser(partnerId, 100);
-      setMessages(res.messages);
-      // 将未读消息标记为已读
-      const unread = res.messages.filter(
-        (m) => m.receiverId === user?.id && !m.isRead
-      );
-      await Promise.all(unread.map((m) => markMessageAsRead(m.id)));
-      if (unread.length > 0) fetchConversationsSilent();
-    } catch {}
-  };
-
+  // ===== 标记已读（自动） =====
   useEffect(() => {
-    fetchNotifications();
-    fetchConversations();
-  }, []);
-
-  useEffect(() => {
-    if (selectedPartnerId) {
-      fetchMessages(selectedPartnerId);
+    if (!selectedPartnerId || !messages.length) return;
+    const unread = messages.filter((m) => m.receiverId === user?.id && !m.isRead);
+    if (unread.length > 0) {
+      Promise.all(unread.map((m) => markMessageAsRead(m.id))).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      });
     }
-  }, [selectedPartnerId]);
+  }, [messages, selectedPartnerId, user?.id, queryClient]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ===== 通知操作 =====
-  const handleRead = async (id: string) => {
-    await markNotificationRead(id);
-    fetchNotificationsSilent();
-  };
+  // ===== Mutations =====
+  const readMutation = useMutation({
+    mutationFn: markNotificationRead,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
 
-  const handleReadAll = async () => {
-    await markAllNotificationsRead();
-    fetchNotificationsSilent();
-  };
+  const readAllMutation = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
 
-  const handleDelete = async (id: string) => {
-    await deleteNotification(id);
-    fetchNotificationsSilent();
-  };
+  const deleteMutation = useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
 
+  const sendMutation = useMutation({
+    mutationFn: ({ partnerId, content }: { partnerId: string; content: string }) =>
+      sendMessageToUser(partnerId, content),
+    onSuccess: (_, vars) => {
+      setMessageInput('');
+      queryClient.invalidateQueries({ queryKey: ['messages', vars.partnerId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+  });
+
+  // ===== 操作 =====
   const handleNotifNavigate = (n: NotificationItem) => {
     if (n.link) navigate(n.link);
     else if (n.postId) navigate(`/forums/${n.postId}`);
-    if (!n.isRead) handleRead(n.id);
+    if (!n.isRead) readMutation.mutate(n.id);
   };
 
-  // ===== 私信操作 =====
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!selectedPartnerId || !messageInput.trim()) return;
-    setSendLoading(true);
-    try {
-      await sendMessageToUser(selectedPartnerId, messageInput.trim());
-      setMessageInput('');
-      await fetchMessages(selectedPartnerId);
-      await fetchConversations();
-    } finally {
-      setSendLoading(false);
-    }
+    sendMutation.mutate({ partnerId: selectedPartnerId, content: messageInput.trim() });
   };
 
   const selectedPartner = conversations.find((c) => c.partnerId === selectedPartnerId);
@@ -229,7 +206,6 @@ export function MessageCenterPage() {
               onClick={() => {
                 setActiveTab('notifications');
                 setSelectedPartnerId(null);
-                fetchNotifications();
               }}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 border-b border-coc-border transition-colors',
@@ -244,7 +220,6 @@ export function MessageCenterPage() {
             <button
               onClick={() => {
                 setActiveTab('messages');
-                fetchConversations();
               }}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 transition-colors',
@@ -266,8 +241,9 @@ export function MessageCenterPage() {
                   <span className="font-bold text-coc-parchment">全部通知</span>
                   {notifications.some((n) => !n.isRead) && (
                     <button
-                      onClick={handleReadAll}
-                      className="text-xs text-coc-text-muted hover:text-coc-parchment flex items-center gap-1"
+                      onClick={() => readAllMutation.mutate()}
+                      disabled={readAllMutation.isPending}
+                      className="text-xs text-coc-text-muted hover:text-coc-parchment flex items-center gap-1 disabled:opacity-50"
                     >
                       <Check size={12} />
                       全部已读
@@ -318,16 +294,18 @@ export function MessageCenterPage() {
                           <div className="flex flex-col items-end gap-1">
                             {!n.isRead && (
                               <button
-                                onClick={() => handleRead(n.id)}
-                                className="text-xs text-coc-text-muted hover:text-coc-parchment"
+                                onClick={() => readMutation.mutate(n.id)}
+                                disabled={readMutation.isPending}
+                                className="text-xs text-coc-text-muted hover:text-coc-parchment disabled:opacity-50"
                                 title="标记已读"
                               >
                                 <Check size={14} />
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(n.id)}
-                              className="text-coc-text-muted hover:text-red-400 p-1"
+                              onClick={() => deleteMutation.mutate(n.id)}
+                              disabled={deleteMutation.isPending}
+                              className="text-coc-text-muted hover:text-red-400 p-1 disabled:opacity-50"
                               title="删除"
                             >
                               <Trash2 size={14} />
@@ -419,34 +397,41 @@ export function MessageCenterPage() {
 
                 {/* 消息记录 */}
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                  {messages.map((m) => {
-                    const isMe = m.senderId === user?.id;
-                    return (
-                      <div
-                        key={m.id}
-                        className={cn('flex', isMe ? 'justify-end' : 'justify-start')}
-                      >
+                  {messagesLoading && messages.length === 0 ? (
+                    <div className="text-center text-coc-text-muted">
+                      <Loader2 className="animate-spin mx-auto mb-2" size={20} />
+                      加载中...
+                    </div>
+                  ) : (
+                    messages.map((m) => {
+                      const isMe = m.senderId === user?.id;
+                      return (
                         <div
-                          className={cn(
-                            'max-w-[70%] px-3 py-2 rounded-lg text-sm',
-                            isMe
-                              ? 'bg-coc-accent-red/20 text-coc-parchment'
-                              : 'bg-coc-bg-tertiary text-coc-parchment'
-                          )}
+                          key={m.id}
+                          className={cn('flex', isMe ? 'justify-end' : 'justify-start')}
                         >
-                          <div>{m.content}</div>
                           <div
                             className={cn(
-                              'text-[10px] mt-1',
-                              isMe ? 'text-coc-text-muted/70 text-right' : 'text-coc-text-muted/70'
+                              'max-w-[70%] px-3 py-2 rounded-lg text-sm',
+                              isMe
+                                ? 'bg-coc-accent-red/20 text-coc-parchment'
+                                : 'bg-coc-bg-tertiary text-coc-parchment'
                             )}
                           >
-                            {formatTimeAgo(m.createdAt)}
+                            <div>{m.content}</div>
+                            <div
+                              className={cn(
+                                'text-[10px] mt-1',
+                                isMe ? 'text-coc-text-muted/70 text-right' : 'text-coc-text-muted/70'
+                              )}
+                            >
+                              {formatTimeAgo(m.createdAt)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
 
@@ -467,10 +452,10 @@ export function MessageCenterPage() {
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!messageInput.trim() || sendLoading}
+                    disabled={!messageInput.trim() || sendMutation.isPending}
                     className="p-2 rounded-md bg-coc-accent-red text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-coc-accent-red/80 transition-colors"
                   >
-                    {sendLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    {sendMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   </button>
                 </div>
               </>

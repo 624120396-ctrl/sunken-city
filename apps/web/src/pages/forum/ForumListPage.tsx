@@ -1,8 +1,8 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { LayoutGrid, School, Anchor, Moon, Flame, Landmark } from 'lucide-react';
 import { getForumBoards } from '../../services/forum.service';
+import { useQuery } from '@tanstack/react-query';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -13,17 +13,12 @@ const boardIconMap: Record<string, React.ElementType> = {
 };
 
 export function ForumListPage() {
-  const [boards, setBoards] = useState<{
-    id: string;
-    key: string;
-    name: string;
-    description?: string;
-    postCount: number;
-  }[]>([]);
-
-  useEffect(() => {
-    getForumBoards().then((res) => setBoards(res.boards));
-  }, []);
+  const { data: boardsData, isLoading } = useQuery({
+    queryKey: ['forumBoards'],
+    queryFn: getForumBoards,
+    staleTime: 5 * 60 * 1000,
+  });
+  const boards = boardsData?.boards || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
@@ -41,7 +36,7 @@ export function ForumListPage() {
 
       {/* Board Cards - 2x2 layout, longer cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {boards.map((b) => {
+        {boards.map((b: any) => {
           const Icon = boardIconMap[b.key] || LayoutGrid;
           return (
             <Link
@@ -79,7 +74,11 @@ export function ForumListPage() {
         })}
       </div>
 
-      {boards.length === 0 && (
+      {isLoading ? (
+        <div className="py-16 text-center text-coc-text-muted">
+          <EmptyState icon={EmptyIcons.Clue} title="加载中..." size="md" animate={false} />
+        </div>
+      ) : boards.length === 0 ? (
         <EmptyState
           icon={EmptyIcons.Clue}
           title="暂无可用版块"
@@ -87,7 +86,7 @@ export function ForumListPage() {
           size="md"
           animate={false}
         />
-      )}
+      ) : null}
     </div>
   );
 }

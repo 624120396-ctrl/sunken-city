@@ -1,9 +1,10 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { getShopItems, purchaseItem, type ShopItem } from '@services/shop.service';
 import { RuneBorder } from '@components/ui/RuneBorder';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 const rarityBorder: Record<string, string> = {
   common: 'border-coc-parchment-dim',
@@ -34,38 +35,32 @@ const CATEGORIES = [
 
 export function ShopPage() {
   const { user, updateUser } = useAuthStore();
-  const [items, setItems] = useState<ShopItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
-  const [purchasingKey, setPurchasingKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchItems();
-  }, [category]);
+  const {
+    data: items,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['shopItems', category],
+    queryFn: () => getShopItems(category || undefined),
+    select: (data) => data.items,
+    staleTime: 60 * 1000,
+  });
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const data = await getShopItems(category || undefined);
-      setItems(data.items);
-    } catch (err) {
-      console.error('获取商品失败:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePurchase = async (item: ShopItem) => {
-    try {
-      setPurchasingKey(item.key);
-      const res = await purchaseItem(item.key, 1);
+  const purchaseMutation = useMutation({
+    mutationFn: (item: ShopItem) => purchaseItem(item.key, 1),
+    onSuccess: (res, item) => {
       updateUser(res.user);
       alert(`购买成功！获得 ${item.name}`);
-    } catch (err) {
-      alert('购买失败：' + (err as Error).message);
-    } finally {
-      setPurchasingKey(null);
-    }
+    },
+    onError: (err: any) => {
+      alert('购买失败：' + err.message);
+    },
+  });
+
+  const handlePurchase = (item: ShopItem) => {
+    purchaseMutation.mutate(item);
   };
 
   return (
@@ -117,11 +112,15 @@ export function ShopPage() {
 
       {/* 商品网格 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {loading ? (
+        {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-64 bg-coc-abyss/40 rounded animate-pulse border border-coc-void" />
           ))
-        ) : items.length === 0 ? (
+        ) : error ? (
+          <div className="col-span-full text-center py-16 text-red-300">
+            <p>加载失败，请稍后重试</p>
+          </div>
+        ) : items?.length === 0 ? (
           <div className="col-span-full text-center py-16 text-coc-parchment-dim">
             <EmptyState
               icon={EmptyIcons.Shop}
@@ -132,7 +131,7 @@ export function ShopPage() {
             />
           </div>
         ) : (
-          items.map((item) => (
+          items?.map((item) => (
             <RuneBorder
               key={item.key}
               variant="default"
@@ -173,10 +172,10 @@ export function ShopPage() {
                   </div>
                   <button
                     onClick={() => handlePurchase(item)}
-                    disabled={purchasingKey === item.key}
+                    disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
                     className="px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
                   >
-                    {purchasingKey === item.key ? '购买中...' : '购买'}
+                    {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
                   </button>
                 </div>
               </div>
