@@ -1226,7 +1226,6 @@ export function RoomPage() {
                     size="sm"
                     type="submit"
                     disabled={!connected}
-                    className="w-full"
                   >
                     <Send size={18} />
                   </MagneticButton>
