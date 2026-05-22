@@ -35,6 +35,7 @@ export function DreamingPage() {
   const { user, updateUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<'today' | 'collection' | 'history'>('today');
+  const [error, setError] = useState<string | null>(null);
 
   // 今日状态
   const [canDraw, setCanDraw] = useState(false);
@@ -48,22 +49,40 @@ export function DreamingPage() {
   const [history, setHistory] = useState<DreamDraw[]>([]);
 
   const loadDaily = useCallback(async () => {
-    const res = await apiFetch('/dream/daily');
-    const data = await handleApiResponse<{ canDraw: boolean; todayDraw: DreamDraw | null }>(res);
-    setCanDraw(data.canDraw);
-    setTodayDraw(data.todayDraw);
+    try {
+      setError(null);
+      const res = await apiFetch('/dream/daily');
+      const data = await handleApiResponse<{ canDraw: boolean; todayDraw: DreamDraw | null }>(res);
+      setCanDraw(data.canDraw);
+      setTodayDraw(data.todayDraw);
+    } catch (e: any) {
+      console.error('获取今日占卜失败:', e);
+      setError('获取今日占卜失败：' + e.message);
+    }
   }, []);
 
   const loadCollection = useCallback(async () => {
-    const res = await apiFetch('/dream/collection');
-    const data = await handleApiResponse<CollectionItem[]>(res);
-    setCollection(data);
+    try {
+      setError(null);
+      const res = await apiFetch('/dream/collection');
+      const data = await handleApiResponse<CollectionItem[]>(res);
+      setCollection(data);
+    } catch (e: any) {
+      console.error('获取图鉴失败:', e);
+      setError('获取图鉴失败：' + e.message);
+    }
   }, []);
 
   const loadHistory = useCallback(async () => {
-    const res = await apiFetch('/dream/history?limit=20');
-    const data = await handleApiResponse<DreamDraw[]>(res);
-    setHistory(data);
+    try {
+      setError(null);
+      const res = await apiFetch('/dream/history?limit=20');
+      const data = await handleApiResponse<DreamDraw[]>(res);
+      setHistory(data);
+    } catch (e: any) {
+      console.error('获取历史失败:', e);
+      setError('获取历史失败：' + e.message);
+    }
   }, []);
 
   useEffect(() => {
@@ -180,6 +199,13 @@ export function DreamingPage() {
           );
         })}
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 rounded border border-coc-blood/30 bg-coc-blood/10 text-coc-parchment text-sm"
+        >
+          {error}
+        </div>
+      )}
 
       {tab === 'today' && (
         <div className="space-y-6">
