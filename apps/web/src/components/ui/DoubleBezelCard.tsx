@@ -37,6 +37,10 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
   ({ children, className, innerClassName, variant = 'default', glow = false, runeCorners = false }, ref) => {
     const styles = variantStyles[variant];
 
+    // 从 innerClassName 提取 flex 相关 class 应用到外层，确保 flex 布局跨层生效
+    const flexClasses = innerClassName?.match(/flex-1|flex-col|flex-row|min-h-0|h-full|overflow-hidden/g) || [];
+    const outerFlexClass = flexClasses.join(' ');
+
     return (
       <div
         ref={ref}
@@ -45,6 +49,7 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
           'ring-1 ring-inset',
           styles.outer,
           glow && 'shadow-lg',
+          outerFlexClass,
           className
         )}
         style={
