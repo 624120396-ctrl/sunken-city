@@ -45,11 +45,17 @@ router.post('/register', async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const maxDisplayId = await prisma.user.aggregate({
+      _max: { displayId: true },
+    });
+    const nextDisplayId = (maxDisplayId._max.displayId || 0) + 1;
+
     const user = await prisma.user.create({
       data: {
         email,
         nickname,
         password: hashedPassword,
+        displayId: nextDisplayId,
       },
       select: {
         id: true,
