@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import { AnimatePresence } from 'motion/react';
+import { ToastProvider } from '@components/ui/Toast';
 
 // 动画
 import { PageTransition } from '@components/ui/Animation';
@@ -83,9 +84,10 @@ function App() {
   }
 
   return (
-    <Routes>
-      {/* 管理后台路由 */}
-      <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+    <ToastProvider>
+      <Routes>
+        {/* 管理后台路由 */}
+        <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
       <Route path="/admin/users" element={<AdminLayout><AdminUsersPage /></AdminLayout>} />
       <Route path="/admin/characters" element={<AdminLayout><AdminCharactersPage /></AdminLayout>} />
       <Route path="/admin/characters/:id/edit" element={<AdminLayout><CharacterEditPage /></AdminLayout>} />
@@ -142,6 +144,7 @@ function App() {
         </MainLayout>
       } />
     </Routes>
+    </ToastProvider>
   );
 }
 

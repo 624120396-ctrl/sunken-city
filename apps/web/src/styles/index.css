@@ -2,6 +2,159 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== V2.1 核心设计 Token（10 个） ===== */
+:root {
+  /* 背景层 */
+  --coc-v2-bg: #0a0a0f;
+  --coc-v2-bg-elevated: #12121a;
+  --coc-v2-bg-overlay: #1a1a24;
+  
+  /* 强调层 */
+  --coc-v2-gold: #c9a227;
+  --coc-v2-gold-dim: #8b7355;
+  --coc-v2-gold-glow: rgba(201, 162, 39, 0.12);
+  
+  /* 状态层 */
+  --coc-v2-blood: #8b2635;
+  --coc-v2-blood-soft: rgba(139, 38, 53, 0.15);
+  --coc-v2-ether: #3b82f6;
+  --coc-v2-ether-soft: rgba(59, 130, 246, 0.15);
+  
+  /* 文字层 */
+  --coc-v2-text: #d4c5a8;
+  --coc-v2-text-muted: #6b6558;
+  
+  /* 边框 */
+  --coc-v2-border: #2a2a35;
+}
+
+/* ===== V2.1 三层光影系统 ===== */
+
+/* Layer 0 — 背景 */
+.bg-layer-0 {
+  background-color: var(--coc-v2-bg);
+}
+
+/* Layer 2 — 卡片（无边框 ring，改用阴影+微光） */
+.card-layer-2 {
+  background: var(--coc-v2-bg-elevated);
+  border: 1px solid var(--coc-v2-border);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.4), 
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  transition: box-shadow 0.2s ease-out, transform 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.card-layer-2:hover {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--coc-v2-gold-glow);
+  transform: translateY(-2px);
+  border-color: #3a3a45;
+}
+
+/* Layer 3 — 悬浮遮罩 */
+.overlay-layer-3 {
+  background: rgba(10, 10, 15, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Layer 3 — 弹窗本体 */
+.modal-layer-3 {
+  background: var(--coc-v2-bg-overlay);
+  border: 1px solid var(--coc-v2-border);
+  border-radius: 12px;
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(201, 162, 39, 0.08);
+}
+
+/* ===== V2.1 Toast 样式 ===== */
+.toast-v2 {
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toast-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toast-v2-success {
+  border: 1px solid var(--coc-v2-ether-soft);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--coc-v2-text);
+}
+
+.toast-v2-error {
+  border: 1px solid var(--coc-v2-blood-soft);
+  background: rgba(139, 38, 53, 0.1);
+  color: var(--coc-v2-text);
+}
+
+.toast-v2-info {
+  border: 1px solid var(--coc-v2-gold-glow);
+  background: rgba(201, 162, 39, 0.08);
+  color: var(--coc-v2-text);
+}
+
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(40px); }
+}
+
+.toast-v2-exit {
+  animation: toast-slide-out 0.2s ease-out forwards;
+}
+
+/* ===== V2.1 骨架屏 shimmer（渐变动画） ===== */
+@keyframes skeleton-shimmer-v2 {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer-v2 {
+  background: linear-gradient(
+    90deg,
+    var(--coc-v2-border) 25%,
+    var(--coc-v2-bg-overlay) 50%,
+    var(--coc-v2-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer-v2 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* ===== V2.1 按钮完整反馈链 ===== */
+.btn-v2 {
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease-out, opacity 0.15s ease-out;
+}
+
+.btn-v2:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-v2:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.btn-v2:disabled {
+  opacity: 0.4;
+  filter: grayscale(0.3);
+  cursor: not-allowed;
+}
+
+.btn-v2-loading {
+  cursor: wait;
+}
+
 /* ===== v1.1 深渊纹理系统 ===== */
 
 /* 噪点纹理 - base64 内联 */

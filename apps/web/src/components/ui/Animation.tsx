@@ -119,18 +119,18 @@ export function StaggerItem({ children, className }: StaggerItemProps) {
 /* ===== 页面过渡动画 ===== */
 
 const pageVariants: Variants = {
-  initial: { opacity: 0, x: 20, scale: 0.995 },
+  initial: { opacity: 0, y: 12, scale: 0.995 },
   in: {
     opacity: 1,
-    x: 0,
+    y: 0,
     scale: 1,
     transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
   },
   out: {
     opacity: 0,
-    x: -20,
+    y: -8,
     scale: 0.995,
-    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
