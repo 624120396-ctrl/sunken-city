@@ -12,6 +12,7 @@ build/
 .env
 .env.local
 .env.*.local
+.env.bak*
 
 # Docker
 .dockerignore
@@ -30,6 +31,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
+ops-log/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -40,9 +42,21 @@ coverage/
 
 # Prisma
 prisma/*.db
+prisma/*.db*
+prisma/backups/
 prisma/migrations/*/migration_lock.toml
 
-# Misc
-.cache/
-temp/
+# Runtime uploads & generated files
+apps/server/public/uploads/
+apps/server/tmp/
+apps/server/dist/
 tmp/
+temp/
+.cache/
+
+# Migration dumps
+migration/
+
+# Misc
+*.bak
+*.bak.*
