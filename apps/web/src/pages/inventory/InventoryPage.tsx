@@ -2,6 +2,7 @@ import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { RuneBorder } from '@components/ui/RuneBorder';
+import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 import { ItemCard } from '@components/items/ItemCard';
 import { Backpack } from 'lucide-react';
 import { cn } from '@lib/utils';
@@ -224,7 +225,7 @@ export function InventoryPage() {
         <RuneBorder variant="gold" intensity="subtle">
           <div className="bg-coc-bg-secondary p-4">
             {loading ? (
-              <div className="py-10 text-center text-coc-text-muted">加载中...</div>
+              <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : generalItems.length === 0 ? (
               <EmptyState
                 icon={EmptyIcons.Inventory}
@@ -268,7 +269,7 @@ export function InventoryPage() {
         <RuneBorder variant="madness" intensity="subtle">
           <div className="bg-coc-bg-secondary p-4">
             {loading ? (
-              <div className="py-10 text-center text-coc-text-muted">加载中...</div>
+              <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : titleItems.length === 0 ? (
               <EmptyState
                 icon={EmptyIcons.Investigator}
@@ -303,7 +304,7 @@ export function InventoryPage() {
             <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
-                <div className="py-6 text-center text-sm text-coc-text-muted">加载中...</div>
+                <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !boundRelics || boundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-coc-text-muted">还没有遗物绑定到角色卡上</div>
               ) : (
@@ -328,7 +329,7 @@ export function InventoryPage() {
             <div className="bg-coc-bg-secondary p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">未绑定遗物</h2>
               {unboundRelicsLoading ? (
-                <div className="py-6 text-center text-sm text-coc-text-muted">加载中...</div>
+                <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !unboundRelics || unboundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-coc-text-muted">暂无有可绑定的遗物</div>
               ) : (

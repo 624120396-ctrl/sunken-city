@@ -1,4 +1,5 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import { SkeletonCard } from '@components/ui/Skeleton';
 import { Link } from 'react-router-dom';
 import { LayoutGrid, School, Anchor, Moon, Flame, Landmark } from 'lucide-react';
 import { getForumBoards } from '../../services/forum.service';
@@ -75,8 +76,11 @@ export function ForumListPage() {
       </div>
 
       {isLoading ? (
-        <div className="py-16 text-center text-coc-text-muted">
-          <EmptyState icon={EmptyIcons.Clue} title="加载中..." size="md" animate={false} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <SkeletonCard className="h-[220px]" />
+          <SkeletonCard className="h-[220px]" />
+          <SkeletonCard className="h-[220px]" />
+          <SkeletonCard className="h-[220px]" />
         </div>
       ) : boards.length === 0 ? (
         <EmptyState

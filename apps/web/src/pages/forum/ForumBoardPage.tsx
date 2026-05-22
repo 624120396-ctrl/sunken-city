@@ -24,6 +24,7 @@ import {
 import { formatTimeAgo } from '../../lib/utils';
 import { CompactPagination } from '../../components/forum/CompactPagination';
 import { useQuery } from '@tanstack/react-query';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -267,7 +268,13 @@ export function ForumBoardPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-coc-text-muted">加载中...</div>
+        <div className="space-y-3">
+          <SkeletonCard className="h-20" />
+          <SkeletonCard className="h-20" />
+          <SkeletonCard className="h-20" />
+          <SkeletonCard className="h-20" />
+          <SkeletonCard className="h-20" />
+        </div>
       ) : (
         <div className="space-y-4">
           {/* 置顶帖 */}

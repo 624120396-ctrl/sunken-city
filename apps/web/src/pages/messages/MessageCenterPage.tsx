@@ -28,6 +28,7 @@ import {
   markMessageAsRead,
 } from '@services/user-messages.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 
 type Tab = 'notifications' | 'messages';
 
@@ -252,9 +253,10 @@ export function MessageCenterPage() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {notifLoading && notifications.length === 0 ? (
-                    <div className="p-8 text-center text-coc-text-muted">
-                      <Loader2 className="animate-spin mx-auto mb-2" size={20} />
-                      加载中...
+                    <div className="p-8">
+                      <SkeletonCard className="h-16" />
+                      <SkeletonCard className="h-16 mt-3" />
+                      <SkeletonCard className="h-16 mt-3" />
                     </div>
                   ) : notifications.length === 0 ? (
                     <div className="p-8 text-center text-coc-text-muted text-sm">
@@ -326,9 +328,10 @@ export function MessageCenterPage() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {msgLoading && conversations.length === 0 ? (
-                    <div className="p-8 text-center text-coc-text-muted">
-                      <Loader2 className="animate-spin mx-auto mb-2" size={20} />
-                      加载中...
+                    <div className="p-8">
+                      <SkeletonCard className="h-16" />
+                      <SkeletonCard className="h-16 mt-3" />
+                      <SkeletonCard className="h-16 mt-3" />
                     </div>
                   ) : conversations.length === 0 ? (
                     <div className="p-8 text-center text-coc-text-muted text-sm">
@@ -398,9 +401,9 @@ export function MessageCenterPage() {
                 {/* 消息记录 */}
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                   {messagesLoading && messages.length === 0 ? (
-                    <div className="text-center text-coc-text-muted">
-                      <Loader2 className="animate-spin mx-auto mb-2" size={20} />
-                      加载中...
+                    <div className="text-center py-8">
+                      <Skeleton className="h-12 w-3/4 mx-auto" />
+                      <Skeleton className="h-12 w-1/2 mx-auto mt-3" />
                     </div>
                   ) : (
                     messages.map((m) => {
