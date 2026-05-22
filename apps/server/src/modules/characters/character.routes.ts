@@ -249,7 +249,9 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
+        displayId: true,
         name: true,
+        portraitUrl: true,
         occupation: true,
         occupationKey: true,
         age: true,
