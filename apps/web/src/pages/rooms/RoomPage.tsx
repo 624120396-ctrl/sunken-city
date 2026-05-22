@@ -776,9 +776,9 @@ export function RoomPage() {
       </div>
 
       {/* 主内容区 */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
         {/* 左侧：成员列表 */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4 overflow-y-auto min-h-0">
           {/* 当前状态条 - 自己的角色 */}
           {selectedCharacter && (
             <DoubleBezelCard variant="blood" runeCorners glow innerClassName="p-4">
@@ -1072,7 +1072,7 @@ export function RoomPage() {
         </div>
 
         {/* 右侧：聊天/战斗区 */}
-        <div className="lg:col-span-3 flex flex-col min-h-0">
+        <div className="lg:col-span-3 flex flex-col min-h-0 overflow-hidden">
           {activeTab === 'chat' ? (
             <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {/* ===== 新增：场景描述卡片 ===== */}
