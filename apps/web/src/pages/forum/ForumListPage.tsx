@@ -42,7 +42,7 @@ export function ForumListPage() {
             <Link
               key={b.key}
               to={`/forums/board/${b.key}`}
-              className="group p-6 bg-coc-bg-tertiary border border-coc-border rounded-lg hover:border-coc-gold/60 transition-all hover:shadow-lg hover:shadow-coc-gold/5 min-h-[220px] flex flex-col justify-between"
+              className="group p-6 card-layer-2 min-h-[220px] flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">

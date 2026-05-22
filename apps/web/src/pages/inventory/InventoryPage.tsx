@@ -6,6 +6,7 @@ import { ItemCard } from '@components/items/ItemCard';
 import { Backpack } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@components/ui/Toast';
 
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
@@ -101,6 +102,7 @@ async function fetchUnboundRelics() {
 
 export function InventoryPage() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [tab, setTab] = useState<'general' | 'titles' | 'relics'>('general');
   const [lootboxResult, setLootboxResult] = useState<LootboxResult | null>(null);
   const [visibleRelics, setVisibleRelics] = useState<number>(0);
@@ -145,11 +147,12 @@ export function InventoryPage() {
         body: JSON.stringify({ inventoryId, characterId }),
       }).then((r) => handleApiResponse(r)),
     onSuccess: () => {
+      showToast('遗物绑定成功', 'success');
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['relics'] });
     },
     onError: (err: any) => {
-      alert(err?.message || '绑定失败');
+      showToast(err?.message || '绑定失败', 'error');
     },
   });
 
@@ -160,6 +163,7 @@ export function InventoryPage() {
     onSuccess: (data) => {
       const result = data.data;
       setLootboxResult(result);
+      showToast(`开箱成功！获得 ${result.relics.length} 件遗物`, 'success');
       // 开箱动画
       const maxRarity = result.relics.reduce((max: string, r) => {
         return RARITY_ORDER.indexOf(r.rarity) > RARITY_ORDER.indexOf(max) ? r.rarity : max;
@@ -177,7 +181,7 @@ export function InventoryPage() {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
     onError: (err: any) => {
-      alert(err?.message || '开启失败');
+      showToast(err?.message || '开启失败', 'error');
     },
   });
 

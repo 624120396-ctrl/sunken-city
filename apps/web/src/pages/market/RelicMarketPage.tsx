@@ -13,6 +13,7 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 import { Store, X, Plus, Coins, Sparkles } from 'lucide-react';
 import { getRarityColorClass } from '@data/relics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@components/ui/Toast';
 
 interface Listing {
   id: string;
@@ -36,11 +37,6 @@ interface Listing {
   } | null;
 }
 
-interface ToastState {
-  message: string;
-  type: 'success' | 'error';
-}
-
 async function fetchCharacters() {
   const res = await apiFetch('/characters');
   return handleApiResponse<{ characters: any[] }>(res);
@@ -49,10 +45,10 @@ async function fetchCharacters() {
 export function RelicMarketPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'market' | 'mine'>('market');
   const [filterKey, setFilterKey] = useState('');
-  const [toast, setToast] = useState<ToastState | null>(null);
 
   // 上架 Modal
   const [showListModal, setShowListModal] = useState(false);
@@ -111,7 +107,7 @@ export function RelicMarketPage() {
       createListing(selectedRelicId, Number(listPrice), listCurrency),
     onSuccess: () => {
       setShowListModal(false);
-      setToast({ message: '上架成功', type: 'success' });
+      showToast('上架成功', 'success');
       queryClient.invalidateQueries({ queryKey: ['marketListings'] });
       setSelectedCharId('');
       setSelectedRelicId('');
@@ -119,31 +115,31 @@ export function RelicMarketPage() {
       setListCurrency('coin');
     },
     onError: (err: any) => {
-      setToast({ message: err.message || '上架失败', type: 'error' });
+      showToast(err.message || '上架失败', 'error');
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: (tradeId: string) => cancelListing(tradeId),
     onSuccess: () => {
-      setToast({ message: '下架成功', type: 'success' });
+      showToast('下架成功', 'success');
       queryClient.invalidateQueries({ queryKey: ['marketListings'] });
     },
     onError: (err: any) => {
-      setToast({ message: err.message || '下架失败', type: 'error' });
+      showToast(err.message || '下架失败', 'error');
     },
   });
 
   const buyMutation = useMutation({
     mutationFn: () => buyListing(buyTradeId!, buyCharId),
     onSuccess: () => {
-      setToast({ message: '购买成功', type: 'success' });
+      showToast('购买成功', 'success');
       setBuyTradeId(null);
       setBuyCharId('');
       queryClient.invalidateQueries({ queryKey: ['marketListings'] });
     },
     onError: (err: any) => {
-      setToast({ message: err.message || '购买失败', type: 'error' });
+      showToast(err.message || '购买失败', 'error');
     },
   });
 
@@ -500,19 +496,6 @@ export function RelicMarketPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed right-4 top-4 z-[60] rounded border px-4 py-2 text-sm shadow-lg ${
-            toast.type === 'success'
-              ? 'border-green-500/50 bg-green-900/80 text-green-100'
-              : 'border-red-500/50 bg-red-900/80 text-red-100'
-          }`}
-        >
-          {toast.message}
         </div>
       )}
     </div>

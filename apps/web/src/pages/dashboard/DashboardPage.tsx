@@ -10,6 +10,7 @@ import { getMyRankTitle, UserRankInfo } from '@services/rank-title.service';
 import { getAnnouncements, type Announcement } from '@services/announcement.service';
 import { dailyCheckin, getOnlineUsers } from '@services/shop.service';
 import { ExpBar } from '@components/ui/ExpBar';
+import { useToast } from '@components/ui/Toast';
 import { UserProfileModal } from '@components/UserProfileModal';
 import type { UserProfile } from '@components/UserProfileCard';
 
@@ -27,6 +28,7 @@ interface Character {
 
 export function DashboardPage() {
   const { user, updateUser, token } = useAuthStore();
+  const { showToast } = useToast();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [rankInfo, setRankInfo] = useState<UserRankInfo | null>(null);
@@ -146,12 +148,13 @@ export function DashboardPage() {
       updateUser(data.user);
       setCheckedInToday(true);
       setCheckinReward(data.reward);
+      showToast(`签到成功！+${data.reward.coins} 锈蚀硬币${data.reward.stardust ? ` · +${data.reward.stardust} 虚银` : ''}`, 'success');
     } catch (err) {
       const msg = (err as Error).message;
       if (msg.includes('已签到')) {
         setCheckedInToday(true);
       }
-      alert('签到失败：' + msg);
+      showToast('签到失败：' + msg, 'error');
     } finally {
       setCheckingIn(false);
     }
@@ -276,8 +279,8 @@ export function DashboardPage() {
                   {checkedInToday ? '已签到' : checkingIn ? '签到中...' : '每日签到'}
                 </button>
                 {checkedInToday && checkinReward && (
-                  <div className="text-xs text-coc-gold animate-in fade-in slide-in-from-top-1 duration-500">
-                    获得 +{checkinReward.coins} 锈蚀硬币
+                  <div className="text-xs text-coc-gold">
+                    已获得 +{checkinReward.coins} 锈蚀硬币
                     {checkinReward.stardust ? ` · +${checkinReward.stardust} 虚银` : ''}
                   </div>
                 )}

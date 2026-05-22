@@ -101,8 +101,10 @@ function PostRow({
     <Link
       key={post.id}
       to={`/forums/${post.id}`}
-      className="group block p-4 rounded border border-coc-border bg-coc-bg-tertiary hover:border-coc-gold/50 transition-colors"
+      className="group block p-4 rounded border border-coc-border bg-coc-bg-tertiary hover:border-coc-gold/50 transition-colors relative overflow-hidden"
     >
+      {/* hover 金色竖线 */}
+      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-coc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

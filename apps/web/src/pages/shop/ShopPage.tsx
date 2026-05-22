@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { getShopItems, purchaseItem, type ShopItem } from '@services/shop.service';
-import { RuneBorder } from '@components/ui/RuneBorder';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useToast } from '@components/ui/Toast';
 
 const rarityBorder: Record<string, string> = {
   common: 'border-coc-parchment-dim',
@@ -35,6 +35,7 @@ const CATEGORIES = [
 
 export function ShopPage() {
   const { user, updateUser } = useAuthStore();
+  const { showToast } = useToast();
   const [category, setCategory] = useState('');
 
   const {
@@ -52,10 +53,10 @@ export function ShopPage() {
     mutationFn: (item: ShopItem) => purchaseItem(item.key, 1),
     onSuccess: (res, item) => {
       updateUser(res.user);
-      alert(`购买成功！获得 ${item.name}`);
+      showToast(`购买成功！获得 ${item.name}`, 'success');
     },
     onError: (err: any) => {
-      alert('购买失败：' + err.message);
+      showToast('购买失败：' + err.message, 'error');
     },
   });
 
@@ -132,11 +133,9 @@ export function ShopPage() {
           </div>
         ) : (
           items?.map((item) => (
-            <RuneBorder
+            <div
               key={item.key}
-              variant="default"
-              intensity="subtle"
-              className="h-full"
+              className="card-layer-2 h-full"
             >
               <div className="h-full p-4 flex flex-col gap-3">
                 <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-coc-abyss/30 flex items-center justify-center`}>
@@ -179,7 +178,7 @@ export function ShopPage() {
                   </button>
                 </div>
               </div>
-            </RuneBorder>
+            </div>
           ))
         )}
       </div>
