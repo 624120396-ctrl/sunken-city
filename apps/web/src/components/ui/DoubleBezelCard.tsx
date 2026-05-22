@@ -39,6 +39,7 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
 
     // 从 innerClassName 提取 flex 相关 class 应用到外层，确保 flex 布局跨层生效
     const flexClasses = innerClassName?.match(/flex-1|flex-col|flex-row|min-h-0|h-full|overflow-hidden/g) || [];
+    const hasFlex = flexClasses.length > 0;
     const outerFlexClass = flexClasses.join(' ');
 
     return (
@@ -46,6 +47,7 @@ export const DoubleBezelCard = forwardRef<HTMLDivElement, DoubleBezelCardProps>(
         ref={ref}
         className={cn(
           'relative rounded-xl p-[1px]',
+          hasFlex && 'flex',
           'ring-1 ring-inset',
           styles.outer,
           glow && 'shadow-lg',
