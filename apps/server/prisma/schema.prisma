@@ -54,8 +54,10 @@ model User {
 
 model Character {
   id          String   @id @default(uuid())
+  displayId   Int      @unique
   userId      String
   name        String
+  portraitUrl String?  // 半身像图片路径
 
   // COC7e 职业系统（职业名称与绑定）
   occupation  String   // 职业显示名称

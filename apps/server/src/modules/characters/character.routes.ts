@@ -363,9 +363,17 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     // 自动设置快捷技能栏（如果未自定义）
     let quickSkills = ["侦查", "聆听", "图书馆使用", "心理学", "话术"];
 
+    // 查询当前最大 displayId，自动生成
+    const maxChar = await prisma.character.findFirst({
+      orderBy: { displayId: 'desc' },
+      select: { displayId: true },
+    });
+    const nextDisplayId = (maxChar?.displayId || 0) + 1;
+
     const character = await prisma.character.create({
       data: {
         userId,
+        displayId: nextDisplayId,
         name: data.name,
         occupation: occ.name,
         occupationKey: data.occupationKey,
