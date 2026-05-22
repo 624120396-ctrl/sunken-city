@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { LayoutGrid, School, Anchor, Moon, Flame, Landmark } from 'lucide-react';
@@ -79,7 +80,13 @@ export function ForumListPage() {
       </div>
 
       {boards.length === 0 && (
-        <div className="text-center py-12 text-coc-text-muted">暂无可用版块</div>
+        <EmptyState
+          icon={EmptyIcons.Clue}
+          title="暂无可用版块"
+          description="论坛版块尚未开放，敬请期待。"
+          size="md"
+          animate={false}
+        />
       )}
     </div>
   );

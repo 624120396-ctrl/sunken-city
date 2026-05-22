@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, X, ShoppingBag, Wand2 } from 'lucide-react';
 import { apiFetch } from '@lib/api';
@@ -317,7 +318,13 @@ export function AdminShopPage() {
           {loading ? (
             <AdminTableSkeleton rows={5} cols={7} showSearch={false} showActions={false} />
           ) : items.length === 0 ? (
-            <div className="text-center py-10 text-coc-parchment-dim">暂无商品</div>
+            <EmptyState
+              icon={EmptyIcons.Shop}
+              title="暂无商品"
+              description="货架空空，等待上新。"
+              size="sm"
+              animate={false}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">

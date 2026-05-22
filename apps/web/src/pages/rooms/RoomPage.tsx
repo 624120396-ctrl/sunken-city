@@ -1015,26 +1015,32 @@ export function RoomPage() {
                     </div>
                     {isMyTurn && (
                       <>
-                        <button
+                        <MagneticButton
+                          variant="blood"
+                          size="sm"
                           onClick={() => setShowAttackModal(true)}
-                          className="w-full coc-btn-primary mt-2 flex items-center justify-center gap-2"
+                          className="w-full mt-2 flex items-center justify-center gap-2"
                         >
                           <Swords size={16} /> 攻击
-                        </button>
-                        <button
+                        </MagneticButton>
+                        <MagneticButton
+                          variant="void"
+                          size="sm"
                           onClick={handleNextTurn}
-                          className="w-full coc-btn-secondary mt-2 flex items-center justify-center gap-2"
+                          className="w-full mt-2 flex items-center justify-center gap-2"
                         >
                           <SkipForward size={16} /> 结束回合
-                        </button>
+                        </MagneticButton>
                       </>
                     )}
-                    <button
+                    <MagneticButton
+                      variant="blood"
+                      size="sm"
                       onClick={handleEndCombat}
-                      className="w-full coc-btn-secondary mt-2 text-red-400 flex items-center justify-center gap-2"
+                      className="w-full mt-2 text-red-400 flex items-center justify-center gap-2"
                     >
                       <Square size={16} /> 结束战斗
-                    </button>
+                    </MagneticButton>
                   </>
                 )}
               </div>
@@ -1215,9 +1221,15 @@ export function RoomPage() {
                     placeholder={connected ? "输入消息..." : "连接中..."}
                     disabled={!connected}
                   />
-                  <button type="submit" className="coc-btn-primary" disabled={!connected}>
+                  <MagneticButton
+                    variant="blood"
+                    size="sm"
+                    type="submit"
+                    disabled={!connected}
+                    className="w-full"
+                  >
                     <Send size={18} />
-                  </button>
+                  </MagneticButton>
                 </div>
               </form>
 
@@ -1265,9 +1277,14 @@ export function RoomPage() {
                     <Swords size={48} className="mx-auto text-coc-text-muted mb-4" />
                     <p className="text-coc-text-secondary">战斗未开始</p>
                     {room?.isCreator && (
-                      <button onClick={handleStartCombat} className="coc-btn-primary mt-4">
+                      <MagneticButton
+                        variant="blood"
+                        size="sm"
+                        onClick={handleStartCombat}
+                        className="mt-4"
+                      >
                         开始战斗
-                      </button>
+                      </MagneticButton>
                     )}
                   </div>
                 </div>
@@ -1276,9 +1293,14 @@ export function RoomPage() {
                   <div className="text-center">
                     <p className="text-coc-text-secondary">战斗已结束</p>
                     {room?.isCreator && (
-                      <button onClick={handleStartCombat} className="coc-btn-primary mt-4">
+                      <MagneticButton
+                        variant="blood"
+                        size="sm"
+                        onClick={handleStartCombat}
+                        className="mt-4"
+                      >
                         开始新战斗
-                      </button>
+                      </MagneticButton>
                     )}
                   </div>
                 </div>
@@ -1456,20 +1478,23 @@ export function RoomPage() {
           )}
 
           <div className="flex gap-3">
-            <button
-              onClick={() =>
-                setShowAttackModal(false)}
-              className="coc-btn-secondary flex-1"
+            <MagneticButton
+              variant="void"
+              size="sm"
+              onClick={() => setShowAttackModal(false)}
+              className="flex-1"
             >
               取消
-            </button>
-            <button
+            </MagneticButton>
+            <MagneticButton
+              variant="blood"
+              size="sm"
               onClick={handleAttack}
               disabled={!attackTarget}
-              className="coc-btn-primary flex-1"
+              className="flex-1"
             >
               攻击
-            </button>
+            </MagneticButton>
           </div>
         </div>
           );

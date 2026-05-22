@@ -10,6 +10,7 @@ interface MagneticButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   magnetic?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const variantStyles = {
@@ -47,6 +48,7 @@ export function MagneticButton({
   onClick,
   disabled = false,
   magnetic = true,
+  type = 'button',
 }: MagneticButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -83,6 +85,7 @@ export function MagneticButton({
   return (
     <button
       ref={buttonRef}
+      type={type}
       onClick={handleClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}

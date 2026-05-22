@@ -1,3 +1,4 @@
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import {
@@ -294,7 +295,12 @@ export function RelicMarketPage() {
             </button>
           </div>
           {loading ? (
-            <div className="py-12 text-center text-coc-text-muted">加载中...</div>
+            <EmptyState
+              icon={EmptyIcons.Shop}
+              title="加载中..."
+              size="sm"
+              animate={false}
+            />
           ) : listings.length === 0 ? (
             <div className="py-16 text-center text-coc-text-muted">
               <Store size={48} className="mx-auto mb-4 text-coc-text-secondary/50" />
