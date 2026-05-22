@@ -1,5 +1,5 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import {
   fetchMarketListings,
@@ -12,6 +12,7 @@ import {
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Store, X, Plus, Coins, Sparkles } from 'lucide-react';
 import { getRarityColorClass } from '@data/relics';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Listing {
   id: string;
@@ -40,13 +41,15 @@ interface ToastState {
   type: 'success' | 'error';
 }
 
+async function fetchCharacters() {
+  const res = await apiFetch('/characters');
+  return handleApiResponse<{ characters: any[] }>(res);
+}
+
 export function RelicMarketPage() {
   const { user } = useAuthStore();
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [myListings, setMyListings] = useState<Listing[]>([]);
-  const [registry, setRegistry] = useState<Record<string, any>>({});
-  const [characters, setCharacters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState<'market' | 'mine'>('market');
   const [filterKey, setFilterKey] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -54,7 +57,6 @@ export function RelicMarketPage() {
   // 上架 Modal
   const [showListModal, setShowListModal] = useState(false);
   const [selectedCharId, setSelectedCharId] = useState('');
-  const [charRelics, setCharRelics] = useState<any[]>([]);
   const [selectedRelicId, setSelectedRelicId] = useState('');
   const [listPrice, setListPrice] = useState('');
   const [listCurrency, setListCurrency] = useState<'coin' | 'stardust'>('coin');
@@ -63,142 +65,145 @@ export function RelicMarketPage() {
   const [buyTradeId, setBuyTradeId] = useState<string | null>(null);
   const [buyCharId, setBuyCharId] = useState('');
 
-  useEffect(() => {
-    loadData();
-    fetchCharacters();
-  }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [marketData, regData] = await Promise.all([
+  // Queries
+  const {
+    data: marketData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['marketListings', filterKey],
+    queryFn: () =>
+      Promise.all([
         fetchMarketListings(filterKey ? { relicKey: filterKey } : undefined),
         fetchRelicRegistry(),
-      ]);
-      const all = marketData.listings || [];
-      setListings(all);
-      setMyListings(all.filter((l: Listing) => l.sellerId === user?.id));
-      const map: Record<string, any> = {};
-      (regData.relics || []).forEach((r: any) => {
-        map[r.key] = r;
-      });
-      setRegistry(map);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      ]),
+    staleTime: 30 * 1000,
+  });
 
-  const fetchCharacters = async () => {
-    try {
-      const res = await apiFetch('/characters');
-      const data = await handleApiResponse<{ characters: any[] }>(res);
-      setCharacters(data.characters || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const [listingsRaw, registryRaw] = marketData ?? [{ listings: [] }, { relics: [] }];
+  const allListings: Listing[] = listingsRaw.listings || [];
+  const myListings = allListings.filter((l: Listing) => l.sellerId === user?.id);
+  const listings = activeTab === 'market' ? allListings : myListings;
 
-  const handleOpenListModal = async (charId?: string) => {
+  const registryMap: Record<string, any> = {};
+  (registryRaw.relics || []).forEach((r: any) => {
+    registryMap[r.key] = r;
+  });
+
+  const { data: charactersData } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+    staleTime: 60 * 1000,
+  });
+  const characters = charactersData?.characters || [];
+
+  const { data: charRelicsData, isLoading: charRelicsLoading } = useQuery({
+    queryKey: ['characterRelics', selectedCharId],
+    queryFn: () => fetchCharacterRelics(selectedCharId),
+    enabled: !!selectedCharId,
+    staleTime: 30 * 1000,
+  });
+  const charRelics = (charRelicsData?.relics || []).filter((r: any) => !r.tradeLockId);
+
+  // Mutations
+  const listMutation = useMutation({
+    mutationFn: () =>
+      createListing(selectedRelicId, Number(listPrice), listCurrency),
+    onSuccess: () => {
+      setShowListModal(false);
+      setToast({ message: '上架成功', type: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['marketListings'] });
+      setSelectedCharId('');
+      setSelectedRelicId('');
+      setListPrice('');
+      setListCurrency('coin');
+    },
+    onError: (err: any) => {
+      setToast({ message: err.message || '上架失败', type: 'error' });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (tradeId: string) => cancelListing(tradeId),
+    onSuccess: () => {
+      setToast({ message: '下架成功', type: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['marketListings'] });
+    },
+    onError: (err: any) => {
+      setToast({ message: err.message || '下架失败', type: 'error' });
+    },
+  });
+
+  const buyMutation = useMutation({
+    mutationFn: () => buyListing(buyTradeId!, buyCharId),
+    onSuccess: () => {
+      setToast({ message: '购买成功', type: 'success' });
+      setBuyTradeId(null);
+      setBuyCharId('');
+      queryClient.invalidateQueries({ queryKey: ['marketListings'] });
+    },
+    onError: (err: any) => {
+      setToast({ message: err.message || '购买失败', type: 'error' });
+    },
+  });
+
+  const handleOpenListModal = (charId?: string) => {
     setSelectedCharId(charId || '');
     setSelectedRelicId('');
     setListPrice('');
     setListCurrency('coin');
     setShowListModal(true);
-    if (charId) {
-      try {
-        const data = await fetchCharacterRelics(charId);
-        setCharRelics(
-          (data.relics || []).filter((r: any) => !r.tradeLockId)
-        );
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      setCharRelics([]);
-    }
   };
 
-  const handleCharChange = async (charId: string) => {
+  const handleCharChange = (charId: string) => {
     setSelectedCharId(charId);
     setSelectedRelicId('');
-    if (!charId) {
-      setCharRelics([]);
-      return;
-    }
-    try {
-      const data = await fetchCharacterRelics(charId);
-      setCharRelics(
-        (data.relics || []).filter((r: any) => !r.tradeLockId)
-      );
-    } catch (err) {
-      console.error(err);
-    }
   };
 
-  const handleList = async () => {
+  const handleList = () => {
     if (!selectedRelicId || !listPrice || Number(listPrice) <= 0) return;
-    try {
-      await createListing(selectedRelicId, Number(listPrice), listCurrency);
-      setShowListModal(false);
-      setToast({ message: '上架成功', type: 'success' });
-      loadData();
-    } catch (err: any) {
-      setToast({ message: err.message || '上架失败', type: 'error' });
-    }
+    listMutation.mutate();
   };
 
-  const handleCancel = async (tradeId: string) => {
+  const handleCancel = (tradeId: string) => {
     if (!confirm('确定下架该挂单吗？')) return;
-    try {
-      await cancelListing(tradeId);
-      setToast({ message: '下架成功', type: 'success' });
-      loadData();
-    } catch (err: any) {
-      setToast({ message: err.message || '下架失败', type: 'error' });
-    }
+    cancelMutation.mutate(tradeId);
   };
 
-  const handleBuy = async () => {
+  const handleBuy = () => {
     if (!buyTradeId || !buyCharId) return;
-    try {
-      await buyListing(buyTradeId, buyCharId);
-      setToast({ message: '购买成功', type: 'success' });
-      setBuyTradeId(null);
-      setBuyCharId('');
-      loadData();
-    } catch (err: any) {
-      setToast({ message: err.message || '购买失败', type: 'error' });
-    }
+    buyMutation.mutate();
   };
 
   const renderListingCard = (l: Listing, isMine = false) => {
-    const meta = registry[l.relicKey] || l.meta;
+    const meta = registryMap[l.relicKey] || l.meta;
     const dur =
       l.relicSnapshot?.durability ?? l.relicSnapshot?.maxDurability ?? null;
     const rarity = meta?.rarity || 'common';
     return (
-      <div key={l.id} className={`rounded border bg-coc-bg-secondary p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}>
+      <div
+        key={l.id}
+        className={`rounded border bg-coc-bg-secondary p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}
+      >
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
               <div className="text-base font-bold text-coc-parchment">
                 {meta?.name || l.relicKey}
               </div>
-              <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)}`}>
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)}`}
+              >
                 {rarity}
               </span>
             </div>
-            <div className="mt-1 text-xs text-coc-text-muted">{meta?.description}</div>
+            <div className="mt-1 text-xs text-coc-text-muted">
+              {meta?.description}
+            </div>
             {dur !== null && (
-              <div className="mt-1 text-xs text-coc-text-secondary">耐久: {dur}</div>
+              <div className="mt-1 text-xs text-coc-text-secondary">
+                耐久: {dur}
+              </div>
             )}
           </div>
           <div className="text-right">
@@ -212,11 +217,14 @@ export function RelicMarketPage() {
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-coc-text-secondary">{new Date(l.createdAt).toLocaleString()}</span>
+          <span className="text-xs text-coc-text-secondary">
+            {new Date(l.createdAt).toLocaleString()}
+          </span>
           {isMine ? (
             <button
               onClick={() => handleCancel(l.id)}
-              className="flex items-center gap-1 rounded bg-red-900/40 px-2 py-1 text-xs text-red-200 hover:bg-red-900/60"
+              disabled={cancelMutation.isPending}
+              className="flex items-center gap-1 rounded bg-red-900/40 px-2 py-1 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
             >
               <X size={12} /> 下架
             </button>
@@ -283,29 +291,42 @@ export function RelicMarketPage() {
               className="rounded border border-coc-void bg-coc-bg-tertiary px-3 py-1.5 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
             >
               <option value="">全部遗物</option>
-              {Object.values(registry).map((r: any) => (
-                <option key={r.key} value={r.key}>{r.name}</option>
+              {Object.values(registryMap).map((r: any) => (
+                <option key={r.key} value={r.key}>
+                  {r.name}
+                </option>
               ))}
             </select>
             <button
-              onClick={loadData}
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: ['marketListings'] })
+              }
               className="coc-btn-secondary text-sm"
             >
               刷新
             </button>
           </div>
-          {loading ? (
+          {isLoading ? (
             <EmptyState
               icon={EmptyIcons.Shop}
               title="加载中..."
               size="sm"
               animate={false}
             />
+          ) : error ? (
+            <div className="py-12 text-center text-red-300">
+              <p>加载失败，请稍后重试</p>
+            </div>
           ) : listings.length === 0 ? (
             <div className="py-16 text-center text-coc-text-muted">
-              <Store size={48} className="mx-auto mb-4 text-coc-text-secondary/50" />
+              <Store
+                size={48}
+                className="mx-auto mb-4 text-coc-text-secondary/50"
+              />
               <p>暂无挂单</p>
-              <p className="mt-1 text-xs">成为第一位在市场出售遗物的调查员</p>
+              <p className="mt-1 text-xs">
+                成为第一位在市场出售遗物的调查员
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -318,7 +339,9 @@ export function RelicMarketPage() {
       {activeTab === 'mine' && (
         <>
           {myListings.length === 0 ? (
-            <div className="py-12 text-center text-coc-text-muted">你没有正在出售的遗物</div>
+            <div className="py-12 text-center text-coc-text-muted">
+              你没有正在出售的遗物
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {myListings.map((l) => renderListingCard(l, true))}
@@ -333,7 +356,9 @@ export function RelicMarketPage() {
           <div className="w-full max-w-md rounded-lg border border-coc-border bg-coc-bg-secondary p-6">
             <h3 className="mb-4 text-lg font-bold text-coc-parchment">上架遗物</h3>
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-coc-text-muted">选择角色卡</label>
+              <label className="mb-1 block text-xs text-coc-text-muted">
+                选择角色卡
+              </label>
               <select
                 value={selectedCharId}
                 onChange={(e) => handleCharChange(e.target.value)}
@@ -341,16 +366,24 @@ export function RelicMarketPage() {
               >
                 <option value="">请选择</option>
                 {characters.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} · {c.occupation}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name} · {c.occupation}
+                  </option>
                 ))}
               </select>
             </div>
 
             {selectedCharId && (
               <div className="mb-4">
-                <label className="mb-1 block text-xs text-coc-text-muted">选择遗物</label>
-                {charRelics.length === 0 ? (
-                  <div className="text-sm text-coc-text-muted">该角色没有可交易的遗物</div>
+                <label className="mb-1 block text-xs text-coc-text-muted">
+                  选择遗物
+                </label>
+                {charRelicsLoading ? (
+                  <div className="text-sm text-coc-text-muted">加载中...</div>
+                ) : charRelics.length === 0 ? (
+                  <div className="text-sm text-coc-text-muted">
+                    该角色没有可交易的遗物
+                  </div>
                 ) : (
                   <select
                     value={selectedRelicId}
@@ -359,11 +392,13 @@ export function RelicMarketPage() {
                   >
                     <option value="">请选择</option>
                     {charRelics.map((r) => {
-                      const meta = registry[r.relicKey] || r.meta;
+                      const meta = registryMap[r.relicKey] || r.meta;
                       return (
                         <option key={r.id} value={r.id}>
                           {meta?.name || r.relicKey}
-                          {r.durability != null ? ` (耐久 ${r.durability})` : ''}
+                          {r.durability != null
+                            ? ` (耐久 ${r.durability})`
+                            : ''}
                         </option>
                       );
                     })}
@@ -374,7 +409,9 @@ export function RelicMarketPage() {
 
             <div className="mb-4 flex items-center gap-2">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-coc-text-muted">价格</label>
+                <label className="mb-1 block text-xs text-coc-text-muted">
+                  价格
+                </label>
                 <input
                   type="number"
                   value={listPrice}
@@ -384,10 +421,14 @@ export function RelicMarketPage() {
                 />
               </div>
               <div className="w-32">
-                <label className="mb-1 block text-xs text-coc-text-muted">币种</label>
+                <label className="mb-1 block text-xs text-coc-text-muted">
+                  币种
+                </label>
                 <select
                   value={listCurrency}
-                  onChange={(e) => setListCurrency(e.target.value as any)}
+                  onChange={(e) =>
+                    setListCurrency(e.target.value as 'coin' | 'stardust')
+                  }
                   className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
                 >
                   <option value="coin">锈蚀硬币</option>
@@ -405,10 +446,15 @@ export function RelicMarketPage() {
               </button>
               <button
                 onClick={handleList}
-                disabled={!selectedRelicId || !listPrice || Number(listPrice) <= 0}
+                disabled={
+                  !selectedRelicId ||
+                  !listPrice ||
+                  Number(listPrice) <= 0 ||
+                  listMutation.isPending
+                }
                 className="rounded bg-coc-gold px-4 py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow disabled:opacity-50"
               >
-                确认上架
+                {listMutation.isPending ? '上架中...' : '确认上架'}
               </button>
             </div>
           </div>
@@ -420,7 +466,9 @@ export function RelicMarketPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-lg border border-coc-border bg-coc-bg-secondary p-6">
             <h3 className="mb-4 text-lg font-bold text-coc-parchment">购买遗物</h3>
-            <p className="mb-3 text-sm text-coc-text-muted">请选择要接收该遗物的角色卡</p>
+            <p className="mb-3 text-sm text-coc-text-muted">
+              请选择要接收该遗物的角色卡
+            </p>
             <select
               value={buyCharId}
               onChange={(e) => setBuyCharId(e.target.value)}
@@ -428,7 +476,9 @@ export function RelicMarketPage() {
             >
               <option value="">请选择</option>
               {characters.map((c) => (
-                <option key={c.id} value={c.id}>{c.name} · {c.occupation}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name} · {c.occupation}
+                </option>
               ))}
             </select>
             <div className="flex justify-end gap-2">
@@ -443,15 +493,16 @@ export function RelicMarketPage() {
               </button>
               <button
                 onClick={handleBuy}
-                disabled={!buyCharId}
+                disabled={!buyCharId || buyMutation.isPending}
                 className="rounded bg-coc-gold px-4 py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow disabled:opacity-50"
               >
-                确认购买
+                {buyMutation.isPending ? '购买中...' : '确认购买'}
               </button>
             </div>
           </div>
         </div>
       )}
+
       {/* Toast */}
       {toast && (
         <div
