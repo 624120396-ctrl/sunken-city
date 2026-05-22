@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Sparkles, BookOpen, History, Loader2, Coins, Gem } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
+import { TiltCard } from '@components/ui/TiltCard';
 
 interface DreamCardBrief {
   key: string;
@@ -203,17 +204,25 @@ export function DreamingPage() {
                 <p className="text-center text-coc-text-muted mb-6">三张暗牌悬于雾中。选择一张，决定你今晚的梦境。</p>
                 <div className="flex justify-center gap-6">
                   {candidates.map((c) => (
-                    <button
+                    <TiltCard
                       key={c.key}
-                      onClick={() => handleSelect(c.key)}
-                      disabled={loading}
-                      className="group relative w-40 h-56 bg-gradient-to-br from-coc-bg-tertiary to-coc-bg-secondary border-2 border-coc-border rounded-lg hover:border-coc-accent-gold transition-all"
+                      width="160px"
+                      height="224px"
+                      rarity={c.rarity as any}
+                      tiltIntensity={20}
                     >
-                      <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-50 transition-opacity">
-                        <Sparkles size={32} className="text-coc-accent-gold" />
-                      </div>
-                      <div className="absolute bottom-3 left-0 right-0 text-center text-xs text-coc-text-muted">溺者之牌</div>
-                    </button>
+                      <button
+                        onClick={() => handleSelect(c.key)}
+                        disabled={loading}
+                        className="w-full h-full bg-gradient-to-br from-coc-bg-tertiary to-coc-bg-secondary rounded-lg flex flex-col items-center justify-center relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-50 transition-opacity">
+                          <Sparkles size={32} className="text-coc-accent-gold" />
+                        </div>
+                        <div className="absolute bottom-3 left-0 right-0 text-center text-xs text-coc-text-muted">溺者之牌</div>
+                        <div className="absolute top-3 left-0 right-0 text-center text-[10px] text-coc-text-muted opacity-60">{c.rarity === 'legendary' ? '传说' : c.rarity === 'epic' ? '史诗' : c.rarity === 'rare' ? '稀有' : '普通'}</div>
+                      </button>
+                    </TiltCard>
                   ))}
                 </div>
               </div>
@@ -222,19 +231,27 @@ export function DreamingPage() {
             {todayDraw && (
               <div className="w-full flex flex-col md:flex-row gap-8 items-center md:items-start">
                 {/* 牌面展示 */}
-                <div className={`relative w-52 h-72 shrink-0 rounded-xl border-2 ${rarityBorder[currentCardMeta?.rarity || 'common']} overflow-hidden bg-coc-bg-tertiary`}>
-                  {currentCardMeta?.imageUrl ? (
-                    <img src={currentCardMeta.imageUrl} alt={currentCardMeta.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-coc-text-muted">
-                      <span className="text-sm">暂无图鉴素材</span>
+                <TiltCard
+                  width="208px"
+                  height="288px"
+                  rarity={(currentCardMeta?.rarity || 'common') as any}
+                  tiltIntensity={12}
+                  className="shrink-0"
+                >
+                  <div className={`w-full h-full rounded-xl overflow-hidden bg-coc-bg-tertiary relative`}>
+                    {currentCardMeta?.imageUrl ? (
+                      <img src={currentCardMeta.imageUrl} alt={currentCardMeta.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-coc-text-muted">
+                        <span className="text-sm">暂无图鉴素材</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                      <div className={`font-ritual text-lg ${rarityColor[currentCardMeta?.rarity || 'common']}`}>{currentCardMeta?.name || '未知'}</div>
+                      <div className="text-xs text-coc-text-muted">{positionLabel(todayDraw.position)}</div>
                     </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                    <div className={`font-ritual text-lg ${rarityColor[currentCardMeta?.rarity || 'common']}`}>{currentCardMeta?.name || '未知'}</div>
-                    <div className="text-xs text-coc-text-muted">{positionLabel(todayDraw.position)}</div>
                   </div>
-                </div>
+                </TiltCard>
 
                 {/* 解牌区 */}
                 <div className="flex-1 w-full">
