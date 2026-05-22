@@ -17,6 +17,7 @@ import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { MagneticButton } from '@components/ui/MagneticButton';
+import { PlayerHud } from '@components/room/PlayerHud';
 
 // ===== 新增沉浸式体验组件 =====
 import { SceneCard } from '@components/room/SceneCard';
@@ -696,7 +697,7 @@ export function RoomPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
+    <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
@@ -812,6 +813,28 @@ export function RoomPage() {
                 </Tooltip>
               </div>
             </DoubleBezelCard>
+          )}
+
+          {/* v1.5 PlayerHud */}
+          {selectedCharacter && (
+            <PlayerHud
+              character={selectedCharacter}
+              statusTags={memberStatuses[room?.members?.find(m => m.userId === user?.id)?.id || ''] || []}
+              quickSkills={(() => {
+                const qs = selectedCharacter.quickSkills
+                  ? typeof selectedCharacter.quickSkills === 'string'
+                    ? JSON.parse(selectedCharacter.quickSkills)
+                    : selectedCharacter.quickSkills
+                  : [];
+                const skills = selectedCharacter.skills
+                  ? typeof selectedCharacter.skills === 'string'
+                    ? JSON.parse(selectedCharacter.skills)
+                    : selectedCharacter.skills
+                  : {};
+                return qs.map((name: string) => ({ name, value: skills[name] || 0 })).filter((s: any) => s.value > 0);
+              })()}
+              onQuickRoll={handleRollDice}
+            />
           )}
 
           <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
@@ -1054,7 +1077,7 @@ export function RoomPage() {
             <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {/* ===== 新增：场景描述卡片 ===== */}
               {(sceneDesc || room?.isCreator) && (
-                <div className="px-4 pt-4">
+                <div className="px-4 pt-4 flex-shrink-0">
                   <SceneCard
                     description={sceneDesc}
                     isKP={!!room?.isCreator}
@@ -1064,7 +1087,7 @@ export function RoomPage() {
               )}
 
               {/* 消息列表 */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
                 {messages.length === 0 ? (
                   <EmptyState
                     icon={EmptyIcons.Messages}
@@ -1180,7 +1203,7 @@ export function RoomPage() {
               {/* 输入框 */}
               <form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-coc-border space-y-2"
+                className="p-4 border-t border-coc-border space-y-2 flex-shrink-0"
               >
                 <div className="flex items-center gap-2">
                   <QuickPhrases
@@ -1234,7 +1257,8 @@ export function RoomPage() {
 
               {/* ===== 新增：快捷掷骰栏 ===== */}
               {selectedCharacter && (
-                <QuickRollBar
+                <div className="flex-shrink-0">
+                  <QuickRollBar
                   quickSkills={(() => {
                     const qs = selectedCharacter.quickSkills
                       ? typeof selectedCharacter.quickSkills === 'string'
@@ -1265,6 +1289,7 @@ export function RoomPage() {
                   }}
                   isEditable={true}
                 />
+                </div>
               )}
             </DoubleBezelCard>
           ) : (
