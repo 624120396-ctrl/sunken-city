@@ -544,20 +544,75 @@ export function setupSocketHandlers(io: SocketIOServer) {
             },
           });
 
-          const rollData = {
-            id: Date.now().toString(),
-            sender: {
-              userId,
-              nickname: socket.user!.nickname,
-            },
-            rollType,
-            targetName,
-            targetValue,
-            rollResult,
-            rolls,
-            successLevel,
-            timestamp: new Date().toISOString(),
-          };
+        // ===== V2.1: 线索自动揭示钩子 =====
+        if (targetName && targetValue && successLevel && successLevel !== '-' && room) {
+          const isFailure = ['FUMBLE', 'FAILURE'].includes(successLevel);
+          if (!isFailure) {
+            const autoClues = await prisma.roomClue.findMany({
+              where: {
+                roomId: room.id,
+                isHidden: true,
+                autoReveal: true,
+                discoverySkill: targetName,
+                discoveryThreshold: { lte: targetValue },
+              },
+            });
+
+            for (const clue of autoClues) {
+              await prisma.roomClue.update({
+                where: { id: clue.id },
+                data: {
+                  isHidden: false,
+                  discoveredByUserId: userId,
+                  discoveredAt: new Date(),
+                },
+              });
+
+              await prisma.roomEventLog.create({
+                data: {
+                  roomId: room.id,
+                  eventType: 'CLUE_DISCOVERED',
+                  payload: JSON.stringify({
+                    clueId: clue.id,
+                    clueTitle: clue.title,
+                    discoveredBy: socket.user!.nickname,
+                    skill: targetName,
+                    rollResult,
+                    successLevel,
+                    auto: true,
+                  }),
+                  userId,
+                },
+              });
+            }
+
+            if (autoClues.length > 0) {
+              // 广播线索揭示事件
+              io.to(roomId).emit('clue:discovered', {
+                clues: autoClues.map(c => ({ id: c.id, title: c.title })),
+                discoveredBy: socket.user!.nickname,
+                skill: targetName,
+              });
+            }
+          }
+        }
+
+        const rollData = {
+          id: Date.now().toString(),
+          sender: {
+            userId,
+            nickname: socket.user!.nickname,
+          },
+          rollType,
+          targetName,
+          targetValue,
+          rollResult,
+          rolls,
+          successLevel,
+          timestamp: new Date().toISOString(),
+          // V2.1: 附加自动揭示的线索
+          revealedClues: undefined as any,
+        };
 
           if (isSecret) {
             // 暗骰：发送者和 KP 看到真实结果

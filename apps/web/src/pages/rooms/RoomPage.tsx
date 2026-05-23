@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -30,6 +30,9 @@ import { StaggerList, StaggerItem } from '@components/ui/Animation';
 // ===== V2.1 新增 =====
 import { RoomStatusBar } from '@components/room/RoomStatusBar';
 import { RoomEventLogPanel } from '@components/room/RoomEventLogPanel';
+import { CluePanel } from '@components/room/CluePanel';
+import { NpcFocusPanel } from '@components/room/NpcFocusPanel';
+import { CombatTimeline } from '@components/room/CombatTimeline';
 
 interface Room {
   id: string;
@@ -226,6 +229,9 @@ export function RoomPage() {
   }>>([]);
   const [showStats, setShowStats] = useState(false);
   const [showEventLog, setShowEventLog] = useState(false);
+  const [showCluePanel, setShowCluePanel] = useState(false);
+  const [showNpcPanel, setShowNpcPanel] = useState(false);
+  const [showCombatTimeline, setShowCombatTimeline] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -767,6 +773,30 @@ export function RoomPage() {
               </span>
             )}
           </button>
+          {/* ===== V2.1 新增：线索按钮 ===== */}
+          <button
+            onClick={() => setShowCluePanel(!showCluePanel)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showCluePanel ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
+          >
+            <Search size={14} />
+            线索
+          </button>
+          {/* ===== V2.1 新增：NPC按钮 ===== */}
+          <button
+            onClick={() => setShowNpcPanel(!showNpcPanel)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showNpcPanel ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
+          >
+            <User size={14} />
+            NPC
+          </button>
+          {/* ===== V2.1 新增：战斗时间线按钮 ===== */}
+          <button
+            onClick={() => setShowCombatTimeline(!showCombatTimeline)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showCombatTimeline ? 'bg-coc-blood/10 border-coc-blood/30' : ''}`}
+          >
+            <Swords size={14} />
+            战斗
+          </button>
           {/* ===== V2.1 新增：事件日志按钮 ===== */}
           <button
             onClick={() => setShowEventLog(!showEventLog)}
@@ -828,6 +858,16 @@ export function RoomPage() {
 
       {/* 主内容区 */}
       <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
+        {/* ===== V2.1 新增：线索面板（左侧抽屉） ===== */}
+        {showCluePanel && (
+          <CluePanel
+            roomId={roomId || ''}
+            isOpen={showCluePanel}
+            onClose={() => setShowCluePanel(false)}
+            isKP={!!room?.isCreator}
+          />
+        )}
+
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
         {/* 左侧：成员列表 */}
         <div className="lg:col-span-1 space-y-4 overflow-y-auto min-h-0">
@@ -1449,7 +1489,28 @@ export function RoomPage() {
           isKP={!!room?.isCreator}
         />
       )}
+      {/* ===== V2.1 新增：NPC 焦点面板 ===== */}
+      {showNpcPanel && (
+        <NpcFocusPanel
+          roomId={roomId || ''}
+          isOpen={showNpcPanel}
+          onClose={() => setShowNpcPanel(false)}
+          currentSceneId={room?.currentScene?.id}
+          isKP={!!room?.isCreator}
+        />
+      )}
     </div>
+
+    {/* ===== V2.1 新增：战斗时间线（底部弹层） ===== */}
+    {showCombatTimeline && (
+      <CombatTimeline
+        roomId={roomId || ''}
+        isOpen={showCombatTimeline}
+        onClose={() => setShowCombatTimeline(false)}
+        isKP={!!room?.isCreator}
+        userId={user?.id}
+      />
+    )}
 
       {/* 选择角色弹窗 */}
       <Modal
