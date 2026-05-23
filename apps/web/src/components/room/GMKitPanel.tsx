@@ -36,6 +36,11 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   const [loading, setLoading] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [newNoteContent, setNewNoteContent] = useState('');
+  // 场景预设创建表单
+  const [newPresetName, setNewPresetName] = useState('');
+  const [newPresetAtmosphere, setNewPresetAtmosphere] = useState('normal');
+  const [newPresetDesc, setNewPresetDesc] = useState('');
+  const [newPresetImage, setNewPresetImage] = useState('');
 
   useEffect(() => {
     if (!isOpen || !roomId) return;
@@ -86,6 +91,41 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
       loadData();
     } catch (err) {
       console.error('删除笔记失败:', err);
+    }
+  }
+
+  async function createPreset() {
+    if (!newPresetName.trim()) return;
+    try {
+      const res = await apiFetch(`/api/rooms/${roomId}/presets`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newPresetName.trim(),
+          atmosphere: newPresetAtmosphere,
+          sceneDesc: newPresetDesc,
+          sceneImageUrl: newPresetImage || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNewPresetName('');
+        setNewPresetAtmosphere('normal');
+        setNewPresetDesc('');
+        setNewPresetImage('');
+        loadData();
+      }
+    } catch (err) {
+      console.error('创建场景预设失败:', err);
+    }
+  }
+
+  async function deletePreset(id: string) {
+    if (!confirm('确定删除此场景预设？')) return;
+    try {
+      await apiFetch(`/api/rooms/${roomId}/presets/${id}`, { method: 'DELETE' });
+      loadData();
+    } catch (err) {
+      console.error('删除场景预设失败:', err);
     }
   }
 
@@ -192,6 +232,49 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
 
         {tab === 'presets' && (
           <div className="space-y-2">
+            <div className="space-y-2 mb-3">
+              <input
+                value={newPresetName}
+                onChange={e => setNewPresetName(e.target.value)}
+                placeholder="场景名称..."
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={newPresetAtmosphere}
+                  onChange={e => setNewPresetAtmosphere(e.target.value)}
+                  className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment"
+                >
+                  <option value="normal">正常</option>
+                  <option value="dark">黑暗</option>
+                  <option value="horror">恐怖</option>
+                  <option value="mystery">神秘</option>
+                  <option value="warm">温暖</option>
+                </select>
+                <input
+                  value={newPresetImage}
+                  onChange={e => setNewPresetImage(e.target.value)}
+                  placeholder="图片URL（可选）"
+                  className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                />
+              </div>
+              <textarea
+                value={newPresetDesc}
+                onChange={e => setNewPresetDesc(e.target.value)}
+                placeholder="场景描述..."
+                rows={2}
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+              />
+              <button
+                onClick={createPreset}
+                disabled={!newPresetName.trim()}
+                className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+              >
+                <Plus size={12} /> 创建场景预设
+              </button>
+            </div>
+
+            {/* 预设列表 */}
             {presets.length === 0 && !loading && (
               <EmptyState icon={EmptyIcons.Investigator} title="暂无场景预设" description="KP 可创建场景预设快速切换氛围" size="sm" animate={false} />
             )}
@@ -199,12 +282,20 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
               <div key={preset.id} className="p-2 rounded bg-coc-bg-elevated/30 border border-coc-border/20">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-ritual text-coc-parchment">{preset.name}</span>
-                  <button
-                    onClick={() => applyPreset(preset.id)}
-                    className="px-2 py-0.5 text-[10px] bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors flex items-center gap-1"
-                  >
-                    <Wand2 size={10} /> 应用
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => applyPreset(preset.id)}
+                      className="px-2 py-0.5 text-[10px] bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors flex items-center gap-1"
+                    >
+                      <Wand2 size={10} /> 应用
+                    </button>
+                    <button
+                      onClick={() => deletePreset(preset.id)}
+                      className="p-0.5 text-coc-text-muted hover:text-coc-blood transition-colors"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
                 </div>
                 <div className="text-[10px] text-coc-text-muted">
                   氛围: {preset.atmosphere}
