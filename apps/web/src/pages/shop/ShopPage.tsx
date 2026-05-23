@@ -1,5 +1,6 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { Tooltip } from '@components/ui/Tooltip';
+import { ParticleBurst } from '@components/ui/ParticleBurst';
 import { useState } from 'react';
 import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
@@ -38,6 +39,7 @@ export function ShopPage() {
   const { user, updateUser } = useAuthStore();
   const { showToast } = useToast();
   const [category, setCategory] = useState('');
+  const [burstItem, setBurstItem] = useState<string | null>(null);
 
   const {
     data: items,
@@ -54,7 +56,9 @@ export function ShopPage() {
     mutationFn: (item: ShopItem) => purchaseItem(item.key, 1),
     onSuccess: (res, item) => {
       updateUser(res.user);
+      setBurstItem(item.key);
       showToast(`购买成功！获得 ${item.name}`, 'success');
+      setTimeout(() => setBurstItem(null), 800);
     },
     onError: (err: any) => {
       showToast('购买失败：' + err.message, 'error');
@@ -164,28 +168,29 @@ export function ShopPage() {
 
                 <p className="text-sm text-coc-parchment-dim line-clamp-2">{item.description}</p>
 
-                <div className="mt-auto pt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-sm">
-                    {item.currency === 'coin' ? (
-                      <>
-                        <Coins size={14} className="text-coc-gold" />
-                        <span className="text-coc-parchment">{item.price}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={14} className="text-purple-400" />
-                        <span className="text-coc-parchment">{item.price}</span>
-                      </>
-                    )}
+                  <div className="mt-auto pt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm">
+                      {item.currency === 'coin' ? (
+                        <>
+                          <Coins size={14} className="text-coc-gold" />
+                          <span className="text-coc-parchment">{item.price}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={14} className="text-purple-400" />
+                          <span className="text-coc-parchment">{item.price}</span>
+                        </>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handlePurchase(item)}
+                      disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
+                      className="relative btn-v2 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
+                    >
+                      <ParticleBurst trigger={burstItem === item.key} onComplete={() => setBurstItem(null)} />
+                      {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handlePurchase(item)}
-                    disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
-                    className="btn-v2 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
-                  >
-                    {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
-                  </button>
-                </div>
               </div>
             </div>
           ))

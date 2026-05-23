@@ -103,7 +103,9 @@ function PostRow({
     <Link
       key={post.id}
       to={`/forums/${post.id}`}
-      className="group block p-4 rounded border border-coc-border bg-coc-bg-tertiary hover:border-coc-gold/50 transition-colors relative overflow-hidden"
+      className={`group block p-4 rounded border border-coc-border hover:border-coc-gold/50 transition-colors relative overflow-hidden ${
+        post.isEssence ? 'bg-gradient-to-r from-coc-gold/5 to-transparent' : 'bg-coc-bg-tertiary'
+      }`}
     >
       {/* hover 金色竖线 */}
       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-coc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
