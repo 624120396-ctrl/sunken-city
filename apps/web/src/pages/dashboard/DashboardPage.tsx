@@ -323,8 +323,6 @@ export function DashboardPage() {
                   icon={action.icon}
                   title={action.title}
                   subtitle={action.subtitle}
-                  gradient={action.gradient}
-                  glow
                 />
               </motion.div>
             ))}
