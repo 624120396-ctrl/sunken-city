@@ -247,7 +247,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
   }
 });
 
-// 加入房间
+// 加入房间（带快照检测）
 router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
@@ -256,7 +256,11 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
 
     const room = await prisma.room.findUnique({
       where: { roomId },
-      include: { members: true },
+      include: {
+        members: {
+          include: { character: true },
+        },
+      },
     });
 
     if (!room) {
@@ -267,32 +271,71 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
       throw new AppError('ROOM_CLOSED', '房间已关闭', 400);
     }
 
-    // 检查是否已在房间中
-    const existingMember = room.members.find(m => m.userId === userId);
+    // 检查是否已在房间中（未离开）
+    const existingMember = room.members.find(m => m.userId === userId && !m.leftAt);
     if (existingMember) {
       throw new AppError('ALREADY_MEMBER', '你已在房间中', 400);
     }
 
-    // 加入房间
-    const member = await prisma.roomMember.create({
-      data: {
-        roomId: room.id,
-        userId,
-        characterId,
-        role: 'PLAYER',
-      },
-    });
+    // 检查是否有之前的快照（已离开的成员）
+    const leftMember = room.members.find(m => m.userId === userId && m.leftAt);
+    let snapshot: any = null;
+    if (leftMember) {
+      const snapshots = await prisma.memberSnapshot.findMany({
+        where: { roomMemberId: leftMember.id },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+      if (snapshots.length > 0) {
+        snapshot = JSON.parse(snapshots[0].snapshotData);
+      }
+    }
 
+    let member: any;
+    if (leftMember) {
+      // 恢复已离开的成员
+      member = await prisma.roomMember.update({
+        where: { id: leftMember.id },
+        data: {
+          leftAt: null,
+          characterId: characterId || leftMember.characterId,
+          ...(snapshot?.statusTags && { statusTags: JSON.stringify(snapshot.statusTags) }),
+        },
+      });
+    } else {
+      // 新成员
+      member = await prisma.roomMember.create({
+        data: {
+          roomId: room.id,
+          userId,
+          characterId,
+          role: 'PLAYER',
+        },
+      });
+    }
+
+    // 如果有快照，返回快照数据供前端选择是否恢复
     res.json({
       success: true,
-      data: { member },
+      data: {
+        member,
+        snapshot: snapshot
+          ? {
+              hp: snapshot.hp,
+              mp: snapshot.mp,
+              san: snapshot.san,
+              statusTags: snapshot.statusTags,
+              createdAt: snapshot.createdAt,
+            }
+          : null,
+      },
     });
   } catch (error) {
     next(error);
   }
 });
 
-// 离开房间
+// 离开房间（带快照归档）
 router.post('/:roomId/leave', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
@@ -300,14 +343,18 @@ router.post('/:roomId/leave', authMiddleware, async (req: AuthRequest, res, next
 
     const room = await prisma.room.findUnique({
       where: { roomId },
-      include: { members: true },
+      include: {
+        members: {
+          include: { character: true },
+        },
+      },
     });
 
     if (!room) {
       throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
     }
 
-    const member = room.members.find(m => m.userId === userId);
+    const member = room.members.find(m => m.userId === userId && !m.leftAt);
     if (!member) {
       throw new AppError('NOT_MEMBER', '你不是房间成员', 400);
     }
@@ -317,6 +364,27 @@ router.post('/:roomId/leave', authMiddleware, async (req: AuthRequest, res, next
       throw new AppError('KP_CANNOT_LEAVE', 'KP不能离开房间，请关闭房间', 400);
     }
 
+    // 创建成员快照
+    const snapshotData = {
+      hp: member.character?.hp || 10,
+      mp: member.character?.mp || 10,
+      san: member.character?.san || 50,
+      maxHp: member.character?.maxHp || 10,
+      maxMp: member.character?.maxMp || 10,
+      maxSan: member.character?.maxSan || 50,
+      statusTags: JSON.parse(member.statusTags || '[]'),
+      characterId: member.characterId,
+      leftAt: new Date().toISOString(),
+    };
+
+    await prisma.memberSnapshot.create({
+      data: {
+        roomMemberId: member.id,
+        snapshotData: JSON.stringify(snapshotData),
+        reason: 'member_left',
+      },
+    });
+
     await prisma.roomMember.update({
       where: { id: member.id },
       data: { leftAt: new Date() },
@@ -325,6 +393,7 @@ router.post('/:roomId/leave', authMiddleware, async (req: AuthRequest, res, next
     res.json({
       success: true,
       message: '已离开房间',
+      data: { snapshotCreated: true },
     });
   } catch (error) {
     next(error);

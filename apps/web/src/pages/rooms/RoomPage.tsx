@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -33,6 +33,7 @@ import { RoomEventLogPanel } from '@components/room/RoomEventLogPanel';
 import { CluePanel } from '@components/room/CluePanel';
 import { NpcFocusPanel } from '@components/room/NpcFocusPanel';
 import { CombatTimeline } from '@components/room/CombatTimeline';
+import { GMKitPanel } from '@components/room/GMKitPanel';
 
 interface Room {
   id: string;
@@ -232,6 +233,7 @@ export function RoomPage() {
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showNpcPanel, setShowNpcPanel] = useState(false);
   const [showCombatTimeline, setShowCombatTimeline] = useState(false);
+  const [showGMKit, setShowGMKit] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -773,6 +775,16 @@ export function RoomPage() {
               </span>
             )}
           </button>
+          {/* ===== V2.1 新增：GM 工具箱按钮（仅KP） ===== */}
+          {room?.isCreator && (
+            <button
+              onClick={() => setShowGMKit(!showGMKit)}
+              className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showGMKit ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
+            >
+              <Moon size={14} />
+              KP工具
+            </button>
+          )}
           {/* ===== V2.1 新增：线索按钮 ===== */}
           <button
             onClick={() => setShowCluePanel(!showCluePanel)}
@@ -1487,6 +1499,14 @@ export function RoomPage() {
           isOpen={showEventLog}
           onClose={() => setShowEventLog(false)}
           isKP={!!room?.isCreator}
+        />
+      )}
+      {/* ===== V2.1 新增：GM 工具箱面板 ===== */}
+      {showGMKit && room?.isCreator && (
+        <GMKitPanel
+          roomId={roomId || ''}
+          isOpen={showGMKit}
+          onClose={() => setShowGMKit(false)}
         />
       )}
       {/* ===== V2.1 新增：NPC 焦点面板 ===== */}
