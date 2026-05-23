@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon, GitBranch, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
 import { Tooltip } from '@components/ui/Tooltip';
-import { StatusBar } from '@components/ui/StatusBar';
 import { UserProfileCard } from '@components/UserProfileCard';
 import { useSocket } from '@hooks/useSocket';
 import { getSuccessExplanation, getSkillExplanation } from '@lib/dice-explanations';
@@ -13,7 +12,7 @@ import { QuickPhrases } from '@components/room/QuickPhrases';
 import { MentionInput } from '@components/room/MentionInput';
 import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
-import { ClueMarker, ClueBoard } from '@components/room/ClueMarker';
+import { ClueMarker } from '@components/room/ClueMarker';
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { MagneticButton } from '@components/ui/MagneticButton';
@@ -24,7 +23,6 @@ import { SceneCard } from '@components/room/SceneCard';
 import { StatusTags } from '@components/room/StatusTags';
 import { PrivateChatPanel } from '@components/room/PrivateChatPanel';
 import { QuickRollBar } from '@components/room/QuickRollBar';
-import { CountdownPanel } from '@components/room/CountdownPanel';
 import { RoomStatsPanel } from '@components/room/RoomStatsPanel';
 import { StaggerList, StaggerItem } from '@components/ui/Animation';
 // ===== V2.1 新增 =====
@@ -224,7 +222,7 @@ export function RoomPage() {
   const [memberStatuses, setMemberStatuses] = useState<Record<string, string[]>>({});
   const [showPrivateChat, setShowPrivateChat] = useState(false);
   const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
-  const [countdowns, setCountdowns] = useState<Array<{
+  const [_countdowns, setCountdowns] = useState<Array<{
     id: string;
     title: string;
     duration: number;
@@ -532,31 +530,6 @@ export function RoomPage() {
     }
   };
 
-  // 创建倒计时
-  const createCountdown = async (title: string, duration: number) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/countdowns`, {
-        method: 'POST',
-        body: JSON.stringify({ title, duration }),
-      });
-      fetchCountdowns();
-    } catch (error) {
-      console.error('创建倒计时失败:', error);
-    }
-  };
-
-  // 停止倒计时
-  const stopCountdown = async (countdownId: string) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/countdowns/${countdownId}/stop`, {
-        method: 'POST',
-      });
-      fetchCountdowns();
-    } catch (error) {
-      console.error('停止倒计时失败:', error);
-    }
-  };
-
   const fetchMyCharacters = async () => {
     try {
       const response = await apiFetch('/characters');
@@ -760,7 +733,7 @@ export function RoomPage() {
           <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} title={connected ? '已连接' : '未连接'} />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
             className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
@@ -768,7 +741,6 @@ export function RoomPage() {
             {activeTab === 'chat' ? <Swords size={14} /> : <Send size={14} />}
             {activeTab === 'chat' ? '战斗' : '聊天'}
           </button>
-          {/* ===== 新增：私聊按钮 ===== */}
           <button
             onClick={() => setShowPrivateChat(true)}
             className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1 relative"
@@ -776,107 +748,59 @@ export function RoomPage() {
             <MessageSquare size={14} />
             私聊
             {privateUnreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-coc-accent-red text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-coc-accent-red text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
                 {privateUnreadCount}
               </span>
             )}
           </button>
-          {/* ===== V2.1 新增：GM 工具箱按钮（仅KP） ===== */}
+          <div className="relative group">
+            <button className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1">
+              <span>更多</span>
+              <ChevronDown size={12} />
+            </button>
+            <div className="absolute right-0 top-full mt-1 w-40 bg-coc-bg-secondary border border-coc-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1">
+              {[
+                { label: '线索', icon: Search, show: showCluePanel, toggle: () => setShowCluePanel(!showCluePanel) },
+                { label: 'NPC', icon: User, show: showNpcPanel, toggle: () => setShowNpcPanel(!showNpcPanel) },
+                { label: '战斗', icon: Swords, show: showCombatTimeline, toggle: () => setShowCombatTimeline(!showCombatTimeline) },
+                { label: 'AI', icon: Sparkles, show: showAI, toggle: () => setShowAI(!showAI) },
+                { label: '子房间', icon: GitBranch, show: showSubRooms, toggle: () => setShowSubRooms(!showSubRooms) },
+                { label: 'Log', icon: ScrollText, show: showLogPanel, toggle: () => setShowLogPanel(!showLogPanel) },
+                { label: '统计', icon: BarChart3, show: showStats, toggle: () => { fetchRoomStats(); setShowStats(!showStats); } },
+                { label: '报告', icon: FileText, show: false, link: `/rooms/${roomId}/report` },
+                { label: '投骰', icon: History, show: false, link: `/rooms/${roomId}/dice-history` },
+              ].map(item => (
+                item.link ? (
+                  <Link key={item.label} to={item.link} className="flex items-center gap-2 px-3 py-1.5 text-sm text-coc-text-secondary hover:bg-coc-bg-tertiary hover:text-coc-text-primary transition-colors">
+                    <item.icon size={14} />
+                    {item.label}
+                  </Link>
+                ) : (
+                  <button key={item.label} onClick={item.toggle} className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${item.show ? 'text-coc-gold bg-coc-gold/5' : 'text-coc-text-secondary hover:bg-coc-bg-tertiary hover:text-coc-text-primary'}`}>
+                    <item.icon size={14} />
+                    {item.label}
+                  </button>
+                )
+              ))}
+            </div>
+          </div>
           {room?.isCreator && (
             <button
               onClick={() => setShowGMKit(!showGMKit)}
-              className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showGMKit ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
+              className={`btn-v2 text-sm flex items-center gap-1 border-coc-gold/30 ${showGMKit ? 'bg-coc-gold/15 text-coc-gold' : 'coc-btn-secondary text-coc-gold'}`}
             >
-              <Moon size={14} />
-              KP工具
+              <Crown size={14} />
+              KP
             </button>
           )}
-          {/* ===== V2.1 新增：线索按钮 ===== */}
-          <button
-            onClick={() => setShowCluePanel(!showCluePanel)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showCluePanel ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
-          >
-            <Search size={14} />
-            线索
-          </button>
-          {/* ===== V2.1 新增：NPC按钮 ===== */}
-          <button
-            onClick={() => setShowNpcPanel(!showNpcPanel)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showNpcPanel ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
-          >
-            <User size={14} />
-            NPC
-          </button>
-          {/* ===== V2.1 新增：战斗时间线按钮 ===== */}
-          <button
-            onClick={() => setShowCombatTimeline(!showCombatTimeline)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showCombatTimeline ? 'bg-coc-blood/10 border-coc-blood/30' : ''}`}
-          >
-            <Swords size={14} />
-            战斗
-          </button>
-          {/* ===== V2.1 新增：AI 助手按钮 ===== */}
-          <button
-            onClick={() => setShowAI(!showAI)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showAI ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
-          >
-            <Sparkles size={14} />
-            AI
-          </button>
-          {/* ===== V2.1 新增：子房间按钮 ===== */}
-          <button
-            onClick={() => setShowSubRooms(!showSubRooms)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showSubRooms ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
-          >
-            <GitBranch size={14} />
-            子房间
-          </button>
-          {/* ===== V2.1 新增：跑团 Log 按钮 ===== */}
-          <button
-            onClick={() => setShowLogPanel(!showLogPanel)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showLogPanel ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
-          >
-            <ScrollText size={14} />
-            Log
-          </button>
-          {/* ===== 新增：统计按钮 ===== */}
-          <button
-            onClick={() => {
-              fetchRoomStats();
-              setShowStats(true);
-            }}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
-          >
-            <BarChart3 size={14} />
-            统计
-          </button>
-          <Link
-            to={`/rooms/${roomId}/report`}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
-          >
-            <FileText size={14} />
-            报告
-          </Link>
-          <Link
-            to={`/rooms/${roomId}/dice-history`}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
-          >
-            <History size={14} />
-            投骰
-          </Link>
-          <button
-            onClick={handleLeaveRoom}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
-          >
+          <div className="w-px h-5 bg-coc-border/40 mx-1" />
+          <button onClick={handleLeaveRoom} className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1">
             <DoorOpen size={14} />
             离开
           </button>
           {room?.isCreator && (
-            <button
-              onClick={handleCloseRoom}
-              className="btn-v2 coc-btn-secondary text-sm text-red-400 hover:text-red-300"
-            >
-              关闭房间
+            <button onClick={handleCloseRoom} className="btn-v2 coc-btn-secondary text-sm text-red-400 hover:text-red-300">
+              关闭
             </button>
           )}
         </div>
@@ -904,41 +828,35 @@ export function RoomPage() {
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
         {/* 左侧：成员列表 */}
-        <div className="lg:col-span-1 space-y-4 overflow-y-auto min-h-0">
-          {/* 当前状态条 - 自己的角色 */}
+        <div className="lg:col-span-1 space-y-3 overflow-y-auto min-h-0">
+          {/* 当前状态 - 水平紧凑条 */}
           {selectedCharacter && (
-            <DoubleBezelCard variant="blood" runeCorners glow innerClassName="p-4">
-              <h3 className="font-bold mb-3 flex items-center gap-2">
-                <Shield size={16} />
-                我的状态
-              </h3>
-              <div className="space-y-3">
-                <Tooltip content="生命值。归零时昏迷，负值时濒死">
-                  <StatusBar
-                    label="HP"
-                    current={selectedCharacter.hp}
-                    max={selectedCharacter.maxHp || selectedCharacter.hp || 10}
-                    color="red"
-                  />
-                </Tooltip>
-                <Tooltip content="魔法值。施法消耗，每8小时恢复1点">
-                  <StatusBar
-                    label="MP"
-                    current={selectedCharacter.mp}
-                    max={selectedCharacter.maxMp || selectedCharacter.mp || 10}
-                    color="cyan"
-                  />
-                </Tooltip>
-                <Tooltip content="理智值。遭遇恐怖事件时检定，归零时疯狂">
-                  <StatusBar
-                    label="SAN"
-                    current={selectedCharacter.san}
-                    max={selectedCharacter.maxSan || selectedCharacter.san || 50}
-                    color="gold"
-                  />
-                </Tooltip>
-              </div>
-            </DoubleBezelCard>
+            <div className="flex items-center gap-2 px-3 py-2 bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg">
+              <Tooltip content={`HP ${selectedCharacter.hp}/${selectedCharacter.maxHp || selectedCharacter.hp}`}>
+                <div className="flex-1 flex items-center gap-1">
+                  <span className="text-[10px] text-coc-accent-red font-bold">HP</span>
+                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-coc-accent-red rounded-full" style={{ width: `${(selectedCharacter.hp / (selectedCharacter.maxHp || selectedCharacter.hp || 1)) * 100}%` }} />
+                  </div>
+                </div>
+              </Tooltip>
+              <Tooltip content={`MP ${selectedCharacter.mp}/${selectedCharacter.maxMp || selectedCharacter.mp}`}>
+                <div className="flex-1 flex items-center gap-1">
+                  <span className="text-[10px] text-coc-accent-cyan font-bold">MP</span>
+                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-coc-accent-cyan rounded-full" style={{ width: `${(selectedCharacter.mp / (selectedCharacter.maxMp || selectedCharacter.mp || 1)) * 100}%` }} />
+                  </div>
+                </div>
+              </Tooltip>
+              <Tooltip content={`SAN ${selectedCharacter.san}/${selectedCharacter.maxSan || selectedCharacter.san}`}>
+                <div className="flex-1 flex items-center gap-1">
+                  <span className="text-[10px] text-yellow-400 font-bold">SAN</span>
+                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(selectedCharacter.san / (selectedCharacter.maxSan || selectedCharacter.san || 1)) * 100}%` }} />
+                  </div>
+                </div>
+              </Tooltip>
+            </div>
           )}
 
           {/* v1.5 PlayerHud */}
@@ -963,12 +881,12 @@ export function RoomPage() {
             />
           )}
 
-          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
-            <h3 className="font-bold mb-3 flex items-center gap-2">
-              <Users size={16} />
+          <div className="bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg p-3">
+            <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+              <Users size={12} />
               调查员 ({room?.members.length || 0})
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {room?.members.map((member) => (
                 <div
                   key={member.id}
@@ -1028,123 +946,16 @@ export function RoomPage() {
                 </div>
               ))}
             </div>
-          </DoubleBezelCard>
-
-          {/* 快捷投骰 - 基于角色技能 */}
-          {activeTab === 'chat' && selectedCharacter && (
-            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
-              <h3 className="font-bold mb-3 flex items-center gap-2">
-                <Dice5 size={16} />
-                快捷检定
-              </h3>
-
-              {(() => {
-                // 解析角色技能
-                const skills = selectedCharacter.skills ?
-                  (typeof selectedCharacter.skills === 'string' ? JSON.parse(selectedCharacter.skills) : selectedCharacter.skills)
-                  : {};
-
-                // 常见技能列表（优先显示）
-                const commonSkills = [
-                  { key: '侦查', default: 25 },
-                  { key: '聆听', default: 20 },
-                  { key: '图书馆', default: 20 },
-                  { key: '心理学', default: 10 },
-                  { key: '话术', default: 5 },
-                  { key: '格斗', default: 25 },
-                  { key: '闪避', default: selectedCharacter.dex ? selectedCharacter.dex / 2 : 25 },
-                  { key: '幸运', default: selectedCharacter.luck || 50 },
-                ];
-
-                // 获取实际技能值
-                const skillList = commonSkills.map(s => ({
-                  name: s.key,
-                  value: skills[s.key] || s.default,
-                }));
-
-                // 添加其他高于默认的技能
-                Object.entries(skills).forEach(([key, value]) => {
-                  if (!commonSkills.find(s => s.key === key) && typeof value === 'number' && value > 0) {
-                    skillList.push({ name: key, value });
-                  }
-                });
-
-                return (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      {skillList.slice(0, 8).map((skill) => (
-                        <Tooltip key={skill.name} content={getSkillExplanation(skill.name)}>
-                          <button
-                            onClick={() => handleRollDice(skill.name, skill.value)}
-                            className="text-sm p-2 bg-coc-bg-tertiary rounded hover:bg-coc-accent-red/20 transition-colors text-left"
-                          >
-                            <div className="font-medium">{skill.name}</div>
-                            <div className="text-xs text-coc-accent-gold">{skill.value}%</div>
-                          </button>
-                        </Tooltip>
-                      ))}
-                    </div>
-
-                    {/* 其他技能折叠区 */}
-                    {skillList.length > 8 && (
-                      <details className="text-sm">
-                        <summary className="cursor-pointer text-coc-text-secondary hover:text-coc-text-primary py-1">
-                          更多技能 ({skillList.length - 8})
-                        </summary>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          {skillList.slice(8).map((skill) => (
-                            <Tooltip key={skill.name} content={getSkillExplanation(skill.name)}>
-                              <button
-                                onClick={() => handleRollDice(skill.name, skill.value)}
-                                className="text-sm p-2 bg-coc-bg-tertiary rounded hover:bg-coc-accent-red/20 transition-colors text-left"
-                              >
-                                <div className="font-medium">{skill.name}</div>
-                                <div className="text-xs text-coc-accent-gold">{skill.value}%</div>
-                              </button>
-                            </Tooltip>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                );
-              })()}
-            </DoubleBezelCard>
-          )}
-
-          {/* 快捷投骰 - 无角色时显示默认 */}
-          {activeTab === 'chat' && !selectedCharacter && (
-            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
-              <h3 className="font-bold mb-3 flex items-center gap-2">
-                <Dice5 size={16} />
-                快捷检定
-              </h3>
-              <p className="text-sm text-coc-text-muted">加入房间后使用角色技能</p>
-            </DoubleBezelCard>
-          )}
-
-          {/* ===== 新增：倒计时器 ===== */}
-          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Timer size={16} className="text-coc-accent-gold" />
-              <h3 className="font-bold">倒计时</h3>
-            </div>
-            <CountdownPanel
-              countdowns={countdowns}
-              isKP={!!room?.isCreator}
-              onCreate={createCountdown}
-              onStop={stopCountdown}
-            />
-          </DoubleBezelCard>
+          </div>
 
           {/* 战斗控制 */}
           {activeTab === 'combat' && room?.isCreator && (
-            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4">
-              <h3 className="font-bold mb-3 flex items-center gap-2">
-                <Swords size={16} />
+            <div className="bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg p-3">
+              <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                <Swords size={12} />
                 战斗控制
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {(!combatState || combatState.status === 'IDLE' || combatState.status === 'ENDED') ? (
                   <MagneticButton
                     variant="blood"
@@ -1186,14 +997,14 @@ export function RoomPage() {
                       variant="blood"
                       size="sm"
                       onClick={handleEndCombat}
-                      className="w-full mt-2 text-red-400 flex items-center justify-center gap-2"
+                      className="w-full mt-1 text-red-400 flex items-center justify-center gap-2"
                     >
                       <Square size={16} /> 结束战斗
                     </MagneticButton>
                   </>
                 )}
               </div>
-            </DoubleBezelCard>
+            </div>
           )}
         </div>
 
@@ -1230,6 +1041,7 @@ export function RoomPage() {
                     const isMe = msg.userId === user?.id;
                     const sender = room?.members?.find(m => m.userId === msg.userId);
                     const isKPMessage = sender?.role === 'KP';
+                    const displayName = sender?.character?.name || sender?.displayedCharacter?.name || msg.nickname;
 
                     const Avatar = () => (
                       <div className="relative w-10 h-10 flex-shrink-0">
@@ -1287,10 +1099,10 @@ export function RoomPage() {
                               {isKPMessage ? (
                                 <>
                                   <Crown size={14} className="text-coc-accent-gold" />
-                                  <span className="text-coc-accent-gold">{msg.nickname}</span>
+                                  <span className="text-coc-accent-gold">{displayName}</span>
                                 </>
                               ) : (
-                                <span className="text-coc-text-primary">{msg.nickname}</span>
+                                <span className="text-coc-text-primary">{displayName}</span>
                               )}
                               {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
                               <Tooltip content={new Date(msg.timestamp).toLocaleString()}>
@@ -1319,7 +1131,7 @@ export function RoomPage() {
                                 <ClueMarker
                                   messageId={msg.id}
                                   messageContent={msg.content}
-                                  nickname={msg.nickname}
+                                  nickname={displayName}
                                   timestamp={msg.timestamp}
                                   onMarkAsClue={addClue}
                                 />
@@ -1851,7 +1663,6 @@ export function RoomPage() {
 
       {/* 笔记栏和线索板 */}
       {roomId && <NotesPanel roomId={roomId} />}
-      {roomId && <ClueBoard roomId={roomId} clues={clues} onAddClue={addClue} />}
 
       {/* ===== 新增：私聊面板 ===== */}
       {roomId && (
