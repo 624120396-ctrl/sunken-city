@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon, GitBranch } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon, GitBranch, Sparkles } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -36,6 +36,7 @@ import { CombatTimeline } from '@components/room/CombatTimeline';
 import { GMKitPanel } from '@components/room/GMKitPanel';
 import { RoomLogPanel } from '@components/room/RoomLogPanel';
 import { SubRoomManager } from '@components/room/SubRoomManager';
+import { AIAssistantPanel } from '@components/room/AIAssistantPanel';
 
 interface Room {
   id: string;
@@ -238,6 +239,7 @@ export function RoomPage() {
   const [showCombatTimeline, setShowCombatTimeline] = useState(false);
   const [showGMKit, setShowGMKit] = useState(false);
   const [showSubRooms, setShowSubRooms] = useState(false);
+  const [showAI, setShowAI] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -812,6 +814,14 @@ export function RoomPage() {
           >
             <Swords size={14} />
             战斗
+          </button>
+          {/* ===== V2.1 新增：AI 助手按钮 ===== */}
+          <button
+            onClick={() => setShowAI(!showAI)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showAI ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
+          >
+            <Sparkles size={14} />
+            AI
           </button>
           {/* ===== V2.1 新增：子房间按钮 ===== */}
           <button
@@ -1511,6 +1521,14 @@ export function RoomPage() {
           isOpen={showLogPanel}
           onClose={() => setShowLogPanel(false)}
           isKP={!!room?.isCreator}
+        />
+      )}
+      {/* ===== V2.1 新增：AI 助手面板 ===== */}
+      {showAI && (
+        <AIAssistantPanel
+          roomId={roomId || ''}
+          isOpen={showAI}
+          onClose={() => setShowAI(false)}
         />
       )}
       {/* ===== V2.1 新增：子房间面板 ===== */}
