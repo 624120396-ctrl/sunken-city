@@ -152,7 +152,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* 主内容 */}
-        <main className="flex-1 overflow-auto pt-14 p-4 relative bg-coc-bg-primary/60">
+        <main className="flex-1 overflow-auto pt-14 p-4 relative">
           {children}
         </main>
       </div>
@@ -313,7 +313,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </aside>
 
       {/* 主内容 */}
-      <main className="flex-1 overflow-auto p-6 relative bg-coc-bg-primary/60">
+      <main className="flex-1 overflow-auto p-6 relative">
         {children}
       </main>
     </div>
