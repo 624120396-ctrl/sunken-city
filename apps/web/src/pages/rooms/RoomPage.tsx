@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText, Search, Moon, GitBranch } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -35,6 +35,7 @@ import { NpcFocusPanel } from '@components/room/NpcFocusPanel';
 import { CombatTimeline } from '@components/room/CombatTimeline';
 import { GMKitPanel } from '@components/room/GMKitPanel';
 import { RoomLogPanel } from '@components/room/RoomLogPanel';
+import { SubRoomManager } from '@components/room/SubRoomManager';
 
 interface Room {
   id: string;
@@ -236,6 +237,7 @@ export function RoomPage() {
   const [showNpcPanel, setShowNpcPanel] = useState(false);
   const [showCombatTimeline, setShowCombatTimeline] = useState(false);
   const [showGMKit, setShowGMKit] = useState(false);
+  const [showSubRooms, setShowSubRooms] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -810,6 +812,14 @@ export function RoomPage() {
           >
             <Swords size={14} />
             战斗
+          </button>
+          {/* ===== V2.1 新增：子房间按钮 ===== */}
+          <button
+            onClick={() => setShowSubRooms(!showSubRooms)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showSubRooms ? 'bg-coc-ether/10 border-coc-ether/30' : ''}`}
+          >
+            <GitBranch size={14} />
+            子房间
           </button>
           {/* ===== V2.1 新增：跑团 Log 按钮 ===== */}
           <button
@@ -1501,6 +1511,16 @@ export function RoomPage() {
           isOpen={showLogPanel}
           onClose={() => setShowLogPanel(false)}
           isKP={!!room?.isCreator}
+        />
+      )}
+      {/* ===== V2.1 新增：子房间面板 ===== */}
+      {showSubRooms && (
+        <SubRoomManager
+          roomId={roomId || ''}
+          isOpen={showSubRooms}
+          onClose={() => setShowSubRooms(false)}
+          isKP={!!room?.isCreator}
+          members={room?.members?.map(m => ({ userId: m.userId, nickname: m.nickname, avatarUrl: m.avatarUrl })) || []}
         />
       )}
       {/* ===== V2.1 新增：事件日志面板 ===== */}
