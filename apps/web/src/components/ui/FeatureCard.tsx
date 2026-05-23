@@ -20,7 +20,7 @@ interface FeatureCardProps {
 }
 
 export const FeatureCard = forwardRef<HTMLDivElement, FeatureCardProps>(
-  ({ icon: Icon, title, subtitle, onClick, href, className, iconClassName, bgImage = '/images/card-bg-tentacle.png', blurStrength = 'medium', overlayOpacity = 0.45 }, ref) => {
+  ({ icon: Icon, title, subtitle, onClick, href, className, iconClassName, bgImage = '/images/card-bg-tentacle.png', blurStrength = 'medium', overlayOpacity = 0.25 }, ref) => {
     const Wrapper = href ? motion.a : motion.div;
     const wrapperProps = href
       ? { href, onClick }
