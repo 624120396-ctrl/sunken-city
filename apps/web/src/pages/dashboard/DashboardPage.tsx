@@ -178,7 +178,7 @@ export function DashboardPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="card-layer-2 rounded-lg overflow-hidden relative corner-ornament corner-ornament-bottom"
+        className="coc-card-important-v2 rounded-lg overflow-hidden relative corner-ornament corner-ornament-bottom"
       >
         <div
           className="h-1"
@@ -300,11 +300,14 @@ export function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="lg:col-span-2 space-y-4"
         >
-          <div className="flex items-center gap-3">
-            <RuneSymbol symbol="gate" size={18} className="text-coc-gold" />
-            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
-              开启仪式
-            </h2>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <RuneSymbol symbol="gate" size={18} className="text-coc-gold" />
+              <h2 className="text-lg font-ritual font-bold tracking-wider" style={{ color: '#FFFEFC' }}>
+                开启仪式
+              </h2>
+            </div>
+            <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.3) 0%, transparent 100%)' }} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
@@ -337,11 +340,14 @@ export function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="lg:col-span-3 space-y-4"
         >
-          <div className="flex items-center gap-3">
-            <Megaphone size={18} className="text-coc-gold" />
-            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
-              旧日低语
-            </h2>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Megaphone size={18} className="text-coc-gold" />
+              <h2 className="text-lg font-ritual font-bold tracking-wider" style={{ color: '#FFFEFC' }}>
+                旧日低语
+              </h2>
+            </div>
+            <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.3) 0%, transparent 100%)' }} />
           </div>
           <div className="card-layer-2 rounded-lg p-5">
             {announcements.length > 0 ? (
@@ -378,10 +384,13 @@ export function DashboardPage() {
         transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="flex items-center gap-3 mb-4">
-          <RuneSymbol symbol="star" size={18} className="text-coc-gold" />
-          <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
-            成长之路
-          </h2>
+          <div className="flex items-center gap-2">
+            <RuneSymbol symbol="star" size={18} className="text-coc-gold" />
+            <h2 className="text-lg font-ritual font-bold tracking-wider" style={{ color: '#FFFEFC' }}>
+              成长之路
+            </h2>
+          </div>
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.3) 0%, transparent 100%)' }} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link to="/ranks" className="group block">
@@ -424,15 +433,16 @@ export function DashboardPage() {
         transition={{ duration: 0.5, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <RuneSymbol symbol="eye" size={18} className="text-coc-blood" />
-            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
+            <h2 className="text-lg font-ritual font-bold tracking-wider" style={{ color: '#FFFEFC' }}>
               我的调查员
             </h2>
           </div>
           <Link
             to="/characters"
-            className="text-sm font-rune text-coc-gold hover:text-coc-gold-glow transition-colors tracking-wider"
+            className="text-sm font-rune hover:opacity-80 transition-opacity tracking-wider"
+            style={{ color: '#c9a227' }}
           >
             查看全部 →
           </Link>

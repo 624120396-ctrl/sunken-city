@@ -967,20 +967,97 @@
   color: #1a1a1a;
 }
 
-/* 在内容区中，卡片需要更实色的深色背景（因为底层变浅了） */
+/* ===== 内容区深色卡片文字修复 ===== */
 .content-area .card-layer-2,
-.content-area .coc-card {
-  background: linear-gradient(
-    135deg,
-    rgba(18, 18, 26, 0.92) 0%,
-    rgba(10, 10, 15, 0.95) 100%
-  );
-  border: 1px solid rgba(201, 162, 39, 0.12);
+.content-area .coc-card,
+.content-area .coc-card-v2,
+.content-area .coc-glass-v2,
+.content-area .coc-card-important {
+  color: var(--coc-v2-text);
+}
+.content-area .card-layer-2 h1,
+.content-area .card-layer-2 h2,
+.content-area .card-layer-2 h3,
+.content-area .coc-card h1,
+.content-area .coc-card h2,
+.content-area .coc-card h3,
+.content-area .coc-card-v2 h1,
+.content-area .coc-card-v2 h2,
+.content-area .coc-card-v2 h3 {
+  color: #FFFEFC;
+}
+.content-area .card-layer-2 .text-coc-parchment,
+.content-area .card-layer-2 .text-coc-text-primary,
+.content-area .card-layer-2 .font-ritual,
+.content-area .coc-card .text-coc-parchment,
+.content-area .coc-card .text-coc-text-primary,
+.content-area .coc-card .font-ritual,
+.content-area .coc-card-v2 .text-coc-parchment,
+.content-area .coc-card-v2 .text-coc-text-primary,
+.content-area .coc-card-v2 .font-ritual {
+  color: #FFFEFC !important;
+}
+.content-area .card-layer-2 .text-coc-text-muted,
+.content-area .coc-card .text-coc-text-muted,
+.content-area .coc-card-v2 .text-coc-text-muted {
+  color: #8b8375 !important;
+}
+.content-area .card-layer-2 .text-coc-gold,
+.content-area .coc-card .text-coc-gold,
+.content-area .coc-card-v2 .text-coc-gold {
+  color: #c9a227 !important;
 }
 
-.content-area .card-layer-2:hover,
-.content-area .coc-card:hover {
-  border-color: rgba(201, 162, 39, 0.25);
+/* ===== v1.7.1 内容区卡片（叠加大理石纹理） ===== */
+.content-area .card-layer-2 {
+  background-image:
+    linear-gradient(135deg, rgba(18, 18, 26, 0.88) 0%, rgba(10, 10, 15, 0.92) 100%),
+    url('/images/dark-marble-veins.jpg');
+  background-blend-mode: normal, multiply;
+  background-size: 100% 100%, cover;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(201, 162, 39, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.content-area .card-layer-2:hover {
+  border-color: rgba(201, 162, 39, 0.35);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(201, 162, 39, 0.12),
+    0 0 0 1px rgba(201, 162, 39, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 卡片顶部金色装饰线 */
+.content-area .card-layer-2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.4) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* 内容区 coc-card 同样叠加纹理 */
+.content-area .coc-card {
+  background-image:
+    linear-gradient(135deg, rgba(26, 26, 36, 0.88) 0%, rgba(10, 10, 15, 0.92) 100%),
+    url('/images/dark-marble-white.jpg');
+  background-blend-mode: normal, multiply;
+  background-size: 100% 100%, cover;
+}
+
+.content-area .coc-card-v2 {
+  background-image:
+    linear-gradient(135deg, rgba(18, 18, 26, 0.82) 0%, rgba(10, 10, 15, 0.88) 100%),
+    url('/images/dark-marble-gray.jpg');
+  background-blend-mode: normal, multiply;
+  background-size: 100% 100%, cover;
 }
 
 /* ===== v1.7.1 内容区按钮适配 ===== */
@@ -1049,7 +1126,7 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* ===== v1.7.1 金色铭牌导航（纯CSS渐变，无需图片） ===== */
+/* ===== v1.7.1 金色铭牌导航（使用笔触素材） ===== */
 .nav-plaque {
   position: relative;
   border-radius: 8px;
@@ -1058,15 +1135,11 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
   overflow: hidden;
   transition: all 0.25s var(--ease-swift);
-  background: linear-gradient(
-    135deg,
-    #6b5320 0%,
-    #9a7b2a 20%,
-    #c9a227 45%,
-    #e8d4a0 55%,
-    #c9a227 70%,
-    #7a5e2a 100%
-  );
+  background-image:
+    linear-gradient(135deg, rgba(107,83,32,0.9) 0%, rgba(154,123,42,0.9) 20%, rgba(201,162,39,0.9) 45%, rgba(232,212,160,0.9) 55%, rgba(201,162,39,0.9) 70%, rgba(122,94,42,0.9) 100%),
+    url('/images/gold-brush-stroke.png');
+  background-blend-mode: normal, overlay;
+  background-size: 100% 100%, cover;
   border: 1px solid rgba(201, 162, 39, 0.6);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
@@ -1461,14 +1534,113 @@
   color: var(--coc-v2-text);
 }
 
-/* ===== v1.7.1 页面标题 ===== */
-.page-title-v2 {
-  font-family: 'Cinzel', 'Noto Serif SC', serif;
-  font-weight: 600;
-  font-size: 28px;
-  color: var(--content-text);
-  letter-spacing: 0.02em;
-  text-shadow: none;
+/* ===== v1.7.1 标题装饰线（金箔枝叶） ===== */
+.gold-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.gold-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%);
+}
+.gold-divider-center::before,
+.gold-divider-center::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+}
+.gold-divider-center::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.4) 100%);
+}
+.gold-divider-center::after {
+  background: linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%);
+}
+.gold-divider-center .gold-vine-icon {
+  width: 24px;
+  height: 8px;
+  background-image: url('/images/gold-vine-simple.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.7;
+}
+
+/* ===== v1.7.1 重要卡片（金色大理石纹理） ===== */
+.coc-card-important-v2 {
+  background-image:
+    linear-gradient(135deg, rgba(18, 18, 26, 0.9) 0%, rgba(10, 10, 15, 0.95) 100%),
+    url('/images/dark-marble-gold.jpg');
+  background-blend-mode: normal, soft-light;
+  background-size: 100% 100%, cover;
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(201, 162, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.5s var(--ease-abyss);
+  overflow: hidden;
+  position: relative;
+}
+
+.coc-card-important-v2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(201, 162, 39, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(139, 38, 53, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.coc-card-important-v2:hover {
+  transform: scale(1.01);
+  border-color: rgba(201, 162, 39, 0.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 24px rgba(201, 162, 39, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ===== v1.7.1 神秘学角标 ===== */
+.occult-badge {
+  position: relative;
+  padding-left: 1.75rem;
+}
+.occult-badge::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+.occult-badge-eye::before { background-image: url('/images/occult-eye.png'); }
+.occult-badge-sun::before { background-image: url('/images/occult-sun.png'); }
+.occult-badge-moon::before { background-image: url('/images/occult-moon.png'); }
+.occult-badge-skull::before { background-image: url('/images/occult-skull.png'); }
+
+/* ===== v1.7.1 金箔碎片背景（危险/SAN相关区域） ===== */
+.gold-shards-bg {
+  background-image: url('/images/gold-shards.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.gold-shards-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(10,10,15,0.85) 0%, rgba(18,18,26,0.9) 100%);
+  pointer-events: none;
 }
 
 /* ===== v1.7.1 抽屉遮罩 ===== */
