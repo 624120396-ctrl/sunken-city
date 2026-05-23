@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { io } from 'socket.io-client';
-import { User, Scroll, Sparkles, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users, Ghost, Clock } from 'lucide-react';
+import { User, Scroll, Sparkles, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users, Ghost, Clock, Crown, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -370,6 +370,52 @@ export function DashboardPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Layer 2: 成长之路 — 位阶 + 印记 */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <RuneSymbol symbol="star" size={18} className="text-coc-gold" />
+          <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
+            成长之路
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link to="/ranks" className="group block">
+            <div className="card-layer-2 p-5 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-coc-gold/10 border border-coc-gold/20 flex items-center justify-center group-hover:bg-coc-gold/20 group-hover:scale-110 transition-all duration-300">
+                  <Crown className="text-coc-gold" size={22} />
+                </div>
+                <div>
+                  <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-gold transition-colors">
+                    位阶天梯
+                  </h3>
+                  <p className="text-xs text-coc-text-muted mt-1">查看位阶体系与灵魂碎片来源</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link to="/titles" className="group block">
+            <div className="card-layer-2 p-5 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-coc-blood/10 border border-coc-blood/20 flex items-center justify-center group-hover:bg-coc-blood/20 group-hover:scale-110 transition-all duration-300">
+                  <Award className="text-coc-blood-glow" size={22} />
+                </div>
+                <div>
+                  <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-blood-glow transition-colors">
+                    印记图鉴
+                  </h3>
+                  <p className="text-xs text-coc-text-muted mt-1">探索可收集的称号与成就</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </motion.div>
 
       {/* Layer 2: 调查员 */}
       <motion.div
