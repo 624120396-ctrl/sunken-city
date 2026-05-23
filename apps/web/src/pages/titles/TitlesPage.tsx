@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft, Award, Lock, Sparkles, Filter, Check, Loader2,
   Layers, Compass, Sword, Users, Waves, Star, HelpCircle, X
 } from 'lucide-react';
-import { RuneBorder } from '@components/ui/RuneBorder';
 import { useAuthStore } from '@stores/auth.store';
 import { 
   getTitles, 
@@ -163,14 +163,19 @@ export function TitlesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-coc-deep pb-12">
+    <motion.div 
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="min-h-screen bg-coc-bg pb-12"
+    >
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-40 bg-coc-abyss/95 backdrop-blur-sm border-b border-coc-void">
+      <div className="sticky top-0 z-40 overlay-layer-3 border-b border-coc-border">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link 
               to="/" 
-              className="flex items-center gap-2 text-coc-parchment-dim hover:text-coc-gold transition-colors"
+              className="flex items-center gap-2 text-coc-text-muted hover:text-coc-gold transition-colors"
             >
               <ChevronLeft size={20} />
               <span className="font-rune">返回</span>
@@ -190,8 +195,8 @@ export function TitlesPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* 收集进度 */}
-        <RuneBorder variant="gold" intensity="normal" showEdges>
-          <div className="coc-bg-parchment p-6">
+        <div className="card-layer-2 rounded-lg overflow-hidden">
+          <div className="bg-coc-bg-elevated p-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative w-24 h-24">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -200,10 +205,10 @@ export function TitlesPage() {
                     cy="50"
                     r="45"
                     fill="none"
-                    stroke="#1a1a24"
+                    stroke="#2a2a35"
                     strokeWidth="8"
                   />
-                  <circle
+                  <motion.circle
                     cx="50"
                     cy="50"
                     r="45"
@@ -212,7 +217,9 @@ export function TitlesPage() {
                     strokeWidth="8"
                     strokeDasharray={`${progress * 2.83} 283`}
                     strokeLinecap="round"
-                    className="transition-all duration-500"
+                    initial={{ strokeDasharray: "0 283" }}
+                    animate={{ strokeDasharray: `${progress * 2.83} 283` }}
+                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -226,7 +233,7 @@ export function TitlesPage() {
                 <h2 className="text-2xl font-ritual font-bold text-coc-parchment mb-2">
                   收集进度
                 </h2>
-                <p className="text-coc-parchment-dim">
+                <p className="text-coc-text-muted">
                   已收集 <span className="text-coc-gold font-bold">{unlockedCount}</span> / {totalTitles} 个印记
                 </p>
                 {displayedTitleKey && (
@@ -243,30 +250,30 @@ export function TitlesPage() {
                 onClick={() => setShowLocked(!showLocked)}
                 className={`px-4 py-2 rounded font-rune text-sm transition-colors
                   ${showLocked 
-                    ? 'bg-coc-gold/20 text-coc-gold' 
-                    : 'bg-coc-void text-coc-parchment-dim'}`}
+                    ? 'bg-coc-gold/20 text-coc-gold border border-coc-gold/40' 
+                    : 'bg-coc-bg text-coc-text-muted border border-coc-border hover:border-coc-gold/50'}`}
               >
                 {showLocked ? '显示全部' : '仅显示已解锁'}
               </button>
             </div>
           </div>
-        </RuneBorder>
+        </div>
 
         {/* 筛选器 */}
         <div className="space-y-4">
           {/* 分类筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <Filter size={16} className="text-coc-parchment-dim mr-2" />
+            <Filter size={16} className="text-coc-text-muted mr-2" />
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors
+                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors border
                   ${selectedCategory === cat.id
-                    ? 'bg-coc-gold text-coc-abyss'
-                    : 'bg-coc-void text-coc-parchment-dim hover:text-coc-parchment'}`}
+                    ? 'bg-coc-gold text-coc-abyss border-coc-gold'
+                    : 'bg-coc-bg-elevated text-coc-text-muted border-coc-border hover:border-coc-gold/50 hover:text-coc-parchment'}`}
               >
-                <cat.icon size={14} className="mr-1" />
+                <cat.icon size={14} className="inline mr-1" />
                 {cat.name}
               </button>
             ))}
@@ -274,15 +281,15 @@ export function TitlesPage() {
           
           {/* 稀有度筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <Sparkles size={16} className="text-coc-parchment-dim mr-2" />
+            <Sparkles size={16} className="text-coc-text-muted mr-2" />
             {rarities.map((rarity) => (
               <button
                 key={rarity.id}
                 onClick={() => setSelectedRarity(rarity.id)}
-                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors
+                className={`px-3 py-1.5 rounded text-sm font-rune transition-colors border
                   ${selectedRarity === rarity.id
-                    ? 'bg-coc-gold text-coc-abyss'
-                    : 'bg-coc-void text-coc-parchment-dim hover:text-coc-parchment'}`}
+                    ? 'bg-coc-gold text-coc-abyss border-coc-gold'
+                    : 'bg-coc-bg-elevated text-coc-text-muted border-coc-border hover:border-coc-gold/50'}`}
                 style={selectedRarity === rarity.id ? {} : { color: rarity.color }}
               >
                 {rarity.name}
@@ -293,164 +300,178 @@ export function TitlesPage() {
 
         {/* 印记网格 */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {filteredTitles.map((title) => {
+          {filteredTitles.map((title, i) => {
             const isUnlocked = unlockedKeys.includes(title.key);
             const isDisplayed = displayedTitleKey === title.key;
             const rarityConfig = RARITY_CONFIG[title.rarity];
             
             return (
-              <button
+              <motion.button
                 key={title.key}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: i * 0.02 }}
                 onClick={() => setSelectedTitle(title)}
                 className="text-left group"
               >
-                <RuneBorder 
-                  variant={isDisplayed ? 'gold' : isUnlocked ? 'default' : 'default'}
-                  intensity={isDisplayed ? 'normal' : 'subtle'}
-                  className={isDisplayed ? 'scale-105' : ''}
+                <div className={`card-layer-2 rounded-lg p-4 h-full transition-all ${
+                  isDisplayed ? 'ring-1 ring-coc-gold/50' : ''
+                } ${!isUnlocked ? 'opacity-60' : ''}`}
                 >
-                  <div className={`p-4 ${!isUnlocked ? 'opacity-50' : ''}`}>
-                    {/* 印记图标 */}
-                    <div className="text-center mb-3">
+                  {/* 印记图标 */}
+                  <div className="text-center mb-3">
+                    {isUnlocked ? (
                       <span className="text-4xl">{title.icon}</span>
-                    </div>
-                    
-                    {/* 稀有度标签 */}
-                    <div 
-                      className="text-xs font-rune px-2 py-0.5 rounded text-center mb-2"
-                      style={{ 
-                        backgroundColor: rarityConfig.bgColor,
-                        color: rarityConfig.color,
-                      }}
-                    >
-                      {rarityConfig.label}
-                    </div>
-                    
-                    {/* 名称 */}
-                    <h3 
-                      className="font-ritual font-bold text-sm text-center truncate"
-                      style={{ color: isUnlocked ? title.color : '#6b6558' }}
-                    >
-                      {title.name}
-                    </h3>
-                    
-                    {/* 锁定状态 */}
-                    {!isUnlocked && (
-                      <div className="flex items-center justify-center gap-1 mt-2 text-coc-parchment-faded">
-                        <Lock size={12} />
-                        <span className="text-xs font-rune">未解锁</span>
-                      </div>
-                    )}
-                    
-                    {/* 展示中标记 */}
-                    {isDisplayed && (
-                      <div className="flex items-center justify-center gap-1 mt-2 text-coc-gold">
-                        <Check size={12} />
-                        <span className="text-xs font-rune">展示中</span>
-                      </div>
+                    ) : title.isHidden ? (
+                      <HelpCircle size={36} className="mx-auto text-coc-text-muted" />
+                    ) : (
+                      <span className="text-4xl grayscale opacity-40">{title.icon}</span>
                     )}
                   </div>
-                </RuneBorder>
-              </button>
+                  
+                  {/* 稀有度标签 */}
+                  <div 
+                    className="text-xs font-rune px-2 py-0.5 rounded text-center mb-2"
+                    style={{ 
+                      backgroundColor: rarityConfig.bgColor,
+                      color: rarityConfig.color,
+                    }}
+                  >
+                    {rarityConfig.label}
+                  </div>
+                  
+                  {/* 名称 */}
+                  <h3 
+                    className="font-ritual font-bold text-sm text-center truncate"
+                    style={{ color: isUnlocked ? title.color : '#6b6558' }}
+                  >
+                    {isUnlocked ? title.name : title.isHidden ? '???' : title.name}
+                  </h3>
+                  
+                  {/* 锁定状态 */}
+                  {!isUnlocked && (
+                    <div className="flex items-center justify-center gap-1 mt-2 text-coc-text-muted">
+                      <Lock size={12} />
+                      <span className="text-xs font-rune">未解锁</span>
+                    </div>
+                  )}
+                  
+                  {/* 展示中标记 */}
+                  {isDisplayed && (
+                    <div className="flex items-center justify-center gap-1 mt-2 text-coc-gold">
+                      <Check size={12} />
+                      <span className="text-xs font-rune">展示中</span>
+                    </div>
+                  )}
+                </div>
+              </motion.button>
             );
           })}
         </div>
 
         {/* 选中印记详情 */}
-        {selectedTitle && (
-          <RuneBorder variant="gold" intensity="normal">
-            <div className="coc-bg-parchment p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-5xl">{selectedTitle.icon}</span>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span 
-                        className="text-xs font-rune px-2 py-0.5 rounded"
-                        style={{ 
-                          backgroundColor: RARITY_CONFIG[selectedTitle.rarity]?.bgColor,
-                          color: RARITY_CONFIG[selectedTitle.rarity]?.color,
-                        }}
+        <AnimatePresence>
+          {selectedTitle && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="card-layer-2 rounded-lg overflow-hidden"
+            >
+              <div className="bg-coc-bg-elevated p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-5xl">{selectedTitle.icon}</span>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span 
+                          className="text-xs font-rune px-2 py-0.5 rounded"
+                          style={{ 
+                            backgroundColor: RARITY_CONFIG[selectedTitle.rarity]?.bgColor,
+                            color: RARITY_CONFIG[selectedTitle.rarity]?.color,
+                          }}
+                        >
+                          {RARITY_CONFIG[selectedTitle.rarity]?.label}
+                        </span>
+                        <span className="text-xs text-coc-text-muted">
+                          {CATEGORY_CONFIG[selectedTitle.category]?.label}
+                        </span>
+                      </div>
+                      <h3 
+                        className="text-2xl font-ritual font-bold"
+                        style={{ color: selectedTitle.color }}
                       >
-                        {RARITY_CONFIG[selectedTitle.rarity]?.label}
-                      </span>
-                      <span className="text-xs text-coc-parchment-dim">
-                        {CATEGORY_CONFIG[selectedTitle.category]?.label}
-                      </span>
+                        {selectedTitle.name}
+                      </h3>
                     </div>
-                    <h3 
-                      className="text-2xl font-ritual font-bold"
-                      style={{ color: selectedTitle.color }}
-                    >
-                      {selectedTitle.name}
-                    </h3>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setSelectedTitle(null)}
+                    className="text-coc-text-muted hover:text-coc-parchment"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <p className="text-coc-text-muted mb-4">
+                  {selectedTitle.description}
+                </p>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-coc-bg rounded border border-coc-border">
+                    <span className="text-sm text-coc-text-muted">获取条件</span>
+                    <span className="text-sm text-coc-parchment font-rune">
+                      {selectedTitle.isHidden && !unlockedKeys.includes(selectedTitle.key)
+                        ? selectedTitle.hint || '???'
+                        : selectedTitle.condition}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-coc-bg rounded border border-coc-border">
+                    <span className="text-sm text-coc-text-muted">奖励灵魂碎片</span>
+                    <span className="text-sm text-coc-gold font-rune">
+                      +{selectedTitle.expReward} SP
+                    </span>
                   </div>
                 </div>
-                
-                <button 
-                  onClick={() => setSelectedTitle(null)}
-                  className="text-coc-parchment-faded hover:text-coc-parchment"
-                >
-                  <X size={20} />
-                </button>
-              </div>
 
-              <p className="text-coc-parchment-dim mb-4">
-                {selectedTitle.description}
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-coc-abyss/50 rounded">
-                  <span className="text-sm text-coc-parchment-dim">获取条件</span>
-                  <span className="text-sm text-coc-parchment font-rune">
-                    {selectedTitle.isHidden && !unlockedKeys.includes(selectedTitle.key)
-                      ? selectedTitle.hint || '???'
-                      : selectedTitle.condition}
-                  </span>
+                {/* 操作按钮 */}
+                <div className="mt-6 flex gap-3">
+                  {unlockedKeys.includes(selectedTitle.key) ? (
+                    <>
+                      {displayedTitleKey === selectedTitle.key ? (
+                        <button
+                          onClick={() => handleSetDisplayed(null)}
+                          disabled={settingDisplay === 'none'}
+                          className="flex-1 py-2 bg-coc-bg text-coc-text-muted rounded font-rune
+                                   hover:bg-coc-bg-elevated transition-colors border border-coc-border disabled:opacity-50"
+                        >
+                          {settingDisplay === 'none' ? '设置中...' : '取消展示'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleSetDisplayed(selectedTitle.key)}
+                          disabled={settingDisplay === selectedTitle.key}
+                          className="flex-1 py-2 bg-coc-gold text-coc-abyss rounded font-rune
+                                   hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
+                        >
+                          {settingDisplay === selectedTitle.key ? '设置中...' : '设为展示'}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex-1 py-2 bg-coc-bg/50 text-coc-text-muted rounded font-rune text-center border border-coc-border">
+                      尚未解锁
+                    </div>
+                  )}
                 </div>
-                
-                <div className="flex items-center justify-between p-3 bg-coc-abyss/50 rounded">
-                  <span className="text-sm text-coc-parchment-dim">奖励灵魂碎片</span>
-                  <span className="text-sm text-coc-gold font-rune">
-                    +{selectedTitle.expReward} SP
-                  </span>
-                </div>
               </div>
-
-              {/* 操作按钮 */}
-              <div className="mt-6 flex gap-3">
-                {unlockedKeys.includes(selectedTitle.key) ? (
-                  <>
-                    {displayedTitleKey === selectedTitle.key ? (
-                      <button
-                        onClick={() => handleSetDisplayed(null)}
-                        disabled={settingDisplay === 'none'}
-                        className="flex-1 py-2 bg-coc-void text-coc-parchment-dim rounded font-rune
-                                 hover:bg-coc-void/80 transition-colors disabled:opacity-50"
-                      >
-                        {settingDisplay === 'none' ? '设置中...' : '取消展示'}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleSetDisplayed(selectedTitle.key)}
-                        disabled={settingDisplay === selectedTitle.key}
-                        className="flex-1 py-2 bg-coc-gold text-coc-abyss rounded font-rune
-                                 hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
-                      >
-                        {settingDisplay === selectedTitle.key ? '设置中...' : '设为展示'}
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex-1 py-2 bg-coc-void/50 text-coc-parchment-faded rounded font-rune text-center">
-                    尚未解锁
-                  </div>
-                )}
-              </div>
-            </div>
-          </RuneBorder>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

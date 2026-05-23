@@ -1,7 +1,6 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { RuneBorder } from '@components/ui/RuneBorder';
 import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 import { ItemCard } from '@components/items/ItemCard';
 import { Backpack } from 'lucide-react';
@@ -12,11 +11,11 @@ import { useToast } from '@components/ui/Toast';
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
 const rarityGlowClass: Record<string, string> = {
-  common: 'border-coc-parchment-dim shadow-none',
-  rare: 'border-coc-ether shadow-[0_0_12px_rgba(59,130,246,0.25)]',
-  epic: 'border-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.35)]',
-  legendary: 'border-orange-400 shadow-[0_0_18px_rgba(251,146,60,0.45)]',
-  mythical: 'border-rose-500 shadow-[0_0_22px_rgba(244,63,94,0.55)]',
+  common: 'border-coc-text-muted shadow-none',
+  rare: 'border-coc-gold shadow-[0_0_12px_rgba(201,162,39,0.25)]',
+  epic: 'border-coc-blood shadow-[0_0_14px_rgba(139,38,53,0.30)]',
+  legendary: 'border-coc-gold shadow-[0_0_18px_rgba(201,162,39,0.45)]',
+  mythical: 'border-coc-blood shadow-[0_0_22px_rgba(139,38,53,0.40)]',
 };
 
 const rarityLabel: Record<string, string> = {
@@ -222,8 +221,8 @@ export function InventoryPage() {
       </div>
 
       {tab === 'general' && (
-        <RuneBorder variant="gold" intensity="subtle">
-          <div className="bg-coc-bg-secondary p-4">
+        <div className="card-layer-2 rounded-lg overflow-hidden">
+          <div className="bg-coc-bg-elevated p-4">
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : generalItems.length === 0 ? (
@@ -262,12 +261,12 @@ export function InventoryPage() {
               </div>
             )}
           </div>
-        </RuneBorder>
+        </div>
       )}
 
       {tab === 'titles' && (
-        <RuneBorder variant="madness" intensity="subtle">
-          <div className="bg-coc-bg-secondary p-4">
+        <div className="card-layer-2 rounded-lg overflow-hidden">
+          <div className="bg-coc-bg-elevated p-4">
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : titleItems.length === 0 ? (
@@ -295,13 +294,13 @@ export function InventoryPage() {
               </div>
             )}
           </div>
-        </RuneBorder>
+        </div>
       )}
 
       {tab === 'relics' && (
         <div className="space-y-4">
-          <RuneBorder variant="gold" intensity="subtle">
-            <div className="bg-coc-bg-secondary p-4">
+          <div className="card-layer-2 rounded-lg overflow-hidden">
+            <div className="bg-coc-bg-elevated p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
@@ -323,10 +322,10 @@ export function InventoryPage() {
                 </div>
               )}
             </div>
-          </RuneBorder>
+          </div>
 
-          <RuneBorder variant="madness" intensity="subtle">
-            <div className="bg-coc-bg-secondary p-4">
+          <div className="card-layer-2 rounded-lg overflow-hidden">
+            <div className="bg-coc-bg-elevated p-4">
               <h2 className="mb-3 text-sm font-bold text-coc-parchment">未绑定遗物</h2>
               {unboundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
@@ -353,19 +352,19 @@ export function InventoryPage() {
                 </div>
               )}
             </div>
-          </RuneBorder>
+          </div>
         </div>
       )}
 
       {/* 开箱结果弹窗 */}
       {lootboxResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overlay-layer-3 p-4">
           <div
             className={cn(
-              'relative w-full max-w-sm rounded-xl border-2 bg-coc-bg-secondary p-5 transition-shadow duration-300',
+              'relative w-full max-w-sm rounded-xl border-2 bg-coc-bg-overlay p-5 transition-shadow duration-300 modal-layer-3',
               flash
                 ? 'border-coc-gold shadow-[0_0_40px_rgba(251,191,36,0.6)]'
-                : 'border-coc-madness'
+                : 'border-coc-blood'
             )}
           >
             <div className="mb-2 text-center">
