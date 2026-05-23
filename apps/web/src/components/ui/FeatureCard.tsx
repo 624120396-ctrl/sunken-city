@@ -36,17 +36,20 @@ export const FeatureCard = forwardRef<HTMLDivElement, FeatureCardProps>(
           className
         )}
       >
-        {/* 背景图 — 全尺寸覆盖 */}
+        {/* 背景图 — 缩小居中 */}
         <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-          style={{ backgroundImage: `url(${bgImage})` }}
+          className="absolute inset-0 bg-no-repeat bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: '70% 70%',
+          }}
         />
 
         {/* 磨砂玻璃内容层 — 唯一的前景层，不额外加遮罩 */}
         <div
           className={cn(
             'relative m-2 rounded-lg p-5',
-            'bg-white/[0.03] backdrop-blur-[10px]',
+            'bg-white/[0.03] backdrop-blur-[6px]',
             'border border-white/[0.08]',
             'shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)]',
             'transition-all duration-300',
