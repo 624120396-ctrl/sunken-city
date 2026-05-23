@@ -25,6 +25,7 @@ import { formatTimeAgo } from '../../lib/utils';
 import { CompactPagination } from '../../components/forum/CompactPagination';
 import { useQuery } from '@tanstack/react-query';
 import { SkeletonCard } from '../../components/ui/Skeleton';
+import { Tooltip } from '../../components/ui/Tooltip';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -209,7 +210,7 @@ export function ForumBoardPage() {
         </div>
         <Link
           to={`/forums/new?board=${boardKey}`}
-          className="coc-btn-primary flex items-center gap-2"
+          className="btn-v2 coc-btn-primary flex items-center gap-2"
         >
           <Plus size={16} />
           发布主题
@@ -228,7 +229,9 @@ export function ForumBoardPage() {
                 <span className="text-base text-coc-gold font-bold tracking-wide">
                   {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
                 </span>
-                <span className="text-sm text-coc-parchment font-medium">{mod.nickname}</span>
+                <Tooltip content={`${BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'} — 该版块的管理者`}>
+                  <span className="text-sm text-coc-parchment font-medium cursor-help">{mod.nickname}</span>
+                </Tooltip>
               </div>
             ))
           ) : (
@@ -246,7 +249,7 @@ export function ForumBoardPage() {
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() => setSortValue('last_reply')}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors ${
+            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               sort === 'last_reply'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
                 : 'border-coc-void text-coc-parchment hover:border-coc-gold'
@@ -256,7 +259,7 @@ export function ForumBoardPage() {
           </button>
           <button
             onClick={() => setSortValue('newest')}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors ${
+            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               sort === 'newest'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
                 : 'border-coc-void text-coc-parchment hover:border-coc-gold'

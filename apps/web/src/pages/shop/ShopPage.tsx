@@ -1,4 +1,5 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import { Tooltip } from '@components/ui/Tooltip';
 import { useState } from 'react';
 import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
@@ -100,7 +101,7 @@ export function ShopPage() {
           <button
             key={c.value}
             onClick={() => setCategory(c.value)}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors ${
+            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               category === c.value
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
                 : 'border-coc-void text-coc-parchment hover:border-coc-gold'
@@ -149,7 +150,15 @@ export function ShopPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-ritual font-bold text-coc-parchment">{item.name}</p>
-                    <p className={`text-xs ${rarityText[item.rarity] || 'text-coc-parchment-dim'}`}>{item.rarity}</p>
+                    <Tooltip content={{
+                    common: '普通藏品 — 基础装饰',
+                    rare: '稀有藏品 — 限定外观',
+                    epic: '史诗藏品 — 传奇之物',
+                    legendary: '传说藏品 — 深渊馈赠',
+                    mythical: '神话藏品 — 不可名状'
+                  }[item.rarity] || item.rarity}>
+                    <p className={`text-xs ${rarityText[item.rarity] || 'text-coc-parchment-dim'} cursor-help`}>{item.rarity}</p>
+                  </Tooltip>
                   </div>
                 </div>
 
@@ -172,7 +181,7 @@ export function ShopPage() {
                   <button
                     onClick={() => handlePurchase(item)}
                     disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
-                    className="px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
+                    className="btn-v2 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
                   >
                     {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
                   </button>

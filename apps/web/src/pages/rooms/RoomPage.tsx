@@ -702,7 +702,7 @@ export function RoomPage() {
       {/* 头部 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <Link to="/rooms" className="coc-btn-secondary p-2">
+          <Link to="/rooms" className="btn-v2 coc-btn-secondary p-2">
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -715,7 +715,7 @@ export function RoomPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-            className="coc-btn-secondary text-sm flex items-center gap-1"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
           >
             {activeTab === 'chat' ? <Swords size={14} /> : <Send size={14} />}
             {activeTab === 'chat' ? '战斗' : '聊天'}
@@ -723,7 +723,7 @@ export function RoomPage() {
           {/* ===== 新增：私聊按钮 ===== */}
           <button
             onClick={() => setShowPrivateChat(true)}
-            className="coc-btn-secondary text-sm flex items-center gap-1 relative"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1 relative"
           >
             <MessageSquare size={14} />
             私聊
@@ -739,28 +739,28 @@ export function RoomPage() {
               fetchRoomStats();
               setShowStats(true);
             }}
-            className="coc-btn-secondary text-sm flex items-center gap-1"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
           >
             <BarChart3 size={14} />
             统计
           </button>
           <Link
             to={`/rooms/${roomId}/report`}
-            className="coc-btn-secondary text-sm flex items-center gap-1"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
           >
             <FileText size={14} />
             报告
           </Link>
           <Link
             to={`/rooms/${roomId}/dice-history`}
-            className="coc-btn-secondary text-sm flex items-center gap-1"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
           >
             <History size={14} />
             投骰
           </Link>
           <button
             onClick={handleLeaveRoom}
-            className="coc-btn-secondary text-sm flex items-center gap-1"
+            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
           >
             <DoorOpen size={14} />
             离开
@@ -768,7 +768,7 @@ export function RoomPage() {
           {room?.isCreator && (
             <button
               onClick={handleCloseRoom}
-              className="coc-btn-secondary text-sm text-red-400 hover:text-red-300"
+              className="btn-v2 coc-btn-secondary text-sm text-red-400 hover:text-red-300"
             >
               关闭房间
             </button>
@@ -1134,7 +1134,7 @@ export function RoomPage() {
                       return (
                         <StaggerItem key={msg.id}>
                           <div className="flex justify-center">
-                            <div className="max-w-[85%] px-4 py-2 rounded-lg bg-coc-accent-gold/15 border border-coc-accent-gold/40 italic text-sm text-coc-text-primary text-center">
+                            <div className="max-w-[85%] px-4 py-2 rounded-lg bg-coc-gold/10 border border-coc-gold/50 italic text-sm text-coc-text-primary text-center shadow-sm">
                               {msg.content}
                               <span className="ml-2 text-xs text-coc-text-muted not-italic">
                                 {new Date(msg.timestamp).toLocaleTimeString()}
@@ -1150,11 +1150,11 @@ export function RoomPage() {
                         <div className="flex justify-start gap-3">
                           <Avatar />
                           <div
-                            className={`max-w-[75%] px-3 py-2 rounded-lg relative group ${
+                            className={`max-w-[75%] px-3 py-2 rounded-lg relative group border border-coc-border/40 shadow-sm ${
                               msg.type === 'dice'
-                                ? 'bg-coc-bg-tertiary border border-coc-accent-gold/30'
+                                ? 'bg-coc-bg-tertiary border-coc-gold/30'
                                 : isMe
-                                ? 'bg-coc-bg-tertiary border-l-2 border-coc-accent-gold'
+                                ? 'bg-coc-bg-tertiary border-l-2 border-l-coc-gold border-coc-border/40'
                                 : 'bg-coc-bg-tertiary'
                             }`}
                           >
@@ -1435,7 +1435,7 @@ export function RoomPage() {
           </div>
           <button
             onClick={() => handleJoinRoom()}
-            className="w-full coc-btn-secondary"
+            className="btn-v2 w-full coc-btn-secondary"
           >
             以观察者身份加入
           </button>

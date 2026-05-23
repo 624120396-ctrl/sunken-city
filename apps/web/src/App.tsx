@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import { AnimatePresence } from 'motion/react';
 import { ToastProvider } from '@components/ui/Toast';
+import { CommandPalette } from '@components/ui/CommandPalette';
 
 // 动画
 import { PageTransition } from '@components/ui/Animation';
@@ -84,7 +85,8 @@ function App() {
   }
 
   return (
-    <ToastProvider>
+    <>
+      <ToastProvider>
       <Routes>
         {/* 管理后台路由 */}
         <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
@@ -145,7 +147,9 @@ function App() {
       } />
     </Routes>
     </ToastProvider>
-  );
+    <CommandPalette />
+  </>
+);
 }
 
 export default App;

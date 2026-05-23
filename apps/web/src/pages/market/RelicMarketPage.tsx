@@ -1,4 +1,5 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import { Tooltip } from '@components/ui/Tooltip';
 import { useState } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import {
@@ -187,11 +188,19 @@ export function RelicMarketPage() {
               <div className="text-base font-bold text-coc-parchment">
                 {meta?.name || l.relicKey}
               </div>
-              <span
-                className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)}`}
-              >
-                {rarity}
-              </span>
+              <Tooltip content={({
+                common: '普通 — 随处可见的遗物',
+                uncommon: '罕见 — 不易获得，略有价值',
+                rare: '稀有 — 珍贵的调查员遗物',
+                epic: '史诗 — 传说级存在',
+                legendary: '传说 — 深渊之主的馈赠'
+              } as Record<string, string>)[rarity] || rarity}>
+                <span
+                  className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)} cursor-help`}
+                >
+                  {rarity}
+                </span>
+              </Tooltip>
             </div>
             <div className="mt-1 text-xs text-coc-text-muted">
               {meta?.description}
@@ -220,7 +229,7 @@ export function RelicMarketPage() {
             <button
               onClick={() => handleCancel(l.id)}
               disabled={cancelMutation.isPending}
-              className="flex items-center gap-1 rounded bg-red-900/40 px-2 py-1 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
+              className="btn-v2 flex items-center gap-1 rounded bg-red-900/40 px-2 py-1 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
             >
               <X size={12} /> 下架
             </button>
@@ -230,7 +239,7 @@ export function RelicMarketPage() {
                 setBuyTradeId(l.id);
                 setBuyCharId('');
               }}
-              className="rounded bg-coc-gold px-3 py-1 text-xs font-bold text-coc-abyss hover:bg-coc-gold-glow"
+              className="btn-v2 rounded bg-coc-gold px-3 py-1 text-xs font-bold text-coc-abyss hover:bg-coc-gold-glow"
             >
               购买
             </button>
@@ -297,7 +306,7 @@ export function RelicMarketPage() {
               onClick={() =>
                 queryClient.invalidateQueries({ queryKey: ['marketListings'] })
               }
-              className="coc-btn-secondary text-sm"
+              className="btn-v2 coc-btn-secondary text-sm"
             >
               刷新
             </button>
@@ -436,7 +445,7 @@ export function RelicMarketPage() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowListModal(false)}
-                className="coc-btn-secondary text-sm"
+                className="btn-v2 coc-btn-secondary text-sm"
               >
                 取消
               </button>
@@ -483,7 +492,7 @@ export function RelicMarketPage() {
                   setBuyTradeId(null);
                   setBuyCharId('');
                 }}
-                className="coc-btn-secondary text-sm"
+                className="btn-v2 coc-btn-secondary text-sm"
               >
                 取消
               </button>
