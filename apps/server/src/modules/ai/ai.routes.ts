@@ -4,9 +4,10 @@ import { AppError } from '../../middleware/error';
 
 const router = Router();
 
-const API_KEY = process.env.SEEDREAM_API_KEY || '';
-const BASE_URL = process.env.SEEDREAM_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
-const MODEL = process.env.SEEDREAM_MODEL || 'doubao-seedream-5-0-260128';
+// 火山引擎 — Seedream-4.5 图片生成
+const API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
+const BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
+const MODEL = 'ep-20260408171908-9s9bs'; // Doubao-Seedream-4.5
 
 interface GenerateImageBody {
   prompt: string;

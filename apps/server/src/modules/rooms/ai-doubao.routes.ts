@@ -4,10 +4,11 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 
 const router = Router();
 
-// Doubao-Seed 配置（兼容 Seedream 的 baseUrl/apiKey）
-const DOUBAO_BASE_URL = process.env.DOUBAO_SEED_BASE_URL || process.env.SEEDREAM_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
-const DOUBAO_API_KEY = process.env.DOUBAO_SEED_API_KEY || process.env.SEEDREAM_API_KEY || '';
-const DOUBAO_MODEL = process.env.DOUBAO_SEED_MODEL || 'doubao-seed-1.5-pro';
+// Doubao-Seed 配置（火山引擎）
+const DOUBAO_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
+const DOUBAO_API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
+const DOUBAO_CHARACTER_ENDPOINT = 'ep-20260408172808-xwbvc'; // 角色扮演/叙事
+const DOUBAO_IMAGE_ENDPOINT = 'ep-20260408171908-9s9bs';    // Seedream-4.5 图片
 
 interface ChatCompletionBody {
   model: string;
@@ -18,10 +19,6 @@ interface ChatCompletionBody {
 }
 
 async function chatCompletion(body: ChatCompletionBody): Promise<string> {
-  if (!DOUBAO_API_KEY) {
-    throw new AppError('CONFIG_ERROR', 'Doubao-Seed API 未配置', 500);
-  }
-
   const response = await fetch(`${DOUBAO_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -29,7 +26,7 @@ async function chatCompletion(body: ChatCompletionBody): Promise<string> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: body.model || DOUBAO_MODEL,
+      model: body.model || DOUBAO_CHARACTER_ENDPOINT,
       messages: body.messages,
       temperature: body.temperature ?? 0.75,
       max_tokens: body.max_tokens ?? 800,
@@ -74,7 +71,7 @@ router.post('/:roomId/ai/scene-desc', authMiddleware, async (req: AuthRequest, r
 4. 只用中文输出纯文本描述`;
 
     const content = await chatCompletion({
-      model: DOUBAO_MODEL,
+      model: DOUBAO_CHARACTER_ENDPOINT,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -116,7 +113,7 @@ router.post('/:roomId/ai/npc-dialogue', authMiddleware, async (req: AuthRequest,
 请以 ${npcName} 的身份回复。当前情绪：${mood}`;
 
     const content = await chatCompletion({
-      model: DOUBAO_MODEL,
+      model: DOUBAO_CHARACTER_ENDPOINT,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -162,7 +159,7 @@ ${parentSceneDesc || '未知'}
 请生成一段子房间场景描述（200-300字）。`;
 
     const content = await chatCompletion({
-      model: DOUBAO_MODEL,
+      model: DOUBAO_CHARACTER_ENDPOINT,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -203,7 +200,7 @@ router.post('/:roomId/ai/scene-image-prompt', authMiddleware, async (req: AuthRe
 4. 只输出提示词文本，不要任何解释`;
 
     const content = await chatCompletion({
-      model: DOUBAO_MODEL,
+      model: DOUBAO_CHARACTER_ENDPOINT,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

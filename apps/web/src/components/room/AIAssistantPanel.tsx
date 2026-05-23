@@ -19,12 +19,12 @@ interface ToolConfig {
 }
 
 const TOOLS: ToolConfig[] = [
-  { id: 'scene', label: '场景生成', icon: Sparkles, model: 'Doubao-Seed', description: '输入关键词生成克苏鲁风格场景描述' },
-  { id: 'npc', label: 'NPC 对话', icon: MessageSquare, model: 'Doubao-Seed', description: '让 AI 扮演 NPC 回复玩家提问' },
-  { id: 'combat', label: '战斗结算', icon: Swords, model: 'deepseekV4', description: '输入行动和状态，AI 按规则计算结果' },
-  { id: 'log', label: 'Log 润色', icon: BookOpen, model: 'deepseekV4', description: '为跑团 Log 填补叙事空白' },
-  { id: 'clue', label: '线索分析', icon: Search, model: 'deepseekV4', description: '分析已揭示线索的关联性' },
-  { id: 'report', label: '战后报告', icon: Wand2, model: 'deepseekV4', description: '基于战斗记录生成结构化战报' },
+  { id: 'scene', label: '场景生成', icon: Sparkles, model: 'Seed-Char', description: '输入关键词生成克苏鲁风格场景描述' },
+  { id: 'npc', label: 'NPC 对话', icon: MessageSquare, model: 'Seed-Char', description: '让 AI 扮演 NPC 回复玩家提问' },
+  { id: 'combat', label: '战斗结算', icon: Swords, model: 'Kimi-K2.6', description: '输入行动和状态，AI 按规则计算结果' },
+  { id: 'log', label: 'Log 润色', icon: BookOpen, model: 'Kimi-K2.6', description: '为跑团 Log 填补叙事空白' },
+  { id: 'clue', label: '线索分析', icon: Search, model: 'Kimi-K2.6', description: '分析已揭示线索的关联性' },
+  { id: 'report', label: '战后报告', icon: Wand2, model: 'Kimi-K2.6', description: '基于战斗记录生成结构化战报' },
 ];
 
 export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelProps) {
@@ -142,7 +142,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
             <tool.icon size={10} className="inline mr-1" />
             {tool.label}
             <span className={`ml-1 text-[8px] px-1 py-0.5 rounded ${
-              tool.model === 'Doubao-Seed' ? 'bg-purple-500/20 text-purple-300' : 'bg-cyan-500/20 text-cyan-300'
+              tool.model === 'Seed-Char' ? 'bg-purple-500/20 text-purple-300' : 'bg-cyan-500/20 text-cyan-300'
             }`}>
               {tool.model}
             </span>

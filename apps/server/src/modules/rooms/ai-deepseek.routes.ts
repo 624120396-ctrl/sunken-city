@@ -4,10 +4,10 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 
 const router = Router();
 
-// deepseekV4 配置
-const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_V4_BASE_URL || 'https://api.deepseek.com/v1';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_V4_API_KEY || '';
-const DEEPSEEK_MODEL = 'deepseek-v4';
+// 火山 Coding Plan — Kimi-K2.6（替代 deepseekV4 做复杂推理）
+const CODING_BASE_URL = 'https://ark.cn-beijing.volces.com/api/coding/v3';
+const CODING_API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
+const CODING_MODEL = 'Kimi-K2.6';
 
 interface ChatCompletionBody {
   model: string;
@@ -18,18 +18,14 @@ interface ChatCompletionBody {
 }
 
 async function chatCompletion(body: ChatCompletionBody): Promise<string> {
-  if (!DEEPSEEK_API_KEY) {
-    throw new AppError('CONFIG_ERROR', 'deepseekV4 API 未配置', 500);
-  }
-
-  const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+  const response = await fetch(`${CODING_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      'Authorization': `Bearer ${CODING_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: body.model || DEEPSEEK_MODEL,
+      model: body.model || CODING_MODEL,
       messages: body.messages,
       temperature: body.temperature ?? 0.2,
       max_tokens: body.max_tokens ?? 1200,
@@ -98,7 +94,7 @@ JSON 格式：
 请按 COC 7e 规则计算并输出 JSON。`;
 
     const content = await chatCompletion({
-      model: DEEPSEEK_MODEL,
+      model: CODING_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -164,7 +160,7 @@ ${gaps?.map((g: any, i: number) => `${i + 1}. 事件 ${g.fromEventId} → 事件
 ]`;
 
     const content = await chatCompletion({
-      model: DEEPSEEK_MODEL,
+      model: CODING_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -231,7 +227,7 @@ ${actions?.slice(0, 20).map((a: any, i: number) => `${i + 1}. ${a.actorName || '
 }`;
 
     const content = await chatCompletion({
-      model: DEEPSEEK_MODEL,
+      model: CODING_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -290,7 +286,7 @@ ${playerActions?.slice(0, 10).map((a: any, i: number) => `${i + 1}. [${a.eventTy
 }`;
 
     const content = await chatCompletion({
-      model: DEEPSEEK_MODEL,
+      model: CODING_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
