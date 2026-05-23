@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Edit2, Check, X, Wand2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateImage } from '../../services/ai.service';
 
 interface SceneCardProps {
@@ -8,12 +8,44 @@ interface SceneCardProps {
   onUpdate?: (desc: string) => void;
 }
 
+function TypewriterText({ text, speed = 30 }: { text: string; speed?: number }) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      if (i <= text.length) {
+        setDisplayed(text.slice(0, i));
+      } else {
+        setDone(true);
+        clearInterval(interval);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return (
+    <span>
+      {displayed}
+      {!done && <span className="inline-block w-0.5 h-4 bg-coc-gold/60 ml-0.5 animate-pulse align-text-bottom" />}
+    </span>
+  );
+}
+
 export function SceneCard({ description, isKP, onUpdate }: SceneCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(description || '');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    setEditValue(description || '');
+  }, [description]);
 
   const handleSave = () => {
     onUpdate?.(editValue);
@@ -104,7 +136,7 @@ export function SceneCard({ description, isKP, onUpdate }: SceneCardProps) {
           ) : (
             <div className="group relative">
               <p className="text-sm text-coc-text-primary italic leading-relaxed whitespace-pre-wrap">
-                {description || '暂无场景描述'}
+                {description ? <TypewriterText text={description} speed={25} /> : '暂无场景描述'}
               </p>
               {isKP && (
                 <button

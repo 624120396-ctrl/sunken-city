@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { io } from 'socket.io-client';
-import { User, Scroll, Sparkles, Crown, Award, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users, Ghost } from 'lucide-react';
+import { User, Scroll, Sparkles, Star, Megaphone, Coins, Gift, CheckCircle2, Loader2, Users, Ghost, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
-import { RuneBorder, RuneSymbol } from '@components/ui/RuneBorder';
+import { RuneSymbol } from '@components/ui/RuneBorder';
 import { SkeletonCard } from '@components/ui/EldritchLoader';
 import { getMyRankTitle, UserRankInfo } from '@services/rank-title.service';
 import { getAnnouncements, type Announcement } from '@services/announcement.service';
@@ -162,55 +163,37 @@ export function DashboardPage() {
 
   const rank = rankInfo?.rank;
 
+  // 快捷入口数据
+  const quickActions = [
+    { to: '/characters/new', icon: User, label: '记录命运', desc: '创建调查员', variant: 'blood' as const },
+    { to: '/rooms', icon: Scroll, label: '开启故事', desc: '创建跑团房间', variant: 'gold' as const },
+    { to: '/rooms', icon: Sparkles, label: '进入深渊', desc: '加入已有跑团', variant: 'madness' as const },
+    { to: '/solo', icon: Ghost, label: '幻影脚本', desc: '单人剧本模式', variant: 'blood' as const },
+  ];
+
   return (
     <div className="space-y-8 pb-8">
-      {/* 公告区域 */}
-      {announcements.length > 0 && (
-        <div className="space-y-3">
-          {announcements.map((ann) => (
-            <div
-              key={ann.id}
-              className={`p-4 rounded border ${
-                ann.isPinned
-                  ? 'border-coc-gold/40 bg-coc-gold/5'
-                  : 'border-coc-void bg-coc-abyss/30'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <Megaphone className={`w-5 h-5 shrink-0 mt-0.5 ${ann.isPinned ? 'text-coc-gold' : 'text-coc-parchment-dim'}`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-ritual font-bold text-coc-parchment">{ann.title}</span>
-                    {ann.isPinned && (
-                      <span className="text-xs px-2 py-0.5 bg-coc-gold/20 text-coc-gold rounded">置顶</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-coc-parchment-dim whitespace-pre-line">{ann.content}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 欢迎区域 - 方案 D 独立铭牌卡片 */}
-      <div className="bg-coc-bg-tertiary border border-coc-border rounded-lg overflow-hidden">
-        {/* 位阶色条 */}
+      {/* Layer 1: 欢迎铭牌 — 第一眼，大字号 */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="card-layer-2 rounded-lg overflow-hidden"
+      >
         <div
-          className="h-1.5"
+          className="h-1"
           style={{ backgroundColor: rank?.color || '#6b6558' }}
         />
-
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-4">
-            {/* 左侧：头像 + 位阶 */}
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            {/* 左侧：头像 + 身份 */}
             <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20 flex-shrink-0">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-coc-gold/20 to-coc-blood/20 border-2 border-coc-gold/40 flex items-center justify-center overflow-hidden">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-coc-gold/20 to-coc-blood/20 border-2 border-coc-gold/40 flex items-center justify-center overflow-hidden">
                   {user?.avatarUrl ? (
                     <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-10 h-10 text-coc-gold" />
+                    <User className="w-8 h-8 md:w-10 md:h-10 text-coc-gold" />
                   )}
                 </div>
                 {user?.frameUrl && (
@@ -223,10 +206,10 @@ export function DashboardPage() {
                 )}
               </div>
               <div>
-                <div className="text-xs text-coc-text-muted mb-0.5">
-                  欢迎从深渊归来，调查员
+                <div className="text-xs text-coc-text-muted mb-1">
+                  欢迎从深渊归来
                 </div>
-                <h1 className="text-2xl font-ritual font-bold text-coc-parchment tracking-wide">
+                <h1 className="text-3xl md:text-4xl font-ritual font-bold text-coc-parchment tracking-wide">
                   {user?.nickname}
                 </h1>
                 <Link
@@ -241,56 +224,54 @@ export function DashboardPage() {
             </div>
 
             {/* 右侧：货币 + 签到 */}
-            <div className="text-right space-y-2 flex-shrink-0">
-              <div className="flex items-center justify-end gap-4 text-sm">
-                <div className="flex flex-col items-end">
-                  <div className="flex items-center gap-1 text-coc-parchment">
+            <div className="md:ml-auto flex flex-col md:items-end gap-3">
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex flex-col md:items-end">
+                  <div className="flex items-center gap-1.5 text-coc-parchment">
                     <Coins size={14} className="text-coc-gold" />
-                    <span className="font-bold">{user?.coins ?? 0}</span>
+                    <span className="text-xl font-bold">{user?.coins ?? 0}</span>
                   </div>
                   <span className="text-[10px] text-coc-text-muted">锈蚀硬币</span>
                 </div>
-                <div className="flex flex-col items-end">
-                  <div className="flex items-center gap-1 text-coc-parchment">
+                <div className="flex flex-col md:items-end">
+                  <div className="flex items-center gap-1.5 text-coc-parchment">
                     <Sparkles size={14} className="text-purple-400" />
-                    <span className="font-bold">{user?.stardust ?? 0}</span>
+                    <span className="text-xl font-bold">{user?.stardust ?? 0}</span>
                   </div>
                   <span className="text-[10px] text-coc-text-muted">虚银</span>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1.5">
-                <button
-                  onClick={handleCheckin}
-                  disabled={checkingIn || checkedInToday}
-                  className={[
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-all',
-                    checkedInToday
-                      ? 'bg-coc-text-muted/10 border border-coc-text-muted/30 text-coc-text-muted cursor-default'
-                      : 'bg-coc-gold/10 border border-coc-gold/40 text-coc-gold hover:bg-coc-gold/20',
-                  ].join(' ')}
-                >
-                  {checkingIn ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : checkedInToday ? (
-                    <CheckCircle2 size={14} />
-                  ) : (
-                    <Gift size={14} />
-                  )}
-                  {checkedInToday ? '已签到' : checkingIn ? '签到中...' : '每日签到'}
-                </button>
-                {checkedInToday && checkinReward && (
-                  <div className="text-xs text-coc-gold">
-                    已获得 +{checkinReward.coins} 锈蚀硬币
-                    {checkinReward.stardust ? ` · +${checkinReward.stardust} 虚银` : ''}
-                  </div>
+              <button
+                onClick={handleCheckin}
+                disabled={checkingIn || checkedInToday}
+                className={[
+                  'inline-flex items-center gap-1.5 px-4 py-2 rounded text-sm transition-all',
+                  checkedInToday
+                    ? 'bg-coc-text-muted/10 border border-coc-text-muted/30 text-coc-text-muted cursor-default'
+                    : 'bg-coc-gold/10 border border-coc-gold/40 text-coc-gold hover:bg-coc-gold/20',
+                ].join(' ')}
+              >
+                {checkingIn ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : checkedInToday ? (
+                  <CheckCircle2 size={14} />
+                ) : (
+                  <Gift size={14} />
                 )}
-              </div>
+                {checkedInToday ? '已签到' : checkingIn ? '签到中...' : '每日签到'}
+              </button>
+              {checkedInToday && checkinReward && (
+                <div className="text-xs text-coc-gold">
+                  已获得 +{checkinReward.coins} 锈蚀硬币
+                  {checkinReward.stardust ? ` · +${checkinReward.stardust} 虚银` : ''}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 底部：全宽大经验条 */}
+          {/* 经验条 */}
           {!rankLoading && rankInfo && rankInfo.nextRank && (
-            <div className="mt-5 pt-4 border-t border-coc-border/50">
+            <div className="mt-6 pt-4 border-t border-coc-border/50">
               <ExpBar
                 current={rankInfo.exp}
                 max={rankInfo.exp + rankInfo.expToNext}
@@ -308,332 +289,194 @@ export function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {/* 快速操作 - v1.1 符文卡片 */}
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-          <RuneSymbol symbol="gate" size={20} className="text-coc-gold" />
-          <h2 className="text-xl font-ritual font-bold text-coc-parchment tracking-wider">
-            开启仪式
-          </h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link 
-            to="/characters/new" 
-            className="group"
-          >
-            <RuneBorder 
-              variant="blood" 
-              intensity="subtle"
-              className="coc-card-hover"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-blood/10 border border-coc-blood/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-blood/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <User className="text-coc-blood" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-blood-glow transition-colors">
-                      记录命运
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      创建新的调查员
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-
-          <Link 
-            to="/rooms" 
-            className="group"
-          >
-            <RuneBorder 
-              variant="gold" 
-              intensity="subtle"
-              className="coc-card-hover"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-gold/10 border border-coc-gold/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-gold/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <Scroll className="text-coc-gold" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-gold-glow transition-colors">
-                      开启故事
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      创建新的跑团房间
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-
-          <Link 
-            to="/rooms" 
-            className="group"
-          >
-            <RuneBorder 
-              variant="madness" 
-              intensity="subtle"
-              className="coc-card-hover"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-madness/10 border border-coc-madness/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-madness/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <Sparkles className="text-coc-madness-glow" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-madness-glow transition-colors">
-                      进入深渊
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      加入已有的跑团
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-
-          <Link 
-            to="/solo" 
-            className="group"
-          >
-            <RuneBorder 
-              variant="blood" 
-              intensity="subtle"
-              className="coc-card-hover"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-blood/10 border border-coc-blood/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-blood/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <Ghost className="text-coc-blood" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-blood-glow transition-colors">
-                      幻影脚本
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      进入单人剧本模式
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-        </div>
-      </div>
-
-      {/* 位阶与印记 - v1.1 */}
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-          <RuneSymbol symbol="star" size={20} className="text-coc-gold" />
-          <h2 className="text-xl font-ritual font-bold text-coc-parchment tracking-wider">
-            成长之路
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link to="/ranks" className="group">
-            <RuneBorder variant="gold" intensity="subtle" className="coc-card-hover">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-gold/10 border border-coc-gold/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-gold/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <Crown className="text-coc-gold" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-gold-glow transition-colors">
-                      位阶天梯
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      查看位阶体系与灵魂碎片来源
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-
-          <Link to="/titles" className="group">
-            <RuneBorder variant="madness" intensity="subtle" className="coc-card-hover">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-coc-madness/10 border border-coc-madness/20 
-                                  flex items-center justify-center 
-                                  group-hover:bg-coc-madness/20 group-hover:scale-110
-                                  transition-all duration-300">
-                    <Award className="text-coc-madness-glow" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-madness-glow transition-colors">
-                      印记图鉴
-                    </h3>
-                    <p className="text-sm text-coc-parchment-dim">
-                      探索可收集的称号与成就
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </RuneBorder>
-          </Link>
-        </div>
-      </div>
-
-      {/* 我的调查员 - v1.1 符文风格 */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
+      {/* Layer 2: 双栏 — 快捷入口 + 最近活动 */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* 左侧：快捷入口 2x2 */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="lg:col-span-2 space-y-4"
+        >
           <div className="flex items-center gap-3">
-            <RuneSymbol symbol="eye" size={20} className="text-coc-blood" />
-            <h2 className="text-xl font-ritual font-bold text-coc-parchment tracking-wider">
+            <RuneSymbol symbol="gate" size={18} className="text-coc-gold" />
+            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
+              开启仪式
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((action, i) => (
+              <motion.div
+                key={action.to + action.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
+              >
+                <Link to={action.to} className="group block">
+                  <div className="card-layer-2 p-4 rounded-lg h-full">
+                    <div className="w-10 h-10 rounded-lg bg-coc-gold/10 border border-coc-gold/20 flex items-center justify-center mb-3 group-hover:bg-coc-gold/20 group-hover:scale-110 transition-all duration-300">
+                      <action.icon className="text-coc-gold" size={20} />
+                    </div>
+                    <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-gold transition-colors">
+                      {action.label}
+                    </h3>
+                    <p className="text-xs text-coc-text-muted mt-1">{action.desc}</p>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* 右侧：最近活动 / 公告 */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="lg:col-span-3 space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Megaphone size={18} className="text-coc-gold" />
+            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
+              旧日低语
+            </h2>
+          </div>
+          <div className="card-layer-2 rounded-lg p-5">
+            {announcements.length > 0 ? (
+              <div className="space-y-4">
+                {announcements.slice(0, 3).map((ann) => (
+                  <div key={ann.id} className="flex items-start gap-3">
+                    <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${ann.isPinned ? 'bg-coc-gold' : 'bg-coc-text-muted'}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-ritual text-sm text-coc-parchment">{ann.title}</span>
+                        {ann.isPinned && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-coc-gold/20 text-coc-gold rounded">置顶</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-coc-text-muted mt-1 line-clamp-2">{ann.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-coc-text-muted">
+                <Clock size={20} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">暂无新公告</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Layer 2: 调查员 */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <RuneSymbol symbol="eye" size={18} className="text-coc-blood" />
+            <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
               我的调查员
             </h2>
           </div>
-          
-          <Link 
-            to="/characters" 
+          <Link
+            to="/characters"
             className="text-sm font-rune text-coc-gold hover:text-coc-gold-glow transition-colors tracking-wider"
           >
             查看全部 →
           </Link>
         </div>
-        
+
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : characters.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {characters.map((char) => (
-              <Link
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {characters.map((char, i) => (
+              <motion.div
                 key={char.id}
-                to={`/characters/${char.id}`}
-                className="group"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.3 + i * 0.05 }}
               >
-                <RuneBorder 
-                  variant={char.san < 30 ? 'madness' : 'default'}
-                  intensity="subtle"
-                  className="coc-card-hover"
-                >
-                  <div className="p-5">
-                    <div className="flex items-start justify-between mb-4">
+                <Link to={`/characters/${char.id}`} className="group block">
+                  <div className="card-layer-2 rounded-lg p-5">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-ritual font-bold text-xl text-coc-parchment group-hover:text-coc-gold transition-colors">
+                        <h3 className="font-ritual font-bold text-lg text-coc-parchment group-hover:text-coc-gold transition-colors">
                           {char.name}
                         </h3>
-                        <p className="text-sm font-rune text-coc-parchment-dim tracking-wider">
+                        <p className="text-xs font-rune text-coc-text-muted tracking-wider">
                           {char.occupation}
                         </p>
                       </div>
-                      
-                      {/* 状态指示 */}
                       {char.san < 30 && (
-                        <span className="px-2 py-0.5 bg-coc-madness/20 border border-coc-madness/40 
-                                         text-coc-madness-glow text-xs font-rune rounded">
+                        <span className="px-2 py-0.5 bg-coc-blood/20 border border-coc-blood/40 text-coc-blood-glow text-[10px] font-rune rounded">
                           疯狂边缘
                         </span>
                       )}
-                      {char.hp < char.maxHp * 0.3 && char.san >= 30 && (
-                        <span className="px-2 py-0.5 bg-coc-blood/20 border border-coc-blood/40 
-                                         text-coc-blood-glow text-xs font-rune rounded">
-                          重伤
-                        </span>
-                      )}
                     </div>
-                    
-                    {/* 状态条 */}
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-rune text-coc-parchment-faded w-8">HP</span>
-                        <div className="flex-1 h-1.5 bg-coc-abyss rounded-full overflow-hidden">
+                        <span className="text-[10px] font-rune text-coc-text-muted w-6">HP</span>
+                        <div className="flex-1 h-1 bg-coc-abyss rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${
-                              char.hp < char.maxHp * 0.3 
-                                ? 'bg-coc-blood' 
-                                : 'bg-coc-parchment-dim'
-                            }`}
+                            className={`h-full rounded-full ${char.hp < char.maxHp * 0.3 ? 'bg-coc-blood' : 'bg-coc-parchment-dim'}`}
                             style={{ width: `${(char.hp / char.maxHp) * 100}%` }}
                           />
                         </div>
-                        <span className={`text-xs font-rune ${
-                          char.hp < char.maxHp * 0.3 ? 'text-coc-blood' : 'text-coc-parchment-dim'
-                        }`}>
+                        <span className={`text-[10px] font-rune ${char.hp < char.maxHp * 0.3 ? 'text-coc-blood' : 'text-coc-text-muted'}`}>
                           {char.hp}/{char.maxHp}
                         </span>
                       </div>
-                      
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-rune text-coc-parchment-faded w-8">SAN</span>
-                        <div className="flex-1 h-1.5 bg-coc-abyss rounded-full overflow-hidden">
+                        <span className="text-[10px] font-rune text-coc-text-muted w-6">SAN</span>
+                        <div className="flex-1 h-1 bg-coc-abyss rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${
-                              char.san < 30 
-                                ? 'bg-coc-madness' 
-                                : 'bg-coc-gold-dim'
-                            }`}
+                            className={`h-full rounded-full ${char.san < 30 ? 'bg-coc-blood' : 'bg-coc-gold-dim'}`}
                             style={{ width: `${(char.san / char.maxSan) * 100}%` }}
                           />
                         </div>
-                        <span className={`text-xs font-rune ${
-                          char.san < 30 ? 'text-coc-madness-glow' : 'text-coc-parchment-dim'
-                        }`}>
+                        <span className={`text-[10px] font-rune ${char.san < 30 ? 'text-coc-blood' : 'text-coc-text-muted'}`}>
                           {char.san}/{char.maxSan}
                         </span>
                       </div>
                     </div>
                   </div>
-                </RuneBorder>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
         ) : (
-          <RuneBorder variant="default" intensity="subtle">
-            <div className="p-12 text-center">
-              <div className="text-4xl mb-4 opacity-30">🌑</div>
-              <p className="text-coc-parchment-dim font-ritual mb-2">
-                暂无调查员记录在案
-              </p>
-              <p className="text-sm text-coc-parchment-faded mb-6">
-                每一位伟大的调查员都有一个开始
-              </p>
-              <Link 
-                to="/characters/new" 
-                className="inline-flex items-center gap-2 px-6 py-3 coc-btn-blood"
-              >
-                <User size={18} />
-                创建第一个调查员
-              </Link>
-            </div>
-          </RuneBorder>
+          <div className="card-layer-2 rounded-lg p-12 text-center">
+            <div className="text-4xl mb-4 opacity-30">🌑</div>
+            <p className="text-coc-text-muted font-ritual mb-2">暂无调查员记录在案</p>
+            <p className="text-sm text-coc-text-muted mb-6">每一位伟大的调查员都有一个开始</p>
+            <Link to="/characters/new" className="inline-flex items-center gap-2 px-6 py-3 btn-v2 bg-coc-blood text-coc-parchment rounded">
+              <User size={18} />
+              创建第一个调查员
+            </Link>
+          </div>
         )}
-      </div>
-      {/* 深渊广场 - 在线调查员 */}
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-          <Users size={20} className="text-coc-gold" />
-          <h2 className="text-xl font-ritual font-bold text-coc-parchment tracking-wider">
+      </motion.div>
+
+      {/* Layer 2: 深渊广场 */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <Users size={18} className="text-coc-gold" />
+          <h2 className="text-lg font-ritual font-bold text-coc-parchment tracking-wider">
             深渊广场
           </h2>
           {!onlineLoading && (
@@ -643,7 +486,7 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-coc-bg-tertiary border border-coc-border rounded-lg p-6">
+        <div className="card-layer-2 rounded-lg p-5">
           {onlineLoading ? (
             <div className="flex items-center gap-2 text-coc-text-muted text-sm">
               <Loader2 size={16} className="animate-spin" />
@@ -657,15 +500,15 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {onlineUsers.map((u, idx) => (
                   <button
                     key={`${u.userId}-${idx}`}
                     type="button"
                     onClick={() => setSelectedOnlineUser(u)}
-                    className="flex items-center gap-2 px-3 py-2 bg-coc-bg-primary border border-coc-border rounded-full hover:border-coc-gold/50 transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-coc-bg-primary border border-coc-border rounded-full hover:border-coc-gold/50 transition-colors"
                   >
-                    <div className="w-7 h-7 rounded-full bg-coc-bg-secondary border border-coc-border flex items-center justify-center text-xs text-coc-text-muted overflow-hidden">
+                    <div className="w-6 h-6 rounded-full bg-coc-bg-secondary border border-coc-border flex items-center justify-center text-[10px] text-coc-text-muted overflow-hidden">
                       {u.avatarUrl ? (
                         <img src={u.avatarUrl} alt={u.nickname} className="w-full h-full object-cover" />
                       ) : (
@@ -676,9 +519,9 @@ export function DashboardPage() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-coc-border/50">
+              <div className="flex items-center justify-between pt-3 border-t border-coc-border/50">
                 <span className="text-xs text-coc-text-muted">
-                  在线灵魂会在深渊广场上显现，也许你可以呼唤他们一起踏入未知的房间
+                  在线灵魂会在深渊广场上显现
                 </span>
                 <Link
                   to="/rooms"
@@ -690,7 +533,8 @@ export function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
+
       <UserProfileModal
         user={selectedOnlineUser}
         isOpen={!!selectedOnlineUser}

@@ -1158,7 +1158,7 @@ export function RoomPage() {
                                 : 'bg-coc-bg-tertiary'
                             }`}
                           >
-                            <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
+                    <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
                               {isKPMessage ? (
                                 <>
                                   <Crown size={14} className="text-coc-accent-gold" />
@@ -1168,9 +1168,11 @@ export function RoomPage() {
                                 <span className="text-coc-text-primary">{msg.nickname}</span>
                               )}
                               {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
-                              <span className="text-xs font-normal text-coc-text-muted ml-auto">
-                                {new Date(msg.timestamp).toLocaleTimeString()}
-                              </span>
+                              <Tooltip content={new Date(msg.timestamp).toLocaleString()}>
+                                <span className="text-xs font-normal text-coc-text-muted ml-auto cursor-help">
+                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </Tooltip>
                             </div>
                             <p className="text-sm text-coc-text-primary">{msg.content}</p>
 
