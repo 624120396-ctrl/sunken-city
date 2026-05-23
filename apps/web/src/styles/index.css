@@ -177,19 +177,19 @@
   }
 
   body {
-    @apply bg-coc-deep text-coc-parchment min-h-[100dvh];
     font-family: 'Geist', 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-    /* 全局背景图 */
+    color: #d4c5a8;
+    min-height: 100dvh;
+    /* 全局背景图 — 无 fallback 背景色，无遮罩，无噪点 */
     background-image: url('/images/bg05.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    /* 噪点纹理层 */
     position: relative;
   }
 
-  /* 背景图上方加暗色遮罩，确保文字可读 */
+  /* 暗色遮罩 — 已关闭 (opacity 0) */
   body::after {
     content: '';
     position: fixed;
@@ -202,7 +202,7 @@
     background: rgba(10, 10, 15, 0);
   }
 
-  /* 噪点纹理层 */
+  /* 噪点纹理层 — 已关闭 */
   body::before {
     content: '';
     position: fixed;
@@ -212,7 +212,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.03;
+    opacity: 0;
     background-image: var(--noise-texture);
     background-repeat: repeat;
   }
