@@ -354,7 +354,7 @@ export function DashboardPage() {
               className="absolute inset-0 bg-center"
               style={{
                 backgroundImage: `url(/images/card-bg-parchment.jpg)`,
-                backgroundSize: '100% 100%',
+                backgroundSize: 'cover',
               }}
             />
 
