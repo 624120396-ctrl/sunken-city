@@ -37,7 +37,7 @@
 
 /* Layer 2 — 卡片（无边框 ring，改用阴影+微光） */
 .card-layer-2 {
-  background: var(--coc-v2-bg-elevated);
+  background: rgba(18, 18, 26, 0.75);
   border: 1px solid var(--coc-v2-border);
   border-radius: 8px;
   box-shadow: 
@@ -255,7 +255,8 @@
   
   /* 基础卡片 - 带符文角标 */
   .coc-card {
-    @apply bg-coc-surface border border-coc-void rounded-lg p-4 relative;
+    @apply border border-coc-void rounded-lg p-4 relative;
+    background: rgba(26, 26, 36, 0.72);
     transition: all 0.3s ease;
   }
 
@@ -314,9 +315,10 @@
 
   /* ===== v1.1 输入框系统 ===== */
   .coc-input {
-    @apply bg-coc-abyss border border-coc-void rounded px-4 py-3 
+    @apply border border-coc-void rounded px-4 py-3 
            text-coc-parchment placeholder-coc-parchment-faded
            transition-all duration-300;
+    background: rgba(10, 10, 15, 0.65);
     font-family: 'Inter', 'Noto Sans SC', sans-serif;
   }
 
@@ -358,7 +360,8 @@
 
   /* 深渊按钮 */
   .coc-btn-void {
-    @apply coc-btn bg-coc-surface border border-coc-void text-coc-parchment;
+    @apply coc-btn border border-coc-void text-coc-parchment;
+    background: rgba(26, 26, 36, 0.72);
   }
 
   .coc-btn-void:hover:not(:disabled) {
@@ -466,7 +469,7 @@
 
   /* 旧纸张纹理背景 */
   .coc-bg-parchment {
-    background-color: #1a1a24;
+    background: rgba(26, 26, 36, 0.72);
     background-image: 
       repeating-linear-gradient(
         0deg,
@@ -696,6 +699,7 @@
 
 /* 应用氛围变量的容器 */
 [data-atmosphere] {
+  background: rgba(10, 10, 15, 0.55);
   transition: background-color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
 }
 
