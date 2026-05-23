@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -882,69 +882,114 @@ export function RoomPage() {
           )}
 
           <div className="bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg p-3">
-            <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-coc-text-muted mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
               <Users size={12} />
               调查员 ({room?.members.length || 0})
             </h3>
-            <div className="space-y-1">
-              {room?.members.map((member) => (
+            <div className="space-y-2">
+              {room?.members.map((member) => {
+                const char = member.displayedCharacter || member.character;
+                return (
                 <div
                   key={member.id}
-                  className="p-2 bg-coc-bg-tertiary rounded flex items-center justify-between cursor-pointer hover:bg-coc-bg-primary transition-colors"
+                  className="p-2.5 bg-coc-bg-tertiary rounded-lg cursor-pointer hover:bg-coc-bg-primary transition-colors"
                   onClick={() => {
                     setSelectedMember(member);
                     setShowMemberDetail(true);
                   }}
                 >
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium">{member.nickname}</span>
-                      {member.role === 'KP' && (
-                        <Crown size={12} className="text-coc-accent-gold" />
-                      )}
-                    </div>
-                    {(member.displayedCharacter || member.character) && (
-                      <div className="text-xs text-coc-text-secondary">
-                        {(member.displayedCharacter || member.character)?.name}
-                      </div>
-                    )}
-                    {/* ===== 新增：状态标记 ===== */}
-                    {memberStatuses[member.id]?.length > 0 && (
-                      <div className="mt-1">
-                        <StatusTags tags={memberStatuses[member.id]} size="sm" />
-                      </div>
-                    )}
-                  </div>
-                  {(member.displayedCharacter || member.character) ? (
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex gap-1 text-xs">
-                        <Tooltip content={`生命值 ${(member.displayedCharacter || member.character)?.hp}/${(member.displayedCharacter || member.character)?.maxHp || (member.displayedCharacter || member.character)?.hp}`}>
-                          <span className="text-coc-accent-red cursor-help">{(member.displayedCharacter || member.character)?.hp}HP</span>
-                        </Tooltip>
-                        <Tooltip content={`魔法值 ${(member.displayedCharacter || member.character)?.mp}/${(member.displayedCharacter || member.character)?.maxMp || (member.displayedCharacter || member.character)?.mp}`}>
-                          <span className="text-coc-accent-cyan cursor-help">{(member.displayedCharacter || member.character)?.mp}MP</span>
-                        </Tooltip>
-                        <Tooltip content={`理智值 ${(member.displayedCharacter || member.character)?.san}/${(member.displayedCharacter || member.character)?.maxSan || (member.displayedCharacter || member.character)?.san}`}>
-                          <span className="text-yellow-400 cursor-help">{(member.displayedCharacter || member.character)?.san}SAN</span>
-                        </Tooltip>
-                      </div>
-                      {/* ===== 新增：KP可编辑状态标记 ===== */}
-                      {room?.isCreator && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <StatusTags
-                            tags={memberStatuses[member.id] || []}
-                            isEditable={true}
-                            onChange={(tags) => updateMemberStatus(member.id, tags)}
-                            size="sm"
-                          />
+                  {/* 第一行：头像 + 名字 + 角色 */}
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {/* 头像 */}
+                    <div className="relative w-9 h-9 flex-shrink-0">
+                      {member.avatarUrl ? (
+                        <img
+                          src={member.avatarUrl}
+                          className="w-9 h-9 rounded-full object-cover border border-coc-border bg-coc-bg-secondary"
+                          alt=""
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-coc-bg-secondary border border-coc-border flex items-center justify-center">
+                          <User size={18} className="text-coc-text-muted" />
                         </div>
                       )}
+                      {member.frameUrl && (
+                        <img
+                          src={member.frameUrl}
+                          className="absolute inset-0 w-full h-full pointer-events-none"
+                          style={{ transform: 'scale(1.3)' }}
+                          alt=""
+                        />
+                      )}
+                    </div>
+                    {/* 名字 */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-sm truncate">{member.nickname}</span>
+                        {member.role === 'KP' && (
+                          <Crown size={12} className="text-coc-accent-gold flex-shrink-0" />
+                        )}
+                      </div>
+                      {char && (
+                        <div className="text-xs text-coc-text-secondary truncate">
+                          {char.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 第二行：HP/MP/SAN 数值 */}
+                  {char ? (
+                    <div className="flex items-center gap-2">
+                      {/* HP */}
+                      <Tooltip content={`生命值 ${char.hp}/${char.maxHp || char.hp}`}>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Heart size={12} className="text-coc-accent-red" />
+                          <span className="text-coc-accent-red font-mono">{char.hp}</span>
+                          <span className="text-coc-text-muted text-[10px]">/{char.maxHp || char.hp}</span>
+                        </div>
+                      </Tooltip>
+                      {/* MP */}
+                      <Tooltip content={`魔法值 ${char.mp}/${char.maxMp || char.mp}`}>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Sparkles size={12} className="text-coc-accent-cyan" />
+                          <span className="text-coc-accent-cyan font-mono">{char.mp}</span>
+                          <span className="text-coc-text-muted text-[10px]">/{char.maxMp || char.mp}</span>
+                        </div>
+                      </Tooltip>
+                      {/* SAN */}
+                      <Tooltip content={`理智值 ${char.san}/${char.maxSan || char.san}`}>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Brain size={12} className="text-yellow-400" />
+                          <span className="text-yellow-400 font-mono">{char.san}</span>
+                          <span className="text-coc-text-muted text-[10px]">/{char.maxSan || char.san}</span>
+                        </div>
+                      </Tooltip>
                     </div>
                   ) : (
                     <span className="text-xs text-coc-text-muted">观察者</span>
                   )}
+
+                  {/* 状态标签 */}
+                  {memberStatuses[member.id]?.length > 0 && (
+                    <div className="mt-1.5">
+                      <StatusTags tags={memberStatuses[member.id]} size="sm" />
+                    </div>
+                  )}
+
+                  {/* KP可编辑状态标记 */}
+                  {room?.isCreator && char && (
+                    <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+                      <StatusTags
+                        tags={memberStatuses[member.id] || []}
+                        isEditable={true}
+                        onChange={(tags) => updateMemberStatus(member.id, tags)}
+                        size="sm"
+                      />
+                    </div>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
