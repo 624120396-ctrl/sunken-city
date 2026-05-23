@@ -345,7 +345,21 @@ export function DashboardPage() {
             </div>
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.3) 0%, transparent 100%)' }} />
           </div>
-          <div className="card-layer-2 rounded-lg p-5">
+          {/* 旧日低语容器 */}
+          <div
+            className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+          >
+            {/* 牛皮纸背景 */}
+            <div
+              className="absolute inset-0 bg-center"
+              style={{
+                backgroundImage: `url(/images/card-bg-parchment.jpg)`,
+                backgroundSize: '100% 100%',
+              }}
+            />
+
+            {/* 磨砂玻璃内容层 */}
+            <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
             {announcements.length > 0 ? (
               <div className="space-y-4">
                 {announcements.slice(0, 3).map((ann) => (
@@ -369,6 +383,10 @@ export function DashboardPage() {
                 <p className="text-sm">暂无新公告</p>
               </div>
             )}
+            </div>
+
+            {/* 悬停边框微光 */}
+            <div className="absolute inset-0 rounded-xl border border-coc-gold/0 hover:border-coc-gold/15 transition-colors duration-500 pointer-events-none" />
           </div>
         </motion.div>
       </div>
