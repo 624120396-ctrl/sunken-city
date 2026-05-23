@@ -925,14 +925,16 @@ export function RoomPage() {
                     {/* 名字 */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm truncate">{member.nickname}</span>
+                        <span className="font-medium text-sm truncate">
+                          {char?.name || member.nickname}
+                        </span>
                         {member.role === 'KP' && (
                           <Crown size={12} className="text-coc-accent-gold flex-shrink-0" />
                         )}
                       </div>
-                      {char && (
+                      {char?.name && (
                         <div className="text-xs text-coc-text-secondary truncate">
-                          {char.name}
+                          {member.nickname}
                         </div>
                       )}
                     </div>
