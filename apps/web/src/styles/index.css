@@ -897,6 +897,70 @@
   animation: warm-flicker 5s ease-in-out infinite;
 }
 
+/* ===== v1.7.1 浅色内容区文字适配 ===== */
+/* 浅色内容区默认深色文字 */
+.content-area {
+  color: var(--content-text);
+}
+
+/* 在浅色内容区中，不在深色容器内的常见浅色Tailwind文字类强制变深色 */
+.content-area .text-coc-parchment,
+.content-area .text-coc-text-primary {
+  color: var(--content-text);
+}
+
+/* 深色容器内恢复浅色文字 */
+.content-area .coc-card .text-coc-parchment,
+.content-area .card-layer-2 .text-coc-parchment,
+.content-area .coc-card-v2 .text-coc-parchment,
+.content-area .modal-layer-3 .text-coc-parchment,
+.content-area .overlay-layer-3 .text-coc-parchment,
+.content-area .coc-glass-v2 .text-coc-parchment,
+.content-area .topnav-v2 .text-coc-parchment,
+.content-area .sidenav-v2 .text-coc-parchment,
+.content-area .user-dropdown-v2 .text-coc-parchment,
+.content-area .nav-plaque .text-coc-parchment,
+.content-area .coc-card .text-coc-text-primary,
+.content-area .card-layer-2 .text-coc-text-primary,
+.content-area .coc-card-v2 .text-coc-text-primary,
+.content-area .modal-layer-3 .text-coc-text-primary,
+.content-area .overlay-layer-3 .text-coc-text-primary,
+.content-area .coc-glass-v2 .text-coc-text-primary,
+.content-area .topnav-v2 .text-coc-text-primary,
+.content-area .sidenav-v2 .text-coc-text-primary,
+.content-area .user-dropdown-v2 .text-coc-text-primary,
+.content-area .nav-plaque .text-coc-text-primary {
+  color: var(--coc-v2-text);
+}
+
+/* 内容区内的深色背景类容器恢复浅色文字 */
+.content-area [class*="bg-coc-abyss"],
+.content-area [class*="bg-coc-deep"],
+.content-area [class*="bg-coc-sunken"],
+.content-area [class*="bg-coc-surface"],
+.content-area [class*="bg-coc-mist"],
+.content-area [class*="bg-coc-bg"] {
+  color: var(--coc-v2-text);
+}
+
+/* 内容区内的金色文字在浅色背景上保持可见（颜色稍深） */
+.content-area .text-coc-gold:not(.coc-card *):not(.card-layer-2 *):not(.coc-card-v2 *):not(.topnav-v2 *):not(.sidenav-v2 *):not(.nav-plaque *) {
+  color: #8b6914;
+}
+
+/* 深色容器内的金色保持原样 */
+.content-area .coc-card .text-coc-gold,
+.content-area .card-layer-2 .text-coc-gold,
+.content-area .coc-card-v2 .text-coc-gold,
+.content-area .modal-layer-3 .text-coc-gold,
+.content-area .overlay-layer-3 .text-coc-gold,
+.content-area .coc-glass-v2 .text-coc-gold,
+.content-area .topnav-v2 .text-coc-gold,
+.content-area .sidenav-v2 .text-coc-gold,
+.content-area .nav-plaque .text-coc-gold {
+  color: var(--coc-v2-gold);
+}
+
 /* ===== v1.7.1 内容区背景 ===== */
 .content-area {
   background: linear-gradient(180deg, var(--content-bg-start) 0%, var(--content-bg-end) 100%);
