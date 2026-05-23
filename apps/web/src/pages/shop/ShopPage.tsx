@@ -73,8 +73,11 @@ export function ShopPage() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ShoppingBag className="w-7 h-7 text-coc-gold" />
-          <h1 className="text-2xl font-ritual font-bold text-coc-parchment">拉莱耶遗珍</h1>
+          <ShoppingBag className="w-7 h-7" style={{ color: '#c9a227' }} />
+          <div>
+            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>拉莱耶遗珍</h1>
+            <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+          </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5 text-coc-parchment">

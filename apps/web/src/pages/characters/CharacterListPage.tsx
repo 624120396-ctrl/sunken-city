@@ -83,9 +83,12 @@ export function CharacterListPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-ritual font-bold text-coc-parchment">调查员名册</h1>
-          <p className="text-sm text-coc-text-muted mt-1">每一张卡都是一段不可删除的命运</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>调查员名册</h1>
+            <p className="text-sm mt-1" style={{ color: '#6b6558' }}>每一张卡都是一段不可删除的命运</p>
+          </div>
+          <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
         <button
           onClick={() => navigate('/characters/new')}
@@ -97,13 +100,14 @@ export function CharacterListPage() {
       </div>
 
       {characters.length === 0 ? (
-        <div className="coc-card text-center py-16">
+        <div className="card-layer-2 text-center py-16 rounded-lg relative corner-ornament">
           <div className="text-4xl mb-4">🎭</div>
-          <p className="text-coc-text-secondary">暂无调查员</p>
-          <p className="text-sm text-coc-text-muted mt-2">创建你的第一个调查员开始冒险</p>
+          <p className="font-ritual" style={{ color: '#FFFEFC' }}>暂无调查员</p>
+          <p className="text-sm mt-2" style={{ color: '#8b8375' }}>创建你的第一个调查员开始冒险</p>
           <button
             onClick={() => navigate('/characters/new')}
-            className="mt-4 text-coc-accent-red hover:underline"
+            className="mt-4 hover:underline"
+            style={{ color: '#a63848' }}
           >
             创建调查员
           </button>

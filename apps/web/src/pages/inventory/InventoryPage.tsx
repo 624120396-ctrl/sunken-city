@@ -196,8 +196,11 @@ export function InventoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Backpack className="w-6 h-6 text-coc-gold" />
-        <h1 className="text-xl font-ritual font-bold text-coc-parchment">背包</h1>
+        <Backpack className="w-6 h-6" style={{ color: '#c9a227' }} />
+        <div>
+          <h1 className="text-xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>背包</h1>
+          <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+        </div>
       </div>
 
       <div className="flex gap-2">
