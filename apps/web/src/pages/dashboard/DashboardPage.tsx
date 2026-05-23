@@ -556,7 +556,14 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="card-layer-2 rounded-lg p-5">
+        <div className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+          {/* 烟雾背景 */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }}
+          />
+          {/* 磨砂玻璃内容层 */}
+          <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
           {onlineLoading ? (
             <div className="flex items-center gap-2 text-coc-text-muted text-sm">
               <Loader2 size={16} className="animate-spin" />
@@ -603,6 +610,10 @@ export function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* 悬停边框微光 */}
+        <div className="absolute inset-0 rounded-xl border border-coc-gold/0 hover:border-coc-gold/15 transition-colors duration-500 pointer-events-none" />
+      </div>
       </motion.div>
 
       <UserProfileModal
