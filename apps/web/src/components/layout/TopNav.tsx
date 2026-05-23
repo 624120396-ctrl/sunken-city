@@ -31,10 +31,16 @@ export function TopNav() {
     <header className="fixed top-0 left-0 right-0 h-14 topnav-v2 z-50 flex items-center px-4 gap-4">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-3 shrink-0">
-        <span className="text-xl font-ritual font-bold tracking-wide" style={{ color: '#c9a227' }}>
+        <img
+          src="/images/logo-gold.png"
+          alt="沉没之城"
+          className="h-9 w-auto hidden sm:block"
+          style={{ filter: 'drop-shadow(0 0 8px rgba(201,162,39,0.3))' }}
+        />
+        <span className="sm:hidden text-xl font-ritual font-bold tracking-wide" style={{ color: '#c9a227' }}>
           沉没之城
         </span>
-        <span className="hidden sm:block text-[10px]" style={{ color: '#6b6558' }}>
+        <span className="hidden md:block text-[10px]" style={{ color: '#6b6558' }}>
           一座城市，万种疯狂
         </span>
       </Link>

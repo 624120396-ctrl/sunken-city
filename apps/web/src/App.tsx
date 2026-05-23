@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
+import { usePageBackground } from '@hooks/usePageBackground';
 import { AnimatePresence } from 'motion/react';
 import { ToastProvider } from '@components/ui/Toast';
 import { CommandPalette } from '@components/ui/CommandPalette';
@@ -73,6 +74,8 @@ const RoomPage = lazy(() => import('@pages/rooms/RoomPage').then(m => ({ default
 function App() {
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
+
+  usePageBackground();
 
   if (!isAuthenticated) {
     return (
