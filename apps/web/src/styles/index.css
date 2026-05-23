@@ -179,8 +179,27 @@
   body {
     @apply bg-coc-deep text-coc-parchment min-h-[100dvh];
     font-family: 'Geist', 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-    /* 全局噪点纹理 */
+    /* 全局背景图 */
+    background-image: url('/images/bg-global.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    /* 噪点纹理层 */
     position: relative;
+  }
+
+  /* 背景图上方加暗色遮罩，确保文字可读 */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    background: rgba(10, 10, 15, 0.82);
   }
 
   /* 噪点纹理层 */
