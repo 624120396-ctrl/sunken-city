@@ -73,7 +73,10 @@ export function RoomListPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-serif font-bold">故事书</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>故事书</h1>
+          <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowJoinModal(true)}
@@ -93,10 +96,10 @@ export function RoomListPage() {
       </div>
 
       {rooms.length === 0 ? (
-        <div className="coc-card text-center py-16">
+        <div className="card-layer-2 text-center py-16 rounded-lg relative corner-ornament">
           <div className="text-4xl mb-4">📖</div>
-          <p className="text-coc-text-secondary">暂无进行中的故事</p>
-          <p className="text-sm text-coc-text-muted mt-2">创建或加入一个房间开始跑团</p>
+          <p className="font-ritual" style={{ color: '#FFFEFC' }}>暂无进行中的故事</p>
+          <p className="text-sm mt-2" style={{ color: '#8b8375' }}>创建或加入一个房间开始跑团</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -104,27 +107,27 @@ export function RoomListPage() {
             <div
               key={room.id}
               onClick={() => navigate(`/rooms/${room.roomId}`)}
-              className="coc-card hover:border-coc-accent-red transition-all cursor-pointer group"
+              className="card-layer-2 hover:border-coc-accent-red transition-all cursor-pointer group rounded-lg relative corner-ornament"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-bold text-lg group-hover:text-coc-accent-red transition-colors">
+                  <h3 className="font-bold text-lg group-hover:text-coc-accent-red transition-colors" style={{ color: '#FFFEFC' }}>
                     {room.name}
                   </h3>
-                  <p className="text-sm text-coc-text-secondary mt-1">
+                  <p className="text-sm mt-1" style={{ color: '#8b8375' }}>
                     #{room.roomId}
                   </p>
                   {room.description && (
-                    <p className="text-sm text-coc-text-muted mt-2 line-clamp-2">
+                    <p className="text-sm mt-2 line-clamp-2" style={{ color: '#8b8375' }}>
                       {room.description}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   {room.isCreator && (
-                    <Crown size={16} className="text-coc-accent-gold" />
+                    <Crown size={16} style={{ color: '#c9a227' }} />
                   )}
-                  <div className="flex items-center gap-1 text-sm text-coc-text-secondary">
+                  <div className="flex items-center gap-1 text-sm" style={{ color: '#a69b85' }}>
                     <Users size={14} />
                     {room.memberCount}
                   </div>
@@ -132,7 +135,7 @@ export function RoomListPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-end">
-                <span className="text-sm text-coc-accent-red flex items-center gap-1">
+                <span className="text-sm flex items-center gap-1" style={{ color: '#a63848' }}>
                   进入房间
                   <ArrowRight size={14} />
                 </span>

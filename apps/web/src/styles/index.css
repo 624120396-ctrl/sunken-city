@@ -967,13 +967,22 @@
   color: #1a1a1a;
 }
 
-/* ===== 内容区深色卡片文字修复 ===== */
+/* 内容区深色卡片内所有 Tailwind 文字类强制变浅 */
 .content-area .card-layer-2,
 .content-area .coc-card,
 .content-area .coc-card-v2,
 .content-area .coc-glass-v2,
-.content-area .coc-card-important {
-  color: var(--coc-v2-text);
+.content-area .coc-card-important,
+.content-area .coc-card-important-v2 {
+  color: #d4c5a8;
+}
+.content-area .card-layer-2 [class*="text-coc-"],
+.content-area .coc-card [class*="text-coc-"],
+.content-area .coc-card-v2 [class*="text-coc-"],
+.content-area .coc-glass-v2 [class*="text-coc-"],
+.content-area .coc-card-important [class*="text-coc-"],
+.content-area .coc-card-important-v2 [class*="text-coc-"] {
+  color: #d4c5a8;
 }
 .content-area .card-layer-2 h1,
 .content-area .card-layer-2 h2,
@@ -983,7 +992,13 @@
 .content-area .coc-card h3,
 .content-area .coc-card-v2 h1,
 .content-area .coc-card-v2 h2,
-.content-area .coc-card-v2 h3 {
+.content-area .coc-card-v2 h3,
+.content-area .coc-card-important h1,
+.content-area .coc-card-important h2,
+.content-area .coc-card-important h3,
+.content-area .coc-card-important-v2 h1,
+.content-area .coc-card-important-v2 h2,
+.content-area .coc-card-important-v2 h3 {
   color: #FFFEFC;
 }
 .content-area .card-layer-2 .text-coc-parchment,
@@ -994,18 +1009,62 @@
 .content-area .coc-card .font-ritual,
 .content-area .coc-card-v2 .text-coc-parchment,
 .content-area .coc-card-v2 .text-coc-text-primary,
-.content-area .coc-card-v2 .font-ritual {
+.content-area .coc-card-v2 .font-ritual,
+.content-area .coc-card-important .text-coc-parchment,
+.content-area .coc-card-important .text-coc-text-primary,
+.content-area .coc-card-important .font-ritual,
+.content-area .coc-card-important-v2 .text-coc-parchment,
+.content-area .coc-card-important-v2 .text-coc-text-primary,
+.content-area .coc-card-important-v2 .font-ritual {
   color: #FFFEFC !important;
+}
+.content-area .card-layer-2 .text-coc-text-secondary,
+.content-area .coc-card .text-coc-text-secondary,
+.content-area .coc-card-v2 .text-coc-text-secondary,
+.content-area .coc-card-important .text-coc-text-secondary,
+.content-area .coc-card-important-v2 .text-coc-text-secondary,
+.content-area .card-layer-2 .text-coc-parchment-dim,
+.content-area .coc-card .text-coc-parchment-dim,
+.content-area .coc-card-v2 .text-coc-parchment-dim,
+.content-area .coc-card-important .text-coc-parchment-dim,
+.content-area .coc-card-important-v2 .text-coc-parchment-dim {
+  color: #a69b85 !important;
 }
 .content-area .card-layer-2 .text-coc-text-muted,
 .content-area .coc-card .text-coc-text-muted,
-.content-area .coc-card-v2 .text-coc-text-muted {
+.content-area .coc-card-v2 .text-coc-text-muted,
+.content-area .coc-card-important .text-coc-text-muted,
+.content-area .coc-card-important-v2 .text-coc-text-muted,
+.content-area .card-layer-2 .text-coc-parchment-faded,
+.content-area .coc-card .text-coc-parchment-faded,
+.content-area .coc-card-v2 .text-coc-parchment-faded,
+.content-area .coc-card-important .text-coc-parchment-faded,
+.content-area .coc-card-important-v2 .text-coc-parchment-faded {
   color: #8b8375 !important;
 }
 .content-area .card-layer-2 .text-coc-gold,
 .content-area .coc-card .text-coc-gold,
-.content-area .coc-card-v2 .text-coc-gold {
+.content-area .coc-card-v2 .text-coc-gold,
+.content-area .coc-card-important .text-coc-gold,
+.content-area .coc-card-important-v2 .text-coc-gold,
+.content-area .card-layer-2 .text-coc-accent-gold,
+.content-area .coc-card .text-coc-accent-gold,
+.content-area .coc-card-v2 .text-coc-accent-gold,
+.content-area .coc-card-important .text-coc-accent-gold,
+.content-area .coc-card-important-v2 .text-coc-accent-gold {
   color: #c9a227 !important;
+}
+.content-area .card-layer-2 .text-coc-blood,
+.content-area .coc-card .text-coc-blood,
+.content-area .coc-card-v2 .text-coc-blood,
+.content-area .coc-card-important .text-coc-blood,
+.content-area .coc-card-important-v2 .text-coc-blood,
+.content-area .card-layer-2 .text-coc-accent-red,
+.content-area .coc-card .text-coc-accent-red,
+.content-area .coc-card-v2 .text-coc-accent-red,
+.content-area .coc-card-important .text-coc-accent-red,
+.content-area .coc-card-important-v2 .text-coc-accent-red {
+  color: #a63848 !important;
 }
 
 /* ===== v1.7.1 内容区卡片（叠加大理石纹理） ===== */
