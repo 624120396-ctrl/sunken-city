@@ -34,6 +34,7 @@ import { CluePanel } from '@components/room/CluePanel';
 import { NpcFocusPanel } from '@components/room/NpcFocusPanel';
 import { CombatTimeline } from '@components/room/CombatTimeline';
 import { GMKitPanel } from '@components/room/GMKitPanel';
+import { RoomLogPanel } from '@components/room/RoomLogPanel';
 
 interface Room {
   id: string;
@@ -230,6 +231,7 @@ export function RoomPage() {
   }>>([]);
   const [showStats, setShowStats] = useState(false);
   const [showEventLog, setShowEventLog] = useState(false);
+  const [showLogPanel, setShowLogPanel] = useState(false);
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showNpcPanel, setShowNpcPanel] = useState(false);
   const [showCombatTimeline, setShowCombatTimeline] = useState(false);
@@ -809,13 +811,13 @@ export function RoomPage() {
             <Swords size={14} />
             战斗
           </button>
-          {/* ===== V2.1 新增：事件日志按钮 ===== */}
+          {/* ===== V2.1 新增：跑团 Log 按钮 ===== */}
           <button
-            onClick={() => setShowEventLog(!showEventLog)}
-            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showEventLog ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
+            onClick={() => setShowLogPanel(!showLogPanel)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showLogPanel ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
           >
             <ScrollText size={14} />
-            日志
+            Log
           </button>
           {/* ===== 新增：统计按钮 ===== */}
           <button
@@ -1492,6 +1494,15 @@ export function RoomPage() {
           )}
         </div>
       </div>
+      {/* ===== V2.1 新增：跑团 Log 面板 ===== */}
+      {showLogPanel && (
+        <RoomLogPanel
+          roomId={roomId || ''}
+          isOpen={showLogPanel}
+          onClose={() => setShowLogPanel(false)}
+          isKP={!!room?.isCreator}
+        />
+      )}
       {/* ===== V2.1 新增：事件日志面板 ===== */}
       {showEventLog && (
         <RoomEventLogPanel

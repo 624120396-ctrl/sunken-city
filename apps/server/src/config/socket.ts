@@ -24,6 +24,29 @@ interface OnlineUser {
 // 全局在线用户列表（基础信息，完整数据走数据库查询）
 const onlineUsers = new Map<string, OnlineUser>();
 
+// ===== V2.1: 跑团 Log 同步钩子 =====
+async function syncEventToLog(roomId: string, eventType: string, payload: any, meta?: { userId?: string; nickname?: string; characterId?: string; characterName?: string }) {
+  try {
+    const log = await prisma.roomLog.findFirst({ where: { roomId } }) || await prisma.roomLog.create({ data: { roomId } });
+    const count = await prisma.roomLogEvent.count({ where: { logId: log.id } });
+    await prisma.roomLogEvent.create({
+      data: {
+        logId: log.id,
+        roomId,
+        eventType,
+        payload: JSON.stringify(payload),
+        userId: meta?.userId || '',
+        userNickname: meta?.nickname || '系统',
+        characterId: meta?.characterId || null,
+        characterName: meta?.characterName || null,
+        sortOrder: count + 1,
+      },
+    });
+  } catch (err) {
+    logger.error('Log 同步失败:', err);
+  }
+}
+
 // 暴露给外部使用（实时查询数据库组装完整资料）
 export async function getOnlineUsers() {
   if (onlineUsers.size === 0) {
@@ -462,6 +485,16 @@ export function setupSocketHandlers(io: SocketIOServer) {
           // 普通消息：广播给所有人
           io.to(roomId).emit('message:received', messageData);
         }
+
+        // ===== V2.1: 同步到 Log =====
+        await syncEventToLog(room.id, 'CHAT_TEXT', {
+          message: content,
+          isSecret: !!isSecret,
+        }, {
+          userId: socket.user!.userId,
+          nickname: socket.user!.nickname,
+          characterId: characterId || undefined,
+        });
       } catch (error) {
         logger.error('发送消息失败:', error);
         socket.emit('error', { message: '发送消息失败' });
@@ -645,6 +678,19 @@ export function setupSocketHandlers(io: SocketIOServer) {
           } else {
             io.to(roomId).emit('dice:result', rollData);
           }
+
+          // ===== V2.1: 同步到 Log =====
+          await syncEventToLog(room.id, 'DICE_ROLL', {
+            rollType,
+            targetName,
+            targetValue,
+            rollResult,
+            rolls,
+            successLevel,
+          }, {
+            userId,
+            nickname: socket.user!.nickname,
+          });
         }
 
         logger.info(`用户 ${socket.user?.nickname} 在房间 ${roomId} 投骰: ${rollResult}`);
