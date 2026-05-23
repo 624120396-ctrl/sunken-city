@@ -410,7 +410,7 @@ export function DashboardPage() {
           <Link to="/ranks" className="group block">
             <div className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }} />
-              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
+              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[10px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-white/[0.06] border border-white/[0.10] backdrop-blur-sm flex items-center justify-center group-hover:bg-white/[0.10] group-hover:border-coc-gold/25 transition-all duration-300">
                     <Crown className="text-coc-gold/90 group-hover:text-coc-gold transition-colors" size={22} />
@@ -429,7 +429,7 @@ export function DashboardPage() {
           <Link to="/titles" className="group block">
             <div className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }} />
-              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
+              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[10px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-white/[0.06] border border-white/[0.10] backdrop-blur-sm flex items-center justify-center group-hover:bg-white/[0.10] group-hover:border-coc-blood/25 transition-all duration-300">
                     <Award className="text-coc-blood-glow/90 group-hover:text-coc-blood-glow transition-colors" size={22} />
@@ -571,7 +571,7 @@ export function DashboardPage() {
             style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }}
           />
           {/* 磨砂玻璃内容层 */}
-          <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
+          <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[10px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
           {onlineLoading ? (
             <div className="flex items-center gap-2 text-coc-text-muted text-sm">
               <Loader2 size={16} className="animate-spin" />
