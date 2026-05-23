@@ -35,23 +35,26 @@
   background-color: var(--coc-v2-bg);
 }
 
-/* Layer 2 — 卡片（无边框 ring，改用阴影+微光） */
+/* Layer 2 — 卡片：磨砂玻璃 + 黑色阴影 */
 .card-layer-2 {
-  background: rgba(18, 18, 26, 0.75);
-  border: 1px solid var(--coc-v2-border);
-  border-radius: 8px;
-  box-shadow: 
-    0 4px 24px rgba(0, 0, 0, 0.4), 
-    0 0 0 1px rgba(255, 255, 255, 0.03);
-  transition: box-shadow 0.2s ease-out, transform 0.2s ease-out, border-color 0.2s ease-out;
+  background: rgba(18, 18, 26, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow 0.3s ease-out, transform 0.25s ease-out, border-color 0.3s ease-out;
 }
 
 .card-layer-2:hover {
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--coc-v2-gold-glow);
-  transform: translateY(-2px);
-  border-color: #3a3a45;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(201, 162, 39, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform: translateY(-3px);
+  border-color: rgba(201, 162, 39, 0.15);
 }
 
 /* Layer 3 — 悬浮遮罩 */
@@ -224,10 +227,16 @@
 @layer components {
   /* ===== v1.1 卡片系统 ===== */
   
-  /* 基础卡片 - 带符文角标 */
+  /* 基础卡片 - 磨砂玻璃 + 暗色阴影 */
   .coc-card {
-    @apply border border-coc-void rounded-lg p-4 relative;
-    background: rgba(26, 26, 36, 0.72);
+    @apply border rounded-xl p-4 relative;
+    background: rgba(26, 26, 36, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
     transition: all 0.3s ease;
   }
 
@@ -276,12 +285,15 @@
 
   /* 卡片hover效果 */
   .coc-card-hover {
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   }
   .coc-card-hover:hover {
-    @apply border-coc-rift;
+    border-color: rgba(201, 162, 39, 0.15);
     transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(139, 38, 53, 0.15), 0 0 20px rgba(139, 38, 53, 0.1);
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(201, 162, 39, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   /* ===== v1.1 输入框系统 ===== */
