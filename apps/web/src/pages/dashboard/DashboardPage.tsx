@@ -408,33 +408,41 @@ export function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link to="/ranks" className="group block">
-            <div className="card-layer-2 p-5 rounded-lg">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-coc-gold/10 border border-coc-gold/20 flex items-center justify-center group-hover:bg-coc-gold/20 group-hover:scale-110 transition-all duration-300">
-                  <Crown className="text-coc-gold" size={22} />
-                </div>
-                <div>
-                  <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-gold transition-colors">
-                    位阶天梯
-                  </h3>
-                  <p className="text-xs text-coc-text-muted mt-1">查看位阶体系与灵魂碎片来源</p>
+            <div className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }} />
+              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-white/[0.06] border border-white/[0.10] backdrop-blur-sm flex items-center justify-center group-hover:bg-white/[0.10] group-hover:border-coc-gold/25 transition-all duration-300">
+                    <Crown className="text-coc-gold/90 group-hover:text-coc-gold transition-colors" size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-gold-glow transition-colors duration-300" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>
+                      位阶天梯
+                    </h3>
+                    <p className="text-xs text-coc-text-secondary mt-1" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>查看位阶体系与灵魂碎片来源</p>
+                  </div>
                 </div>
               </div>
+              <div className="absolute inset-0 rounded-xl border border-coc-gold/0 group-hover:border-coc-gold/15 transition-colors duration-500 pointer-events-none" />
             </div>
           </Link>
           <Link to="/titles" className="group block">
-            <div className="card-layer-2 p-5 rounded-lg">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-coc-blood/10 border border-coc-blood/20 flex items-center justify-center group-hover:bg-coc-blood/20 group-hover:scale-110 transition-all duration-300">
-                  <Award className="text-coc-blood-glow" size={22} />
-                </div>
-                <div>
-                  <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-blood-glow transition-colors">
-                    印记图鉴
-                  </h3>
-                  <p className="text-xs text-coc-text-muted mt-1">探索可收集的称号与成就</p>
+            <div className="relative overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(/images/card-bg-smoke.png)` }} />
+              <div className="relative m-2 rounded-lg bg-white/[0.03] backdrop-blur-[3px] border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.04)] p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-white/[0.06] border border-white/[0.10] backdrop-blur-sm flex items-center justify-center group-hover:bg-white/[0.10] group-hover:border-coc-blood/25 transition-all duration-300">
+                    <Award className="text-coc-blood-glow/90 group-hover:text-coc-blood-glow transition-colors" size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-blood-glow transition-colors duration-300" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>
+                      印记图鉴
+                    </h3>
+                    <p className="text-xs text-coc-text-secondary mt-1" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>探索可收集的称号与成就</p>
+                  </div>
                 </div>
               </div>
+              <div className="absolute inset-0 rounded-xl border border-coc-gold/0 group-hover:border-coc-gold/15 transition-colors duration-500 pointer-events-none" />
             </div>
           </Link>
         </div>
