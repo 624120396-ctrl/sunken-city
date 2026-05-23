@@ -940,33 +940,36 @@ export function RoomPage() {
                     </div>
                   </div>
 
-                  {/* 第二行：HP/MP/SAN 数值 */}
+                  {/* 两行：HP+MP / SAN */}
                   {char ? (
-                    <div className="flex items-center gap-2">
-                      {/* HP */}
-                      <Tooltip content={`生命值 ${char.hp}/${char.maxHp || char.hp}`}>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Heart size={12} className="text-coc-accent-red" />
-                          <span className="text-coc-accent-red font-mono">{char.hp}</span>
-                          <span className="text-coc-text-muted text-[10px]">/{char.maxHp || char.hp}</span>
-                        </div>
-                      </Tooltip>
-                      {/* MP */}
-                      <Tooltip content={`魔法值 ${char.mp}/${char.maxMp || char.mp}`}>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Sparkles size={12} className="text-coc-accent-cyan" />
-                          <span className="text-coc-accent-cyan font-mono">{char.mp}</span>
-                          <span className="text-coc-text-muted text-[10px]">/{char.maxMp || char.mp}</span>
-                        </div>
-                      </Tooltip>
-                      {/* SAN */}
-                      <Tooltip content={`理智值 ${char.san}/${char.maxSan || char.san}`}>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Brain size={12} className="text-yellow-400" />
-                          <span className="text-yellow-400 font-mono">{char.san}</span>
-                          <span className="text-coc-text-muted text-[10px]">/{char.maxSan || char.san}</span>
-                        </div>
-                      </Tooltip>
+                    <div className="space-y-1">
+                      {/* 第一行：HP + MP */}
+                      <div className="flex items-center gap-2">
+                        <Tooltip content={`生命值 ${char.hp}/${char.maxHp || char.hp}`}>
+                          <div className="flex items-center gap-1 text-xs">
+                            <Heart size={12} className="text-coc-accent-red" />
+                            <span className="text-coc-accent-red font-mono">{char.hp}</span>
+                            <span className="text-coc-text-muted text-[10px]">/{char.maxHp || char.hp}</span>
+                          </div>
+                        </Tooltip>
+                        <Tooltip content={`魔法值 ${char.mp}/${char.maxMp || char.mp}`}>
+                          <div className="flex items-center gap-1 text-xs">
+                            <Sparkles size={12} className="text-coc-accent-cyan" />
+                            <span className="text-coc-accent-cyan font-mono">{char.mp}</span>
+                            <span className="text-coc-text-muted text-[10px]">/{char.maxMp || char.mp}</span>
+                          </div>
+                        </Tooltip>
+                      </div>
+                      {/* 第二行：SAN */}
+                      <div className="flex items-center gap-2">
+                        <Tooltip content={`理智值 ${char.san}/${char.maxSan || char.san}`}>
+                          <div className="flex items-center gap-1 text-xs">
+                            <Brain size={12} className="text-yellow-400" />
+                            <span className="text-yellow-400 font-mono">{char.san}</span>
+                            <span className="text-coc-text-muted text-[10px]">/{char.maxSan || char.san}</span>
+                          </div>
+                        </Tooltip>
+                      </div>
                     </div>
                   ) : (
                     <span className="text-xs text-coc-text-muted">观察者</span>
@@ -1102,14 +1105,6 @@ export function RoomPage() {
                           <div className="w-10 h-10 rounded-full bg-coc-bg-tertiary border border-coc-border flex items-center justify-center">
                             <User size={20} className="text-coc-text-muted" />
                           </div>
-                        )}
-                        {sender?.frameUrl && (
-                          <img
-                            src={sender.frameUrl}
-                            className="absolute inset-0 w-full h-full pointer-events-none"
-                            style={{ transform: 'scale(1.35)' }}
-                            alt=""
-                          />
                         )}
                       </div>
                     );
