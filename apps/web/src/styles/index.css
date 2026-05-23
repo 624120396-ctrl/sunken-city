@@ -961,10 +961,61 @@
   color: var(--coc-v2-gold);
 }
 
-/* ===== v1.7.1 内容区背景 ===== */
+/* ===== v1.7.1 内容区背景（更实色，覆盖全局背景图） ===== */
 .content-area {
-  background: linear-gradient(180deg, var(--content-bg-start) 0%, var(--content-bg-end) 100%);
-  color: var(--content-text);
+  background: linear-gradient(180deg, #FDFDF9 0%, #F2F3EE 100%);
+  color: #1a1a1a;
+}
+
+/* 在内容区中，卡片需要更实色的深色背景（因为底层变浅了） */
+.content-area .card-layer-2,
+.content-area .coc-card {
+  background: linear-gradient(
+    135deg,
+    rgba(18, 18, 26, 0.92) 0%,
+    rgba(10, 10, 15, 0.95) 100%
+  );
+  border: 1px solid rgba(201, 162, 39, 0.12);
+}
+
+.content-area .card-layer-2:hover,
+.content-area .coc-card:hover {
+  border-color: rgba(201, 162, 39, 0.25);
+}
+
+/* ===== v1.7.1 内容区按钮适配 ===== */
+/* 旧版按钮在浅色内容区需要更实色 */
+.content-area .coc-btn-blood,
+.content-area .coc-btn-primary {
+  background: linear-gradient(135deg, #6b1a26 0%, #8b2635 50%, #a03040 100%) !important;
+  color: #FFFEFC !important;
+  border: 1px solid rgba(139, 38, 53, 0.5) !important;
+}
+
+.content-area .coc-btn-gold {
+  background: linear-gradient(
+    135deg,
+    #6b5320 0%,
+    #9a7b2a 20%,
+    #c9a227 45%,
+    #e8d4a0 55%,
+    #c9a227 70%,
+    #7a5e2a 100%
+  ) !important;
+  color: #0f0f14 !important;
+  border: 1px solid rgba(201, 162, 39, 0.5) !important;
+}
+
+.content-area .coc-btn-void,
+.content-area .coc-btn-secondary {
+  background: linear-gradient(135deg, rgba(18, 18, 26, 0.92) 0%, rgba(10, 10, 15, 0.95) 100%) !important;
+  color: #d4c5a8 !important;
+  border: 1px solid rgba(201, 162, 39, 0.15) !important;
+}
+
+.content-area .coc-btn-void:hover,
+.content-area .coc-btn-secondary:hover {
+  border-color: rgba(201, 162, 39, 0.3) !important;
 }
 
 /* ===== v1.7.1 导航栏样式 ===== */
@@ -1392,22 +1443,10 @@
   -webkit-backdrop-filter: blur(4px);
 }
 
-/* ===== v1.7.1 响应式断点辅助 ===== */
+/* ===== v1.7.1 响应式断点辅助（仅移动端需要底部padding） ===== */
 @media (max-width: 767px) {
   .content-area {
     padding-bottom: 64px; /* 为底部Tab栏留出空间 */
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .content-area {
-    padding-left: 56px; /* 为收起侧边栏留出空间 */
-  }
-}
-
-@media (min-width: 1024px) {
-  .content-area {
-    padding-left: 224px; /* 为展开侧边栏留出空间 */
   }
 }
 
