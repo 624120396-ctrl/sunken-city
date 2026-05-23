@@ -183,7 +183,12 @@ model Room {
   
   // 新增：当前场景描述
   sceneDesc   String?
-  
+
+  // ===== V2.1 新增 =====
+  currentPhaseId   String?
+  currentSceneId   String?
+  activeCombatId   String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -195,6 +200,16 @@ model Room {
   clues       RoomClue[]
   npcs        RoomNpc[]
   scenarioSession ScenarioSession?
+
+  // V2.1 关系
+  phases           RoomPhase[]
+  scenes           RoomScene[]
+  combatSessions   CombatSession[]
+  gmNotes          GmNote[]
+  presets          ScenePreset[]
+  eventLogs        RoomEventLog[]
+  roomLogs         RoomLog[]
+  subRooms         SubRoom[]
 }
 
 model RoomMember {
@@ -208,6 +223,10 @@ model RoomMember {
   
   // 新增：角色状态标记（JSON数组：injured, poisoned, insane, unconscious, dying）
   statusTags  String   @default("[]")
+
+  // ===== V2.1 新增 =====
+  currentRound     Int      @default(0)
+  displayedCharacterId String?
 
   room        Room      @relation(fields: [roomId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
@@ -246,6 +265,10 @@ model DiceRoll {
   rolls        String
   successLevel String?
   createdAt    DateTime @default(now())
+
+  // ===== V2.1 新增 =====
+  isBlind          Boolean  @default(false)
+  visibleToUserIds String   @default("[]")
 
   room Room? @relation(fields: [roomId], references: [id])
   user User? @relation(fields: [userId], references: [id])
@@ -300,6 +323,351 @@ model PrivateMessage {
 
   @@index([roomId, receiverId])
   @@index([createdAt])
+}
+
+// ===== V2.1 房间系统升级模型 =====
+
+model RoomPhase {
+  id          String   @id @default(uuid())
+  roomId      String
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  status      String   @default("active") // active | completed | skipped
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  scenes      RoomScene[]
+
+  @@index([roomId])
+}
+
+model RoomScene {
+  id          String   @id @default(uuid())
+  phaseId     String
+  roomId      String
+  title       String
+  description String?
+  atmosphere  String   @default("normal") // normal | dark | horror | mystery | warm
+  imageUrl    String?
+  musicUrl    String?
+  sortOrder   Int      @default(0)
+  status      String   @default("draft") // draft | active | completed
+
+  phase       RoomPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  npcs        RoomNpc[]
+
+  @@index([phaseId])
+  @@index([roomId])
+}
+
+model CombatSession {
+  id          String   @id @default(uuid())
+  roomId      String
+  roundCount  Int      @default(0)
+  status      String   @default("active") // active | paused | ended
+  initiative  String   @default("[]") // JSON: [{actorId, actorType, dex, roll}]
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  rounds      CombatRound[]
+
+  @@index([roomId])
+}
+
+model CombatRound {
+  id          String   @id @default(uuid())
+  combatId    String
+  roundNum    Int
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  combat      CombatSession @relation(fields: [combatId], references: [id], onDelete: Cascade)
+  actions     CombatAction[]
+
+  @@index([combatId])
+}
+
+model CombatAction {
+  id          String   @id @default(uuid())
+  roundId     String
+  actorId     String
+  actorType   String   @default("player") // player | npc | enemy
+  actionType  String   // attack | dodge | spell | item | move | end
+  targetId    String?
+  targetType  String?
+  description String?
+  result      String   @default("{}") // JSON: {hit, damage, crit, effects}
+  createdAt   DateTime @default(now())
+
+  round       CombatRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@index([roundId])
+}
+
+model RoomEventLog {
+  id          String   @id @default(uuid())
+  roomId      String
+  phaseId     String?
+  sceneId     String?
+  userId      String?
+  eventType   String   // DICE_ROLL | CLUE_DISCOVERED | PHASE_CHANGE | SCENE_CHANGE | COMBAT_ACTION | NPC_STATE_CHANGE | MEMBER_JOIN | MEMBER_LEAVE | STATUS_CHANGE
+  payload     String   @default("{}") // JSON
+  isSecret    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([roomId, eventType])
+}
+
+model GmNote {
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String
+  title       String
+  content     String
+  tags        String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model ScenePreset {
+  id          String   @id @default(uuid())
+  roomId      String
+  name        String
+  atmosphere  String   @default("normal")
+  sceneDesc   String?
+  sceneImageUrl String?
+  sceneMusicUrl String?
+  npcSnapshots    String   @default("[]") // JSON
+  clueSnapshots   String   @default("[]") // JSON
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model MemberSnapshot {
+  id          String   @id @default(uuid())
+  roomMemberId String
+  snapshotData String   // JSON: {hp, mp, san, statusTags, items, skills}
+  reason      String   @default("member_left") // member_left | combat_end | scene_change
+  createdAt   DateTime @default(now())
+
+  @@index([roomMemberId])
+}
+
+// ===== 跑团 Log（模块 9）=====
+
+model RoomLog {
+  id          String   @id @default(uuid())
+  roomId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  events      RoomLogEvent[]
+  annotations RoomLogAnnotation[]
+  exports     RoomLogExport[]
+
+  @@index([roomId])
+}
+
+model RoomLogEvent {
+  id            String   @id @default(uuid())
+  logId         String
+  roomId        String
+  eventType     String   // CHAT_TEXT | DICE_ROLL | SCENE_CHANGE | COMBAT_ACTION | CLUE_REVEAL | NPC_DIALOGUE | PHASE_CHANGE | SYSTEM_EVENT
+  payload       String   // JSON
+  timestamp     DateTime @default(now())
+  characterId   String?
+  characterName String?
+  userId        String
+  userNickname  String
+  sortOrder     Int      @default(0)
+
+  log           RoomLog  @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  @@index([logId, timestamp])
+  @@index([roomId, eventType])
+}
+
+model RoomLogAnnotation {
+  id          String   @id @default(uuid())
+  logId       String
+  fromEventId String
+  toEventId   String?
+  type        String   // NARRATION | MERGE | REDACT | NOTE
+  content     String
+  authorId    String   // KP userId
+  createdAt   DateTime @default(now())
+
+  log         RoomLog  @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  @@index([logId])
+}
+
+model RoomLogExport {
+  id          String   @id @default(uuid())
+  logId       String
+  format      String   // markdown | html | plain | json | pdf
+  content     String
+  fileUrl     String?
+  options     String   @default("{}") // JSON
+  createdAt   DateTime @default(now())
+
+  log         RoomLog  @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  @@index([logId])
+}
+
+// ===== 子房间（模块 10）=====
+
+model SubRoom {
+  id            String   @id @default(uuid())
+  parentRoomId  String
+  name          String
+  description   String?
+  atmosphere    String   @default("normal")
+  sceneImageUrl String?
+  creatorId     String
+  timeMode      String   @default("sync") // sync | paused | independent
+  status        String   @default("active") // active | paused | dissolved
+  sceneDesc     String?
+  syncEvents    String   @default("[]") // JSON
+  createdAt     DateTime @default(now())
+  dissolvedAt   DateTime?
+
+  parentRoom    Room     @relation(fields: [parentRoomId], references: [id], onDelete: Cascade)
+  members       SubRoomMember[]
+  messages      SubRoomMessage[]
+  clues         SubRoomClue[]
+  npcs          SubRoomNpc[]
+
+  @@index([parentRoomId])
+  @@index([status])
+}
+
+model SubRoomMember {
+  id                String   @id @default(uuid())
+  subRoomId         String
+  userId            String
+  roomMemberId      String
+  characterId       String?
+  characterSnapshot String?  // JSON
+  role              String   @default("PLAYER")
+  canInvite         Boolean  @default(false)
+  joinedAt          DateTime @default(now())
+  leftAt            DateTime?
+
+  subRoom           SubRoom  @relation(fields: [subRoomId], references: [id], onDelete: Cascade)
+
+  @@unique([subRoomId, userId])
+  @@index([subRoomId])
+}
+
+model SubRoomMessage {
+  id            String   @id @default(uuid())
+  subRoomId     String
+  userId        String
+  nickname      String
+  characterName String?
+  content       String
+  type          String   @default("text")
+  rollData      String?
+  timestamp     DateTime @default(now())
+
+  subRoom       SubRoom  @relation(fields: [subRoomId], references: [id], onDelete: Cascade)
+
+  @@index([subRoomId, timestamp])
+}
+
+model SubRoomClue {
+  id           String   @id @default(uuid())
+  subRoomId    String
+  parentClueId String?
+  content      String
+  source       String
+  category     String?
+  isRevealed   Boolean  @default(false)
+  discoveredBy String?
+  createdAt    DateTime @default(now())
+
+  subRoom      SubRoom  @relation(fields: [subRoomId], references: [id], onDelete: Cascade)
+
+  @@index([subRoomId])
+}
+
+model SubRoomNpc {
+  id          String   @id @default(uuid())
+  subRoomId   String
+  parentNpcId String?
+  name        String
+  description String?
+  avatarUrl   String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+
+  subRoom     SubRoom  @relation(fields: [subRoomId], references: [id], onDelete: Cascade)
+
+  @@index([subRoomId])
+}
+
+// ===== 现有模型 V2.1 扩展 =====
+
+model RoomClue {
+  id            String   @id @default(uuid())
+  roomId        String
+  title         String
+  content       String
+  imageUrl      String?
+  discoveredBy  String   @default("all")
+  isHidden      Boolean  @default(false)
+  requiresSkill String?
+  requiresValue Int?
+  createdAt     DateTime @default(now())
+
+  // ===== V2.1 新增 =====
+  discoverySkill   String?
+  discoveryThreshold Int?
+  discoveredByUserId String?
+  discoveredAt     DateTime?
+  autoReveal       Boolean  @default(false)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model RoomNpc {
+  id          String   @id @default(uuid())
+  roomId      String
+  name        String
+  avatarUrl   String?
+  description String?
+  statsJson   String   @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // ===== V2.1 新增 =====
+  sceneId          String?
+  isActiveInScene  Boolean  @default(true)
+  dynamicStats     String   @default("{}")
+
+  room  Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  scene RoomScene? @relation(fields: [sceneId], references: [id])
+
+  @@index([roomId])
 }
 
 // 新增：平台级用户私信表
@@ -825,39 +1193,6 @@ model RelicTrade {
   @@index([relicKey])
 }
 
-
-model RoomClue {
-  id            String   @id @default(uuid())
-  roomId        String
-  title         String
-  content       String
-  imageUrl      String?
-  discoveredBy  String   @default("all")
-  isHidden      Boolean  @default(false)
-  requiresSkill String?
-  requiresValue Int?
-  createdAt     DateTime @default(now())
-
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  @@index([roomId])
-}
-
-
-model RoomNpc {
-  id          String   @id @default(uuid())
-  roomId      String
-  name        String
-  avatarUrl   String?
-  description String?
-  statsJson   String   @default("{}")
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  @@index([roomId])
-}
 
 
 model Scenario {

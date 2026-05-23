@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Dice5, Swords, Shield, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, Timer, User, ScrollText } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { Modal } from '@components/ui/Modal';
@@ -27,6 +27,9 @@ import { QuickRollBar } from '@components/room/QuickRollBar';
 import { CountdownPanel } from '@components/room/CountdownPanel';
 import { RoomStatsPanel } from '@components/room/RoomStatsPanel';
 import { StaggerList, StaggerItem } from '@components/ui/Animation';
+// ===== V2.1 新增 =====
+import { RoomStatusBar } from '@components/room/RoomStatusBar';
+import { RoomEventLogPanel } from '@components/room/RoomEventLogPanel';
 
 interface Room {
   id: string;
@@ -37,9 +40,39 @@ interface Room {
   isCreator: boolean;
   isMember: boolean;
   members: RoomMember[];
-  // 新增字段
   atmosphere?: string;
   sceneDesc?: string;
+  // ===== V2.1 新增 =====
+  phases?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    sortOrder: number;
+    status: string;
+    scenes: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      atmosphere: string;
+      imageUrl?: string;
+      musicUrl?: string;
+      sortOrder: number;
+      status: string;
+    }>;
+  }>;
+  currentPhase?: {
+    id: string;
+    title: string;
+    description?: string;
+    status: string;
+  } | null;
+  currentScene?: {
+    id: string;
+    title: string;
+    description?: string;
+    atmosphere: string;
+    imageUrl?: string;
+  } | null;
 }
 
 interface RoomMember {
@@ -192,6 +225,7 @@ export function RoomPage() {
     isActive: boolean;
   }>>([]);
   const [showStats, setShowStats] = useState(false);
+  const [showEventLog, setShowEventLog] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -733,6 +767,14 @@ export function RoomPage() {
               </span>
             )}
           </button>
+          {/* ===== V2.1 新增：事件日志按钮 ===== */}
+          <button
+            onClick={() => setShowEventLog(!showEventLog)}
+            className={`btn-v2 coc-btn-secondary text-sm flex items-center gap-1 ${showEventLog ? 'bg-coc-gold/10 border-coc-gold/30' : ''}`}
+          >
+            <ScrollText size={14} />
+            日志
+          </button>
           {/* ===== 新增：统计按钮 ===== */}
           <button
             onClick={() => {
@@ -776,8 +818,17 @@ export function RoomPage() {
         </div>
       </div>
 
+      {/* ===== V2.1 新增：房间状态栏 ===== */}
+      <RoomStatusBar
+        currentPhase={room?.currentPhase || null}
+        currentScene={room?.currentScene || null}
+        phases={room?.phases}
+        isKP={!!room?.isCreator}
+      />
+
       {/* 主内容区 */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
+      <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
         {/* 左侧：成员列表 */}
         <div className="lg:col-span-1 space-y-4 overflow-y-auto min-h-0">
           {/* 当前状态条 - 自己的角色 */}
@@ -1389,6 +1440,16 @@ export function RoomPage() {
           )}
         </div>
       </div>
+      {/* ===== V2.1 新增：事件日志面板 ===== */}
+      {showEventLog && (
+        <RoomEventLogPanel
+          roomId={roomId || ''}
+          isOpen={showEventLog}
+          onClose={() => setShowEventLog(false)}
+          isKP={!!room?.isCreator}
+        />
+      )}
+    </div>
 
       {/* 选择角色弹窗 */}
       <Modal

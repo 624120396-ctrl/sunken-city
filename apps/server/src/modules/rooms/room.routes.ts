@@ -99,6 +99,13 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
             },
           },
         },
+        // V2.1: 包含阶段和场景信息
+        phases: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            scenes: { orderBy: { sortOrder: 'asc' } },
+          },
+        },
       },
     });
 
@@ -133,6 +140,10 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
 
     const titleMap = new Map(titleConfigs.map(t => [t.key, t.name]));
 
+    // V2.1: 计算当前阶段和场景
+    const currentPhase = room.phases.find(p => p.id === room.currentPhaseId);
+    const currentScene = currentPhase?.scenes.find(s => s.id === room.currentSceneId);
+
     res.json({
       success: true,
       data: {
@@ -142,8 +153,41 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
           name: room.name,
           description: room.description,
           status: room.status,
+          atmosphere: room.atmosphere,
+          sceneDesc: room.sceneDesc,
           isCreator,
           isMember,
+          // V2.1 阶段信息
+          currentPhase: currentPhase ? {
+            id: currentPhase.id,
+            title: currentPhase.title,
+            description: currentPhase.description,
+            status: currentPhase.status,
+          } : null,
+          currentScene: currentScene ? {
+            id: currentScene.id,
+            title: currentScene.title,
+            description: currentScene.description,
+            atmosphere: currentScene.atmosphere,
+            imageUrl: currentScene.imageUrl,
+          } : null,
+          phases: room.phases.map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            sortOrder: p.sortOrder,
+            status: p.status,
+            scenes: p.scenes.map(s => ({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              atmosphere: s.atmosphere,
+              imageUrl: s.imageUrl,
+              musicUrl: s.musicUrl,
+              sortOrder: s.sortOrder,
+              status: s.status,
+            })),
+          })),
           members: room.members.map(m => {
             const rank = getCurrentRank(m.user.exp);
             return {

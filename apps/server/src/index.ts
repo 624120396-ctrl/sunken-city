@@ -16,6 +16,8 @@ import { getOnlineUsers } from './config/socket';
 import authRoutes from './modules/auth/auth.routes';
 import characterRoutes from './modules/characters/character.routes';
 import roomRoutes from './modules/rooms/room.routes';
+import phaseRoutes from './modules/rooms/phase.routes';
+import eventLogRoutes from './modules/rooms/event-log.routes';
 import diceRoutes from './modules/dice/dice.routes';
 import combatRoutes from './modules/combat/combat.routes';
 import reportRoutes from './modules/reports/report.routes';
@@ -80,6 +82,8 @@ app.get('/api/online-users', (_req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/characters', characterRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/rooms', phaseRoutes);
+app.use('/api/rooms', eventLogRoutes);
 app.use('/api/dice', diceRoutes);
 app.use('/api', combatRoutes);
 app.use('/api', reportRoutes);
