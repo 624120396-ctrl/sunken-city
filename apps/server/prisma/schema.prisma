@@ -58,6 +58,14 @@ model User {
   directMessagesSent     DirectMessage[]    @relation("SentDirectMessages")
   directMessagesReceived DirectMessage[]    @relation("ReceivedDirectMessages")
 
+  // 剧本跑团系统
+  authoredScenarios      Scenario[]
+  achievements           UserAchievement[]
+  dreamDailies           UserDreamDaily[]
+  dreamDraws             UserDreamDraw[]
+  fishingDailies         UserFishingDaily[]
+  fishingLogs            UserFishingLog[]
+
   @@index([exp])
 }
 
@@ -127,6 +135,7 @@ model Character {
   roomMembers RoomMember[]
   privateMessagesSent   PrivateMessage[] @relation("SentMessages")
   privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
+  relics                  CharacterRelic[]
 }
 
 // COC7e 职业模板表
@@ -183,6 +192,9 @@ model Room {
   privateMessages PrivateMessage[]
   countdowns  Countdown[]
   messages    RoomMessage[]
+  clues       RoomClue[]
+  npcs        RoomNpc[]
+  scenarioSession ScenarioSession?
 }
 
 model RoomMember {
@@ -654,4 +666,579 @@ model DirectMessage {
   @@index([receiverId, createdAt])
   @@index([receiverId, isRead])
 }
+
+// ========== 剧本跑团系统（Scenario） ==========
+
+model AiNarrativeCache {
+  id         String   @id @default(cuid())
+  sessionId  String
+  nodeId     String
+  cacheKey   String
+  promptHash String
+  cachedText String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([sessionId, nodeId, cacheKey])
+  @@index([promptHash])
+}
+
+
+model ArgumentRecord {
+  id              String   @id @default(cuid())
+  sessionId       String
+  doubtId         String
+  selectedClueIds String   // JSON array string
+  result          String   // SUCCESS | FAIL | ABORT
+  createdAt       DateTime @default(now())
+
+  session ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([doubtId])
+}
+
+
+model CharacterRelic {
+  id            String   @id @default(uuid())
+  characterId   String
+  userId        String // 冗余索引，方便按用户查询
+  relicKey      String // 对应 ShopItem.key
+  source        String   @default("shop") // shop | room_drop | trade | gift
+  durability    Int? // 当前耐久
+  maxDurability Int? // 最大耐久
+  usedCount     Int      @default(0) // 已使用次数（consumable）
+  isEquipped    Boolean  @default(false) // 是否标记为常备（展示用）
+  tradeLockId   String? // 若正在挂单，记录 RelicTrade.id
+  acquiredAt    DateTime @default(now())
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId])
+  @@index([userId])
+  @@index([tradeLockId])
+}
+
+
+model Clue {
+  id              String   @id @default(cuid())
+  scenarioId      String
+  name            String
+  description     String
+  icon            String?
+  type            String   // PERSON | ITEM | EVENT | LOCATION
+  unlockCondition String?  // JSON string
+  createdAt       DateTime @default(now())
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([type])
+}
+
+
+model Doubt {
+  id                String   @id @default(cuid())
+  scenarioId        String
+  nodeId            String
+  title             String
+  description       String
+  requiredClueCount Int      @default(3)
+  correctClueIds    String   // JSON array string
+  successNodeId     String
+  failNodeId        String
+  maxRetry          Int      @default(3)
+  modePunishment    String?  // JSON string
+  createdAt         DateTime @default(now())
+
+  scenario Scenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  node     ScenarioNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([nodeId])
+}
+
+
+model DreamCard {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  rarity    String   @default("common") // common | rare | epic | legendary
+  imageUrl  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model FishingConfig {
+  id         String   @id @default(uuid())
+  dailyLimit Int      @default(5)
+  extraCost  Int      @default(10)
+  updatedAt  DateTime @updatedAt
+}
+
+
+model FishingItem {
+  id                 String   @id @default(uuid())
+  key                String   @unique
+  name               String
+  description        String
+  rarity             String // JUNK | COMMON | UNCOMMON | RARE | ELDRITCH
+  sellPrice          Int      @default(0)
+  sellCurrency       String   @default("coin") // coin | stardust
+  isCollection       Boolean  @default(false)
+  collectionCategory String?
+  iconUrl            String?
+  weight             Int      @default(100)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+}
+
+
+model RelicOverride {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String?
+  description String?
+  type        String?
+  iconUrl     String?
+  updatedAt   DateTime @updatedAt
+}
+
+
+model RelicTrade {
+  id                     String    @id @default(uuid())
+  sellerId               String
+  sellerCharacterRelicId String? // 若从角色上解绑交易，记录来源
+  relicKey               String
+  price                  Int
+  currency               String    @default("coin")
+  status                 String    @default("active") // active | sold | cancelled
+  buyerId                String?
+  relicSnapshot          String? // JSON: { durability, usedCount, maxDurability, isEquipped }
+  createdAt              DateTime  @default(now())
+  soldAt                 DateTime?
+
+  @@index([status, createdAt])
+  @@index([relicKey])
+}
+
+
+model RoomClue {
+  id            String   @id @default(uuid())
+  roomId        String
+  title         String
+  content       String
+  imageUrl      String?
+  discoveredBy  String   @default("all")
+  isHidden      Boolean  @default(false)
+  requiresSkill String?
+  requiresValue Int?
+  createdAt     DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+
+model RoomNpc {
+  id          String   @id @default(uuid())
+  roomId      String
+  name        String
+  avatarUrl   String?
+  description String?
+  statsJson   String   @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+
+model Scenario {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  
+  coverImage  String?
+
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  difficulty  String    @default("NORMAL")
+  estimatedDuration Int @default(120)
+  maxPlayers  Int       @default(6)
+  minPlayers  Int       @default(1)
+
+  supportsKPLess Boolean @default(true)
+  supportsKPMode Boolean @default(true)
+
+  status      String    @default("DRAFT")
+  version     Int       @default(1)
+
+  tags        String?  
+  era         String?
+  location    String?
+
+  playCount   Int       @default(0)
+  rating      Float     @default(0)
+  ratingCount Int       @default(0)
+
+  startNodeId String?   @unique
+  startNode   ScenarioNode? @relation("ScenarioStart", fields: [startNodeId], references: [id])
+
+  nodes       ScenarioNode[]
+  edges       ScenarioEdge[]
+  sessions    ScenarioSession[]
+
+  // 2.0 新增
+  galleryImages String?
+  assets        ScenarioAsset[]
+  items         ScenarioItem[]
+  achievements  UserAchievement[]
+
+  // 3.0 新增
+  characters    ScenarioCharacter[]
+  doubts        Doubt[]
+  clues         Clue[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([status])
+  @@index([difficulty])
+}
+
+
+model ScenarioAsset {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  nodeId      String?
+  npcName     String?
+  itemName    String?
+  type        String   // scene | npc_portrait | item_icon | ending_image
+  imageUrl    String
+  prompt      String?
+  worldState  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId, type])
+  @@index([scenarioId, nodeId, worldState])
+}
+
+
+model ScenarioCharacter {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  name        String
+  description String?
+  avatar      String?  // 小头像/关系图头像
+  sprites     String   // JSON string: { "calm": "url", "surprised": "url", ... }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+}
+
+
+model ScenarioDiceResult {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  nodeId      String
+  skill       String
+  difficulty  Int
+  rolledValue Int
+  isSuccess   Boolean
+  successLevel String?
+  createdAt   DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+
+model ScenarioEdge {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  fromNodeId  String
+  fromNode    ScenarioNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNodeId    String
+  toNode      ScenarioNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  type        String    @default("DEFAULT")
+  conditions  String?  
+  priority    Int       @default(0)
+  label       String?
+  isDefault   Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([scenarioId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+
+model ScenarioItem {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  key         String
+  name        String
+  description String?
+  type        String   // consumable | key | clue
+  iconUrl     String?
+  effects     String   @default("[]")
+  usableAt    String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([scenarioId, key])
+  @@index([scenarioId])
+}
+
+
+model ScenarioNode {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  nodeId      String
+  worldState  String    @default("normal")
+  title       String
+  type        String
+  content     String   
+
+  positionX   Float     @default(0)
+  positionY   Float     @default(0)
+  metadata    String?  
+
+  // 2.0 新增
+  generatedImageUrl String?
+
+  // 3.0 新增：AVG 演出字段
+  bgUrl             String? // 场景背景图
+  cgUrl             String? // CG 图
+  bgmUrl            String? // 节点默认 BGM
+  sfxUrl            String? // 节点入场音效
+  transitionType    String  @default("fade") // fade | dissolve | wipe | glitch | ripple
+  speakerId         String? // 当前说话角色的 ScenarioCharacter.id
+  speakerExpression String? // 如 "fear"
+  speakerPosition   String  @default("center") // left | center | right | custom
+  speakerPositionX  Float?  // 当 position 为 custom 时生效（百分比 0-1）
+
+  outgoingEdges ScenarioEdge[]  @relation("EdgeFrom")
+  incomingEdges ScenarioEdge[]  @relation("EdgeTo")
+  sessionsAsCurrent ScenarioSession[] @relation("CurrentNode")
+  sessionStates   ScenarioSessionState[]
+  scenariosAsStart Scenario? @relation("ScenarioStart")
+  doubts          Doubt[] // 3.0 新增：关联的疑点
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([scenarioId, nodeId, worldState])
+  @@index([scenarioId])
+  @@index([type])
+  @@index([scenarioId, worldState])
+}
+
+
+model ScenarioPlayerChoice {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  nodeId      String
+  edgeId      String?
+  choiceLabel String?
+  createdAt   DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+
+model ScenarioSession {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  roomId      String?   @unique
+  room        Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  mode        String
+  status      String    @default("ACTIVE")
+  currentNodeId String?
+  currentNode   ScenarioNode? @relation("CurrentNode", fields: [currentNodeId], references: [id])
+
+  globalState String?  
+  visitedNodes String? 
+
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  duration    Int       @default(0)
+  outcome     String?
+  endingNodeId String?
+
+  nodeStates  ScenarioSessionState[]
+  playerChoices ScenarioPlayerChoice[]
+  diceResults ScenarioDiceResult[]
+  playerStates ScenarioSessionPlayerState[]
+
+  // 3.0 新增：论证记录
+  argumentRecords ArgumentRecord[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([scenarioId])
+  @@index([roomId])
+  @@index([status])
+}
+
+
+model ScenarioSessionPlayerState {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  characterId String?
+
+  // 该玩家在此剧本中的运行时状态（如临时 SAN 变更、剧本私有变量等）
+  runtimeState String?
+
+  // 2.0 新增：剧本内物品栏
+  inventory String? @default("[]")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+
+model ScenarioSessionState {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     ScenarioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  nodeId      String
+  node        ScenarioNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  status      String    @default("PENDING")
+  visitedAt   DateTime?
+  completedAt DateTime?
+  stateData   String?  
+  result      String?  
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([sessionId, nodeId])
+  @@index([sessionId])
+}
+
+
+model UserAchievement {
+  id             String   @id @default(cuid())
+  userId         String
+  scenarioId     String
+  achievementKey String
+  unlockedAt     DateTime @default(now())
+  metadata       String?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scenarioId, achievementKey])
+  @@index([userId])
+  @@index([scenarioId])
+}
+
+
+model UserDreamDaily {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  date       String // YYYY-MM-DD
+  drawCount  Int      @default(0)
+  lastDrawAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+
+model UserDreamDraw {
+  id       String   @id @default(uuid())
+  userId   String
+  cardKey  String
+  position String // upright | reversed
+  drawnAt  DateTime @default(now())
+
+  isRevealed Boolean   @default(false)
+  revealedAt DateTime?
+  revealText String?
+
+  isDeepRevealed Boolean   @default(false)
+  deepRevealedAt DateTime?
+  deepRevealText String?
+  tentacleBuff   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, drawnAt])
+  @@index([userId])
+}
+
+
+model UserFishingDaily {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  freeUsed      Int      @default(0)
+  extraUsed     Int      @default(0)
+  lastRefreshAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model UserFishingLog {
+  id           String   @id @default(uuid())
+  userId       String
+  itemKey      String
+  itemName     String
+  rarity       String
+  sellPrice    Int
+  sellCurrency String
+  isSold       Boolean  @default(false)
+  caughtAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, caughtAt])
+  @@index([userId])
+}
+
 
