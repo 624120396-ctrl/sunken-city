@@ -199,7 +199,7 @@
     height: 100%;
     pointer-events: none;
     z-index: -1;
-    background: rgba(10, 10, 15, 0.10);
+    background: rgba(10, 10, 15, 0);
   }
 
   /* 噪点纹理层 */
