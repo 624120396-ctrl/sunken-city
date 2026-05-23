@@ -13,6 +13,7 @@ import { dailyCheckin, getOnlineUsers } from '@services/shop.service';
 import { ExpBar } from '@components/ui/ExpBar';
 import { useToast } from '@components/ui/Toast';
 import { UserProfileModal } from '@components/UserProfileModal';
+import { FeatureCard } from '@components/ui/FeatureCard';
 import type { UserProfile } from '@components/UserProfileCard';
 
 interface Character {
@@ -165,10 +166,10 @@ export function DashboardPage() {
 
   // 快捷入口数据
   const quickActions = [
-    { to: '/characters/new', icon: User, label: '记录命运', desc: '创建调查员', variant: 'blood' as const },
-    { to: '/rooms', icon: Scroll, label: '开启故事', desc: '创建跑团房间', variant: 'gold' as const },
-    { to: '/rooms', icon: Sparkles, label: '进入深渊', desc: '加入已有跑团', variant: 'madness' as const },
-    { to: '/solo', icon: Ghost, label: '幻影脚本', desc: '单人剧本模式', variant: 'blood' as const },
+    { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', gradient: 'subtle' as const },
+    { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', gradient: 'default' as const },
+    { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团', gradient: 'warm' as const },
+    { to: '/solo', icon: Ghost, title: '幻影脚本', subtitle: '单人剧本模式', gradient: 'default' as const },
   ];
 
   return (
@@ -312,22 +313,19 @@ export function DashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
               <motion.div
-                key={action.to + action.label}
+                key={action.to + action.title}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
               >
-                <Link to={action.to} className="group block">
-                  <div className="card-layer-2 p-4 rounded-lg h-full">
-                    <div className="w-10 h-10 rounded-lg bg-coc-gold/10 border border-coc-gold/20 flex items-center justify-center mb-3 group-hover:bg-coc-gold/20 group-hover:scale-110 transition-all duration-300">
-                      <action.icon className="text-coc-gold" size={20} />
-                    </div>
-                    <h3 className="font-ritual font-bold text-sm text-coc-parchment group-hover:text-coc-gold transition-colors">
-                      {action.label}
-                    </h3>
-                    <p className="text-xs text-coc-text-muted mt-1">{action.desc}</p>
-                  </div>
-                </Link>
+                <FeatureCard
+                  href={action.to}
+                  icon={action.icon}
+                  title={action.title}
+                  subtitle={action.subtitle}
+                  gradient={action.gradient}
+                  glow
+                />
               </motion.div>
             ))}
           </div>
