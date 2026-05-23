@@ -144,7 +144,7 @@ interface RoomMember {
     luck?: number;
     mov?: number;
     build?: number;
-  };
+  } | null;
 }
 
 interface ChatMessage {
@@ -826,9 +826,9 @@ export function RoomPage() {
           />
         )}
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 grid-rows-[minmax(0,1fr)]">
-        {/* 左侧：成员列表 */}
-        <div className="lg:col-span-1 space-y-3 overflow-y-auto min-h-0">
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* 左侧：成员列表 */}
+          <div className="w-[200px] shrink-0 space-y-3 overflow-y-auto min-h-0 border-r border-coc-border/20 pr-3">
           {/* 当前状态 - 水平紧凑条 */}
           {selectedCharacter && (
             <div className="flex items-center gap-2 px-3 py-2 bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg">
@@ -903,9 +903,9 @@ export function RoomPage() {
                         <Crown size={12} className="text-coc-accent-gold" />
                       )}
                     </div>
-                    {member.character && (
+                    {(member.displayedCharacter || member.character) && (
                       <div className="text-xs text-coc-text-secondary">
-                        {member.character.name}
+                        {(member.displayedCharacter || member.character)?.name}
                       </div>
                     )}
                     {/* ===== 新增：状态标记 ===== */}
@@ -915,17 +915,17 @@ export function RoomPage() {
                       </div>
                     )}
                   </div>
-                  {member.character ? (
+                  {(member.displayedCharacter || member.character) ? (
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex gap-1 text-xs">
-                        <Tooltip content={`生命值 ${member.character.hp}/${member.character.maxHp || member.character.hp}`}>
-                          <span className="text-coc-accent-red cursor-help">{member.character.hp}HP</span>
+                        <Tooltip content={`生命值 ${(member.displayedCharacter || member.character)?.hp}/${(member.displayedCharacter || member.character)?.maxHp || (member.displayedCharacter || member.character)?.hp}`}>
+                          <span className="text-coc-accent-red cursor-help">{(member.displayedCharacter || member.character)?.hp}HP</span>
                         </Tooltip>
-                        <Tooltip content={`魔法值 ${member.character.mp}/${member.character.maxMp || member.character.mp}`}>
-                          <span className="text-coc-accent-cyan cursor-help">{member.character.mp}MP</span>
+                        <Tooltip content={`魔法值 ${(member.displayedCharacter || member.character)?.mp}/${(member.displayedCharacter || member.character)?.maxMp || (member.displayedCharacter || member.character)?.mp}`}>
+                          <span className="text-coc-accent-cyan cursor-help">{(member.displayedCharacter || member.character)?.mp}MP</span>
                         </Tooltip>
-                        <Tooltip content={`理智值 ${member.character.san}/${member.character.maxSan || member.character.san}`}>
-                          <span className="text-yellow-400 cursor-help">{member.character.san}SAN</span>
+                        <Tooltip content={`理智值 ${(member.displayedCharacter || member.character)?.san}/${(member.displayedCharacter || member.character)?.maxSan || (member.displayedCharacter || member.character)?.san}`}>
+                          <span className="text-yellow-400 cursor-help">{(member.displayedCharacter || member.character)?.san}SAN</span>
                         </Tooltip>
                       </div>
                       {/* ===== 新增：KP可编辑状态标记 ===== */}
@@ -1009,7 +1009,7 @@ export function RoomPage() {
         </div>
 
         {/* 右侧：聊天/战斗区 */}
-        <div className="lg:col-span-3 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden pl-3">
           {activeTab === 'chat' ? (
             <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
               {/* ===== 新增：场景描述卡片 ===== */}

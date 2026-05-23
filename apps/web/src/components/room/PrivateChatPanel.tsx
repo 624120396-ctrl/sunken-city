@@ -30,7 +30,7 @@ interface PrivateChatPanelProps {
       id: string;
       name: string;
       avatarUrl?: string;
-    };
+    } | null;
   }>;
   myCharacterId?: string;
   isOpen: boolean;

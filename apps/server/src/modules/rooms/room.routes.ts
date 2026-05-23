@@ -71,6 +71,31 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
                 coins: true,
                 stardust: true,
                 displayedTitleKey: true,
+                displayedCharacter: {
+                  select: {
+                    id: true,
+                    name: true,
+                    occupation: true,
+                    avatarUrl: true,
+                    hp: true,
+                    mp: true,
+                    san: true,
+                    maxHp: true,
+                    maxMp: true,
+                    maxSan: true,
+                    str: true,
+                    dex: true,
+                    con: true,
+                    siz: true,
+                    app: true,
+                    int: true,
+                    pow: true,
+                    edu: true,
+                    luck: true,
+                    mov: true,
+                    build: true,
+                  },
+                },
               },
             },
             character: {
@@ -197,7 +222,8 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
               avatarUrl: m.user.avatarUrl,
               frameUrl: frameMap.get(m.user.equippedFrame || '') || null,
               role: m.role,
-              character: m.character,
+              character: m.character || m.user.displayedCharacter,
+              displayedCharacter: m.user.displayedCharacter,
               exp: m.user.exp,
               coins: m.user.coins,
               stardust: m.user.stardust,
@@ -223,6 +249,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     // 生成短ID (6位字母数字)
     const roomId = generateRoomId();
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { displayedCharacterId: true },
+    });
+
     const room = await prisma.room.create({
       data: {
         roomId,
@@ -233,6 +264,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
           create: {
             userId,
             role: 'KP',
+            characterId: user?.displayedCharacterId || null,
+            displayedCharacterId: user?.displayedCharacterId || null,
           },
         },
       },
