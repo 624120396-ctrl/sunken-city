@@ -56,9 +56,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   // 移动端：侧边栏作为 Drawer
   if (isMobile) {
     return (
-      <div className="flex min-h-[100dvh] bg-coc-bg-primary relative">
+      <div className="flex min-h-[100dvh] relative">
         {/* 移动端顶部栏 */}
-        <div className="fixed top-0 left-0 right-0 h-14 bg-coc-bg-secondary/95 border-b border-coc-border z-40 flex items-center px-4 gap-3">
+        <div className="fixed top-0 left-0 right-0 h-14 bg-coc-bg-secondary/85 border-b border-coc-border z-40 flex items-center px-4 gap-3">
           <button
             onClick={toggleMobileSidebar}
             className="p-2 -ml-2 text-coc-text-secondary hover:text-coc-text-primary transition-colors"
@@ -76,7 +76,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* 移动端 Drawer 侧边栏 */}
         <aside
           className={cn(
-            'fixed top-14 left-0 bottom-0 w-64 bg-coc-bg-secondary border-r border-coc-border z-30 flex flex-col',
+            'fixed top-14 left-0 bottom-0 w-64 bg-coc-bg-secondary/85 border-r border-coc-border z-30 flex flex-col',
             'transition-transform duration-300 ease-in-out',
             sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full'
           )}
@@ -152,7 +152,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* 主内容 */}
-        <main className="flex-1 overflow-auto pt-14 p-4 relative">
+        <main className="flex-1 overflow-auto pt-14 p-4 relative bg-coc-bg-primary/60">
           {children}
         </main>
       </div>
@@ -161,11 +161,11 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   // PC 端
   return (
-    <div className="flex min-h-[100dvh] bg-coc-bg-primary">
+    <div className="flex min-h-[100dvh] relative">
       {/* 侧边栏 */}
       <aside
         className={cn(
-          'bg-coc-bg-secondary border-r border-coc-border flex flex-col shrink-0',
+          'bg-coc-bg-secondary/85 border-r border-coc-border flex flex-col shrink-0',
           'transition-all duration-300 ease-in-out overflow-hidden',
           sidebarCollapsed ? 'w-16' : 'w-64'
         )}
@@ -313,7 +313,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </aside>
 
       {/* 主内容 */}
-      <main className="flex-1 overflow-auto p-6 relative">
+      <main className="flex-1 overflow-auto p-6 relative bg-coc-bg-primary/60">
         {children}
       </main>
     </div>

@@ -826,7 +826,7 @@ export function RoomPage() {
           />
         )}
 
-        <div className="flex-1 flex min-h-0 overflow-hidden">
+        <div className="flex-1 flex min-h-0 overflow-hidden bg-coc-bg-primary/60">
           {/* 左侧：成员列表 */}
           <div className="w-[200px] shrink-0 space-y-3 overflow-y-auto min-h-0 border-r border-coc-border/20 pr-3">
           {/* 当前状态 - 水平紧凑条 */}
