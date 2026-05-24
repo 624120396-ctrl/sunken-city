@@ -975,9 +975,9 @@
   color: var(--coc-v2-gold);
 }
 
-/* ===== v1.7.1 内容区背景（更实色，覆盖全局背景图） ===== */
+/* ===== v1.7.1 内容区文字适配（全局背景图展示） ===== */
 .content-area {
-  background: linear-gradient(180deg, #FDFDF9 0%, #F2F3EE 100%);
+  /* 背景已移除——改为展示全局 bg-vellum.png */
   color: #1a1a1a;
 }
 
