@@ -115,10 +115,10 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
   if (!isOpen) return null;
 
   return (
-    <div className="w-[360px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
+    <div className="w-[360px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <GitBranch size={14} className="text-coc-ether" />
           <span className="font-ritual">子房间</span>
         </div>
@@ -126,12 +126,12 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
           {isKP && (
             <button
               onClick={() => setShowCreate(true)}
-              className="p-1 text-coc-gold hover:text-coc-gold/80 transition-colors"
+              className="p-1 text-[#c9a227] hover:text-coc-gold/80 transition-colors"
             >
               <Plus size={16} />
             </button>
           )}
-          <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+          <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -154,12 +154,12 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             className={`p-2.5 rounded-lg border transition-colors ${
               sub.isMember
                 ? 'bg-coc-bg-elevated/30 border-coc-gold/20'
-                : 'bg-coc-bg-elevated/10 border-coc-border/20'
+                : 'bg-coc-bg-elevated/10 border-[#3a3a3a]/20'
             }`}
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
-                <span className="font-ritual text-sm text-coc-parchment">{sub.name}</span>
+                <span className="font-ritual text-sm text-[#e8d4a0]">{sub.name}</span>
                 <span
                   className="text-[9px] px-1 py-0.5 rounded"
                   style={{
@@ -174,14 +174,14 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                 {sub.isMember ? (
                   <button
                     onClick={() => leaveSubRoom(sub.id)}
-                    className="p-0.5 text-coc-text-muted hover:text-coc-blood transition-colors"
+                    className="p-0.5 text-[#6b6558] hover:text-[#a63848] transition-colors"
                   >
                     <LogOut size={12} />
                   </button>
                 ) : (
                   <button
                     onClick={() => joinSubRoom(sub.id)}
-                    className="px-1.5 py-0.5 text-[10px] bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors"
+                    className="px-1.5 py-0.5 text-[10px] bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors"
                   >
                     加入
                   </button>
@@ -189,7 +189,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                 {isKP && (
                   <button
                     onClick={() => dissolveSubRoom(sub.id)}
-                    className="p-0.5 text-coc-text-muted hover:text-coc-blood transition-colors"
+                    className="p-0.5 text-[#6b6558] hover:text-[#a63848] transition-colors"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -197,9 +197,9 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
               </div>
             </div>
             {sub.description && (
-              <p className="text-[10px] text-coc-text-muted line-clamp-1 mb-1">{sub.description}</p>
+              <p className="text-[10px] text-[#6b6558] line-clamp-1 mb-1">{sub.description}</p>
             )}
-            <div className="flex items-center justify-between text-[10px] text-coc-text-muted">
+            <div className="flex items-center justify-between text-[10px] text-[#6b6558]">
               <div className="flex items-center gap-1">
                 <Users size={10} />
                 <span>{sub.memberCount} 人</span>
@@ -225,27 +225,27 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             value={formName}
             onChange={e => setFormName(e.target.value)}
             placeholder="子房间名称"
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-sm text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
           />
           <textarea
             value={formDesc}
             onChange={e => setFormDesc(e.target.value)}
             placeholder="描述（可选）"
             rows={2}
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-sm text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
           />
           <textarea
             value={formSceneDesc}
             onChange={e => setFormSceneDesc(e.target.value)}
             placeholder="场景描述（可选）"
             rows={2}
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-sm text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
           />
           <div className="grid grid-cols-2 gap-2">
             <select
               value={formAtmosphere}
               onChange={e => setFormAtmosphere(e.target.value)}
-              className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment"
+              className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
             >
               <option value="normal">正常</option>
               <option value="dark">黑暗</option>
@@ -255,7 +255,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             <select
               value={formTimeMode}
               onChange={e => setFormTimeMode(e.target.value)}
-              className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment"
+              className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
             >
               <option value="sync">时间同步</option>
               <option value="paused">时间暂停</option>
@@ -263,7 +263,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             </select>
           </div>
           <div className="space-y-1">
-            <div className="text-[10px] text-coc-text-muted">邀请参与者</div>
+            <div className="text-[10px] text-[#6b6558]">邀请参与者</div>
             <div className="flex flex-wrap gap-1">
               {members.filter(m => m.userId).map(m => (
                 <button
@@ -277,8 +277,8 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                   }}
                   className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
                     selectedParticipants.includes(m.userId)
-                      ? 'bg-coc-gold/20 text-coc-gold border border-coc-gold/20'
-                      : 'bg-coc-bg-elevated/20 text-coc-text-muted border border-coc-border/20'
+                      ? 'bg-coc-gold/20 text-[#c9a227] border border-coc-gold/20'
+                      : 'bg-coc-bg-elevated/20 text-[#6b6558] border border-[#3a3a3a]/20'
                   }`}
                 >
                   {m.nickname}

@@ -61,21 +61,21 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
   if (!isOpen) return null;
 
   return (
-    <div className="w-[320px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
+    <div className="w-[320px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <User size={14} />
           <span className="font-ritual">焦点 NPC</span>
         </div>
-        <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+        <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
           <X size={16} />
         </button>
       </div>
 
       <div className="flex flex-1 min-h-0">
         {/* NPC 列表 */}
-        <div className="w-[110px] border-r border-coc-border/20 overflow-y-auto">
+        <div className="w-[110px] border-r border-[#3a3a3a]/20 overflow-y-auto">
           {npcs.length === 0 && !loading && (
             <div className="p-3">
               <EmptyState icon={EmptyIcons.Investigator} title="暂无NPC" size="sm" animate={false} />
@@ -85,10 +85,10 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
             <button
               key={npc.id}
               onClick={() => setSelectedNpc(npc)}
-              className={`w-full px-2 py-2 text-left text-xs transition-colors border-b border-coc-border/10 ${
+              className={`w-full px-2 py-2 text-left text-xs transition-colors border-b border-[#3a3a3a]/10 ${
                 selectedNpc?.id === npc.id
                   ? 'bg-coc-gold/10 text-coc-gold'
-                  : 'text-coc-text-muted hover:text-coc-parchment hover:bg-coc-bg-elevated/30'
+                  : 'text-[#6b6558] hover:text-[#e8d4a0] hover:bg-coc-bg-elevated/30'
               } ${!npc.isActive ? 'opacity-40' : ''}`}
             >
               <div className="flex items-center gap-1.5">
@@ -96,7 +96,7 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
                   <img src={npc.avatarUrl} alt={npc.name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-6 h-6 rounded-full bg-coc-bg-elevated flex items-center justify-center flex-shrink-0">
-                    <User size={10} className="text-coc-text-muted" />
+                    <User size={10} className="text-[#6b6558]" />
                   </div>
                 )}
                 <span className="truncate">{npc.name}</span>
@@ -116,17 +116,17 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
                 {selectedNpc.avatarUrl ? (
                   <img src={selectedNpc.avatarUrl} alt={selectedNpc.name} className="w-12 h-12 rounded-full object-cover border border-coc-gold/20" />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-coc-bg-elevated border border-coc-border/30 flex items-center justify-center">
-                    <User size={20} className="text-coc-text-muted" />
+                  <div className="w-12 h-12 rounded-full bg-coc-bg-elevated border border-[#3a3a3a]/30 flex items-center justify-center">
+                    <User size={20} className="text-[#6b6558]" />
                   </div>
                 )}
                 <div>
-                  <div className="font-ritual text-sm text-coc-parchment">{selectedNpc.name}</div>
-                  <div className="text-[10px] text-coc-text-muted">
+                  <div className="font-ritual text-sm text-[#e8d4a0]">{selectedNpc.name}</div>
+                  <div className="text-[10px] text-[#6b6558]">
                     {selectedNpc.isActive ? (
                       <span className="text-green-400/60">● 在场</span>
                     ) : (
-                      <span className="text-coc-text-muted">○ 离场</span>
+                      <span className="text-[#6b6558]">○ 离场</span>
                     )}
                   </div>
                 </div>
@@ -140,15 +140,15 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
 
               {selectedNpc.dynamicStats && selectedNpc.dynamicStats !== '{}' && (
                 <div className="space-y-1">
-                  <div className="text-[10px] text-coc-text-muted uppercase tracking-wider">状态</div>
+                  <div className="text-[10px] text-[#6b6558] uppercase tracking-wider">状态</div>
                   <div className="text-xs text-coc-text">
                     {(() => {
                       try {
                         const stats = JSON.parse(selectedNpc.dynamicStats);
                         return Object.entries(stats).map(([k, v]) => (
                           <div key={k} className="flex justify-between">
-                            <span className="text-coc-text-muted">{k}</span>
-                            <span className="text-coc-parchment">{String(v)}</span>
+                            <span className="text-[#6b6558]">{k}</span>
+                            <span className="text-[#e8d4a0]">{String(v)}</span>
                           </div>
                         ));
                       } catch {
@@ -160,14 +160,14 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
               )}
 
               {/* PL 向 NPC 提问按钮 */}
-              <button className="w-full py-1.5 text-xs text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/5 transition-colors flex items-center justify-center gap-1">
+              <button className="w-full py-1.5 text-xs text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/5 transition-colors flex items-center justify-center gap-1">
                 <MessageCircle size={12} />
                 向 {selectedNpc.name} 提问
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <span className="text-xs text-coc-text-muted">选择一位 NPC</span>
+              <span className="text-xs text-[#6b6558]">选择一位 NPC</span>
             </div>
           )}
         </div>

@@ -132,12 +132,12 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
   const hasCombat = combat && combat.status === 'active';
 
   return (
-    <div className="w-full bg-coc-bg-elevated border-t border-coc-border flex flex-col max-h-[40vh]"
+    <div className="w-full bg-coc-bg-elevated border-t border-[#3a3a3a]/40 flex flex-col max-h-[40vh]"
     >
       {/* 头部 */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-coc-border/30"
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[#3a3a3a]/30"
       >
-        <div className="flex items-center gap-2 text-sm text-coc-parchment"
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]"
         >
           <Swords size={14} className={hasCombat ? 'text-coc-blood' : 'text-coc-text-muted'} />
           <span className="font-ritual"
@@ -152,13 +152,13 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
           {hasCombat && isKP && (
             <button
               onClick={handleEndCombat}
-              className="text-[11px] text-coc-blood hover:text-coc-blood/80 transition-colors"
+              className="text-[11px] text-[#a63848] hover:text-coc-blood/80 transition-colors"
             >
               结束战斗
             </button
             >
           )}
-          <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors"
+          <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors"
           >
             <X size={16} />
           </button
@@ -184,9 +184,9 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
         <div className="flex flex-1 min-h-0"
         >
           {/* 行动顺序 */}
-          <div className="w-[160px] border-r border-coc-border/20 overflow-y-auto p-3 space-y-2"
+          <div className="w-[160px] border-r border-[#3a3a3a]/20 overflow-y-auto p-3 space-y-2"
           >
-            <div className="text-[10px] text-coc-text-muted uppercase tracking-wider mb-2"
+            <div className="text-[10px] text-[#6b6558] uppercase tracking-wider mb-2"
             >行动顺序 (DEX)
             </div
             >
@@ -224,7 +224,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
           <div className="flex-1 flex flex-col min-h-0"
           >
             {/* 当前行动者 */}
-            <div className="px-4 py-2 border-b border-coc-border/20 flex items-center gap-3"
+            <div className="px-4 py-2 border-b border-[#3a3a3a]/20 flex items-center gap-3"
             >
               {(() => {
                 const idx = (combat.currentRound?.actions.length || 0) % combat.initiative.length;
@@ -233,7 +233,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
                 const isMyTurn = actor.userId === userId;
                 return (
                   <>
-                    <span className="text-xs text-coc-text-muted"
+                    <span className="text-xs text-[#6b6558]"
                     >当前行动者:
                     </span
                     >
@@ -247,21 +247,21 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
                       >
                         <button
                           onClick={() => handleAction('end')}
-                          className="px-2 py-0.5 text-[10px] border border-coc-border/30 rounded hover:border-coc-gold/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] border border-[#3a3a3a]/30 rounded hover:border-coc-gold/30 transition-colors"
                         >
                           跳过
                         </button
                         >
                         <button
                           onClick={() => handleAction('attack', { targetId: '' })}
-                          className="px-2 py-0.5 text-[10px] bg-coc-blood/20 text-coc-blood rounded hover:bg-coc-blood/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] bg-coc-blood/20 text-[#a63848] rounded hover:bg-coc-blood/30 transition-colors"
                         >
                           攻击
                         </button
                         >
                         <button
                           onClick={handleNextTurn}
-                          className="px-2 py-0.5 text-[10px] bg-coc-gold/20 text-coc-gold rounded hover:bg-coc-gold/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] bg-coc-gold/20 text-[#c9a227] rounded hover:bg-coc-gold/30 transition-colors"
                         >
                           结束回合
                         </button
@@ -272,7 +272,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
                     {!isMyTurn && isKP && (
                       <button
                         onClick={handleNextTurn}
-                        className="ml-auto px-2 py-0.5 text-[10px] border border-coc-gold/20 text-coc-gold rounded hover:bg-coc-gold/5 transition-colors"
+                        className="ml-auto px-2 py-0.5 text-[10px] border border-coc-gold/20 text-[#c9a227] rounded hover:bg-coc-gold/5 transition-colors"
                       >
                         KP推进
                       </button
@@ -285,7 +285,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
             >
 
             {actionError && (
-              <div className="px-4 py-1 text-[11px] text-coc-blood bg-coc-blood/5"
+              <div className="px-4 py-1 text-[11px] text-[#a63848] bg-coc-blood/5"
               >{actionError}
               </div
               >
@@ -295,7 +295,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
             <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 min-h-0"
             >
               {combat.currentRound?.actions.length === 0 && (
-                <div className="text-center text-xs text-coc-text-muted py-4 italic"
+                <div className="text-center text-xs text-[#6b6558] py-4 italic"
                 >回合刚开始，尚无行动记录
                 </div
                 >
@@ -316,11 +316,11 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
                     <Icon size={12} className={`mt-0.5 flex-shrink-0 ${color}`} />
                     <div className="flex-1 min-w-0"
                     >
-                      <span className="text-coc-parchment"
+                      <span className="text-[#e8d4a0]"
                       >{actor?.actorName || '?'}
                       </span
                       >
-                      <span className="text-coc-text-muted"
+                      <span className="text-[#6b6558]"
                       > {action.description || action.actionType}
                       </span
                       >
@@ -338,7 +338,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
                         >
                       )}
                       {result.skipped && (
-                        <span className="text-coc-text-muted"
+                        <span className="text-[#6b6558]"
                         > 跳过回合
                         </span
                         >

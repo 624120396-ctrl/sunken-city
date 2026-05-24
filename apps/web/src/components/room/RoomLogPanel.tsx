@@ -143,26 +143,26 @@ export function RoomLogPanel({ roomId, isOpen, onClose, isKP }: RoomLogPanelProp
   if (!isOpen) return null;
 
   return (
-    <div className="w-[380px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
+    <div className="w-[380px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <BookOpen size={14} />
           <span className="font-ritual">跑团 Log</span>
         </div>
-        <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+        <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
           <X size={16} />
         </button>
       </div>
 
       {/* Tab */}
-      <div className="flex border-b border-coc-border/20">
+      <div className="flex border-b border-[#3a3a3a]/20">
         {(['realtime', 'edit', 'export'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-2 text-xs text-center transition-colors ${
-              tab === t ? 'text-coc-gold border-b border-coc-gold' : 'text-coc-text-muted hover:text-coc-parchment'
+              tab === t ? 'text-[#c9a227] border-b border-coc-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
             } ${t === 'edit' && !isKP ? 'hidden' : ''}`}
           >
             {t === 'realtime' && <>实时</>}
@@ -236,14 +236,14 @@ function LogRealtimeView({ events, annotations }: { events: LogEvent[]; annotati
               <div className="flex-1 min-w-0">
                 {event.eventType === 'CHAT_TEXT' && (
                   <span>
-                    <span className="text-coc-parchment">{event.characterName || event.userNickname}</span>
-                    <span className="text-coc-text-muted">：{payload.message || payload.content || event.payload}</span>
+                    <span className="text-[#e8d4a0]">{event.characterName || event.userNickname}</span>
+                    <span className="text-[#6b6558]">：{payload.message || payload.content || event.payload}</span>
                   </span>
                 )}
                 {event.eventType === 'DICE_ROLL' && (
                   <span>
-                    🎲 <span className="text-coc-parchment">{payload.skill || payload.targetName || '检定'}</span>
-                    <span className="text-coc-text-muted"> {payload.rollResult || payload.result}/{payload.targetValue || '?'} </span>
+                    🎲 <span className="text-[#e8d4a0]">{payload.skill || payload.targetName || '检定'}</span>
+                    <span className="text-[#6b6558]"> {payload.rollResult || payload.result}/{payload.targetValue || '?'} </span>
                     <span className={payload.successLevel?.includes('成功') ? 'text-green-400' : 'text-coc-blood'}>{payload.successLevel || payload.result}</span>
                   </span>
                 )}
@@ -254,34 +254,34 @@ function LogRealtimeView({ events, annotations }: { events: LogEvent[]; annotati
                 )}
                 {event.eventType === 'COMBAT_ACTION' && (
                   <span>
-                    ⚔️ <span className="text-coc-parchment">{payload.actor || '?'}</span>
-                    <span className="text-coc-text-muted"> {payload.action || '行动'}</span>
-                    {payload.target && <span className="text-coc-text-muted"> → {payload.target}</span>}
+                    ⚔️ <span className="text-[#e8d4a0]">{payload.actor || '?'}</span>
+                    <span className="text-[#6b6558]"> {payload.action || '行动'}</span>
+                    {payload.target && <span className="text-[#6b6558]"> → {payload.target}</span>}
                   </span>
                 )}
                 {event.eventType === 'CLUE_REVEAL' && (
                   <span>
                     💡 <span className="text-coc-ether">线索揭示：{payload.clueTitle || '未知线索'}</span>
-                    <span className="text-coc-text-muted">（{payload.discoveredBy || event.userNickname}）</span>
+                    <span className="text-[#6b6558]">（{payload.discoveredBy || event.userNickname}）</span>
                   </span>
                 )}
                 {event.eventType === 'SYSTEM_EVENT' && (
-                  <span className="text-coc-text-muted">{payload.message || payload.action || event.payload}</span>
+                  <span className="text-[#6b6558]">{payload.message || payload.action || event.payload}</span>
                 )}
                 {![
                   'CHAT_TEXT', 'DICE_ROLL', 'SCENE_CHANGE', 'COMBAT_ACTION', 'CLUE_REVEAL', 'SYSTEM_EVENT',
                 ].includes(event.eventType) && (
-                  <span className="text-coc-text-muted">{JSON.stringify(payload).slice(0, 120)}</span>
+                  <span className="text-[#6b6558]">{JSON.stringify(payload).slice(0, 120)}</span>
                 )}
               </div>
-              <span className="text-[9px] text-coc-text-muted flex-shrink-0">
+              <span className="text-[9px] text-[#6b6558] flex-shrink-0">
                 {new Date(event.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
 
             {/* Annotation 后置 */}
             {anns.filter(a => a.toEventId).map(ann => (
-              <div key={ann.id} className="px-2 py-0.5 text-[10px] text-coc-text-muted italic">
+              <div key={ann.id} className="px-2 py-0.5 text-[10px] text-[#6b6558] italic">
                 {ann.type === 'REDACT' ? '█ 内容已脱敏 █' : `[${ann.type}] ${ann.content}`}
               </div>
             ))}
@@ -317,7 +317,7 @@ function LogEditView({
 
   return (
     <div className="space-y-3">
-      <div className="text-xs text-coc-text-muted">
+      <div className="text-xs text-[#6b6558]">
         选择事件范围，然后添加旁白或合并标记
       </div>
       <div className="space-y-1 max-h-[40vh] overflow-y-auto">
@@ -334,11 +334,11 @@ function LogEditView({
             >
               <div className={`w-3 h-3 rounded border flex-shrink-0 mt-0.5 ${isSelected ? 'bg-coc-gold border-coc-gold' : 'border-coc-border'}`} />
               <div className="flex-1 min-w-0">
-                <span className="text-coc-text-muted">{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</span>
-                <span className="text-coc-parchment ml-1">
+                <span className="text-[#6b6558]">{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</span>
+                <span className="text-[#e8d4a0] ml-1">
                   {event.characterName || event.userNickname}
                 </span>
-                <span className="text-coc-text-muted ml-1 truncate">
+                <span className="text-[#6b6558] ml-1 truncate">
                   {payload.message || payload.action || JSON.stringify(payload).slice(0, 60)}
                 </span>
               </div>
@@ -348,7 +348,7 @@ function LogEditView({
       </div>
       {selectedEventIds.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[10px] text-coc-text-muted">
+          <div className="text-[10px] text-[#6b6558]">
             已选择 {selectedEventIds.length} 个事件
           </div>
           <textarea
@@ -356,12 +356,12 @@ function LogEditView({
             onChange={e => setNarrationText(e.target.value)}
             placeholder="输入旁白内容..."
             rows={3}
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
           />
           <button
             onClick={onAddNarration}
             disabled={!narrationText.trim()}
-            className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors"
+            className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors"
           >
             添加旁白
           </button>
@@ -386,7 +386,7 @@ function LogExportView({
 }) {
   return (
     <div className="space-y-3">
-      <div className="text-xs text-coc-text-muted">
+      <div className="text-xs text-[#6b6558]">
         选择导出格式，系统将生成文件并自动下载
       </div>
       <div className="space-y-1.5">
@@ -397,7 +397,7 @@ function LogExportView({
             className={`w-full flex items-center gap-2 px-3 py-2 rounded text-xs transition-colors ${
               format === f
                 ? 'bg-coc-gold/10 border border-coc-gold/20 text-coc-gold'
-                : 'bg-coc-bg-elevated/20 border border-coc-border/20 text-coc-text-muted hover:text-coc-parchment'
+                : 'bg-coc-bg-elevated/20 border border-[#3a3a3a]/20 text-[#6b6558] hover:text-[#e8d4a0]'
             }`}
           >
             <FileText size={14} />
@@ -408,7 +408,7 @@ function LogExportView({
           </button>
         ))}
       </div>
-      <div className="text-[10px] text-coc-text-muted">
+      <div className="text-[10px] text-[#6b6558]">
         当前记录包含 {eventCount} 个事件
       </div>
       <button

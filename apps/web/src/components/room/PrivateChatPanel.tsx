@@ -105,28 +105,28 @@ export function PrivateChatPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-coc-bg-secondary border-l border-coc-border shadow-xl z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-coc-border">
+    <div className="fixed inset-y-0 right-0 w-80 bg-black/20 border-l border-[#3a3a3a]/40 shadow-xl shadow-black/60 z-50 flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-[#3a3a3a]/40">
         <div className="flex items-center gap-2">
-          <MessageSquare size={18} className="text-coc-accent-gold" />
+          <MessageSquare size={18} className="text-[#c9a227]" />
           <span className="font-bold">私聊</span>
           {unreadCount > 0 && (
-            <span className="bg-coc-accent-red text-white text-xs px-1.5 py-0.5 rounded-full">{unreadCount}</span>
+            <span className="bg-[#a63848] text-white text-xs px-1.5 py-0.5 rounded-full">{unreadCount}</span>
           )}
         </div>
-        <button onClick={onClose} className="text-coc-text-muted hover:text-coc-text-primary">
+        <button onClick={onClose} className="text-[#6b6558] hover:text-[#d4c5a8]">
           <X size={20} />
         </button>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-24 border-r border-coc-border overflow-y-auto">
+        <div className="w-24 border-r border-[#3a3a3a]/40 overflow-y-auto">
           {chatableMembers.map(member => (
             <button
               key={member.character!.id}
               onClick={() => setSelectedReceiverId(member.character!.id)}
-              className={`w-full p-2 text-left border-b border-coc-border hover:bg-coc-bg-tertiary transition-colors ${
-                selectedReceiverId === member.character!.id ? 'bg-coc-bg-tertiary' : ''
+              className={`w-full p-2 text-left border-b border-[#3a3a3a]/40 hover:bg-black/20 transition-colors ${
+                selectedReceiverId === member.character!.id ? 'bg-black/20' : ''
               }`}
             >
               <div className="flex flex-col items-center gap-1">
@@ -137,7 +137,7 @@ export function PrivateChatPanel({
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-coc-bg-tertiary flex items-center justify-center text-sm">
+                  <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-sm">
                     {member.character!.name[0]}
                   </div>
                 )}
@@ -158,10 +158,10 @@ export function PrivateChatPanel({
                       <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
                         isMe 
                           ? 'bg-coc-accent-gold/20 text-coc-text-primary' 
-                          : 'bg-coc-bg-tertiary text-coc-text-primary'
+                          : 'bg-black/20 text-coc-text-primary'
                       }`}>
                         <p>{msg.content}</p>
-                        <span className="text-xs text-coc-text-muted mt-1">
+                        <span className="text-xs text-[#6b6558] mt-1">
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -171,7 +171,7 @@ export function PrivateChatPanel({
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-3 border-t border-coc-border">
+              <div className="p-3 border-t border-[#3a3a3a]/40">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -193,7 +193,7 @@ export function PrivateChatPanel({
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-coc-text-muted">
+            <div className="flex-1 flex items-center justify-center text-[#6b6558]">
               <p className="text-sm">选择左侧成员开始私聊</p>
             </div>
           )}

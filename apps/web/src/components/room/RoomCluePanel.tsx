@@ -82,13 +82,13 @@ export function RoomCluePanel({
     <div className={`coc-card flex flex-col max-h-[50vh] ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Search size={16} className="text-coc-accent-gold" />
+          <Search size={16} className="text-[#c9a227]" />
           <div className="font-bold text-sm">线索板</div>
         </div>
         {isKP && (
           <button
             onClick={() => setAdding(true)}
-            className="p-1 rounded hover:bg-coc-bg-tertiary text-coc-text-secondary"
+            className="p-1 rounded hover:bg-black/20 text-[#8b8375]"
           >
             <Plus size={14} />
           </button>
@@ -97,54 +97,54 @@ export function RoomCluePanel({
 
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {(adding || editingId) && (
-          <div className="p-2 rounded border border-coc-border bg-coc-bg-tertiary space-y-2">
+          <div className="p-2 rounded border border-[#3a3a3a]/40 bg-black/20 space-y-2">
             <input
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="线索标题"
-              className="w-full bg-coc-bg-primary border border-coc-border rounded px-2 py-1 text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-2 py-1 text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <textarea
               value={form.content}
               onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
               placeholder="线索内容"
               rows={3}
-              className="w-full bg-coc-bg-primary border border-coc-border rounded px-2 py-1 text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+              className="w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-2 py-1 text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
             />
             <input
               value={form.imageUrl}
               onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
               placeholder="图片 URL（可选）"
-              className="w-full bg-coc-bg-primary border border-coc-border rounded px-2 py-1 text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-2 py-1 text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <div className="flex items-center gap-2">
               <input
                 value={form.requiresSkill}
                 onChange={(e) => setForm((f) => ({ ...f, requiresSkill: e.target.value }))}
                 placeholder="要求技能（如 spot_hidden）"
-                className="flex-1 bg-coc-bg-primary border border-coc-border rounded px-2 py-1 text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                className="flex-1 bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-2 py-1 text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
               />
               <input
                 value={form.requiresValue}
                 onChange={(e) => setForm((f) => ({ ...f, requiresValue: e.target.value }))}
                 placeholder="目标值"
-                className="w-20 bg-coc-bg-primary border border-coc-border rounded px-2 py-1 text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                className="w-20 bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-2 py-1 text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
               />
             </div>
-            <label className="flex items-center gap-2 text-xs text-coc-text-secondary">
+            <label className="flex items-center gap-2 text-xs text-[#8b8375]">
               <input
                 type="checkbox"
                 checked={form.isHidden}
                 onChange={(e) => setForm((f) => ({ ...f, isHidden: e.target.checked }))}
-                className="rounded border-coc-border bg-coc-bg-primary text-coc-accent-gold"
+                className="rounded border-[#3a3a3a]/40 bg-[#1a1a1a] text-[#c9a227]"
               />
               隐藏线索（仅 KP 可见）
             </label>
             <div className="flex justify-end gap-2">
-              <button onClick={resetForm} className="p-1 text-coc-text-muted hover:text-coc-parchment">
+              <button onClick={resetForm} className="p-1 text-[#6b6558] hover:text-[#e8d4a0]">
                 <X size={14} />
               </button>
-              <button onClick={handleSave} className="p-1 text-coc-accent-gold hover:text-coc-gold">
+              <button onClick={handleSave} className="p-1 text-[#c9a227] hover:text-coc-gold">
                 <Check size={14} />
               </button>
             </div>
@@ -152,32 +152,32 @@ export function RoomCluePanel({
         )}
 
         {visibleClues.length === 0 ? (
-          <div className="text-xs text-coc-text-muted text-center py-4">{isKP ? '暂无线索' : '尚未发现线索'}</div>
+          <div className="text-xs text-[#6b6558] text-center py-4">{isKP ? '暂无线索' : '尚未发现线索'}</div>
         ) : (
           visibleClues.map((c) => (
-            <div key={c.id} className="p-2 rounded border border-coc-border bg-coc-bg-tertiary/40 hover:bg-coc-bg-tertiary transition-colors">
+            <div key={c.id} className="p-2 rounded border border-[#3a3a3a]/40 bg-black/20/40 hover:bg-black/20 transition-colors">
               <div className="flex items-start justify-between gap-2">
-                <div className="font-medium text-sm text-coc-parchment truncate">{c.title}</div>
+                <div className="font-medium text-sm text-[#e8d4a0] truncate">{c.title}</div>
                 <div className="flex items-center gap-1">
-                  {c.isHidden && <EyeOff size={12} className="text-coc-text-muted" />}
+                  {c.isHidden && <EyeOff size={12} className="text-[#6b6558]" />}
                   {isKP && (
                     <>
-                      <button onClick={() => startEdit(c)} className="p-1 text-coc-text-muted hover:text-coc-parchment">
+                      <button onClick={() => startEdit(c)} className="p-1 text-[#6b6558] hover:text-[#e8d4a0]">
                         <Edit3 size={12} />
                       </button>
-                      <button onClick={() => onDelete(c.id)} className="p-1 text-coc-text-muted hover:text-coc-blood-glow">
+                      <button onClick={() => onDelete(c.id)} className="p-1 text-[#6b6558] hover:text-coc-blood-glow">
                         <Trash2 size={12} />
                       </button>
                     </>
                   )}
                 </div>
               </div>
-              <div className="text-xs text-coc-text-secondary mt-1 whitespace-pre-wrap">{c.content}</div>
+              <div className="text-xs text-[#8b8375] mt-1 whitespace-pre-wrap">{c.content}</div>
               {c.imageUrl && (
-                <img src={c.imageUrl} alt="" className="mt-2 rounded border border-coc-border max-h-32 object-cover w-full" />
+                <img src={c.imageUrl} alt="" className="mt-2 rounded border border-[#3a3a3a]/40 max-h-32 object-cover w-full" />
               )}
               {(c.requiresSkill || c.requiresValue) && (
-                <div className="mt-1.5 text-[10px] text-coc-accent-gold">
+                <div className="mt-1.5 text-[10px] text-[#c9a227]">
                   要求：{c.requiresSkill || '任意'} {c.requiresValue ? `≥ ${c.requiresValue}` : ''}
                 </div>
               )}

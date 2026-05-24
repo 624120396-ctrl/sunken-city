@@ -144,23 +144,23 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="w-[340px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+    <div className="w-[340px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <Moon size={14} className="text-coc-ether" />
           <span className="font-ritual">KP 工具箱</span>
         </div>
-        <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+        <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
           <X size={16} />
         </button>
       </div>
 
       {/* Tab */}
-      <div className="flex border-b border-coc-border/20">
+      <div className="flex border-b border-[#3a3a3a]/20">
         <button
           onClick={() => setTab('notes')}
           className={`flex-1 py-2 text-xs text-center transition-colors ${
-            tab === 'notes' ? 'text-coc-gold border-b border-coc-gold' : 'text-coc-text-muted hover:text-coc-parchment'
+            tab === 'notes' ? 'text-[#c9a227] border-b border-coc-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
           }`}
         >
           <BookOpen size={12} className="inline mr-1" />笔记
@@ -168,7 +168,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
         <button
           onClick={() => setTab('presets')}
           className={`flex-1 py-2 text-xs text-center transition-colors ${
-            tab === 'presets' ? 'text-coc-gold border-b border-coc-gold' : 'text-coc-text-muted hover:text-coc-parchment'
+            tab === 'presets' ? 'text-[#c9a227] border-b border-coc-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
           }`}
         >
           <MapPin size={12} className="inline mr-1" />场景预设
@@ -184,19 +184,19 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
                 value={newNoteTitle}
                 onChange={e => setNewNoteTitle(e.target.value)}
                 placeholder="笔记标题..."
-                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
               />
               <textarea
                 value={newNoteContent}
                 onChange={e => setNewNoteContent(e.target.value)}
                 placeholder="笔记内容..."
                 rows={3}
-                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
               />
               <button
                 onClick={createNote}
                 disabled={!newNoteTitle.trim()}
-                className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+                className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
               >
                 <Plus size={12} /> 添加笔记
               </button>
@@ -207,21 +207,21 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
               <EmptyState icon={EmptyIcons.Investigator} title="暂无笔记" size="sm" animate={false} />
             )}
             {notes.map(note => (
-              <div key={note.id} className="p-2 rounded bg-coc-bg-elevated/30 border border-coc-border/20 space-y-1">
+              <div key={note.id} className="p-2 rounded bg-coc-bg-elevated/30 border border-[#3a3a3a]/20 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-ritual text-coc-parchment">{note.title}</span>
+                  <span className="text-xs font-ritual text-[#e8d4a0]">{note.title}</span>
                   <button
                     onClick={() => deleteNote(note.id)}
-                    className="p-0.5 text-coc-text-muted hover:text-coc-blood transition-colors"
+                    className="p-0.5 text-[#6b6558] hover:text-[#a63848] transition-colors"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
-                <p className="text-[11px] text-coc-text-muted line-clamp-3">{note.content}</p>
+                <p className="text-[11px] text-[#6b6558] line-clamp-3">{note.content}</p>
                 {note.tags.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
                     {note.tags.map((tag: string) => (
-                      <span key={tag} className="text-[9px] px-1 py-0.5 bg-coc-bg rounded text-coc-text-muted">{tag}</span>
+                      <span key={tag} className="text-[9px] px-1 py-0.5 backdrop-blur-md bg-black/40 rounded text-[#6b6558]">{tag}</span>
                     ))}
                   </div>
                 )}
@@ -237,13 +237,13 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
                 value={newPresetName}
                 onChange={e => setNewPresetName(e.target.value)}
                 placeholder="场景名称..."
-                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
                 <select
                   value={newPresetAtmosphere}
                   onChange={e => setNewPresetAtmosphere(e.target.value)}
-                  className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment"
+                  className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
                 >
                   <option value="normal">正常</option>
                   <option value="dark">黑暗</option>
@@ -255,7 +255,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
                   value={newPresetImage}
                   onChange={e => setNewPresetImage(e.target.value)}
                   placeholder="图片URL（可选）"
-                  className="px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+                  className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
                 />
               </div>
               <textarea
@@ -263,12 +263,12 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
                 onChange={e => setNewPresetDesc(e.target.value)}
                 placeholder="场景描述..."
                 rows={2}
-                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none resize-none"
+                className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
               />
               <button
                 onClick={createPreset}
                 disabled={!newPresetName.trim()}
-                className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+                className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
               >
                 <Plus size={12} /> 创建场景预设
               </button>
@@ -279,25 +279,25 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
               <EmptyState icon={EmptyIcons.Investigator} title="暂无场景预设" description="KP 可创建场景预设快速切换氛围" size="sm" animate={false} />
             )}
             {presets.map(preset => (
-              <div key={preset.id} className="p-2 rounded bg-coc-bg-elevated/30 border border-coc-border/20">
+              <div key={preset.id} className="p-2 rounded bg-coc-bg-elevated/30 border border-[#3a3a3a]/20">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-ritual text-coc-parchment">{preset.name}</span>
+                  <span className="text-xs font-ritual text-[#e8d4a0]">{preset.name}</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => applyPreset(preset.id)}
-                      className="px-2 py-0.5 text-[10px] bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors flex items-center gap-1"
+                      className="px-2 py-0.5 text-[10px] bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors flex items-center gap-1"
                     >
                       <Wand2 size={10} /> 应用
                     </button>
                     <button
                       onClick={() => deletePreset(preset.id)}
-                      className="p-0.5 text-coc-text-muted hover:text-coc-blood transition-colors"
+                      className="p-0.5 text-[#6b6558] hover:text-[#a63848] transition-colors"
                     >
                       <Trash2 size={10} />
                     </button>
                   </div>
                 </div>
-                <div className="text-[10px] text-coc-text-muted">
+                <div className="text-[10px] text-[#6b6558]">
                   氛围: {preset.atmosphere}
                   {preset.sceneDesc && ` · ${preset.sceneDesc.slice(0, 40)}${preset.sceneDesc.length > 40 ? '...' : ''}`}
                 </div>

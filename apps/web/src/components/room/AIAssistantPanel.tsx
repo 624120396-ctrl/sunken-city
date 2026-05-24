@@ -115,28 +115,28 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
   const activeConfig = TOOLS.find(t => t.id === activeTool)!;
 
   return (
-    <div className="w-[380px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
+    <div className="w-[380px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <Sparkles size={14} className="text-coc-gold" />
           <span className="font-ritual">AI 助手</span>
         </div>
-        <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+        <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
           <X size={16} />
         </button>
       </div>
 
       {/* 工具选择 */}
-      <div className="flex border-b border-coc-border/20 overflow-x-auto">
+      <div className="flex border-b border-[#3a3a3a]/20 overflow-x-auto">
         {TOOLS.map(tool => (
           <button
             key={tool.id}
             onClick={() => { setActiveTool(tool.id); setResult(null); setError(''); }}
             className={`flex-shrink-0 px-3 py-2 text-[10px] text-center transition-colors whitespace-nowrap ${
               activeTool === tool.id
-                ? 'text-coc-gold border-b border-coc-gold'
-                : 'text-coc-text-muted hover:text-coc-parchment'
+                ? 'text-[#c9a227] border-b border-coc-gold'
+                : 'text-[#6b6558] hover:text-[#e8d4a0]'
             }`}
           >
             <tool.icon size={10} className="inline mr-1" />
@@ -151,7 +151,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
       </div>
 
       {/* 工具描述 */}
-      <div className="px-3 py-1.5 text-[10px] text-coc-text-muted border-b border-coc-border/10">
+      <div className="px-3 py-1.5 text-[10px] text-[#6b6558] border-b border-[#3a3a3a]/10">
         {activeConfig.description}
       </div>
 
@@ -164,12 +164,12 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
               value={sceneKeywords}
               onChange={e => setSceneKeywords(e.target.value)}
               placeholder="关键词，如：地下墓穴、潮湿、腐臭..."
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <select
               value={sceneAtmosphere}
               onChange={e => setSceneAtmosphere(e.target.value)}
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
             >
               <option value="normal">正常</option>
               <option value="dark">黑暗</option>
@@ -179,7 +179,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
             <button
               onClick={() => callAI('scene')}
               disabled={loading || !sceneKeywords.trim()}
-              className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+              className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
               生成场景描述
@@ -194,24 +194,24 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
               value={npcName}
               onChange={e => setNpcName(e.target.value)}
               placeholder="NPC 名称"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <input
               value={npcDesc}
               onChange={e => setNpcDesc(e.target.value)}
               placeholder="NPC 描述（如：一位神秘的图书管理员）"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <input
               value={npcQuestion}
               onChange={e => setNpcQuestion(e.target.value)}
               placeholder="玩家提问"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <button
               onClick={() => callAI('npc')}
               disabled={loading || !npcName.trim() || !npcQuestion.trim()}
-              className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+              className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
               生成 NPC 回复
@@ -226,24 +226,24 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
               value={combatActor}
               onChange={e => setCombatActor(e.target.value)}
               placeholder="行动者名称"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <input
               value={combatTarget}
               onChange={e => setCombatTarget(e.target.value)}
               placeholder="目标名称"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <input
               value={combatAction}
               onChange={e => setCombatAction(e.target.value)}
               placeholder="行动描述（如：用棒球棍攻击深潜者）"
-              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-coc-border/30 rounded text-xs text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+              className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
             />
             <button
               onClick={() => callAI('combat')}
               disabled={loading}
-              className="w-full py-1.5 text-xs bg-coc-blood/10 text-coc-blood border border-coc-blood/20 rounded hover:bg-coc-blood/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+              className="w-full py-1.5 text-xs bg-coc-blood/10 text-[#a63848] border border-coc-blood/20 rounded hover:bg-coc-blood/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <Swords size={12} />}
               AI 战斗结算
@@ -254,7 +254,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
         {/* Log 润色 / 线索分析 / 战后报告（直接调用） */}
         {(activeTool === 'log' || activeTool === 'clue' || activeTool === 'report') && (
           <div className="space-y-2">
-            <div className="text-[10px] text-coc-text-muted">
+            <div className="text-[10px] text-[#6b6558]">
               {activeTool === 'log' && '基于当前房间 Log 记录，AI 自动填补叙事空白'}
               {activeTool === 'clue' && '基于已揭示线索和玩家行动，AI 分析关联性'}
               {activeTool === 'report' && '基于最近一次战斗记录，AI 生成结构化战报'}
@@ -262,7 +262,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
             <button
               onClick={() => callAI(activeTool)}
               disabled={loading}
-              className="w-full py-1.5 text-xs bg-coc-gold/10 text-coc-gold border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
+              className="w-full py-1.5 text-xs bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 disabled:opacity-30 transition-colors flex items-center justify-center gap-1"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
               {activeTool === 'log' && '开始润色'}
@@ -283,7 +283,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
         {result && (
           <div className="space-y-2">
             <div className="text-[10px] text-coc-gold/60 uppercase tracking-wider">AI 输出</div>
-            <div className="p-2.5 rounded bg-coc-bg-elevated/20 border border-coc-border/20 text-xs text-coc-text leading-relaxed whitespace-pre-wrap">
+            <div className="p-2.5 rounded bg-coc-bg-elevated/20 border border-[#3a3a3a]/20 text-xs text-coc-text leading-relaxed whitespace-pre-wrap">
               {result.description || result.dialogue || JSON.stringify(result.result || result.report || result.analysis || result.narrations, null, 2)}
             </div>
             {(result.description || result.dialogue) && (
@@ -292,7 +292,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
                   const text = result.description || result.dialogue || '';
                   navigator.clipboard?.writeText(text);
                 }}
-                className="w-full py-1 text-[10px] text-coc-text-muted hover:text-coc-parchment transition-colors"
+                className="w-full py-1 text-[10px] text-[#6b6558] hover:text-[#e8d4a0] transition-colors"
               >
                 复制到剪贴板
               </button>

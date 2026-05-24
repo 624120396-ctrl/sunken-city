@@ -93,25 +93,25 @@ export function RoomEventLogPanel({ roomId, isOpen, onClose, isKP }: RoomEventLo
   if (!isOpen) return null;
 
   return (
-    <div className="w-[320px] bg-coc-bg border-l border-coc-border flex flex-col h-full">
+    <div className="w-[320px] backdrop-blur-md bg-black/40 border-l border-[#3a3a3a]/40 flex flex-col h-full">
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-coc-border/30">
-        <div className="flex items-center gap-2 text-sm text-coc-parchment">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
+        <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
           <ScrollText size={14} />
           <span className="font-ritual">事件日志</span>
         </div>
-        <button onClick={onClose} className="p-1 text-coc-text-muted hover:text-coc-parchment transition-colors">
+        <button onClick={onClose} className="p-1 text-[#6b6558] hover:text-[#e8d4a0] transition-colors">
           <X size={16} />
         </button>
       </div>
 
       {/* 过滤 */}
-      <div className="px-3 py-2 border-b border-coc-border/20 flex items-center gap-2 flex-wrap">
-        <Filter size={12} className="text-coc-text-muted flex-shrink-0" />
+      <div className="px-3 py-2 border-b border-[#3a3a3a]/20 flex items-center gap-2 flex-wrap">
+        <Filter size={12} className="text-[#6b6558] flex-shrink-0" />
         <button
           onClick={() => setFilter('')}
           className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
-            filter === '' ? 'bg-coc-gold/20 text-coc-gold' : 'text-coc-text-muted hover:text-coc-parchment'
+            filter === '' ? 'bg-coc-gold/20 text-coc-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
           }`}
         >
           全部
@@ -123,7 +123,7 @@ export function RoomEventLogPanel({ roomId, isOpen, onClose, isKP }: RoomEventLo
             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
               filter === type
                 ? 'bg-coc-gold/20 text-coc-gold'
-                : 'text-coc-text-muted hover:text-coc-parchment'
+                : 'text-[#6b6558] hover:text-[#e8d4a0]'
             }`}
           >
             {EVENT_TYPE_LABELS[type]?.label || type}
@@ -134,13 +134,13 @@ export function RoomEventLogPanel({ roomId, isOpen, onClose, isKP }: RoomEventLo
       {/* 事件列表 */}
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 min-h-0">
         {loading && events.length === 0 && (
-          <div className="text-center text-xs text-coc-text-muted py-8">加载中...</div>
+          <div className="text-center text-xs text-[#6b6558] py-8">加载中...</div>
         )}
         {error && (
-          <div className="text-center text-xs text-coc-blood py-4">{error}</div>
+          <div className="text-center text-xs text-[#a63848] py-4">{error}</div>
         )}
         {!loading && events.length === 0 && (
-          <div className="text-center text-xs text-coc-text-muted py-8 italic">
+          <div className="text-center text-xs text-[#6b6558] py-8 italic">
             暂无事件记录
           </div>
         )}
@@ -158,7 +158,7 @@ export function RoomEventLogPanel({ roomId, isOpen, onClose, isKP }: RoomEventLo
                 {event.isSecret && isKP && (
                   <span className="text-[9px] text-coc-blood/60">(密)</span>
                 )}
-                <span className="ml-auto text-[9px] text-coc-text-muted flex items-center gap-0.5">
+                <span className="ml-auto text-[9px] text-[#6b6558] flex items-center gap-0.5">
                   <Clock size={8} />
                   {new Date(event.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                 </span>

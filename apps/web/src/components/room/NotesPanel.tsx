@@ -57,12 +57,12 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-4 top-20 z-30 p-2 bg-coc-bg-secondary border border-coc-border rounded-lg shadow-lg hover:bg-coc-bg-tertiary transition-colors"
+        className="fixed right-4 top-20 z-30 p-2 bg-black/20 border border-[#3a3a3a]/40 rounded-lg shadow-lg shadow-black/40 hover:bg-black/20 transition-colors"
         title="笔记栏"
       >
-        <Book size={20} className="text-coc-accent-gold" />
+        <Book size={20} className="text-[#c9a227]" />
         {notes.length > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-coc-accent-red rounded-full text-xs flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#a63848] rounded-full text-xs flex items-center justify-center">
             {notes.length}
           </span>
         )}
@@ -71,15 +71,15 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
   }
 
   return (
-    <div className="fixed right-4 top-20 z-30 w-72 bg-coc-bg-secondary border border-coc-border rounded-lg shadow-xl">
-      <div className="p-3 border-b border-coc-border flex items-center justify-between">
+    <div className="fixed right-4 top-20 z-30 w-72 bg-black/20 border border-[#3a3a3a]/40 rounded-lg shadow-xl shadow-black/60">
+      <div className="p-3 border-b border-[#3a3a3a]/40 flex items-center justify-between">
         <h3 className="font-bold flex items-center gap-2">
-          <Book size={16} className="text-coc-accent-gold" />
+          <Book size={16} className="text-[#c9a227]" />
           调查笔记
         </h3>
         <button
           onClick={() => setIsOpen(false)}
-          className="text-coc-text-muted hover:text-coc-text-primary"
+          className="text-[#6b6558] hover:text-[#d4c5a8]"
         >
           ×
         </button>
@@ -92,7 +92,7 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             placeholder="记录线索、推理、待办..."
-            className="w-full h-20 p-2 text-sm bg-coc-bg-tertiary border border-coc-border rounded resize-none focus:outline-none focus:border-coc-accent-gold"
+            className="w-full h-20 p-2 text-sm bg-black/20 border border-[#3a3a3a]/40 rounded resize-none focus:outline-none focus:border-coc-accent-gold"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.metaKey) {
                 addNote();
@@ -105,7 +105,7 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
               className={`text-xs flex items-center gap-1 px-2 py-1 rounded transition-colors ${
                 isPrivate 
                   ? 'bg-purple-500/20 text-purple-400' 
-                  : 'bg-coc-bg-tertiary text-coc-text-secondary'
+                  : 'bg-black/20 text-coc-text-secondary'
               }`}
             >
               {isPrivate ? <Lock size={12} /> : <Unlock size={12} />}
@@ -115,7 +115,7 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
             <button
               onClick={addNote}
               disabled={!newNote.trim()}
-              className="text-xs px-3 py-1 bg-coc-accent-red rounded disabled:opacity-50"
+              className="text-xs px-3 py-1 bg-[#a63848] rounded disabled:opacity-50"
             >
               添加
             </button>
@@ -125,7 +125,7 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
         {/* 笔记列表 */}
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {notes.length === 0 ? (
-            <p className="text-sm text-coc-text-muted text-center py-4">
+            <p className="text-sm text-[#6b6558] text-center py-4">
               还没有笔记
             </p>
           ) : (
@@ -133,12 +133,12 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
               <div
                 key={note.id}
                 className={`p-2 rounded text-sm relative group ${
-                  note.isPrivate ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-coc-bg-tertiary'
+                  note.isPrivate ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-black/20'
                 }`}
               >
                 <p className="pr-6">{note.content}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-coc-text-muted">
+                  <span className="text-xs text-[#6b6558]">
                     {new Date(note.createdAt).toLocaleDateString()}
                   </span>
                   {note.isPrivate && (
