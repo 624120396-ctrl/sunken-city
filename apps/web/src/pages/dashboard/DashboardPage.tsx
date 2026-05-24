@@ -14,7 +14,6 @@ import { UserProfileModal } from '@components/UserProfileModal';
 import type { UserProfile } from '@components/UserProfileCard';
 
 // ===== v2.3 新质感组件 =====
-import { CthulhuCard3D } from '@components/ui/CthulhuCard3D';
 import { CthulhuButton } from '@components/ui/CthulhuButton';
 import { CthulhuProgress } from '@components/ui/CthulhuProgress';
 import { GoldOrnament } from '@components/ui/GoldOrnament';
@@ -214,8 +213,12 @@ export function DashboardPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full"
       >
-        <CthulhuCard3D variant="gold" noTilt glowOnHover={false} className="w-full">
+        <div className="relative rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+          {/* 顶部金色渐变装饰线 */}
+          <div className="absolute top-0 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent pointer-events-none" />
+          
           <div className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               {/* 左侧：头像 + 身份 */}
@@ -257,39 +260,43 @@ export function DashboardPage() {
                 </div>
               </div>
 
-              {/* 右侧：货币 + 签到 */}
-              <div className="md:ml-auto flex flex-col md:items-end gap-3">
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex flex-col md:items-end">
-                    <div className="flex items-center gap-1.5 text-[#d4c5a8]">
-                      <Coins size={14} className="text-[#c9a227]" />
-                      <span className="text-xl font-bold">{user?.coins ?? 0}</span>
-                    </div>
-                    <span className="text-[10px] text-[#a69b85]">锈蚀硬币</span>
+              {/* 右侧：货币徽章 + 签到 */}
+              <div className="md:ml-auto flex items-center gap-4">
+                {/* 锈蚀硬币徽章 */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative w-12 h-12 rounded-full bg-[#12121a] border border-[#c9a227]/30 flex items-center justify-center shadow-[0_0_12px_rgba(201,162,39,0.15)]">
+                    <Coins size={20} className="text-[#c9a227]" />
                   </div>
-                  <div className="flex flex-col md:items-end">
-                    <div className="flex items-center gap-1.5 text-[#f5f0e6]">
-                      <Sparkles size={14} className="text-purple-400" />
-                      <span className="text-xl font-bold">{user?.stardust ?? 0}</span>
-                    </div>
-                    <span className="text-[10px] text-[#a69b85]">虚银</span>
-                  </div>
+                  <span className="text-lg font-bold text-[#e8d4a0]">{user?.coins ?? 0}</span>
+                  <span className="text-[10px] text-[#a69b85]">锈蚀硬币</span>
                 </div>
-                <CthulhuButton
-                  size="sm"
-                  variant={checkedInToday ? 'ghost' : 'primary'}
-                  onClick={handleCheckin}
-                  disabled={checkingIn || checkedInToday}
-                  icon={checkingIn ? <Loader2 size={14} className="animate-spin" /> : checkedInToday ? <CheckCircle2 size={14} /> : <Gift size={14} />}
-                >
-                  {checkedInToday ? '已签到' : checkingIn ? '签到中...' : '每日签到'}
-                </CthulhuButton>
-                {checkedInToday && checkinReward && (
-                  <div className="text-xs text-[#c9a227]">
-                    已获得 +{checkinReward.coins} 锈蚀硬币
-                    {checkinReward.stardust ? ` · +${checkinReward.stardust} 虚银` : ''}
+
+                {/* 虚银徽章 */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative w-12 h-12 rounded-full bg-[#12121a] border border-purple-400/30 flex items-center justify-center shadow-[0_0_12px_rgba(139,38,53,0.15)]">
+                    <Sparkles size={20} className="text-purple-400" />
                   </div>
-                )}
+                  <span className="text-lg font-bold text-[#e8d4a0]">{user?.stardust ?? 0}</span>
+                  <span className="text-[10px] text-[#a69b85]">虚银</span>
+                </div>
+
+                <div className="ml-2">
+                  <CthulhuButton
+                    size="sm"
+                    variant={checkedInToday ? 'ghost' : 'primary'}
+                    onClick={handleCheckin}
+                    disabled={checkingIn || checkedInToday}
+                    icon={checkingIn ? <Loader2 size={14} className="animate-spin" /> : checkedInToday ? <CheckCircle2 size={14} /> : <Gift size={14} />}
+                  >
+                    {checkedInToday ? '已签到' : checkingIn ? '签到中...' : '每日签到'}
+                  </CthulhuButton>
+                  {checkedInToday && checkinReward && (
+                    <div className="text-xs text-[#c9a227] mt-1 text-center">
+                      已获得 +{checkinReward.coins} 锈蚀硬币
+                      {checkinReward.stardust ? ` · +${checkinReward.stardust} 虚银` : ''}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -305,7 +312,7 @@ export function DashboardPage() {
               </div>
             )}
           </div>
-        </CthulhuCard3D>
+        </div>
       </motion.div>
 
       {/* ===== Layer 2: Bento Grid（功能入口 + 旧日低语Glass卡片） ===== */}
