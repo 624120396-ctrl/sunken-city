@@ -286,7 +286,7 @@ export function DashboardPage() {
           className="lg:col-span-2 space-y-3"
         >
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#d4c5a8]">开启仪式</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">开启仪式</h2>
           </GoldOrnament.Title>
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
@@ -299,11 +299,11 @@ export function DashboardPage() {
                 <Link to={action.to} className="block">
                   <CthulhuCard3D variant="abyss" className="h-full">
                     <div className="p-4 flex flex-col h-full min-h-[120px]">
-                      <div className="w-10 h-10 rounded-lg bg-white/[0.06] border border-white/[0.10] flex items-center justify-center mb-3">
-                        <action.icon size={20} className="text-[#c9a227]" strokeWidth={1.5} />
+                      <div className="w-10 h-10 rounded-lg bg-[#1a1a24] border border-[#c9a227]/30 flex items-center justify-center mb-3">
+                        <action.icon size={20} className="text-[#e8d4a0]" strokeWidth={1.5} />
                       </div>
-                      <h3 className="font-bold text-sm text-[#d4c5a8] tracking-wide">{action.title}</h3>
-                      <p className="text-xs text-[#6b6558] mt-1">{action.subtitle}</p>
+                      <h3 className="font-bold text-sm text-[#f5f0e6] tracking-wide">{action.title}</h3>
+                      <p className="text-xs text-[#a69b85] mt-1">{action.subtitle}</p>
                     </div>
                   </CthulhuCard3D>
                 </Link>
@@ -320,7 +320,7 @@ export function DashboardPage() {
           className="lg:col-span-3 space-y-3"
         >
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#d4c5a8]">旧日低语</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">旧日低语</h2>
           </GoldOrnament.Title>
 
           {/* 公告卡片 */}
@@ -333,12 +333,12 @@ export function DashboardPage() {
                       <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-[#d4c5a8]">{ann.title}</span>
+                          <span className="text-sm text-[#f5f0e6]">{ann.title}</span>
                           {ann.isPinned && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/20 text-[#c9a227] rounded">置顶</span>
                           )}
                         </div>
-                        <p className="text-xs text-[#6b6558] mt-1 line-clamp-2">{ann.content}</p>
+                        <p className="text-xs text-[#a69b85] mt-1 line-clamp-2">{ann.content}</p>
                       </div>
                     </div>
                   ))}
@@ -359,8 +359,8 @@ export function DashboardPage() {
                 <div className="p-4 flex items-center gap-3">
                   <OccultBadge type="crown" size="sm" glow />
                   <div>
-                    <h3 className="font-bold text-sm text-[#d4c5a8]">位阶天梯</h3>
-                    <p className="text-xs text-[#6b6558]">灵魂碎片来源</p>
+                    <h3 className="font-bold text-sm text-[#f5f0e6]">位阶天梯</h3>
+                    <p className="text-xs text-[#a69b85]">灵魂碎片来源</p>
                   </div>
                 </div>
               </CthulhuCard3D>
@@ -370,8 +370,8 @@ export function DashboardPage() {
                 <div className="p-4 flex items-center gap-3">
                   <OccultBadge type="skull" size="sm" glow />
                   <div>
-                    <h3 className="font-bold text-sm text-[#d4c5a8]">印记图鉴</h3>
-                    <p className="text-xs text-[#6b6558]">称号与成就</p>
+                    <h3 className="font-bold text-sm text-[#f5f0e6]">印记图鉴</h3>
+                    <p className="text-xs text-[#a69b85]">称号与成就</p>
                   </div>
                 </div>
               </CthulhuCard3D>
@@ -388,7 +388,7 @@ export function DashboardPage() {
       >
         <div className="flex items-center gap-3 mb-3">
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#d4c5a8]">深渊广场</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">深渊广场</h2>
           </GoldOrnament.Title>
           {!onlineLoading && (
             <span className="px-2 py-0.5 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded">
@@ -453,7 +453,7 @@ export function DashboardPage() {
       >
         <div className="flex items-center justify-between mb-3">
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#d4c5a8]">我的调查员</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">我的调查员</h2>
           </GoldOrnament.Title>
           <Link to="/characters" className="text-sm hover:opacity-80 transition-opacity tracking-wider text-[#c9a227]">
             查看全部 →
@@ -461,30 +461,30 @@ export function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex-shrink-0 w-72">
+              <div key={i} className="flex-shrink-0 w-80">
                 <SkeletonCard />
               </div>
             ))}
           </div>
         ) : characters.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {characters.map((char, i) => (
               <motion.div
                 key={char.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-                className="flex-shrink-0 w-72"
+                className="flex-shrink-0 w-80"
               >
                 <Link to={`/characters/${char.id}`} className="block">
                   <CthulhuCard3D variant="abyss">
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="font-bold text-lg text-[#d4c5a8]">{char.name}</h3>
-                          <p className="text-xs text-[#6b6558] tracking-wider">{char.occupation}</p>
+                          <h3 className="font-bold text-lg text-[#f5f0e6]">{char.name}</h3>
+                          <p className="text-xs text-[#a69b85] tracking-wider">{char.occupation}</p>
                         </div>
                         {char.san < 30 && (
                           <OccultBadge type="eye2" size="sm" pulse label="疯狂" />

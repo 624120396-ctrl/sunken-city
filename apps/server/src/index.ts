@@ -129,7 +129,19 @@ app.use('/api', notificationRoutes);
 app.use('/api', userMessageRoutes);
 app.use('/api/admin', adminNotificationRoutes);
 
-// 404处理
+// SPA 回退 — 支持前端路由
+app.get('*', (req, res) => {
+  // 排除 API 路径和静态文件请求
+  if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
+    return res.status(404).json({
+      success: false,
+      error: { code: 'NOT_FOUND', message: '请求的资源不存在' },
+    });
+  }
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+});
+
+// 404处理（API路径未匹配时）
 app.use((req, res) => {
   res.status(404).json({
     success: false,
