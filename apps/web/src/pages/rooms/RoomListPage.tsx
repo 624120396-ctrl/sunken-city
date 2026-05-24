@@ -103,7 +103,8 @@ export function RoomListPage() {
 
       {rooms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 
-                        border border-[#3a3a3a]/40 rounded-lg backdrop-blur-sm bg-black/10">
+                        border border-[#3a3a3a]/40 rounded-lg backdrop-blur-md bg-black/40
+                        shadow-lg shadow-black/40">
           <div className="text-4xl mb-4 opacity-60">📖</div>
           <p className="font-ritual text-lg" style={{ color: '#e8d4a0' }}>暂无进行中的故事</p>
           <p className="text-sm mt-2" style={{ color: '#6b6558' }}>创建或加入一个房间开始跑团</p>
@@ -115,8 +116,9 @@ export function RoomListPage() {
               key={room.id}
               onClick={() => navigate(`/rooms/${room.roomId}`)}
               className="group relative border border-[#3a3a3a]/40 rounded-lg p-5 
-                         backdrop-blur-sm bg-black/20 cursor-pointer
-                         hover:border-[#c9a227]/50 hover:bg-black/30
+                         backdrop-blur-md bg-black/40 cursor-pointer
+                         hover:border-[#c9a227]/50 hover:bg-black/50
+                         shadow-lg shadow-black/40
                          transition-all duration-300"
             >
               <div className="flex items-start justify-between">
