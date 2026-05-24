@@ -119,14 +119,14 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
       {/* 头部 */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#3a3a3a]/30">
         <div className="flex items-center gap-2 text-sm text-[#e8d4a0]">
-          <GitBranch size={14} className="text-coc-ether" />
+          <GitBranch size={14} style={{ color: "#6b6558" }} />
           <span className="font-ritual">子房间</span>
         </div>
         <div className="flex items-center gap-1">
           {isKP && (
             <button
               onClick={() => setShowCreate(true)}
-              className="p-1 text-[#c9a227] hover:text-coc-gold/80 transition-colors"
+              className="p-1 text-[#c9a227] hover:text-[#e8d4a0] transition-colors"
             >
               <Plus size={16} />
             </button>
@@ -153,8 +153,8 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             key={sub.id}
             className={`p-2.5 rounded-lg border transition-colors ${
               sub.isMember
-                ? 'bg-coc-bg-elevated/30 border-coc-gold/20'
-                : 'bg-coc-bg-elevated/10 border-[#3a3a3a]/20'
+                ? 'bg-black/30 border-[#c9a227]/20'
+                : 'bg-black/10 border-[#3a3a3a]/20'
             }`}
           >
             <div className="flex items-center justify-between mb-1">
@@ -181,7 +181,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                 ) : (
                   <button
                     onClick={() => joinSubRoom(sub.id)}
-                    className="px-1.5 py-0.5 text-[10px] bg-coc-gold/10 text-[#c9a227] border border-coc-gold/20 rounded hover:bg-coc-gold/20 transition-colors"
+                    className="px-1.5 py-0.5 text-[10px] bg-[#c9a227]/10 text-[#c9a227] border border-[#c9a227]/20 rounded hover:bg-[#c9a227]/20 transition-colors"
                   >
                     加入
                   </button>
@@ -204,7 +204,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                 <Users size={10} />
                 <span>{sub.memberCount} 人</span>
                 {sub.members.slice(0, 3).map(m => (
-                  <span key={m.userId} className="text-coc-text/60">{m.nickname}</span>
+                  <span key={m.userId} style={{ color: "#6b6558" }}>{m.nickname}</span>
                 ))}
               </div>
               {sub.lastMessage && (
@@ -220,32 +220,32 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
 
       {/* 创建弹窗 */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="创建子房间">
-        <div className="space-y-3 w-[320px]">
+        <div className="space-y-3 w-[320px] max-h-[60vh] overflow-y-auto pr-1">
           <input
             value={formName}
             onChange={e => setFormName(e.target.value)}
             placeholder="子房间名称"
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
+            className="w-full px-2 py-1.5 bg-[#1a1a1a] border border-[#3a3a3a] rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-[#c9a227] focus:outline-none"
           />
           <textarea
             value={formDesc}
             onChange={e => setFormDesc(e.target.value)}
             placeholder="描述（可选）"
             rows={2}
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
+            className="w-full px-2 py-1.5 bg-[#1a1a1a] border border-[#3a3a3a] rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-[#c9a227] focus:outline-none resize-none"
           />
           <textarea
             value={formSceneDesc}
             onChange={e => setFormSceneDesc(e.target.value)}
             placeholder="场景描述（可选）"
             rows={2}
-            className="w-full px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none resize-none"
+            className="w-full px-2 py-1.5 bg-[#1a1a1a] border border-[#3a3a3a] rounded text-sm text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-[#c9a227] focus:outline-none resize-none"
           />
           <div className="grid grid-cols-2 gap-2">
             <select
               value={formAtmosphere}
               onChange={e => setFormAtmosphere(e.target.value)}
-              className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
+              className="px-2 py-1.5 bg-[#1a1a1a] border border-[#3a3a3a] rounded text-xs text-[#e8d4a0]"
             >
               <option value="normal">正常</option>
               <option value="dark">黑暗</option>
@@ -255,7 +255,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
             <select
               value={formTimeMode}
               onChange={e => setFormTimeMode(e.target.value)}
-              className="px-2 py-1.5 bg-coc-bg-elevated border border-[#3a3a3a]/30 rounded text-xs text-[#e8d4a0]"
+              className="px-2 py-1.5 bg-[#1a1a1a] border border-[#3a3a3a] rounded text-xs text-[#e8d4a0]"
             >
               <option value="sync">时间同步</option>
               <option value="paused">时间暂停</option>
@@ -277,8 +277,8 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
                   }}
                   className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
                     selectedParticipants.includes(m.userId)
-                      ? 'bg-coc-gold/20 text-[#c9a227] border border-coc-gold/20'
-                      : 'bg-coc-bg-elevated/20 text-[#6b6558] border border-[#3a3a3a]/20'
+                      ? 'bg-[#c9a227]/20 text-[#c9a227] border border-[#c9a227]/20'
+                      : 'bg-black/20 text-[#6b6558] border border-[#3a3a3a]/20 hover:border-[#3a3a3a]/40'
                   }`}
                 >
                   {m.nickname}
@@ -289,7 +289,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
           <button
             onClick={createSubRoom}
             disabled={!formName.trim()}
-            className="w-full py-1.5 text-sm bg-coc-gold text-coc-abyss rounded font-medium hover:bg-coc-gold/80 disabled:opacity-30 transition-colors"
+            className="w-full py-1.5 text-sm rounded font-medium transition-colors disabled:opacity-30" style={{ background: "#c9a227", color: "#1a1a1a" }} onMouseEnter={(e) => { if(formName.trim()) e.currentTarget.style.background = "#b8941f" }} onMouseLeave={(e) => e.currentTarget.style.background = "#c9a227" }
           >
             创建
           </button>
