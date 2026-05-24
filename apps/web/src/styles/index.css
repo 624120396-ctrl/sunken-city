@@ -202,7 +202,7 @@
     color: #d4c5a8;
     min-height: 100dvh;
     /* 全局背景图 — 无 fallback 背景色，无遮罩，无噪点，无伪元素 */
-    background-image: url('/images/bg05.png');
+    background-image: url('/bg-vellum.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
