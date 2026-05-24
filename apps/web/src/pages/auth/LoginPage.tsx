@@ -58,7 +58,7 @@ export function LoginPage() {
               <img
                 src="/logo.png"
                 alt="沉没之城"
-                className="w-48 h-auto mx-auto drop-shadow-[0_0_12px_rgba(201,162,39,0.4)]"
+                className="w-64 h-auto mx-auto drop-shadow-[0_0_12px_rgba(201,162,39,0.4)]"
                 onError={(e) => {
                   // 如果 logo 加载失败，回退到文字
                   e.currentTarget.style.display = 'none';
