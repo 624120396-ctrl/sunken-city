@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { io } from 'socket.io-client';
-import { User, Scroll, Sparkles, Star, Coins, Gift, CheckCircle2, Loader2, Ghost, Clock, ChevronRight } from 'lucide-react';
+import { User, Scroll, Sparkles, Star, Coins, Gift, CheckCircle2, Loader2, Ghost, ChevronRight, Users, Crown, Award, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -31,6 +31,28 @@ interface Character {
   maxMp: number;
   maxSan: number;
 }
+
+// ===== Glassmorphism 卡片组件（Uiverse ugly-lion-23 风格） =====
+const GlassCard = ({ children, className = '', hoverGlow = false }: { children: React.ReactNode; className?: string; hoverGlow?: boolean }) => (
+  <div
+    className={`
+      relative rounded-xl overflow-hidden
+      bg-[#0a0a0f]/90
+      border border-white/[0.08]
+      shadow-[0_4px_24px_rgba(0,0,0,0.4)]
+      transition-all duration-300
+      ${hoverGlow ? 'hover:border-[#c9a227]/30 hover:shadow-[0_0_20px_rgba(201,162,39,0.1)]' : ''}
+      ${className}
+    `}
+  >
+    {/* 顶部高光条 */}
+    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-[#c9a227]/30 to-transparent" />
+    {/* 内容 */}
+    <div className="relative">
+      {children}
+    </div>
+  </div>
+);
 
 export function DashboardPage() {
   const { user, updateUser, token } = useAuthStore();
@@ -62,7 +84,6 @@ export function DashboardPage() {
     return () => clearInterval(onlineInterval);
   }, []);
 
-  // Socket 在线状态上报
   useEffect(() => {
     if (!token) return;
     const socketUrl = import.meta.env.VITE_WS_URL || window.location.origin;
@@ -167,7 +188,6 @@ export function DashboardPage() {
 
   const rank = rankInfo?.rank;
 
-  // 快捷入口数据
   const quickActions = [
     { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员' },
     { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间' },
@@ -177,7 +197,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* ===== Layer 1: 用户信息面板（全宽 Bento 头） ===== */}
+      {/* ===== Layer 1: 用户信息面板 ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -276,7 +296,7 @@ export function DashboardPage() {
         </CthulhuCard3D>
       </motion.div>
 
-      {/* ===== Layer 2: Bento Grid（功能入口 + 公告/位阶） ===== */}
+      {/* ===== Layer 2: Bento Grid（功能入口 + 旧日低语Glass卡片） ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* 左侧：快捷入口 2×2 */}
         <motion.div
@@ -312,7 +332,7 @@ export function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* 右侧：旧日低语（公告 + 位阶堆叠） */}
+        {/* 右侧：旧日低语（3张Glass卡片） */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -323,133 +343,70 @@ export function DashboardPage() {
             <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">旧日低语</h2>
           </GoldOrnament.Title>
 
-          {/* 公告卡片 */}
-          <CthulhuCard3D variant="parchment" noTilt>
-            <div className="p-5">
-              {announcements.length > 0 ? (
-                <div className="space-y-3">
-                  {announcements.slice(0, 3).map((ann) => (
-                    <div key={ann.id} className="flex items-start gap-3">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-[#f5f0e6]">{ann.title}</span>
-                          {ann.isPinned && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/20 text-[#c9a227] rounded">置顶</span>
-                          )}
-                        </div>
-                        <p className="text-xs text-[#a69b85] mt-1 line-clamp-2">{ann.content}</p>
+          {/* 公告 Glass卡片 */}
+          <GlassCard hoverGlow className="p-5">
+            {announcements.length > 0 ? (
+              <div className="space-y-3">
+                {announcements.slice(0, 3).map((ann) => (
+                  <div key={ann.id} className="flex items-start gap-3">
+                    <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-[#f5f0e6]">{ann.title}</span>
+                        {ann.isPinned && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/20 text-[#c9a227] rounded">置顶</span>
+                        )}
                       </div>
+                      <p className="text-xs text-[#a69b85] mt-1 line-clamp-2">{ann.content}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-[#a69b85]">
-                  <Clock size={20} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">暂无新公告</p>
-                </div>
-              )}
-            </div>
-          </CthulhuCard3D>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-[#a69b85]">
+                <Megaphone size={20} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">暂无新公告</p>
+              </div>
+            )}
+          </GlassCard>
 
-          {/* 位阶 + 印记 */}
+          {/* 位阶 + 印记 Glass卡片 */}
           <div className="grid grid-cols-2 gap-3">
             <Link to="/ranks" className="block">
-              <CthulhuCard3D variant="gold">
-                <div className="p-4 flex items-center gap-3">
-                  <OccultBadge type="crown" size="sm" glow />
+              <GlassCard hoverGlow className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#c9a227]/10 border border-[#c9a227]/20 flex items-center justify-center">
+                    <Crown size={20} className="text-[#c9a227]" />
+                  </div>
                   <div>
                     <h3 className="font-bold text-sm text-[#f5f0e6]">位阶天梯</h3>
                     <p className="text-xs text-[#a69b85]">灵魂碎片来源</p>
                   </div>
                 </div>
-              </CthulhuCard3D>
+              </GlassCard>
             </Link>
             <Link to="/titles" className="block">
-              <CthulhuCard3D variant="abyss">
-                <div className="p-4 flex items-center gap-3">
-                  <OccultBadge type="skull" size="sm" glow />
+              <GlassCard hoverGlow className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#8b2635]/10 border border-[#8b2635]/20 flex items-center justify-center">
+                    <Award size={20} className="text-[#8b2635]" />
+                  </div>
                   <div>
                     <h3 className="font-bold text-sm text-[#f5f0e6]">印记图鉴</h3>
                     <p className="text-xs text-[#a69b85]">称号与成就</p>
                   </div>
                 </div>
-              </CthulhuCard3D>
+              </GlassCard>
             </Link>
           </div>
         </motion.div>
       </div>
 
-      {/* ===== Layer 3: 深渊广场（全宽横幅） ===== */}
+      {/* ===== Layer 3: 调查员 ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">深渊广场</h2>
-          </GoldOrnament.Title>
-          {!onlineLoading && (
-            <span className="px-2 py-0.5 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded">
-              {onlineCount} 人在线
-            </span>
-          )}
-        </div>
-
-        <CthulhuCard3D variant="blood" noTilt>
-          <div className="p-5">
-            {onlineLoading ? (
-              <div className="flex items-center gap-2 text-[#6b6558] text-sm">
-                <Loader2 size={16} className="animate-spin" />
-                正在感应深渊中的灵魂...
-              </div>
-            ) : onlineUsers.length === 0 ? (
-              <div className="text-center py-6 text-[#6b6558]">
-                <div className="text-3xl mb-3 opacity-30">🌑</div>
-                <p className="font-bold">深渊之中空无一人</p>
-                <p className="text-sm mt-1">此刻只有你在守望这座城市</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {onlineUsers.map((u, idx) => (
-                    <button
-                      key={`${u.userId}-${idx}`}
-                      type="button"
-                      onClick={() => setSelectedOnlineUser(u)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a24] border border-[#2a2a35] rounded-full hover:border-[#c9a227]/30 transition-colors"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-[#12121a] border border-[#2a2a35] flex items-center justify-center text-[10px] text-[#6b6558] overflow-hidden">
-                        {u.avatarUrl ? (
-                          <img src={u.avatarUrl} alt={u.nickname} className="w-full h-full object-cover" />
-                        ) : (
-                          u.nickname.charAt(0)
-                        )}
-                      </div>
-                      <span className="text-sm text-[#d4c5a8]">{u.nickname}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-[#2a2a35]/50">
-                  <span className="text-xs text-[#6b6558]">在线灵魂会在深渊广场上显现</span>
-                  <Link to="/rooms">
-                    <CthulhuButton size="sm" icon={<ChevronRight size={14} />}>
-                      进入房间广场
-                    </CthulhuButton>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-        </CthulhuCard3D>
-      </motion.div>
-
-      {/* ===== Layer 4: 调查员（横向滚动条） ===== */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="flex items-center justify-between mb-3">
           <GoldOrnament.Title>
@@ -501,19 +458,80 @@ export function DashboardPage() {
             ))}
           </div>
         ) : (
-          <CthulhuCard3D variant="parchment" noTilt>
-            <div className="p-12 text-center">
-              <div className="text-4xl mb-4 opacity-30">🌑</div>
-              <p className="text-[#6b6558] font-bold mb-2">暂无调查员记录在案</p>
-              <p className="text-sm text-[#6b6558] mb-6">每一位伟大的调查员都有一个开始</p>
-              <Link to="/characters/new">
-                <CthulhuButton size="md" variant="primary" icon={<User size={18} />}>
-                  创建第一个调查员
-                </CthulhuButton>
-              </Link>
-            </div>
-          </CthulhuCard3D>
+          <GlassCard className="p-12 text-center">
+            <div className="text-4xl mb-4 opacity-30">🌑</div>
+            <p className="text-[#a69b85] font-bold mb-2">暂无调查员记录在案</p>
+            <p className="text-sm text-[#a69b85] mb-6">每一位伟大的调查员都有一个开始</p>
+            <Link to="/characters/new">
+              <CthulhuButton size="md" variant="primary" icon={<User size={18} />}>
+                创建第一个调查员
+              </CthulhuButton>
+            </Link>
+          </GlassCard>
         )}
+      </motion.div>
+
+      {/* ===== Layer 4: 深渊广场（最底部大入口） ===== */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <GoldOrnament.Title>
+            <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">深渊广场</h2>
+          </GoldOrnament.Title>
+          {!onlineLoading && (
+            <span className="px-2 py-0.5 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded">
+              {onlineCount} 人在线
+            </span>
+          )}
+        </div>
+
+        <GlassCard hoverGlow className="p-6">
+          {onlineLoading ? (
+            <div className="flex items-center gap-2 text-[#a69b85] text-sm">
+              <Loader2 size={16} className="animate-spin" />
+              正在感应深渊中的灵魂...
+            </div>
+          ) : onlineUsers.length === 0 ? (
+            <div className="text-center py-8 text-[#a69b85]">
+              <Users size={32} className="mx-auto mb-3 opacity-30" />
+              <p className="font-bold text-lg">深渊之中空无一人</p>
+              <p className="text-sm mt-1">此刻只有你在守望这座城市</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {onlineUsers.map((u, idx) => (
+                  <button
+                    key={`${u.userId}-${idx}`}
+                    type="button"
+                    onClick={() => setSelectedOnlineUser(u)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a24] border border-[#2a2a35] rounded-full hover:border-[#c9a227]/30 transition-colors"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-[#12121a] border border-[#2a2a35] flex items-center justify-center text-[10px] text-[#6b6558] overflow-hidden">
+                      {u.avatarUrl ? (
+                        <img src={u.avatarUrl} alt={u.nickname} className="w-full h-full object-cover" />
+                      ) : (
+                        u.nickname.charAt(0)
+                      )}
+                    </div>
+                    <span className="text-sm text-[#d4c5a8]">{u.nickname}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-[#2a2a35]/50">
+                <span className="text-xs text-[#6b6558]">在线灵魂会在深渊广场上显现</span>
+                <Link to="/rooms">
+                  <CthulhuButton size="sm" icon={<ChevronRight size={14} />}>
+                    进入房间广场
+                  </CthulhuButton>
+                </Link>
+              </div>
+            </div>
+          )}
+        </GlassCard>
       </motion.div>
 
       <UserProfileModal
