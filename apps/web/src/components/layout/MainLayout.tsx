@@ -92,7 +92,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
                     active
-                      ? 'nav-plaque nav-plaque-texture'
+                      ? 'nav-plaque'
                       : 'nav-item-v2'
                   )}
                 >
@@ -169,7 +169,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   'flex items-center rounded-lg transition-all duration-200',
                   sidebarCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-2.5',
                   active
-                    ? 'nav-plaque nav-plaque-texture'
+                    ? cn('nav-plaque', sidebarCollapsed && 'nav-plaque-lil')
                     : 'nav-item-v2'
                 )}
               >

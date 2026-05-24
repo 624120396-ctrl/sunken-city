@@ -1204,21 +1204,21 @@
   position: relative;
   border-radius: 8px;
   font-weight: 600;
-  color: #0f0f14;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: #e8d4a0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   transition: all 0.25s var(--ease-swift);
-  background-image:
-    linear-gradient(135deg, rgba(107,83,32,0.9) 0%, rgba(154,123,42,0.9) 20%, rgba(201,162,39,0.9) 45%, rgba(232,212,160,0.9) 55%, rgba(201,162,39,0.9) 70%, rgba(122,94,42,0.9) 100%),
-    url('/images/gold-brush-stroke.png');
-  background-blend-mode: normal, overlay;
-  background-size: 100% 100%, cover;
-  border: 1px solid rgba(201, 162, 39, 0.6);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 16px rgba(201, 162, 39, 0.25),
-    0 2px 8px rgba(0, 0, 0, 0.3);
+  background-image: url('/nav-active-long.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 12px rgba(139, 38, 53, 0.2);
+}
+
+/* 收缩态用方块图片 */
+.nav-plaque-lil {
+  background-image: url('/nav-active-lil.png') !important;
 }
 
 /* 扫光伪元素 - 选中态 */
@@ -1232,9 +1232,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.15) 40%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.15) 60%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
     transparent 100%
   );
   transform: skewX(-20deg);
@@ -1264,35 +1264,16 @@
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.06) 0%,
     transparent 35%,
     transparent 65%,
-    rgba(0, 0, 0, 0.06) 100%
+    rgba(0, 0, 0, 0.1) 100%
   );
   border-radius: inherit;
   z-index: 2;
 }
 
-/* 铭牌金属拉丝纹理叠加 */
-.nav-plaque-texture {
-  position: relative;
-}
 
-.nav-plaque-texture::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(255, 255, 255, 0.04) 2px,
-    rgba(255, 255, 255, 0.04) 4px
-  );
-  border-radius: inherit;
-  mix-blend-mode: overlay;
-}
 
 /* 未选中导航项 */
 .nav-item-v2 {
