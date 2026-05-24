@@ -63,7 +63,12 @@ export function ForumNewPostPage() {
         <button onClick={() => navigate(-1)} className="coc-btn-secondary p-2">
           <ArrowLeft size={18} />
         </button>
-        <h1 className="text-2xl font-ritual font-bold text-coc-parchment">发布主题</h1>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>发布主题</h1>
+            <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-coc-bg-tertiary border border-coc-border rounded-lg p-4">

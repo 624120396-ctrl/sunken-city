@@ -25,9 +25,12 @@ export function ForumListPage() {
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-ritual font-bold text-coc-parchment">旧日低语</h1>
-          <p className="text-sm text-coc-text-muted mt-1">选择版块，进入你的讨论领域</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>旧日低语</h1>
+            <p className="text-sm mt-1" style={{ color: '#6b6558' }}>选择版块，进入你的讨论领域</p>
+          </div>
+          <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
         <div className="hidden sm:flex items-center gap-2 text-coc-text-muted text-sm">
           <LayoutGrid size={16} />
@@ -48,13 +51,13 @@ export function ForumListPage() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-xl font-bold text-coc-parchment group-hover:text-coc-gold transition-colors truncate">
+                    <h2 className="text-xl font-bold group-hover:text-coc-gold transition-colors truncate" style={{ color: '#FFFEFC' }}>
                       {b.name}
                     </h2>
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-2xl font-bold text-coc-parchment">{b.postCount}</span>
-                    <span className="text-xs text-coc-text-muted">主题</span>
+                    <span className="text-2xl font-bold" style={{ color: '#FFFEFC' }}>{b.postCount}</span>
+                    <span className="text-xs" style={{ color: '#8b8375' }}>主题</span>
                   </div>
                 </div>
                 {b.description && (
