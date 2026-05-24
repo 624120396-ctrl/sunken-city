@@ -338,7 +338,7 @@ export function DashboardPage() {
                       />
                     )}
                     {/* 磨砂玻璃覆盖层 */}
-                    <div className="absolute inset-0 backdrop-blur-[3px] pointer-events-none" />
+                    <div className="absolute inset-0 backdrop-blur-[1px] pointer-events-none" />
                     {/* 底部血红色渐变 */}
                     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
                     {/* 顶部微光 */}
