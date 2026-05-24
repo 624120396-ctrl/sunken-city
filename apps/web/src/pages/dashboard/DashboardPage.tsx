@@ -384,7 +384,7 @@ export function DashboardPage() {
           >
             {/* 卡片1 - 深渊公告（左，-15deg） */}
             <div
-              className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/30 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+              className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
               style={{
                 transform: whispersHovered ? 'rotate(0deg)' : 'rotate(-15deg)',
                 margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -420,15 +420,15 @@ export function DashboardPage() {
               </div>
 
               {/* 底部标签 */}
-              <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
-                <span className="text-xs text-[#d4c5a8]">深渊公告</span>
+              <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                <span className="text-xs text-white/70">深渊公告</span>
               </div>
             </div>
 
             {/* 卡片2 - 位阶天梯（中，0deg） */}
             <Link to="/ranks" className="block">
               <div
-                className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/30 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(0deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -469,8 +469,8 @@ export function DashboardPage() {
                 </div>
 
                 {/* 底部标签 */}
-                <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
-                  <span className="text-xs text-[#d4c5a8]">位阶天梯</span>
+                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                  <span className="text-xs text-white/70">位阶天梯</span>
                 </div>
               </div>
             </Link>
@@ -478,7 +478,7 @@ export function DashboardPage() {
             {/* 卡片3 - 印记图鉴（右，+15deg） */}
             <Link to="/titles" className="block">
               <div
-                className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/30 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(15deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -510,8 +510,8 @@ export function DashboardPage() {
                 </div>
 
                 {/* 底部标签 */}
-                <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
-                  <span className="text-xs text-[#d4c5a8]">印记图鉴</span>
+                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                  <span className="text-xs text-white/70">印记图鉴</span>
                 </div>
               </div>
             </Link>
