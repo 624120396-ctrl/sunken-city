@@ -80,11 +80,11 @@ export function ShopPage() {
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-coc-parchment">
-            <Coins size={16} className="text-coc-gold" />
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
+            <Coins size={16} className="text-[#c9a227]" />
             <span>{user?.coins ?? 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-coc-parchment">
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
             <Sparkles size={16} className="text-purple-400" />
             <span>{user?.stardust ?? 0}</span>
           </div>
@@ -111,7 +111,7 @@ export function ShopPage() {
             className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               category === c.value
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-coc-parchment hover:border-coc-gold'
+                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
             }`}
           >
             {c.label}
@@ -123,7 +123,7 @@ export function ShopPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-64 bg-coc-abyss/40 rounded animate-pulse border border-coc-void" />
+            <div key={i} className="h-64 bg-[#0a0a0f]/40 rounded animate-pulse border border-coc-void" />
           ))
         ) : error ? (
           <div className="col-span-full text-center py-16 text-red-300">
@@ -146,7 +146,7 @@ export function ShopPage() {
               className="card-layer-2 h-full"
             >
               <div className="h-full p-4 flex flex-col gap-3">
-                <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-coc-abyss/30 flex items-center justify-center`}>
+                <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-[#0a0a0f]/30 flex items-center justify-center`}>
                   {item.iconUrl ? (
                     <img src={item.iconUrl} alt={item.name} className="max-h-28 object-contain" />
                   ) : (
@@ -156,7 +156,7 @@ export function ShopPage() {
 
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-ritual font-bold text-coc-parchment">{item.name}</p>
+                    <p className="font-ritual font-bold text-[#e8d4a0]">{item.name}</p>
                     <Tooltip content={{
                     common: '普通藏品 — 基础装饰',
                     rare: '稀有藏品 — 限定外观',
@@ -175,13 +175,13 @@ export function ShopPage() {
                     <div className="flex items-center gap-1 text-sm">
                       {item.currency === 'coin' ? (
                         <>
-                          <Coins size={14} className="text-coc-gold" />
-                          <span className="text-coc-parchment">{item.price}</span>
+                          <Coins size={14} className="text-[#c9a227]" />
+                          <span className="text-[#e8d4a0]">{item.price}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles size={14} className="text-purple-400" />
-                          <span className="text-coc-parchment">{item.price}</span>
+                          <span className="text-[#e8d4a0]">{item.price}</span>
                         </>
                       )}
                     </div>

@@ -180,12 +180,12 @@ export function RelicMarketPage() {
     return (
       <div
         key={l.id}
-        className={`rounded border bg-coc-bg-secondary p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}
+        className={`rounded border bg-black/20 p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}
       >
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <div className="text-base font-bold text-coc-parchment">
+              <div className="text-base font-bold text-[#e8d4a0]">
                 {meta?.name || l.relicKey}
               </div>
               <Tooltip content={({
@@ -202,27 +202,27 @@ export function RelicMarketPage() {
                 </span>
               </Tooltip>
             </div>
-            <div className="mt-1 text-xs text-coc-text-muted">
+            <div className="mt-1 text-xs text-[#6b6558]">
               {meta?.description}
             </div>
             {dur !== null && (
-              <div className="mt-1 text-xs text-coc-text-secondary">
+              <div className="mt-1 text-xs text-[#8b8375]">
                 耐久: {dur}
               </div>
             )}
           </div>
           <div className="text-right">
-            <div className="flex items-center justify-end gap-1 text-lg font-bold text-coc-gold">
+            <div className="flex items-center justify-end gap-1 text-lg font-bold text-[#c9a227]">
               {l.currency === 'coin' ? <Coins size={16} /> : <Sparkles size={16} />}
               {l.price}
             </div>
-            <div className="text-xs text-coc-text-muted">
+            <div className="text-xs text-[#6b6558]">
               {l.currency === 'coin' ? '锈蚀硬币' : '虚银'} · {l.sellerName}
             </div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-coc-text-secondary">
+          <span className="text-xs text-[#8b8375]">
             {new Date(l.createdAt).toLocaleString()}
           </span>
           {isMine ? (
@@ -253,7 +253,7 @@ export function RelicMarketPage() {
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Store size={24} className="text-coc-gold" />
+          <Store size={24} className="text-[#c9a227]" />
           <h1 className="text-2xl font-serif font-bold">遗物市场</h1>
         </div>
         <button
@@ -264,13 +264,13 @@ export function RelicMarketPage() {
         </button>
       </div>
 
-      <div className="mb-4 flex items-center gap-2 border-b border-coc-border">
+      <div className="mb-4 flex items-center gap-2 border-b border-[#3a3a3a]/40">
         <button
           onClick={() => setActiveTab('market')}
           className={`px-4 py-2 text-sm ${
             activeTab === 'market'
-              ? 'border-b-2 border-coc-accent-red text-coc-accent-red'
-              : 'text-coc-text-secondary hover:text-coc-text-primary'
+              ? 'border-b-2 border-[#a63848] text-coc-accent-red'
+              : 'text-[#8b8375] hover:text-[#d4c5a8]'
           }`}
         >
           交易大厅
@@ -279,8 +279,8 @@ export function RelicMarketPage() {
           onClick={() => setActiveTab('mine')}
           className={`px-4 py-2 text-sm ${
             activeTab === 'mine'
-              ? 'border-b-2 border-coc-accent-red text-coc-accent-red'
-              : 'text-coc-text-secondary hover:text-coc-text-primary'
+              ? 'border-b-2 border-[#a63848] text-coc-accent-red'
+              : 'text-[#8b8375] hover:text-[#d4c5a8]'
           }`}
         >
           我的挂单
@@ -293,7 +293,7 @@ export function RelicMarketPage() {
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
-              className="rounded border border-coc-void bg-coc-bg-tertiary px-3 py-1.5 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+              className="rounded border border-coc-void bg-black/20 px-3 py-1.5 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
             >
               <option value="">全部遗物</option>
               {Object.values(registryMap).map((r: any) => (
@@ -323,7 +323,7 @@ export function RelicMarketPage() {
               <p>加载失败，请稍后重试</p>
             </div>
           ) : listings.length === 0 ? (
-            <div className="py-16 text-center text-coc-text-muted">
+            <div className="py-16 text-center text-[#6b6558]">
               <Store
                 size={48}
                 className="mx-auto mb-4 text-coc-text-secondary/50"
@@ -344,7 +344,7 @@ export function RelicMarketPage() {
       {activeTab === 'mine' && (
         <>
           {myListings.length === 0 ? (
-            <div className="py-12 text-center text-coc-text-muted">
+            <div className="py-12 text-center text-[#6b6558]">
               你没有正在出售的遗物
             </div>
           ) : (
@@ -358,16 +358,16 @@ export function RelicMarketPage() {
       {/* 上架 Modal */}
       {showListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-lg border border-coc-border bg-coc-bg-secondary p-6">
-            <h3 className="mb-4 text-lg font-bold text-coc-parchment">上架遗物</h3>
+          <div className="w-full max-w-md rounded-lg border border-[#3a3a3a]/40 bg-black/20 p-6">
+            <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">上架遗物</h3>
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-coc-text-muted">
+              <label className="mb-1 block text-xs text-[#6b6558]">
                 选择角色卡
               </label>
               <select
                 value={selectedCharId}
                 onChange={(e) => handleCharChange(e.target.value)}
-                className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                className="w-full rounded border border-coc-void bg-black/20 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
               >
                 <option value="">请选择</option>
                 {characters.map((c) => (
@@ -380,20 +380,20 @@ export function RelicMarketPage() {
 
             {selectedCharId && (
               <div className="mb-4">
-                <label className="mb-1 block text-xs text-coc-text-muted">
+                <label className="mb-1 block text-xs text-[#6b6558]">
                   选择遗物
                 </label>
                 {charRelicsLoading ? (
-                  <div className="text-sm text-coc-text-muted">加载中...</div>
+                  <div className="text-sm text-[#6b6558]">加载中...</div>
                 ) : charRelics.length === 0 ? (
-                  <div className="text-sm text-coc-text-muted">
+                  <div className="text-sm text-[#6b6558]">
                     该角色没有可交易的遗物
                   </div>
                 ) : (
                   <select
                     value={selectedRelicId}
                     onChange={(e) => setSelectedRelicId(e.target.value)}
-                    className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                    className="w-full rounded border border-coc-void bg-black/20 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
                   >
                     <option value="">请选择</option>
                     {charRelics.map((r) => {
@@ -414,7 +414,7 @@ export function RelicMarketPage() {
 
             <div className="mb-4 flex items-center gap-2">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-coc-text-muted">
+                <label className="mb-1 block text-xs text-[#6b6558]">
                   价格
                 </label>
                 <input
@@ -422,11 +422,11 @@ export function RelicMarketPage() {
                   value={listPrice}
                   onChange={(e) => setListPrice(e.target.value)}
                   min={1}
-                  className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                  className="w-full rounded border border-coc-void bg-black/20 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
                 />
               </div>
               <div className="w-32">
-                <label className="mb-1 block text-xs text-coc-text-muted">
+                <label className="mb-1 block text-xs text-[#6b6558]">
                   币种
                 </label>
                 <select
@@ -434,7 +434,7 @@ export function RelicMarketPage() {
                   onChange={(e) =>
                     setListCurrency(e.target.value as 'coin' | 'stardust')
                   }
-                  className="w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+                  className="w-full rounded border border-coc-void bg-black/20 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
                 >
                   <option value="coin">锈蚀硬币</option>
                   <option value="stardust">虚银</option>
@@ -469,15 +469,15 @@ export function RelicMarketPage() {
       {/* 购买 Modal */}
       {buyTradeId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-lg border border-coc-border bg-coc-bg-secondary p-6">
-            <h3 className="mb-4 text-lg font-bold text-coc-parchment">购买遗物</h3>
-            <p className="mb-3 text-sm text-coc-text-muted">
+          <div className="w-full max-w-sm rounded-lg border border-[#3a3a3a]/40 bg-black/20 p-6">
+            <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">购买遗物</h3>
+            <p className="mb-3 text-sm text-[#6b6558]">
               请选择要接收该遗物的角色卡
             </p>
             <select
               value={buyCharId}
               onChange={(e) => setBuyCharId(e.target.value)}
-              className="mb-4 w-full rounded border border-coc-void bg-coc-bg-tertiary px-3 py-2 text-sm text-coc-parchment focus:border-coc-gold focus:outline-none"
+              className="mb-4 w-full rounded border border-coc-void bg-black/20 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
             >
               <option value="">请选择</option>
               {characters.map((c) => (

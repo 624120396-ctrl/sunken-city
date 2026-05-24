@@ -207,11 +207,11 @@ export function FishingPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Fish className="text-coc-accent-red" size={28} />
+          <Fish className="text-[#a63848]" size={28} />
           <h1 className="text-2xl font-serif font-bold">黑水港 · 深渊垂钓</h1>
         </div>
-        <div className="px-3 py-1 rounded-full bg-coc-bg-tertiary text-sm border border-coc-void">
-          今日剩余 <span className="text-coc-accent-gold font-bold">{remaining}</span> 次
+        <div className="px-3 py-1 rounded-full bg-black/20 text-sm border border-coc-void">
+          今日剩余 <span className="text-[#c9a227] font-bold">{remaining}</span> 次
         </div>
       </div>
 
@@ -239,7 +239,7 @@ export function FishingPage() {
                   <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-auto">
                     <div className="catch-reveal-card">
                       <div className="reveal-inner">
-                        <p className="text-coc-text-muted">脱钩了…什么都没有</p>
+                        <p className="text-[#6b6558]">脱钩了…什么都没有</p>
                         <button onClick={reset} className="coc-btn-primary w-full mt-4">
                           再来一次
                         </button>
@@ -287,13 +287,13 @@ export function FishingPage() {
         <div className="space-y-4">
           <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-2">收集进度</h3>
-            <div className="w-full bg-coc-abyss rounded-full h-2 mb-2">
+            <div className="w-full bg-[#0a0a0f] rounded-full h-2 mb-2">
               <div
                 className="bg-coc-gold h-2 rounded-full transition-all"
                 style={{ width: `${collectionPct}%` }}
               />
             </div>
-            <p className="text-sm text-coc-text-secondary">{collectionPct.toFixed(1)}% 已解锁</p>
+            <p className="text-sm text-[#8b8375]">{collectionPct.toFixed(1)}% 已解锁</p>
           </DoubleBezelCard>
 
           <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
@@ -312,12 +312,12 @@ export function FishingPage() {
                   <li key={log.id} className="text-sm border-b border-coc-void pb-2 last:border-0 min-w-0">
                     <div className="flex items-center justify-between min-w-0 gap-2">
                       <span className="font-medium truncate max-w-[8rem] block">{log.itemName}</span>
-                      <span className="text-coc-gold text-xs truncate">{log.rarity}</span>
+                      <span className="text-[#c9a227] text-xs truncate">{log.rarity}</span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <div className="text-xs text-coc-text-muted">
+                      <div className="text-xs text-[#6b6558]">
                         {log.isSold ? (
-                          <span className="text-coc-text-secondary">已售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
+                          <span className="text-[#8b8375]">已售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
                         ) : (
                           <span>可售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
                         )}
@@ -340,7 +340,7 @@ export function FishingPage() {
       </div>
 
       {message && (
-        <div className="text-center text-coc-accent-red text-sm break-words px-2">{message}</div>
+        <div className="text-center text-[#a63848] text-sm break-words px-2">{message}</div>
       )}
     </div>
   );

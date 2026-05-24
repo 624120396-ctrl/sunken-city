@@ -215,7 +215,7 @@ export function InventoryPage() {
             className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
                 ? 'bg-coc-gold text-coc-abyss'
-                : 'bg-coc-bg-secondary text-coc-text-secondary hover:text-coc-parchment'
+                : 'bg-black/20 text-[#8b8375] hover:text-[#e8d4a0]'
             }`}
           >
             {t.label}
@@ -225,7 +225,7 @@ export function InventoryPage() {
 
       {tab === 'general' && (
         <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-coc-bg-elevated p-4">
+          <div className="bg-[#1a1a1a] p-4">
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : generalItems.length === 0 ? (
@@ -269,7 +269,7 @@ export function InventoryPage() {
 
       {tab === 'titles' && (
         <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-coc-bg-elevated p-4">
+          <div className="bg-[#1a1a1a] p-4">
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : titleItems.length === 0 ? (
@@ -303,12 +303,12 @@ export function InventoryPage() {
       {tab === 'relics' && (
         <div className="space-y-4">
           <div className="card-layer-2 rounded-lg overflow-hidden">
-            <div className="bg-coc-bg-elevated p-4">
-              <h2 className="mb-3 text-sm font-bold text-coc-parchment">已绑定遗物（角色保险箱）</h2>
+            <div className="bg-[#1a1a1a] p-4">
+              <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !boundRelics || boundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-coc-text-muted">还没有遗物绑定到角色卡上</div>
+                <div className="py-6 text-center text-sm text-[#6b6558]">还没有遗物绑定到角色卡上</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {boundRelics.map((r) => (
@@ -328,12 +328,12 @@ export function InventoryPage() {
           </div>
 
           <div className="card-layer-2 rounded-lg overflow-hidden">
-            <div className="bg-coc-bg-elevated p-4">
-              <h2 className="mb-3 text-sm font-bold text-coc-parchment">未绑定遗物</h2>
+            <div className="bg-[#1a1a1a] p-4">
+              <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">未绑定遗物</h2>
               {unboundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !unboundRelics || unboundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-coc-text-muted">暂无有可绑定的遗物</div>
+                <div className="py-6 text-center text-sm text-[#6b6558]">暂无有可绑定的遗物</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {unboundRelics.map((r) => (
@@ -371,8 +371,8 @@ export function InventoryPage() {
             )}
           >
             <div className="mb-2 text-center">
-              <h3 className="text-lg font-ritual font-bold text-coc-gold">旧日低语已兑现</h3>
-              <p className="mt-2 text-sm italic leading-relaxed text-coc-text-secondary">
+              <h3 className="text-lg font-ritual font-bold text-[#c9a227]">旧日低语已兑现</h3>
+              <p className="mt-2 text-sm italic leading-relaxed text-[#8b8375]">
                 {getLootboxFlavor(
                   lootboxResult.relics.reduce(
                     (max, r) =>
@@ -384,9 +384,9 @@ export function InventoryPage() {
             </div>
 
             <div className="my-4 flex items-center justify-center gap-2 rounded-lg border border-coc-gold/30 bg-coc-gold/10 py-2">
-              <span className="text-sm text-coc-text-secondary">锈蚀硬币</span>
-              <span className="text-base font-bold text-coc-gold">+{lootboxResult.gainedCoins}</span>
-              <span className="text-xs text-coc-text-muted">（当前 {lootboxResult.coins}）</span>
+              <span className="text-sm text-[#8b8375]">锈蚀硬币</span>
+              <span className="text-base font-bold text-[#c9a227]">+{lootboxResult.gainedCoins}</span>
+              <span className="text-xs text-[#6b6558]">（当前 {lootboxResult.coins}）</span>
             </div>
 
             <div className="space-y-3">
@@ -394,7 +394,7 @@ export function InventoryPage() {
                 <div
                   key={r.id}
                   className={cn(
-                    'rounded-lg border bg-coc-bg-tertiary p-3 transition-all duration-500',
+                    'rounded-lg border bg-black/20 p-3 transition-all duration-500',
                     rarityGlowClass[r.rarity] || rarityGlowClass.common,
                     idx < visibleRelics ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
                   )}
@@ -408,12 +408,12 @@ export function InventoryPage() {
                         className="h-12 w-12 rounded-md object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-coc-bg-secondary text-xs text-coc-text-muted">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-black/20 text-xs text-[#6b6558]">
                         无图
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className="text-sm font-bold text-coc-parchment">{r.name}</div>
+                      <div className="text-sm font-bold text-[#e8d4a0]">{r.name}</div>
                       <div
                         className="mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-coc-abyss"
                         style={{
@@ -433,7 +433,7 @@ export function InventoryPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-coc-text-secondary line-clamp-3">
+                  <p className="mt-2 text-xs leading-relaxed text-[#8b8375] line-clamp-3">
                     {r.description}
                   </p>
                 </div>
