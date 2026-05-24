@@ -738,18 +738,20 @@ export function RoomPage() {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-            className="px-3 py-1.5 rounded text-sm flex items-center gap-1.5 border border-[#3a3a3a]/60 
-                       text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
-                       transition-all"
+            className="px-4 py-1.5 rounded text-sm flex items-center gap-1.5 text-[#e8d4a0]
+                       bg-[url('/btn-off.png')] bg-cover bg-center
+                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                       transition-all min-w-[80px] justify-center"
           >
             {activeTab === 'chat' ? <Swords size={14} /> : <Send size={14} />}
             {activeTab === 'chat' ? '战斗' : '聊天'}
           </button>
           <button
             onClick={() => setShowPrivateChat(true)}
-            className="px-3 py-1.5 rounded text-sm flex items-center gap-1.5 border border-[#3a3a3a]/60 
-                       text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
-                       transition-all relative"
+            className="px-4 py-1.5 rounded text-sm flex items-center gap-1.5 text-[#e8d4a0]
+                       bg-[url('/btn-off.png')] bg-cover bg-center
+                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                       transition-all min-w-[80px] justify-center relative"
           >
             <MessageSquare size={14} />
             私聊
@@ -760,9 +762,10 @@ export function RoomPage() {
             )}
           </button>
           <div className="relative group">
-            <button className="px-3 py-1.5 rounded text-sm flex items-center gap-1 border border-[#3a3a3a]/60 
-                              text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
-                              transition-all">
+            <button className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
+                              bg-[url('/btn-off.png')] bg-cover bg-center
+                              hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                              transition-all min-w-[80px] justify-center">
               <span>更多</span>
               <ChevronDown size={12} />
             </button>
@@ -797,23 +800,29 @@ export function RoomPage() {
           {room?.isCreator && (
             <button
               onClick={() => setShowGMKit(!showGMKit)}
-              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border transition-all ${showGMKit ? 'bg-[#c9a227]/15 text-[#c9a227] border-[#c9a227]/40' : 'border-[#3a3a3a]/60 text-[#c9a227] hover:border-[#c9a227]/40 hover:bg-[#c9a227]/5'}`}
+              className={`px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
+                          bg-[url('/btn-off.png')] bg-cover bg-center
+                          hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                          transition-all min-w-[60px] justify-center
+                          ${showGMKit ? "bg-[url('/btn-on.png')] text-white" : ""}`}
             >
               <Crown size={14} />
               KP
             </button>
           )}
           <div className="w-px h-5 mx-1" style={{ background: 'rgba(58,58,58,0.5)' }} />
-          <button onClick={handleLeaveRoom} className="px-3 py-1.5 rounded text-sm flex items-center gap-1 border border-[#3a3a3a]/60 
-                       text-[#8b8375] hover:border-[#a63848]/40 hover:text-[#a63848] hover:bg-[#a63848]/5 
-                       transition-all">
+          <button onClick={handleLeaveRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
+                       bg-[url('/btn-off.png')] bg-cover bg-center
+                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                       transition-all min-w-[60px] justify-center">
             <DoorOpen size={14} />
             离开
           </button>
           {room?.isCreator && (
-            <button onClick={handleCloseRoom} className="px-3 py-1.5 rounded text-sm text-[#a63848] hover:text-[#e8d4a0] 
-                       border border-[#a63848]/30 hover:border-[#a63848]/60 hover:bg-[#a63848]/10
-                       transition-all">
+            <button onClick={handleCloseRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
+                       bg-[url('/btn-off.png')] bg-cover bg-center
+                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
+                       transition-all min-w-[60px] justify-center">
               关闭
             </button>
           )}
