@@ -124,7 +124,7 @@ export function CharacterCreatePage() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/characters')}
-          className="coc-btn-secondary p-2"
+          className="rounded border border-[#3a3a3a] transition-colors p-2"
         >
           <ArrowLeft size={20} />
         </button>
@@ -146,7 +146,7 @@ export function CharacterCreatePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">姓名 *</label>
+              <label className="block text-sm text-[#8b8375] mb-1">姓名 *</label>
               <input
                 type="text"
                 value={formData.name}
@@ -158,20 +158,20 @@ export function CharacterCreatePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">职业 *</label>
+              <label className="block text-sm text-[#8b8375] mb-1">职业 *</label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setOccupationMode('preset')}
-                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'preset' ? 'bg-coc-accent-red/20 border-coc-accent-red text-coc-accent-red' : 'border-coc-border text-coc-text-secondary'}`}
+                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'preset' ? 'bg-[#a63848]/20 border-[#a63848] text-coc-accent-red' : 'border-[#3a3a3a]/40 text-coc-text-secondary'}`}
                   >
                     选择职业
                   </button>
                   <button
                     type="button"
                     onClick={() => setOccupationMode('custom')}
-                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'custom' ? 'bg-coc-accent-red/20 border-coc-accent-red text-coc-accent-red' : 'border-coc-border text-coc-text-secondary'}`}
+                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'custom' ? 'bg-[#a63848]/20 border-[#a63848] text-coc-accent-red' : 'border-[#3a3a3a]/40 text-coc-text-secondary'}`}
                   >
                     自定义
                   </button>
@@ -202,7 +202,7 @@ export function CharacterCreatePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">年龄</label>
+              <label className="block text-sm text-[#8b8375] mb-1">年龄</label>
               <input
                 type="number"
                 value={formData.age}
@@ -214,7 +214,7 @@ export function CharacterCreatePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">性别</label>
+              <label className="block text-sm text-[#8b8375] mb-1">性别</label>
               <input
                 type="text"
                 value={formData.gender}
@@ -225,7 +225,7 @@ export function CharacterCreatePage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm text-coc-text-secondary mb-1">背景故事</label>
+              <label className="block text-sm text-[#8b8375] mb-1">背景故事</label>
               <textarea
                 value={formData.background}
                 onChange={(e) => setFormData({ ...formData, background: e.target.value })}
@@ -246,7 +246,7 @@ export function CharacterCreatePage() {
             <button
               type="button"
               onClick={rollAllAttributes}
-              className="coc-btn-secondary text-sm flex items-center gap-1"
+              className="rounded border border-[#3a3a3a] transition-colors text-sm flex items-center gap-1"
             >
               <Dice5 size={14} />
               随机生成全部
@@ -256,7 +256,7 @@ export function CharacterCreatePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {Object.entries(attributeLabels).map(([key, label]) => (
               <div key={key} className="space-y-1">
-                <label className="block text-xs text-coc-text-secondary">{label}</label>
+                <label className="block text-xs text-[#8b8375]">{label}</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -269,7 +269,7 @@ export function CharacterCreatePage() {
                   <button
                     type="button"
                     onClick={() => rollAttribute(key as keyof AttributeState)}
-                    className="coc-btn-secondary px-2"
+                    className="rounded border border-[#3a3a3a] transition-colors px-2"
                     title="随机生成"
                   >
                     <Dice5 size={14} />
@@ -280,37 +280,37 @@ export function CharacterCreatePage() {
           </div>
 
           {/* 派生属性 */}
-          <div className="mt-6 pt-4 border-t border-coc-border">
-            <h3 className="text-sm font-bold mb-3 text-coc-text-secondary">派生属性</h3>
+          <div className="mt-6 pt-4 border-t border-[#3a3a3a]/40">
+            <h3 className="text-sm font-bold mb-3 text-[#8b8375]">派生属性</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-coc-bg-tertiary rounded">
-                <div className="text-2xl font-bold text-coc-accent-red">{derived.hp}</div>
-                <div className="text-xs text-coc-text-muted">HP</div>
+              <div className="text-center p-3 bg-black/20 rounded">
+                <div className="text-2xl font-bold text-[#a63848]">{derived.hp}</div>
+                <div className="text-xs text-[#6b6558]">HP</div>
               </div>
-              <div className="text-center p-3 bg-coc-bg-tertiary rounded">
-                <div className="text-2xl font-bold text-coc-accent-cyan">{derived.mp}</div>
-                <div className="text-xs text-coc-text-muted">MP</div>
+              <div className="text-center p-3 bg-black/20 rounded">
+                <div className="text-2xl font-bold text-[#4db8b8]">{derived.mp}</div>
+                <div className="text-xs text-[#6b6558]">MP</div>
               </div>
-              <div className="text-center p-3 bg-coc-bg-tertiary rounded">
-                <div className="text-2xl font-bold text-coc-accent-gold">{derived.san}</div>
-                <div className="text-xs text-coc-text-muted">SAN</div>
+              <div className="text-center p-3 bg-black/20 rounded">
+                <div className="text-2xl font-bold text-[#c9a227]">{derived.san}</div>
+                <div className="text-xs text-[#6b6558]">SAN</div>
               </div>
-              <div className="text-center p-3 bg-coc-bg-tertiary rounded">
+              <div className="text-center p-3 bg-black/20 rounded">
                 <div className="text-2xl font-bold">{derived.mov}</div>
-                <div className="text-xs text-coc-text-muted">MOV</div>
+                <div className="text-xs text-[#6b6558]">MOV</div>
               </div>
             </div>
           </div>
           {/* 武器配置 */}
-          <div className="mt-6 pt-4 border-t border-coc-border">
+          <div className="mt-6 pt-4 border-t border-[#3a3a3a]/40">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-coc-text-secondary flex items-center gap-2">
+              <h3 className="text-sm font-bold text-[#8b8375] flex items-center gap-2">
                 <Sword size={16} /> 武器
               </h3>
               <button
                 type="button"
                 onClick={() => setShowWeaponModal(true)}
-                className="text-xs text-coc-accent-red hover:underline"
+                className="text-xs text-[#a63848] hover:underline"
               >
                 + 添加武器
               </button>
@@ -318,10 +318,10 @@ export function CharacterCreatePage() {
             {selectedWeapons.length > 0 ? (
               <div className="space-y-2">
                 {selectedWeapons.map((weapon, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-coc-bg-tertiary rounded text-sm">
+                  <div key={idx} className="flex items-center justify-between p-2 bg-black/20 rounded text-sm">
                     <div>
                       <span className="font-medium">{weapon.name}</span>
-                      <span className="text-coc-text-muted ml-2">{weapon.damage} | {weapon.skill}</span>
+                      <span className="text-[#6b6558] ml-2">{weapon.damage} | {weapon.skill}</span>
                     </div>
                     <button
                       type="button"
@@ -334,29 +334,29 @@ export function CharacterCreatePage() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-coc-text-muted">未选择武器（默认徒手）</p>
+              <p className="text-xs text-[#6b6558]">未选择武器（默认徒手）</p>
             )}
           </div>
 
           {/* 护甲配置 */}
-          <div className="mt-4 pt-4 border-t border-coc-border">
+          <div className="mt-4 pt-4 border-t border-[#3a3a3a]/40">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-coc-text-secondary flex items-center gap-2">
+              <h3 className="text-sm font-bold text-[#8b8375] flex items-center gap-2">
                 <Shield size={16} /> 护甲
               </h3>
               <button
                 type="button"
                 onClick={() => setShowArmorModal(true)}
-                className="text-xs text-coc-accent-red hover:underline"
+                className="text-xs text-[#a63848] hover:underline"
               >
                 {selectedArmor ? '更换' : '+ 添加'}
               </button>
             </div>
             {selectedArmor ? (
-              <div className="flex items-center justify-between p-2 bg-coc-bg-tertiary rounded text-sm">
+              <div className="flex items-center justify-between p-2 bg-black/20 rounded text-sm">
                 <div>
                   <span className="font-medium">{selectedArmor.name}</span>
-                  <span className="text-coc-text-muted ml-2">护甲值: {selectedArmor.rating}</span>
+                  <span className="text-[#6b6558] ml-2">护甲值: {selectedArmor.rating}</span>
                 </div>
                 <button
                   type="button"
@@ -367,7 +367,7 @@ export function CharacterCreatePage() {
                 </button>
               </div>
             ) : (
-              <p className="text-xs text-coc-text-muted">未装备护甲</p>
+              <p className="text-xs text-[#6b6558]">未装备护甲</p>
             )}
           </div>
         </DoubleBezelCard>
@@ -376,7 +376,7 @@ export function CharacterCreatePage() {
           <button
             type="button"
             onClick={() => navigate('/characters')}
-            className="coc-btn-secondary flex-1"
+            className="rounded border border-[#3a3a3a] transition-colors flex-1"
           >
             取消
           </button>
@@ -396,7 +396,7 @@ export function CharacterCreatePage() {
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setWeaponTypeFilter('all')}
-              className={`px-3 py-1 rounded text-sm ${weaponTypeFilter === 'all' ? 'bg-coc-accent-red' : 'bg-coc-bg-tertiary'}`}
+              className={`px-3 py-1 rounded text-sm ${weaponTypeFilter === 'all' ? 'bg-[#a63848]' : 'bg-black/20'}`}
             >
               全部
             </button>
@@ -404,7 +404,7 @@ export function CharacterCreatePage() {
               <button
                 key={type}
                 onClick={() => setWeaponTypeFilter(type)}
-                className={`px-3 py-1 rounded text-sm ${weaponTypeFilter === type ? 'bg-coc-accent-red' : 'bg-coc-bg-tertiary'}`}
+                className={`px-3 py-1 rounded text-sm ${weaponTypeFilter === type ? 'bg-[#a63848]' : 'bg-black/20'}`}
               >
                 {type === 'melee' && '近战'}
                 {type === 'pistol' && '手枪'}
@@ -428,13 +428,13 @@ export function CharacterCreatePage() {
                     }
                   }}
                   disabled={selectedWeapons.some(w => w.id === weapon.id) || selectedWeapons.length >= 4}
-                  className="w-full p-3 bg-coc-bg-tertiary rounded text-left hover:bg-coc-accent-red/20 transition-colors disabled:opacity-50"
+                  className="w-full p-3 bg-black/20 rounded text-left hover:bg-[#a63848]/15 transition-colors disabled:opacity-50"
                 >
                   <div className="flex justify-between">
                     <span className="font-medium">{weapon.name}</span>
-                    <span className="text-coc-accent-gold">{weapon.damage}</span>
+                    <span className="text-[#c9a227]">{weapon.damage}</span>
                   </div>
-                  <div className="text-xs text-coc-text-secondary">
+                  <div className="text-xs text-[#8b8375]">
                     {weapon.skill} | {weapon.range} {weapon.impale && '| 贯穿'}
                   </div>
                 </button>
@@ -453,13 +453,13 @@ export function CharacterCreatePage() {
                 setSelectedArmor(armor);
                 setShowArmorModal(false);
               }}
-              className="w-full p-3 bg-coc-bg-tertiary rounded text-left hover:bg-coc-accent-red/20 transition-colors"
+              className="w-full p-3 bg-black/20 rounded text-left hover:bg-[#a63848]/15 transition-colors"
             >
               <div className="flex justify-between">
                 <span className="font-medium">{armor.name}</span>
-                <span className="text-coc-accent-gold">护甲 {armor.rating}</span>
+                <span className="text-[#c9a227]">护甲 {armor.rating}</span>
               </div>
-              <div className="text-xs text-coc-text-secondary">
+              <div className="text-xs text-[#8b8375]">
                 {armor.coverage}
                 {armor.movPenalty !== 0 && ` | MOV ${armor.movPenalty > 0 ? '-' : '+'}${Math.abs(armor.movPenalty)}`}
                 {armor.dexPenalty > 0 && ` | DEX -${armor.dexPenalty}`}

@@ -249,7 +249,7 @@ export function CharacterDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
       </div>
     );
   }
@@ -257,8 +257,8 @@ export function CharacterDetailPage() {
   if (!character) {
     return (
       <div className="text-center py-16">
-        <p className="text-coc-text-secondary">调查员不存在</p>
-        <Link to="/characters" className="text-coc-accent-red hover:underline mt-2 inline-block">
+        <p className="text-[#8b8375]">调查员不存在</p>
+        <Link to="/characters" className="text-[#a63848] hover:underline mt-2 inline-block">
           返回名册
         </Link>
       </div>
@@ -291,7 +291,7 @@ export function CharacterDetailPage() {
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
           {/* 左侧：形象立绘 */}
           <div className="w-full md:w-40 lg:w-44 flex-shrink-0">
-            <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-coc-void bg-coc-abyss">
+            <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-coc-void bg-[#0a0a0f]">
               {character.portraitUrl ? (
                 <img
                   src={character.portraitUrl}
@@ -299,7 +299,7 @@ export function CharacterDetailPage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-coc-text-muted">
+                <div className="w-full h-full flex flex-col items-center justify-center text-[#6b6558]">
                   <svg className="w-14 h-14 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -315,15 +315,15 @@ export function CharacterDetailPage() {
                   <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Link to="/characters" className="coc-btn-secondary p-1 rounded-md">
+                    <Link to="/characters" className="rounded border border-[#3a3a3a] transition-colors p-1 rounded-md">
                       <ArrowLeft size={16} />
                     </Link>
-                    <h1 className="text-xl md:text-2xl font-ritual font-bold text-coc-parchment">{character.name}</h1>
+                    <h1 className="text-xl md:text-2xl font-ritual font-bold text-[#e8d4a0]">{character.name}</h1>
                   </div>
-                  <p className="text-sm text-coc-text-secondary">
+                  <p className="text-sm text-[#8b8375]">
                     {character.occupation} · {character.age}岁 · {character.gender}
                   </p>
-                  <div className="mt-1.5 font-mono text-xs text-coc-gold">#{String(character.displayId).padStart(8, '0')}</div>
+                  <div className="mt-1.5 font-mono text-xs text-[#c9a227]">#{String(character.displayId).padStart(8, '0')}</div>
                 </div>
               </div>
 
@@ -340,11 +340,11 @@ export function CharacterDetailPage() {
                   const val = (character as any)[s.key];
                   const maxVal = s.maxKey ? (character as any)[s.maxKey] : null;
                   return (
-                    <div key={s.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-coc-abyss border border-coc-void transition-colors hover:border-coc-rift">
+                    <div key={s.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[#0a0a0f] border border-coc-void transition-colors hover:border-coc-rift">
                       <Icon size={14} className={cn(s.color)} />
                       <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-coc-parchment">{val}</span>
-                        <span className="text-[10px] text-coc-text-muted">{s.label}{maxVal ? `/${maxVal}` : ''}</span>
+                        <span className="text-sm font-bold text-[#e8d4a0]">{val}</span>
+                        <span className="text-[10px] text-[#6b6558]">{s.label}{maxVal ? `/${maxVal}` : ''}</span>
                       </div>
                     </div>
                   );
@@ -394,8 +394,8 @@ export function CharacterDetailPage() {
                 className={cn(
                   'px-4 py-3 flex items-center gap-2 border-b-2 transition-colors text-sm md:text-base',
                   activeTab === tab.id
-                    ? 'border-coc-accent-red text-coc-accent-red'
-                    : 'border-transparent text-coc-text-secondary hover:text-coc-text-primary'
+                    ? 'border-[#a63848] text-coc-accent-red'
+                    : 'border-transparent text-[#8b8375] hover:text-[#d4c5a8]'
                 )}
               >
                 <Icon size={16} />
@@ -421,10 +421,10 @@ export function CharacterDetailPage() {
               { key: 'edu', label: '教育 EDU' },
               { key: 'luck', label: '幸运 LUCK' },
             ].map((attr) => (
-              <div key={attr.key} className="text-center p-4 bg-coc-bg-tertiary rounded">
-                <div className="text-xs text-coc-text-muted mb-1">{attr.label}</div>
+              <div key={attr.key} className="text-center p-4 bg-black/20 rounded">
+                <div className="text-xs text-[#6b6558] mb-1">{attr.label}</div>
                 <div className="text-2xl font-bold">{(character as any)[attr.key]}</div>
-                <div className="text-xs text-coc-text-muted mt-1">
+                <div className="text-xs text-[#6b6558] mt-1">
                   ½:{Math.floor((character as any)[attr.key] / 2)} ⅕:{Math.floor((character as any)[attr.key] / 5)}
                 </div>
               </div>
@@ -442,17 +442,17 @@ export function CharacterDetailPage() {
               }, {} as Record<string, typeof COC7E_SKILLS>);
               return Object.entries(groups).map(([category, skills]) => (
                 <div key={category}>
-                  <h3 className="font-bold mb-3 text-coc-accent-gold capitalize">{SKILL_CATEGORIES[category] || category}</h3>
+                  <h3 className="font-bold mb-3 text-[#c9a227] capitalize">{SKILL_CATEGORIES[category] || category}</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {skills.map((skill) => {
                       const value = character.skills[skill.key] ?? skill.baseValue;
                       return (
-                        <div key={skill.key} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
+                        <div key={skill.key} className="flex justify-between items-center p-2 bg-black/20 rounded">
                           <span className="text-sm">{skill.name}</span>
                           <div className="flex items-center gap-2 text-xs">
-                            <span className="text-coc-accent-cyan">{value}%</span>
-                            <span className="text-coc-text-muted">½{Math.floor(value/2)}</span>
-                            <span className="text-coc-text-muted">⅕{Math.floor(value/5)}</span>
+                            <span className="text-[#4db8b8]">{value}%</span>
+                            <span className="text-[#6b6558]">½{Math.floor(value/2)}</span>
+                            <span className="text-[#6b6558]">⅕{Math.floor(value/5)}</span>
                           </div>
                         </div>
                       );
@@ -465,17 +465,17 @@ export function CharacterDetailPage() {
               !COC7E_SKILLS.some(s => s.key === name)
             ).length > 0 && (
               <div>
-                <h3 className="font-bold mb-3 text-coc-accent-gold">自定义技能</h3>
+                <h3 className="font-bold mb-3 text-[#c9a227]">自定义技能</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {Object.entries(character.skills || {}).filter(([name]) =>
                     !COC7E_SKILLS.some(s => s.key === name)
                   ).map(([name, value]) => (
-                    <div key={name} className="flex justify-between items-center p-2 bg-coc-bg-tertiary rounded">
+                    <div key={name} className="flex justify-between items-center p-2 bg-black/20 rounded">
                       <span className="text-sm">{name}</span>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-coc-accent-cyan">{value}%</span>
-                        <span className="text-coc-text-muted">½{Math.floor((value as number)/2)}</span>
-                        <span className="text-coc-text-muted">⅕{Math.floor((value as number)/5)}</span>
+                        <span className="text-[#4db8b8]">{value}%</span>
+                        <span className="text-[#6b6558]">½{Math.floor((value as number)/2)}</span>
+                        <span className="text-[#6b6558]">⅕{Math.floor((value as number)/5)}</span>
                       </div>
                     </div>
                   ))}
@@ -492,9 +492,9 @@ export function CharacterDetailPage() {
               {character.weapons.length > 0 ? (
                 <div className="space-y-2">
                   {character.weapons.map((weapon: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-coc-bg-tertiary rounded">
+                    <div key={idx} className="p-3 bg-black/20 rounded">
                       <div className="font-medium">{weapon.name}</div>
-                      <div className="text-sm text-coc-text-secondary">
+                      <div className="text-sm text-[#8b8375]">
                         伤害: {weapon.damage} | 射程: {weapon.range} | 贯穿: {weapon.impale ? '是' : '否'}
                       </div>
                     </div>
@@ -514,14 +514,14 @@ export function CharacterDetailPage() {
             <div>
               <h3 className="font-bold mb-3">护甲</h3>
               {character.armor ? (
-                <div className="p-3 bg-coc-bg-tertiary rounded">
+                <div className="p-3 bg-black/20 rounded">
                   <div className="font-medium">{character.armor.name}</div>
-                  <div className="text-sm text-coc-text-secondary">
+                  <div className="text-sm text-[#8b8375]">
                     护甲值: {character.armor.rating} | 覆盖: {character.armor.coverage}
                   </div>
                 </div>
               ) : (
-                <p className="text-coc-text-muted">无护甲</p>
+                <p className="text-[#6b6558]">无护甲</p>
               )}
             </div>
           </div>
@@ -531,7 +531,7 @@ export function CharacterDetailPage() {
           <div className="space-y-4">
             {character.background ? (
               <div>
-                <h4 className="text-sm font-bold text-coc-text-secondary mb-2">背景故事</h4>
+                <h4 className="text-sm font-bold text-[#8b8375] mb-2">背景故事</h4>
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">
                   {character.background}
                 </p>
@@ -542,19 +542,19 @@ export function CharacterDetailPage() {
               <>
                 {character.backgroundEntries.map((entry) => (
                   <div key={entry.type}>
-                    <h4 className="text-sm font-bold text-coc-text-secondary mb-1">{entry.type}</h4>
+                    <h4 className="text-sm font-bold text-[#8b8375] mb-1">{entry.type}</h4>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{entry.content}</p>
                   </div>
                 ))}
                 {character.keyConnection ? (
                   <div className="pt-2 border-t border-coc-void">
-                    <h4 className="text-sm font-bold text-coc-accent-gold mb-1">关键背景连接</h4>
+                    <h4 className="text-sm font-bold text-[#c9a227] mb-1">关键背景连接</h4>
                     <p className="text-sm">{character.keyConnection}</p>
                   </div>
                 ) : null}
               </>
             ) : (
-              !character.background && <p className="text-coc-text-muted">未填写背景信息</p>
+              !character.background && <p className="text-[#6b6558]">未填写背景信息</p>
             )}
           </div>
         )}
@@ -563,17 +563,17 @@ export function CharacterDetailPage() {
       {/* ===== 形象铸造弹窗 ===== */}
       {showPortraitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-lg bg-coc-bg-secondary border border-coc-void shadow-xl space-y-4 p-6">
+          <div className="w-full max-w-md rounded-lg bg-black/20 border border-coc-void shadow-xl shadow-black/60 space-y-4 p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-ritual font-bold text-coc-parchment">塑造调查员形象</h3>
-              <button onClick={() => setShowPortraitModal(false)} className="text-coc-text-muted hover:text-coc-parchment">
+              <h3 className="text-lg font-ritual font-bold text-[#e8d4a0]">塑造调查员形象</h3>
+              <button onClick={() => setShowPortraitModal(false)} className="text-[#6b6558] hover:text-[#e8d4a0]">
                 <X size={20} />
               </button>
             </div>
 
             {portraitQuota && (
-              <div className="text-sm text-coc-text-secondary flex items-center justify-between">
-                <span>剩余次数：<span className="text-coc-accent-gold">{portraitQuota.remainingCount}</span> / {portraitQuota.maxCount}</span>
+              <div className="text-sm text-[#8b8375] flex items-center justify-between">
+                <span>剩余次数：<span className="text-[#c9a227]">{portraitQuota.remainingCount}</span> / {portraitQuota.maxCount}</span>
                 {cooldownText && <span className="text-xs">下次可生成：{cooldownText}</span>}
               </div>
             )}
@@ -581,7 +581,7 @@ export function CharacterDetailPage() {
             {character.portraitUrl && !portraitPreviewUrl && (
               <div className="flex items-center gap-3">
                 <img src={character.portraitUrl} alt="当前形象" className="w-16 h-16 rounded object-cover border border-coc-void" />
-                <span className="text-sm text-coc-text-muted">当前形象</span>
+                <span className="text-sm text-[#6b6558]">当前形象</span>
               </div>
             )}
 
@@ -597,7 +597,7 @@ export function CharacterDetailPage() {
                   </button>
                   <button
                     onClick={() => setPortraitPreviewUrl(null)}
-                    className="flex-1 px-4 py-2 bg-coc-bg-tertiary border border-coc-void rounded hover:bg-coc-void"
+                    className="flex-1 px-4 py-2 bg-black/20 border border-coc-void rounded hover:bg-coc-void"
                   >
                     重新生成
                   </button>
@@ -605,14 +605,14 @@ export function CharacterDetailPage() {
               </div>
             ) : (
               <>
-                <div className="text-sm text-coc-text-muted space-y-1">
+                <div className="text-sm text-[#6b6558] space-y-1">
                   <p>系统将基于角色信息自动生成英文提示词。您可以在下方补充自定义描述（如服装、神态、背景等）。</p>
                 </div>
                 <textarea
                   value={portraitCustomDesc}
                   onChange={(e) => setPortraitCustomDesc(e.target.value)}
                   placeholder="例如：戴着单片眼镜，左手有伤疤，背景是雨夜码头"
-                  className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none min-h-[80px]"
+                  className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none min-h-[80px]"
                   maxLength={200}
                 />
                 <button

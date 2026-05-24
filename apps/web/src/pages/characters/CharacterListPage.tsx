@@ -75,7 +75,7 @@ export function CharacterListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
       </div>
     );
   }
@@ -130,7 +130,7 @@ export function CharacterListPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-coc-abyss flex flex-col items-center justify-center text-coc-text-muted">
+                    <div className="w-full h-full bg-[#0a0a0f] flex flex-col items-center justify-center text-[#6b6558]">
                       <User size={56} className="mb-3 opacity-30" />
                       <span className="text-xs tracking-widest opacity-60">暂无形象</span>
                     </div>
@@ -144,32 +144,32 @@ export function CharacterListPage() {
                   )}
 
                   {/* 右上角编号 */}
-                  <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-coc-abyss/80 border border-coc-void text-coc-gold text-[10px] font-mono truncate max-w-[45%] z-10">
+                  <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-[#0a0a0f]/80 border border-coc-void text-[#c9a227] text-[10px] font-mono truncate max-w-[45%] z-10">
                     #{String(char.displayId).padStart(8, '0')}
                   </div>
 
                   {/* 底部信息浮层 */}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-coc-abyss via-coc-abyss/80 to-transparent pt-8 pb-2 px-2 z-10">
                     <div className="space-y-1">
-                      <h3 className="font-ritual font-bold text-base text-coc-parchment drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">{char.name}</h3>
+                      <h3 className="font-ritual font-bold text-base text-[#e8d4a0] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">{char.name}</h3>
                       <p className="text-xs text-coc-parchment-dim truncate">{char.occupation} · {char.age}岁</p>
                     </div>
 
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex items-center gap-1 text-[10px]">
-                        <Heart size={10} className="text-coc-accent-red" />
-                        <span className="text-coc-parchment">{char.hp}</span>
-                        <span className="text-coc-text-muted">/{char.maxHp}</span>
+                        <Heart size={10} className="text-[#a63848]" />
+                        <span className="text-[#e8d4a0]">{char.hp}</span>
+                        <span className="text-[#6b6558]">/{char.maxHp}</span>
                       </div>
                       <div className="flex items-center gap-1 text-[10px]">
-                        <Zap size={10} className="text-coc-accent-cyan" />
-                        <span className="text-coc-parchment">{char.mp}</span>
-                        <span className="text-coc-text-muted">/{char.maxMp}</span>
+                        <Zap size={10} className="text-[#4db8b8]" />
+                        <span className="text-[#e8d4a0]">{char.mp}</span>
+                        <span className="text-[#6b6558]">/{char.maxMp}</span>
                       </div>
                       <div className="flex items-center gap-1 text-[10px]">
-                        <Brain size={10} className="text-coc-accent-gold" />
-                        <span className="text-coc-parchment">{char.san}</span>
-                        <span className="text-coc-text-muted">/{char.maxSan}</span>
+                        <Brain size={10} className="text-[#c9a227]" />
+                        <span className="text-[#e8d4a0]">{char.san}</span>
+                        <span className="text-[#6b6558]">/{char.maxSan}</span>
                       </div>
                     </div>
                   </div>
@@ -178,24 +178,24 @@ export function CharacterListPage() {
               back={
                 <div className="flex flex-col items-center gap-3 w-full px-3">
                   {/* 背面标题 */}
-                  <h3 className="font-ritual font-bold text-coc-gold text-sm truncate w-full text-center">{char.name}</h3>
+                  <h3 className="font-ritual font-bold text-[#c9a227] text-sm truncate w-full text-center">{char.name}</h3>
                   
                   {/* 属性网格 */}
                   <div className="grid grid-cols-3 gap-2 w-full">
                     <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Heart size={14} className="text-coc-accent-red" />
-                      <span className="text-xs text-coc-parchment font-bold">{char.hp}</span>
-                      <span className="text-[9px] text-coc-text-muted">HP</span>
+                      <Heart size={14} className="text-[#a63848]" />
+                      <span className="text-xs text-[#e8d4a0] font-bold">{char.hp}</span>
+                      <span className="text-[9px] text-[#6b6558]">HP</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Zap size={14} className="text-coc-accent-cyan" />
-                      <span className="text-xs text-coc-parchment font-bold">{char.mp}</span>
-                      <span className="text-[9px] text-coc-text-muted">MP</span>
+                      <Zap size={14} className="text-[#4db8b8]" />
+                      <span className="text-xs text-[#e8d4a0] font-bold">{char.mp}</span>
+                      <span className="text-[9px] text-[#6b6558]">MP</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Brain size={14} className="text-coc-accent-gold" />
-                      <span className="text-xs text-coc-parchment font-bold">{char.san}</span>
-                      <span className="text-[9px] text-coc-text-muted">SAN</span>
+                      <Brain size={14} className="text-[#c9a227]" />
+                      <span className="text-xs text-[#e8d4a0] font-bold">{char.san}</span>
+                      <span className="text-[9px] text-[#6b6558]">SAN</span>
                     </div>
                   </div>
 
@@ -209,7 +209,7 @@ export function CharacterListPage() {
                     </Link>
                     <Link
                       to={`/characters/${char.id}/growth`}
-                      className="w-full text-center py-1.5 bg-coc-surface border border-coc-void text-coc-parchment rounded text-xs hover:border-coc-rift transition-colors flex items-center justify-center gap-1"
+                      className="w-full text-center py-1.5 bg-coc-surface border border-coc-void text-[#e8d4a0] rounded text-xs hover:border-coc-rift transition-colors flex items-center justify-center gap-1"
                     >
                       <TrendingUp size={12} />
                       战后成长
@@ -224,8 +224,8 @@ export function CharacterListPage() {
                       className={cn(
                         'w-full text-center py-1.5 rounded text-xs flex items-center justify-center gap-1 transition-colors border',
                         displayedId === char.id
-                          ? 'bg-coc-gold/20 text-coc-gold border-coc-gold/50'
-                          : 'bg-coc-surface text-coc-parchment-dim border-coc-void hover:border-coc-rift hover:text-coc-parchment'
+                          ? 'bg-coc-gold/20 text-[#c9a227] border-coc-gold/50'
+                          : 'bg-coc-surface text-coc-parchment-dim border-coc-void hover:border-coc-rift hover:text-[#e8d4a0]'
                       )}
                     >
                       <Eye size={12} />

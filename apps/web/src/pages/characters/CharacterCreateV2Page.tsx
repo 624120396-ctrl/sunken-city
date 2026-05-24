@@ -290,20 +290,20 @@ export function CharacterCreateV2Page() {
   const prevStep = () => { if (step > 1) setStep(step - 1); };
 
   return (
-    <div className="min-h-screen bg-coc-bg-primary text-coc-text-primary font-body pb-20">
+    <div className="min-h-screen bg-[#1a1a1a] text-[#d4c5a8] font-body pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-coc-bg-primary/95 backdrop-blur border-b border-coc-border">
+      <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur border-b border-[#3a3a3a]/40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate('/characters')} className="flex items-center gap-1 text-coc-text-secondary hover:text-coc-accent-red transition-colors">
+          <button onClick={() => navigate('/characters')} className="flex items-center gap-1 text-[#8b8375] hover:text-[#a63848] transition-colors">
             <ArrowLeft size={18} />
             <span>返回</span>
           </button>
           <h1 className="font-ritual text-lg tracking-wide">创建调查员</h1>
-          <div className="text-sm text-coc-text-muted">步骤 {step}/{totalSteps}</div>
+          <div className="text-sm text-[#6b6558]">步骤 {step}/{totalSteps}</div>
         </div>
         {/* Progress bar */}
-        <div className="h-0.5 bg-coc-bg-tertiary">
-          <div className="h-full bg-coc-accent-red transition-all" style={{ width: `${(step / totalSteps) * 100}%` }} />
+        <div className="h-0.5 bg-black/20">
+          <div className="h-full bg-[#a63848] transition-all" style={{ width: `${(step / totalSteps) * 100}%` }} />
         </div>
       </div>
 
@@ -326,13 +326,13 @@ export function CharacterCreateV2Page() {
                   setAgeApplied(false);
                   setEduEnhancements([]);
                 }}
-                className={`p-6 rounded-xl border text-left transition-all ${method === 'roll' ? 'border-coc-accent-red bg-coc-accent-red/10' : 'border-coc-border hover:border-coc-text-muted'}`}
+                className={`p-6 rounded-xl border text-left transition-all ${method === 'roll' ? 'border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Dice5 className="text-coc-accent-red" />
+                  <Dice5 className="text-[#a63848]" />
                   <span className="font-bold text-lg">投骰生成</span>
                 </div>
-                <p className="text-sm text-coc-text-secondary">经典的 COC7e 体验。通过掷骰决定八项属性，感受命运的无常。</p>
+                <p className="text-sm text-[#8b8375]">经典的 COC7e 体验。通过掷骰决定八项属性，感受命运的无常。</p>
               </button>
 
               <button
@@ -344,13 +344,13 @@ export function CharacterCreateV2Page() {
                   setAgeApplied(false);
                   setEduEnhancements([]);
                 }}
-                className={`p-6 rounded-xl border text-left transition-all ${method === 'pointbuy' ? 'border-coc-accent-red bg-coc-accent-red/10' : 'border-coc-border hover:border-coc-text-muted'}`}
+                className={`p-6 rounded-xl border text-left transition-all ${method === 'pointbuy' ? 'border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="text-coc-accent-red" />
+                  <Sparkles className="text-[#a63848]" />
                   <span className="font-bold text-lg">购点制</span>
                 </div>
-                <p className="text-sm text-coc-text-secondary">在 460 点自由分配池中，精准构建你心目中的调查员。</p>
+                <p className="text-sm text-[#8b8375]">在 460 点自由分配池中，精准构建你心目中的调查员。</p>
               </button>
             </div>
           </div>
@@ -375,15 +375,15 @@ export function CharacterCreateV2Page() {
                   <div className="mt-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {Object.entries(ATTRIBUTE_LABELS).map(([key, label]) => (
-                        <div key={key} className="p-3 rounded bg-coc-bg-tertiary text-center">
-                          <div className="text-xs text-coc-text-muted">{label}</div>
-                          <div className="text-xl font-mono text-coc-accent-red">{rawAttrs[key]}</div>
+                        <div key={key} className="p-3 rounded bg-black/20 text-center">
+                          <div className="text-xs text-[#6b6558]">{label}</div>
+                          <div className="text-xl font-mono text-[#a63848]">{rawAttrs[key]}</div>
                         </div>
                       ))}
                     </div>
                     <div className="mt-4 text-center">
-                      <span className="text-sm text-coc-text-secondary">总点数</span>
-                      <span className="ml-2 text-2xl font-mono text-coc-accent-red">
+                      <span className="text-sm text-[#8b8375]">总点数</span>
+                      <span className="ml-2 text-2xl font-mono text-[#a63848]">
                         {Object.values(rawAttrs).reduce((a, b) => a + b, 0)}
                       </span>
                     </div>
@@ -401,7 +401,7 @@ export function CharacterCreateV2Page() {
           <div className="coc-card p-6">
             <h2 className="font-ritual text-xl mb-4">决定年龄</h2>
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-coc-text-secondary">年龄</span>
+              <span className="text-[#8b8375]">年龄</span>
               <input
                 type="range"
                 min={15}
@@ -418,37 +418,37 @@ export function CharacterCreateV2Page() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {Object.entries(ATTRIBUTE_LABELS).map(([key, label]) => (
-                    <div key={key} className="p-3 rounded bg-coc-bg-tertiary text-center">
-                      <div className="text-xs text-coc-text-muted">{label}</div>
+                    <div key={key} className="p-3 rounded bg-black/20 text-center">
+                      <div className="text-xs text-[#6b6558]">{label}</div>
                       <div className="flex justify-center items-center gap-2">
-                        <span className="text-sm text-coc-text-muted">{rawAttrs[key]}</span>
-                        <span className="text-coc-text-muted">→</span>
-                        <span className="text-xl font-mono text-coc-accent-red">{finalAttrs[key]}</span>
+                        <span className="text-sm text-[#6b6558]">{rawAttrs[key]}</span>
+                        <span className="text-[#6b6558]">→</span>
+                        <span className="text-xl font-mono text-[#a63848]">{finalAttrs[key]}</span>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 <div className="text-center">
-                  <span className="text-sm text-coc-text-secondary">总点数</span>
-                  <span className="mx-2 text-sm text-coc-text-muted">{Object.values(rawAttrs).reduce((a, b) => a + b, 0)}</span>
-                  <span className="text-coc-text-muted">→</span>
-                  <span className="ml-2 text-2xl font-mono text-coc-accent-red">{Object.values(finalAttrs).reduce((a, b) => a + b, 0)}</span>
+                  <span className="text-sm text-[#8b8375]">总点数</span>
+                  <span className="mx-2 text-sm text-[#6b6558]">{Object.values(rawAttrs).reduce((a, b) => a + b, 0)}</span>
+                  <span className="text-[#6b6558]">→</span>
+                  <span className="ml-2 text-2xl font-mono text-[#a63848]">{Object.values(finalAttrs).reduce((a, b) => a + b, 0)}</span>
                 </div>
 
-                <div className="p-3 rounded bg-coc-bg-tertiary">
-                  <div className="text-sm text-coc-text-secondary mb-2">EDU 增强检定</div>
+                <div className="p-3 rounded bg-black/20">
+                  <div className="text-sm text-[#8b8375] mb-2">EDU 增强检定</div>
                   <div className="flex flex-wrap gap-2">
                     {eduEnhancements.map((e, i) => (
-                      <span key={i} className="px-2 py-1 rounded bg-coc-bg-secondary text-xs">
+                      <span key={i} className="px-2 py-1 rounded bg-black/20 text-xs">
                         第{i+1}次: 投出 {e.roll}, {e.gained > 0 ? `+${e.gained} → ${e.newEdu}` : '未提升'}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-coc-bg-tertiary">
-                  <div className="text-sm text-coc-text-secondary">幸运: <span className="text-coc-parchment font-mono">{luck}</span></div>
+                <div className="p-3 rounded bg-black/20">
+                  <div className="text-sm text-[#8b8375]">幸运: <span className="text-[#e8d4a0] font-mono">{luck}</span></div>
                 </div>
               </div>
             )}
@@ -466,15 +466,15 @@ export function CharacterCreateV2Page() {
                   onClick={() => handleSelectOccupation(occ.key)}
                   className={`text-left p-4 rounded-lg border transition-all ${
                     occupationKey === occ.key
-                      ? 'border-coc-accent-red bg-coc-accent-red/10'
-                      : 'border-coc-border hover:border-coc-text-muted bg-coc-bg-tertiary/50'
+                      ? 'border-[#a63848] bg-[#a63848]/10'
+                      : 'border-[#3a3a3a]/40 hover:border-coc-text-muted bg-black/20/50'
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="font-bold">{occ.name}</div>
-                    <div className="text-xs text-coc-text-muted">{occ.skillPointFormula}</div>
+                    <div className="text-xs text-[#6b6558]">{occ.skillPointFormula}</div>
                   </div>
-                  <div className="text-xs text-coc-text-secondary mt-1">信用 {occ.creditRatingMin}-{occ.creditRatingMax} · {occ.electiveDescription || '无自选'}</div>
+                  <div className="text-xs text-[#8b8375] mt-1">信用 {occ.creditRatingMin}-{occ.creditRatingMax} · {occ.electiveDescription || '无自选'}</div>
                 </button>
               ))}
             </div>
@@ -487,19 +487,19 @@ export function CharacterCreateV2Page() {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h2 className="font-ritual text-xl">分配技能点</h2>
               <div className="flex gap-3 text-sm">
-                <div className="px-3 py-1 rounded bg-coc-bg-tertiary">
+                <div className="px-3 py-1 rounded bg-black/20">
                   本职: <span className={`font-mono ${usedPoints.occ > skillPointsAvailable.occupation ? 'text-coc-blood.glow' : 'text-coc-accent-red'}`}>{usedPoints.occ}</span>
-                  <span className="text-coc-text-muted">/{skillPointsAvailable.occupation}</span>
+                  <span className="text-[#6b6558]">/{skillPointsAvailable.occupation}</span>
                 </div>
-                <div className="px-3 py-1 rounded bg-coc-bg-tertiary">
+                <div className="px-3 py-1 rounded bg-black/20">
                   兴趣: <span className={`font-mono ${usedPoints.interest > skillPointsAvailable.interest ? 'text-coc-blood.glow' : 'text-coc-accent-red'}`}>{usedPoints.interest}</span>
-                  <span className="text-coc-text-muted">/{skillPointsAvailable.interest}</span>
+                  <span className="text-[#6b6558]">/{skillPointsAvailable.interest}</span>
                 </div>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="text-sm text-coc-text-secondary">信用评级 ({selectedOccupation.creditRatingMin}-{selectedOccupation.creditRatingMax})</label>
+              <label className="text-sm text-[#8b8375]">信用评级 ({selectedOccupation.creditRatingMin}-{selectedOccupation.creditRatingMax})</label>
               <div className="flex items-center gap-3 mt-1">
                 <input
                   type="range"
@@ -534,36 +534,36 @@ export function CharacterCreateV2Page() {
                 const occDisabled = !canOcc || usedPoints.occ >= skillPointsAvailable.occupation;
                 const intDisabled = !canInt || usedPoints.interest >= skillPointsAvailable.interest;
                 return (
-                  <div key={key} className={`flex items-center justify-between p-2 rounded ${isCore ? 'bg-coc-accent-red/10 border border-coc-accent-red/30' : 'bg-coc-bg-tertiary/50'}`}>
+                  <div key={key} className={`flex items-center justify-between p-2 rounded ${isCore ? 'bg-[#a63848]/10 border border-[#a63848]/30' : 'bg-black/20/50'}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{skill.name}</span>
-                      {isCore && <span className="text-[10px] px-1 rounded bg-coc-accent-red text-white">本职</span>}
+                      {isCore && <span className="text-[10px] px-1 rounded bg-[#a63848] text-white">本职</span>}
                       {isElective && <span className="text-[10px] px-1 rounded bg-coc-madness.DEFAULT text-white">选修</span>}
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-xs text-coc-text-muted w-8 text-right">{current}</div>
+                      <div className="text-xs text-[#6b6558] w-8 text-right">{current}</div>
                       <div className="flex items-center gap-1">
                         <button
                           disabled={occDisabled && add.occ === 0}
                           onClick={() => adjustSkill(key, -1, 0)}
-                          className="w-6 h-6 rounded bg-coc-bg-tertiary text-coc-text-secondary disabled:opacity-30">-</button>
+                          className="w-6 h-6 rounded bg-black/20 text-[#8b8375] disabled:opacity-30">-</button>
                         <div className="w-6 text-center text-xs">{add.occ}</div>
                         <button
                           disabled={occDisabled}
                           onClick={() => adjustSkill(key, 1, 0)}
-                          className="w-6 h-6 rounded bg-coc-bg-tertiary text-coc-text-secondary disabled:opacity-30"
+                          className="w-6 h-6 rounded bg-black/20 text-[#8b8375] disabled:opacity-30"
 >+</button>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           disabled={intDisabled && add.int === 0}
                           onClick={() => adjustSkill(key, 0, -1)}
-                          className="w-6 h-6 rounded bg-coc-bg-tertiary text-coc-text-secondary disabled:opacity-30">-</button>
+                          className="w-6 h-6 rounded bg-black/20 text-[#8b8375] disabled:opacity-30">-</button>
                         <div className="w-6 text-center text-xs">{add.int}</div>
                         <button
                           disabled={intDisabled}
                           onClick={() => adjustSkill(key, 0, 1)}
-                          className="w-6 h-6 rounded bg-coc-bg-tertiary text-coc-text-secondary disabled:opacity-30">+</button>
+                          className="w-6 h-6 rounded bg-black/20 text-[#8b8375] disabled:opacity-30">+</button>
                       </div>
                     </div>
                   </div>
@@ -579,20 +579,20 @@ export function CharacterCreateV2Page() {
             <h2 className="font-ritual text-xl mb-4">背景与基础信息</h2>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-sm text-coc-text-secondary">姓名 *</label>
+                <label className="text-sm text-[#8b8375]">姓名 *</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 rounded bg-coc-bg-tertiary border border-coc-border text-coc-text-primary focus:border-coc-accent-red focus:outline-none"
+                  className="w-full mt-1 px-3 py-2 rounded bg-black/20 border border-[#3a3a3a]/40 text-[#d4c5a8] focus:border-[#a63848] focus:outline-none"
                   placeholder="调查员姓名"
                 />
               </div>
               <div>
-                <label className="text-sm text-coc-text-secondary">性别</label>
+                <label className="text-sm text-[#8b8375]">性别</label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 rounded bg-coc-bg-tertiary border border-coc-border text-coc-text-primary focus:border-coc-accent-red focus:outline-none"
+                  className="w-full mt-1 px-3 py-2 rounded bg-black/20 border border-[#3a3a3a]/40 text-[#d4c5a8] focus:border-[#a63848] focus:outline-none"
                 >
                   <option value="">请选择</option>
                   <option value="男">男</option>
@@ -605,11 +605,11 @@ export function CharacterCreateV2Page() {
             <div className="space-y-3">
               {BACKGROUND_TYPES.map((t) => (
                 <div key={t.key}>
-                  <label className="text-sm text-coc-text-secondary">{t.label}</label>
+                  <label className="text-sm text-[#8b8375]">{t.label}</label>
                   <textarea
                     value={backgroundEntries[t.key] || ''}
                     onChange={(e) => setBackgroundEntries((prev) => ({ ...prev, [t.key]: e.target.value }))}
-                    className="w-full mt-1 px-3 py-2 rounded bg-coc-bg-tertiary border border-coc-border text-coc-text-primary focus:border-coc-accent-red focus:outline-none resize-none"
+                    className="w-full mt-1 px-3 py-2 rounded bg-black/20 border border-[#3a3a3a]/40 text-[#d4c5a8] focus:border-[#a63848] focus:outline-none resize-none"
                     rows={2}
                     placeholder={t.placeholder}
                   />
@@ -618,11 +618,11 @@ export function CharacterCreateV2Page() {
             </div>
 
             <div className="mt-4">
-              <label className="text-sm text-coc-text-secondary">关键背景连接 *</label>
+              <label className="text-sm text-[#8b8375]">关键背景连接 *</label>
               <select
                 value={keyConnection}
                 onChange={(e) => setKeyConnection(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded bg-coc-bg-tertiary border border-coc-border text-coc-text-primary focus:border-coc-accent-red focus:outline-none"
+                className="w-full mt-1 px-3 py-2 rounded bg-black/20 border border-[#3a3a3a]/40 text-[#d4c5a8] focus:border-[#a63848] focus:outline-none"
               >
                 <option value="">请选择最重要的背景条目</option>
                 {BACKGROUND_TYPES.map((t) => (
@@ -638,11 +638,11 @@ export function CharacterCreateV2Page() {
           <div className="coc-card p-6">
             <h2 className="font-ritual text-xl mb-4">最终确认</h2>
             <div className="space-y-4">
-              <div className="p-4 rounded bg-coc-bg-tertiary">
+              <div className="p-4 rounded bg-black/20">
                 <div className="flex items-center gap-3 mb-2">
-                  <User className="text-coc-accent-red" />
+                  <User className="text-[#a63848]" />
                   <div className="font-bold text-lg">{name}</div>
-                  <div className="text-sm text-coc-text-secondary">{selectedOccupation?.name} · {gender}</div>
+                  <div className="text-sm text-[#8b8375]">{selectedOccupation?.name} · {gender}</div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-sm">
                   <div>STR {finalAttrs.str}</div><div>CON {finalAttrs.con}</div><div>SIZ {finalAttrs.siz}</div><div>DEX {finalAttrs.dex}</div>
@@ -655,12 +655,12 @@ export function CharacterCreateV2Page() {
                 return (
                   <>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded bg-coc-bg-tertiary">
-                        <div className="text-sm text-coc-text-secondary mb-2">战斗数值</div>
+                      <div className="p-4 rounded bg-black/20">
+                        <div className="text-sm text-[#8b8375] mb-2">战斗数值</div>
                         <div className="text-sm">HP {previewDerived.hp} · MP {previewDerived.mp} · SAN {previewDerived.san} · MOV {previewDerived.mov} · DB {previewDerived.db}</div>
                       </div>
-                      <div className="p-4 rounded bg-coc-bg-tertiary">
-                        <div className="text-sm text-coc-text-secondary mb-2">资产</div>
+                      <div className="p-4 rounded bg-black/20">
+                        <div className="text-sm text-[#8b8375] mb-2">资产</div>
                         <div className="text-sm">信用评级 {creditRating} · 现金/资产由后端计算</div>
                       </div>
                     </div>
@@ -668,8 +668,8 @@ export function CharacterCreateV2Page() {
                 );
               })()}
 
-              <div className="p-4 rounded bg-coc-bg-tertiary max-h-40 overflow-y-auto">
-                <div className="text-sm text-coc-text-secondary mb-2">已分配技能 (显示值 {'>'} 0)</div>
+              <div className="p-4 rounded bg-black/20 max-h-40 overflow-y-auto">
+                <div className="text-sm text-[#8b8375] mb-2">已分配技能 (显示值 {'>'} 0)</div>
                 <div className="flex flex-wrap gap-2 text-sm">
                   {Object.entries(currentSkills)
                     .filter(([_, v]) => v > 0)
@@ -678,7 +678,7 @@ export function CharacterCreateV2Page() {
                     .map(([k, v]) => {
                       const def = COC7E_SKILLS.find(s => s.key === k);
                       return (
-                        <span key={k} className="px-2 py-0.5 rounded bg-coc-bg-secondary">
+                        <span key={k} className="px-2 py-0.5 rounded bg-black/20">
                           {def?.name || k} {v}
                         </span>
                       );
@@ -703,7 +703,7 @@ export function CharacterCreateV2Page() {
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className="px-4 py-2 rounded border border-coc-border text-coc-text-secondary hover:border-coc-text-muted disabled:opacity-30 flex items-center gap-1"
+            className="px-4 py-2 rounded border border-[#3a3a3a]/40 text-[#8b8375] hover:border-coc-text-muted disabled:opacity-30 flex items-center gap-1"
           >
             <ChevronLeft size={18} /> 上一步
           </button>
@@ -711,7 +711,7 @@ export function CharacterCreateV2Page() {
           {step < totalSteps && (
             <button
               onClick={nextStep}
-              className="px-4 py-2 rounded bg-coc-accent-red text-white hover:bg-coc-blood.glow flex items-center gap-1"
+              className="px-4 py-2 rounded bg-[#a63848] text-white hover:bg-coc-blood.glow flex items-center gap-1"
             >
               下一步 <ChevronRight size={18} />
             </button>
@@ -741,13 +741,13 @@ function PointBuyPanel({ rawAttrs, setRawAttrs }: { rawAttrs: Record<string, num
         剩余点数: {remaining} / {TOTAL_POINTS}
       </div>
       <div className="text-center mb-4">
-        <span className="text-sm text-coc-text-secondary">总点数</span>
-        <span className="ml-2 text-xl font-mono text-coc-accent-red">{used}</span>
+        <span className="text-sm text-[#8b8375]">总点数</span>
+        <span className="ml-2 text-xl font-mono text-[#a63848]">{used}</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {attrsList.map((key) => (
-          <div key={key} className="p-3 rounded bg-coc-bg-tertiary">
-            <div className="flex justify-between text-sm text-coc-text-secondary mb-1">
+          <div key={key} className="p-3 rounded bg-black/20">
+            <div className="flex justify-between text-sm text-[#8b8375] mb-1">
               <span>{ATTRIBUTE_LABELS[key]}</span>
               <span className="font-mono">{rawAttrs[key] || 50}</span>
             </div>

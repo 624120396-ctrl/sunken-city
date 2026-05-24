@@ -265,7 +265,7 @@ export function CharacterEditPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
       </div>
     );
   }
@@ -277,13 +277,13 @@ export function CharacterEditPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(isAdminEdit ? '/admin/characters' : `/characters/${id}`)}
-            className="coc-btn-secondary p-2"
+            className="rounded border border-[#3a3a3a] transition-colors p-2"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
             <h1 className="text-2xl font-serif font-bold">编辑调查员</h1>
-            <p className="text-sm text-coc-text-secondary">{originalData?.name}</p>
+            <p className="text-sm text-[#8b8375]">{originalData?.name}</p>
           </div>
         </div>
         <button
@@ -308,7 +308,7 @@ export function CharacterEditPage() {
           <h2 className="text-lg font-bold mb-4">基本信息</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">姓名</label>
+              <label className="block text-sm text-[#8b8375] mb-1">姓名</label>
               <input
                 type="text"
                 value={formData.name}
@@ -318,20 +318,20 @@ export function CharacterEditPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">职业</label>
+              <label className="block text-sm text-[#8b8375] mb-1">职业</label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setOccupationMode('preset')}
-                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'preset' ? 'bg-coc-accent-red/20 border-coc-accent-red text-coc-accent-red' : 'border-coc-border text-coc-text-secondary'}`}
+                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'preset' ? 'bg-[#a63848]/20 border-[#a63848] text-coc-accent-red' : 'border-[#3a3a3a]/40 text-coc-text-secondary'}`}
                   >
                     选择职业
                   </button>
                   <button
                     type="button"
                     onClick={() => setOccupationMode('custom')}
-                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'custom' ? 'bg-coc-accent-red/20 border-coc-accent-red text-coc-accent-red' : 'border-coc-border text-coc-text-secondary'}`}
+                    className={`px-3 py-1.5 text-sm rounded border ${occupationMode === 'custom' ? 'bg-[#a63848]/20 border-[#a63848] text-coc-accent-red' : 'border-[#3a3a3a]/40 text-coc-text-secondary'}`}
                   >
                     自定义
                   </button>
@@ -361,7 +361,7 @@ export function CharacterEditPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">年龄</label>
+              <label className="block text-sm text-[#8b8375] mb-1">年龄</label>
               <input
                 type="number"
                 value={formData.age}
@@ -372,7 +372,7 @@ export function CharacterEditPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-coc-text-secondary mb-1">性别</label>
+              <label className="block text-sm text-[#8b8375] mb-1">性别</label>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
@@ -386,7 +386,7 @@ export function CharacterEditPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm text-coc-text-secondary mb-1">背景故事</label>
+              <label className="block text-sm text-[#8b8375] mb-1">背景故事</label>
               <textarea
                 value={formData.background}
                 onChange={(e) => setFormData(prev => ({ ...prev, background: e.target.value }))}
@@ -404,7 +404,7 @@ export function CharacterEditPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {backgroundEntries.map((entry) => (
               <div key={entry.type}>
-                <label className="block text-sm text-coc-text-secondary mb-1">{entry.type}</label>
+                <label className="block text-sm text-[#8b8375] mb-1">{entry.type}</label>
                 <input
                   type="text"
                   value={entry.content}
@@ -415,7 +415,7 @@ export function CharacterEditPage() {
               </div>
             ))}
             <div className="md:col-span-2">
-              <label className="block text-sm text-coc-text-secondary mb-1">关键背景连接</label>
+              <label className="block text-sm text-[#8b8375] mb-1">关键背景连接</label>
               <select
                 value={keyConnection}
                 onChange={(e) => setKeyConnection(e.target.value)}
@@ -434,7 +434,7 @@ export function CharacterEditPage() {
         <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">属性</h2>
-            <div className="text-sm text-coc-text-secondary">
+            <div className="text-sm text-[#8b8375]">
               HP: {derived.hp} | MP: {derived.mp} | SAN: {derived.san} | MOV: {derived.mov} | Build: {derived.build}
             </div>
           </div>
@@ -450,8 +450,8 @@ export function CharacterEditPage() {
               { key: 'edu', label: '教育 EDU' },
               { key: 'luck', label: '幸运 LUCK' },
             ].map((attr) => (
-              <div key={attr.key} className="bg-coc-bg-tertiary p-3 rounded">
-                <label className="block text-xs text-coc-text-secondary mb-1">{attr.label}</label>
+              <div key={attr.key} className="bg-black/20 p-3 rounded">
+                <label className="block text-xs text-[#8b8375] mb-1">{attr.label}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -464,7 +464,7 @@ export function CharacterEditPage() {
                   <button
                     type="button"
                     onClick={() => rollAttribute(attr.key as keyof AttributeState)}
-                    className="p-1 text-coc-accent-gold hover:text-coc-accent-red transition-colors"
+                    className="p-1 text-[#c9a227] hover:text-[#a63848] transition-colors"
                     title="随机掷骰"
                   >
                     <Dice5 size={16} />
@@ -482,14 +482,14 @@ export function CharacterEditPage() {
               <Sword size={20} />
               武器
             </h2>
-            <span className="text-sm text-coc-text-secondary">{selectedWeapons.length}/4</span>
+            <span className="text-sm text-[#8b8375]">{selectedWeapons.length}/4</span>
           </div>
           <div className="space-y-2">
             {selectedWeapons.map((weapon) => (
-              <div key={weapon.id} className="flex items-center justify-between p-3 bg-coc-bg-tertiary rounded">
+              <div key={weapon.id} className="flex items-center justify-between p-3 bg-black/20 rounded">
                 <div>
                   <div className="font-medium">{weapon.name}</div>
-                  <div className="text-sm text-coc-text-secondary">
+                  <div className="text-sm text-[#8b8375]">
                     {weapon.damage} | {weapon.skill} | {weapon.range}
                   </div>
                 </div>
@@ -506,7 +506,7 @@ export function CharacterEditPage() {
               type="button"
               onClick={() => setShowWeaponModal(true)}
               disabled={selectedWeapons.length >= 4}
-              className="w-full py-2 border-2 border-dashed border-coc-border rounded-lg text-coc-text-secondary hover:border-coc-accent-red hover:text-coc-accent-red transition-colors"
+              className="w-full py-2 border-2 border-dashed border-[#3a3a3a]/40 rounded-lg text-[#8b8375] hover:border-[#a63848] hover:text-[#a63848] transition-colors"
             >
               + 添加武器
             </button>
@@ -522,10 +522,10 @@ export function CharacterEditPage() {
             </h2>
           </div>
           {selectedArmor ? (
-            <div className="flex items-center justify-between p-3 bg-coc-bg-tertiary rounded">
+            <div className="flex items-center justify-between p-3 bg-black/20 rounded">
               <div>
                 <div className="font-medium">{selectedArmor.name}</div>
-                <div className="text-sm text-coc-text-secondary">
+                <div className="text-sm text-[#8b8375]">
                   护甲值: {selectedArmor.rating} | {selectedArmor.coverage}
                 </div>
               </div>
@@ -541,7 +541,7 @@ export function CharacterEditPage() {
             <button
               type="button"
               onClick={() => setShowArmorModal(true)}
-              className="w-full py-2 border-2 border-dashed border-coc-border rounded-lg text-coc-text-secondary hover:border-coc-accent-red hover:text-coc-accent-red transition-colors"
+              className="w-full py-2 border-2 border-dashed border-[#3a3a3a]/40 rounded-lg text-[#8b8375] hover:border-[#a63848] hover:text-[#a63848] transition-colors"
             >
               + 选择护甲
             </button>
@@ -564,8 +564,8 @@ export function CharacterEditPage() {
                 className={cn(
                   'px-3 py-1 text-sm rounded capitalize',
                   weaponTypeFilter === type
-                    ? 'bg-coc-accent-red text-white'
-                    : 'bg-coc-bg-tertiary text-coc-text-secondary'
+                    ? 'bg-[#a63848] text-white'
+                    : 'bg-black/20 text-coc-text-secondary'
                 )}
               >
                 {type === 'all' ? '全部' : type}
@@ -578,10 +578,10 @@ export function CharacterEditPage() {
                 key={weapon.id}
                 onClick={() => addWeapon(weapon)}
                 disabled={selectedWeapons.find(w => w.id === weapon.id) !== undefined}
-                className="w-full p-3 bg-coc-bg-tertiary rounded text-left hover:bg-coc-accent-red/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full p-3 bg-black/20 rounded text-left hover:bg-[#a63848]/15 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="font-medium">{weapon.name}</div>
-                <div className="text-sm text-coc-text-secondary">
+                <div className="text-sm text-[#8b8375]">
                   {weapon.damage} | {weapon.skill} | {weapon.range}
                 </div>
               </button>
@@ -601,10 +601,10 @@ export function CharacterEditPage() {
             <button
               key={armor.id}
               onClick={() => addArmor(armor)}
-              className="w-full p-3 bg-coc-bg-tertiary rounded text-left hover:bg-coc-accent-red/20"
+              className="w-full p-3 bg-black/20 rounded text-left hover:bg-[#a63848]/15"
             >
               <div className="font-medium">{armor.name}</div>
-              <div className="text-sm text-coc-text-secondary">
+              <div className="text-sm text-[#8b8375]">
                 护甲值: {armor.rating} | {armor.coverage}
               </div>
             </button>

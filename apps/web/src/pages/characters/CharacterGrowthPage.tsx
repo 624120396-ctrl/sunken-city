@@ -89,7 +89,7 @@ export function CharacterGrowthPage() {
     loadCharacter();
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function CharacterGrowthPage() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate(`/characters/${id}`)}
-          className="coc-btn-secondary p-2"
+          className="rounded border border-[#3a3a3a] transition-colors p-2"
         >
           <ArrowLeft size={20} />
         </button>
@@ -108,7 +108,7 @@ export function CharacterGrowthPage() {
 
       <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 mb-6">
         <h2 className="font-bold mb-4">使用说明</h2>
-        <div className="text-sm text-coc-text-secondary space-y-2">
+        <div className="text-sm text-[#8b8375] space-y-2">
           <p>1. 选择本局游戏中<strong>成功使用过</strong>的技能</p>
           <p>2. 每个选中技能可以进行一次成长检定</p>
           <p>3. COC7成长规则：掷1D100，结果<strong>大于</strong>当前技能值则成长成功</p>
@@ -129,7 +129,7 @@ export function CharacterGrowthPage() {
               }, {} as Record<string, typeof COC7E_SKILLS>);
               return Object.entries(groups).map(([category, skills]) => (
                 <div key={category}>
-                  <h4 className="text-sm font-bold text-coc-accent-gold mb-2 capitalize">{category}</h4>
+                  <h4 className="text-sm font-bold text-[#c9a227] mb-2 capitalize">{category}</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {skills.map(skill => {
                       const currentValue = character.skills?.[skill.key] ?? skill.baseValue;
@@ -147,13 +147,13 @@ export function CharacterGrowthPage() {
                                 ? 'bg-green-900/30 border border-green-500/50'
                                 : 'bg-red-900/30 border border-red-500/50'
                               : isSelected
-                              ? 'bg-coc-accent-red/30 border border-coc-accent-red'
-                              : 'bg-coc-bg-tertiary hover:bg-coc-bg-tertiary/80'
+                              ? 'bg-[#a63848]/30 border border-[#a63848]'
+                              : 'bg-black/20 hover:bg-black/20/80'
                           }`}
                         >
                           <div className="flex justify-between">
                             <span>{skill.name}</span>
-                            <span className="text-coc-text-muted">{currentValue}%</span>
+                            <span className="text-[#6b6558]">{currentValue}%</span>
                           </div>
                           {hasResult && (
                             <div className="text-xs mt-1">
@@ -194,7 +194,7 @@ export function CharacterGrowthPage() {
                 <button
                   onClick={saveGrowth}
                   disabled={loading || saved}
-                  className="w-full coc-btn-secondary flex items-center justify-center gap-2"
+                  className="w-full rounded border border-[#3a3a3a] transition-colors flex items-center justify-center gap-2"
                 >
                   {saved ? <Check size={18} /> : <X size={18} />}
                   {saved ? '已保存' : '保存成长结果'}
@@ -206,23 +206,23 @@ export function CharacterGrowthPage() {
               <div className="mt-6">
                 <h4 className="font-bold mb-3">成长统计</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-coc-bg-tertiary rounded text-center">
+                  <div className="p-3 bg-black/20 rounded text-center">
                     <div className="text-2xl font-bold text-green-400">
                       {growthResults.filter(r => r.success).length}
                     </div>
-                    <div className="text-xs text-coc-text-secondary">成长成功</div>
+                    <div className="text-xs text-[#8b8375]">成长成功</div>
                   </div>
-                  <div className="p-3 bg-coc-bg-tertiary rounded text-center">
+                  <div className="p-3 bg-black/20 rounded text-center">
                     <div className="text-2xl font-bold text-red-400">
                       {growthResults.filter(r => !r.success).length}
                     </div>
-                    <div className="text-xs text-coc-text-secondary">成长失败</div>
+                    <div className="text-xs text-[#8b8375]">成长失败</div>
                   </div>
-                  <div className="p-3 bg-coc-bg-tertiary rounded text-center col-span-2">
-                    <div className="text-2xl font-bold text-coc-accent-gold">
+                  <div className="p-3 bg-black/20 rounded text-center col-span-2">
+                    <div className="text-2xl font-bold text-[#c9a227]">
                       {growthResults.filter(r => r.success).reduce((sum, r) => sum + (r.newValue - r.oldValue), 0)}
                     </div>
-                    <div className="text-xs text-coc-text-secondary">总成长点数</div>
+                    <div className="text-xs text-[#8b8375]">总成长点数</div>
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export function CharacterGrowthPage() {
                   >
                     <div>
                       <div className="font-medium">{result.skillName}</div>
-                      <div className="text-xs text-coc-text-secondary">
+                      <div className="text-xs text-[#8b8375]">
                         检定: {result.rollResult} vs {result.oldValue}%
                       </div>
                     </div>
