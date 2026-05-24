@@ -32,7 +32,7 @@ export function ForumListPage() {
           </div>
           <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-coc-text-muted text-sm">
+        <div className="hidden sm:flex items-center gap-2 text-[#6b6558] text-sm">
           <LayoutGrid size={16} />
           <span>共 {boards.length} 个版块</span>
         </div>
@@ -51,7 +51,7 @@ export function ForumListPage() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-xl font-bold group-hover:text-coc-gold transition-colors truncate" style={{ color: '#FFFEFC' }}>
+                    <h2 className="text-xl font-bold group-hover:text-[#c9a227] transition-colors truncate" style={{ color: '#FFFEFC' }}>
                       {b.name}
                     </h2>
                   </div>
@@ -61,7 +61,7 @@ export function ForumListPage() {
                   </div>
                 </div>
                 {b.description && (
-                  <p className="text-sm text-coc-text-muted mt-3 leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-[#6b6558] mt-3 leading-relaxed whitespace-pre-line">
                     {b.description}
                   </p>
                 )}
@@ -70,7 +70,7 @@ export function ForumListPage() {
               <div className="mt-4 flex items-center justify-end">
                 <Icon
                   size={32}
-                  className="text-coc-text-muted group-hover:text-coc-gold transition-colors"
+                  className="text-[#6b6558] group-hover:text-[#c9a227] transition-colors"
                 />
               </div>
             </Link>

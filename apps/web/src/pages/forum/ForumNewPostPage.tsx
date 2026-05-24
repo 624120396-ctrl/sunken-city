@@ -71,13 +71,13 @@ export function ForumNewPostPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-coc-bg-tertiary border border-coc-border rounded-lg p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-black/20 border border-[#3a3a3a]/40 rounded-lg p-4">
         <div>
-          <label className="block text-sm text-coc-text-muted mb-1">选择版块</label>
+          <label className="block text-sm text-[#6b6558] mb-1">选择版块</label>
           <select
             value={boardKey}
             onChange={(e) => setBoardKey(e.target.value)}
-            className="w-full bg-coc-bg-primary border border-coc-border rounded p-2 text-coc-parchment focus:border-coc-gold focus:outline-none"
+            className="w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded p-2 text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
           >
             {boards.map((b) => (
               <option key={b.key} value={b.key}>
@@ -88,19 +88,19 @@ export function ForumNewPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-coc-text-muted mb-1">标题</label>
+          <label className="block text-sm text-[#6b6558] mb-1">标题</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={100}
             placeholder="请输入标题"
-            className="w-full bg-coc-bg-primary border border-coc-border rounded p-2 text-coc-parchment placeholder:text-coc-text-muted focus:border-coc-gold focus:outline-none"
+            className="w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded p-2 text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-coc-text-muted mb-1">内容</label>
+          <label className="block text-sm text-[#6b6558] mb-1">内容</label>
           <RichTextEditor
             value={content}
             onChange={setContent}
@@ -110,7 +110,7 @@ export function ForumNewPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-coc-text-muted mb-1">悬赏金额（锈蚀硬币，可选）</label>
+          <label className="block text-sm text-[#6b6558] mb-1">悬赏金额（锈蚀硬币，可选）</label>
           <div className="flex items-center gap-3">
             <input
               type="number"
@@ -118,9 +118,9 @@ export function ForumNewPostPage() {
               max={user?.coins || 0}
               value={bounty}
               onChange={(e) => setBounty(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-32 bg-coc-bg-primary border border-coc-border rounded p-2 text-coc-parchment focus:border-coc-gold focus:outline-none"
+              className="w-32 bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded p-2 text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
             />
-            <span className="text-sm text-coc-text-muted">当前余额：{user?.coins || 0} 锈蚀硬币</span>
+            <span className="text-sm text-[#6b6558]">当前余额：{user?.coins || 0} 锈蚀硬币</span>
           </div>
           {bounty > 0 && (
             <p className="text-xs text-amber-400 mt-1">

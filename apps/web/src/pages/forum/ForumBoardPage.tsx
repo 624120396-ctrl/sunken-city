@@ -56,7 +56,7 @@ function Badge({
     bounty: 'border-amber-500/60 text-amber-500 bg-amber-500/10',
     lock: 'border-coc-text-muted text-coc-text-muted',
     best: 'border-amber-400/60 text-amber-400',
-    default: 'border-coc-border text-coc-text-muted',
+    default: 'border-[#3a3a3a]/40 text-coc-text-muted',
   };
   return (
     <span
@@ -103,8 +103,8 @@ function PostRow({
     <Link
       key={post.id}
       to={`/forums/${post.id}`}
-      className={`group block p-4 rounded border border-coc-border hover:border-coc-gold/50 transition-colors relative overflow-hidden ${
-        post.isEssence ? 'bg-gradient-to-r from-coc-gold/5 to-transparent' : 'bg-coc-bg-tertiary'
+      className={`group block p-4 rounded border border-[#3a3a3a]/40 hover:border-coc-gold/50 transition-colors relative overflow-hidden ${
+        post.isEssence ? 'bg-gradient-to-r from-coc-gold/5 to-transparent' : 'bg-black/20'
       }`}
     >
       {/* hover 金色竖线 */}
@@ -113,12 +113,12 @@ function PostRow({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <PostBadges post={post} />
-            <h3 className="font-bold text-coc-parchment truncate">{post.title}</h3>
+            <h3 className="font-bold text-[#e8d4a0] truncate">{post.title}</h3>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-4 text-xs text-coc-text-muted">
+          <div className="flex items-center gap-4 text-xs text-[#6b6558]">
             <span className="flex items-center gap-1">
               <Eye size={14} /> {post.viewCount}
             </span>
@@ -130,8 +130,8 @@ function PostRow({
             </span>
           </div>
           {showLastReply && post.lastReplyBy && (
-            <div className="text-xs text-coc-text-muted">
-              最后回复：<span className="text-coc-parchment">{post.lastReplyBy.nickname}</span> ·{' '}
+            <div className="text-xs text-[#6b6558]">
+              最后回复：<span className="text-[#e8d4a0]">{post.lastReplyBy.nickname}</span> ·{' '}
               {formatTimeAgo(post.lastReplyAt)}
             </div>
           )}
@@ -203,10 +203,10 @@ export function ForumBoardPage() {
       {/* Breadcrumb + Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm">
-          <Link to="/forums" className="text-coc-text-muted hover:text-coc-parchment">旧日低语</Link>
-          <span className="text-coc-text-muted">/</span>
-          <span className="flex items-center gap-1.5 text-coc-parchment font-bold">
-            <BoardIcon size={16} className="text-coc-gold" />
+          <Link to="/forums" className="text-[#6b6558] hover:text-[#e8d4a0]">旧日低语</Link>
+          <span className="text-[#6b6558]">/</span>
+          <span className="flex items-center gap-1.5 text-[#e8d4a0] font-bold">
+            <BoardIcon size={16} className="text-[#c9a227]" />
             {boardName}
           </span>
         </div>
@@ -226,22 +226,22 @@ export function ForumBoardPage() {
             moderators.map((mod: any) => (
               <div
                 key={mod.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/50 bg-coc-bg-primary shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/50 bg-[#1a1a1a] shadow-sm"
               >
-                <span className="text-base text-coc-gold font-bold tracking-wide">
+                <span className="text-base text-[#c9a227] font-bold tracking-wide">
                   {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
                 </span>
                 <Tooltip content={`${BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'} — 该版块的管理者`}>
-                  <span className="text-sm text-coc-parchment font-medium cursor-help">{mod.nickname}</span>
+                  <span className="text-sm text-[#e8d4a0] font-medium cursor-help">{mod.nickname}</span>
                 </Tooltip>
               </div>
             ))
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/30 bg-coc-bg-primary/50">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/30 bg-[#1a1a1a]/50">
               <span className="text-base text-coc-gold/70 font-bold tracking-wide">
                 {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
               </span>
-              <span className="text-sm text-coc-text-muted">虚位以待</span>
+              <span className="text-sm text-[#6b6558]">虚位以待</span>
             </div>
           )}
         </div>
@@ -254,7 +254,7 @@ export function ForumBoardPage() {
             className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               sort === 'last_reply'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-coc-parchment hover:border-coc-gold'
+                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
             }`}
           >
             最后回复
@@ -264,7 +264,7 @@ export function ForumBoardPage() {
             className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               sort === 'newest'
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-coc-parchment hover:border-coc-gold'
+                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
             }`}
           >
             最新发布
@@ -299,7 +299,7 @@ export function ForumBoardPage() {
           {/* 精华帖 */}
           {essencePosts.length > 0 && (
             <div className="space-y-2">
-              <div className="text-xs font-bold text-coc-accent-gold flex items-center gap-1">
+              <div className="text-xs font-bold text-[#c9a227] flex items-center gap-1">
                 <Award size={12} /> 精华
               </div>
               <div className="space-y-2">
@@ -313,9 +313,9 @@ export function ForumBoardPage() {
           {/* 普通帖 */}
           <div className="space-y-2">
             {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
-              <div className="text-center py-12 text-coc-text-muted">该版块暂无帖子，来发布第一条吧</div>
+              <div className="text-center py-12 text-[#6b6558]">该版块暂无帖子，来发布第一条吧</div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-8 text-coc-text-muted text-sm">没有更多帖子了</div>
+              <div className="text-center py-8 text-[#6b6558] text-sm">没有更多帖子了</div>
             ) : (
               posts.map((post) => <PostRow key={post.id} post={post} />)
             )}

@@ -45,7 +45,7 @@ function Badge({
     bounty: 'border-amber-500/60 text-amber-500 bg-amber-500/10',
     lock: 'border-coc-text-muted text-coc-text-muted',
     best: 'border-amber-400/60 text-amber-400',
-    default: 'border-coc-border text-coc-text-muted',
+    default: 'border-[#3a3a3a]/40 text-coc-text-muted',
   };
   return (
     <span
@@ -80,12 +80,12 @@ function AvatarWithFrame({
         <img
           src={avatarUrl}
           alt={nickname}
-          className="rounded-full object-cover border border-coc-border bg-coc-bg-secondary"
+          className="rounded-full object-cover border border-[#3a3a3a]/40 bg-black/20"
           style={{ width: size, height: size }}
         />
       ) : (
         <div
-          className="rounded-full bg-coc-bg-tertiary border border-coc-border flex items-center justify-center text-coc-text-muted font-bold"
+          className="rounded-full bg-black/20 border border-[#3a3a3a]/40 flex items-center justify-center text-[#6b6558] font-bold"
           style={{ width: size, height: size }}
         >
           {nickname[0]?.toUpperCase()}
@@ -261,18 +261,18 @@ export function ForumPostPage() {
           <ArrowLeft size={18} />
         </Link>
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-coc-text-muted">
+          <div className="text-xs text-[#6b6558]">
             {post ? (
               <>
-                <Link to="/forums" className="hover:text-coc-parchment">旧日低语</Link>
+                <Link to="/forums" className="hover:text-[#e8d4a0]">旧日低语</Link>
                 <span className="mx-1">/</span>
-                <Link to={`/forums/board/${post.board.key}`} className="hover:text-coc-parchment">{post.board.name}</Link>
+                <Link to={`/forums/board/${post.board.key}`} className="hover:text-[#e8d4a0]">{post.board.name}</Link>
               </>
             ) : (
               '旧日低语'
             )}
           </div>
-          <h1 className="text-xl font-bold text-coc-parchment truncate">{post?.title || '加载中...'}</h1>
+          <h1 className="text-xl font-bold text-[#e8d4a0] truncate">{post?.title || '加载中...'}</h1>
         </div>
         {(isAuthor || canModeratePost) && (
           <button onClick={handleDeletePost} className="text-red-400 hover:text-red-300 p-2">
@@ -282,11 +282,11 @@ export function ForumPostPage() {
       </div>
 
       {loading || !post ? (
-        <div className="text-center py-12 text-coc-text-muted">加载中...</div>
+        <div className="text-center py-12 text-[#6b6558]">加载中...</div>
       ) : (
         <>
           {/* 主贴 */}
-          <div className="p-4 bg-coc-bg-tertiary border border-coc-border rounded-lg space-y-3 border-l-2 border-l-coc-gold/40">
+          <div className="p-4 bg-black/20 border border-[#3a3a3a]/40 rounded-lg space-y-3 border-l-2 border-l-coc-gold/40">
             <div className="flex items-start gap-3">
               <AvatarWithFrame
                 avatarUrl={post.author.avatarUrl}
@@ -300,7 +300,7 @@ export function ForumPostPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedProfileUser(post.author)}
-                      className="text-sm font-bold text-coc-parchment hover:text-coc-gold transition-colors"
+                      className="text-sm font-bold text-[#e8d4a0] hover:text-[#c9a227] transition-colors"
                     >
                       {post.author.nickname}
                     </button>
@@ -323,12 +323,12 @@ export function ForumPostPage() {
                       <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
                     )}
                   </div>
-                  <div className="text-xs text-coc-text-muted whitespace-nowrap">
+                  <div className="text-xs text-[#6b6558] whitespace-nowrap">
                     {formatTimeAgo(post.createdAt)}
                     {post.updatedAt !== post.createdAt && ` · 编辑于 ${formatTimeAgo(post.updatedAt)}`}
                   </div>
                 </div>
-                <div className="text-xs text-coc-text-muted mt-0.5">
+                <div className="text-xs text-[#6b6558] mt-0.5">
                   {post.author.rankName || '未知位阶'}
                   {post.author.titleName && (
                     <span style={{ color: post.author.titleColor || '#a69b85' }}> · {post.author.titleName}</span>
@@ -364,15 +364,15 @@ export function ForumPostPage() {
                 <button
                   onClick={handleLike}
                   className={`flex items-center gap-1.5 text-sm transition-colors ${
-                    post.hasLiked ? 'text-coc-accent-gold' : 'text-coc-text-muted hover:text-coc-parchment'
+                    post.hasLiked ? 'text-coc-accent-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
                   }`}
                 >
                   <ThumbsUp size={16} /> {post.likeCount}
                 </button>
-                <span className="flex items-center gap-1.5 text-sm text-coc-text-muted">
+                <span className="flex items-center gap-1.5 text-sm text-[#6b6558]">
                   <Eye size={16} /> {post.viewCount}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-coc-text-muted">
+                <span className="flex items-center gap-1.5 text-sm text-[#6b6558]">
                   <MessageSquare size={16} /> {post.replyCount}
                 </span>
               </div>
@@ -384,7 +384,7 @@ export function ForumPostPage() {
                         setEditPostContent(post.content);
                         setEditingPost(true);
                       }}
-                      className="text-xs text-coc-text-muted hover:text-coc-parchment flex items-center gap-1"
+                      className="text-xs text-[#6b6558] hover:text-[#e8d4a0] flex items-center gap-1"
                     >
                       <Pencil size={12} /> 编辑
                     </button>
@@ -392,7 +392,7 @@ export function ForumPostPage() {
                   {(isAuthor || canModeratePost) && (
                     <button
                       onClick={handleToggleEssence}
-                      className="text-xs text-coc-text-muted hover:text-coc-accent-gold flex items-center gap-1"
+                      className="text-xs text-[#6b6558] hover:text-[#c9a227] flex items-center gap-1"
                     >
                       {post.isEssence ? '取消精华' : '设为精华'}
                     </button>
@@ -400,7 +400,7 @@ export function ForumPostPage() {
                   {canModeratePost && (
                     <button
                       onClick={handleTogglePin}
-                      className="text-xs text-coc-text-muted hover:text-coc-blood flex items-center gap-1"
+                      className="text-xs text-[#6b6558] hover:text-[#a63848] flex items-center gap-1"
                     >
                       {post.isPinned ? '取消置顶' : '设为置顶'}
                     </button>
@@ -442,7 +442,7 @@ export function ForumPostPage() {
 
           {/* 回复框 */}
           {!post.isLocked && (
-            <div className="p-4 bg-coc-bg-tertiary border border-coc-border rounded-lg space-y-3">
+            <div className="p-4 bg-black/20 border border-[#3a3a3a]/40 rounded-lg space-y-3">
               <RichTextEditor
                 value={replyContent}
                 onChange={setReplyContent}
@@ -515,7 +515,7 @@ function ReplyItem({
       className={`p-4 border rounded-lg ${
         reply.isBestReply
           ? 'bg-amber-500/10 border-amber-500/40 relative overflow-hidden'
-          : 'bg-coc-bg-tertiary border-coc-border'
+          : 'bg-black/20 border-coc-border'
       }`}
     >
       {reply.isBestReply && (
@@ -537,7 +537,7 @@ function ReplyItem({
               <button
                 type="button"
                 onClick={onAuthorClick}
-                className={`text-sm font-bold hover:text-coc-gold transition-colors ${
+                className={`text-sm font-bold hover:text-[#c9a227] transition-colors ${
                   isLandlord ? 'text-amber-400' : 'text-coc-parchment'
                 }`}
               >
@@ -547,12 +547,12 @@ function ReplyItem({
                 <Badge variant="pin"><Pin size={10} /> 楼主</Badge>
               )}
             </div>
-            <div className="text-xs text-coc-text-muted whitespace-nowrap">
+            <div className="text-xs text-[#6b6558] whitespace-nowrap">
               {formatTimeAgo(reply.createdAt)}
               {reply.updatedAt !== reply.createdAt && ` · 编辑于 ${formatTimeAgo(reply.updatedAt)}`}
             </div>
           </div>
-          <div className="text-xs text-coc-text-muted mt-0.5">
+          <div className="text-xs text-[#6b6558] mt-0.5">
             {reply.author.rankName || '未知位阶'}
             {reply.author.titleName && (
               <span style={{ color: reply.author.titleColor || '#a69b85' }}> · {reply.author.titleName}</span>
@@ -585,7 +585,7 @@ function ReplyItem({
               {canEdit && (
                 <button
                   onClick={() => onStartEdit(reply.content)}
-                  className="text-xs text-coc-text-muted hover:text-coc-parchment"
+                  className="text-xs text-[#6b6558] hover:text-[#e8d4a0]"
                 >
                   编辑
                 </button>
