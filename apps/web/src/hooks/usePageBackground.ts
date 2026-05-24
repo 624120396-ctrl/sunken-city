@@ -2,12 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const BG_MAP: Record<string, string> = {
-  // 深海主题
-  '/fishing': '/images/bg-underwater.png',
-  '/dream': '/images/bg-underwater.png',
-  // 幻梦境主题
-  '/profile': '/images/bg-dreamscape.png',
-  // 默认
+  // 默认全局羊皮纸背景
   default: '/bg-vellum.png',
 };
 
