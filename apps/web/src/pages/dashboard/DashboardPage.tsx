@@ -337,14 +337,14 @@ export function DashboardPage() {
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     )}
-                    {/* 磨砂玻璃覆盖层 */}
-                    <div className="absolute inset-0 backdrop-blur-[1px] pointer-events-none" />
+                    {/* 磨砂玻璃覆盖层 - 仅左侧1/5 */}
+                    <div className="absolute inset-y-0 left-0 w-[22%] backdrop-blur-[1px] bg-[#0a0a0f]/30 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
                     {/* 底部血红色渐变 */}
                     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
                     {/* 顶部微光 */}
                     <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
                     {/* 内容 */}
-                    <div className="relative p-4 flex flex-col h-full min-h-[140px]">
+                    <div className="relative p-4 flex flex-col h-full min-h-[140px] max-w-[55%]">
                       <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-3 group-hover:border-[#c9a227]/25 group-hover:bg-[#c9a227]/5 transition-all duration-300">
                         <action.icon size={20} className="text-[#e8d4a0]" strokeWidth={1.5} />
                       </div>
