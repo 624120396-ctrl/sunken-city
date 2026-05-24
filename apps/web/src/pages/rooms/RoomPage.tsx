@@ -721,44 +721,53 @@ export function RoomPage() {
   return (
     <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-4">
-          <Link to="/rooms" className="btn-v2 coc-btn-secondary p-2">
+          <Link to="/rooms" className="p-2 rounded border border-[#3a3a3a]/60 text-[#c9a227] 
+                     hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10 transition-all">
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-xl font-serif font-bold">{room?.name}</h1>
-            <p className="text-sm text-coc-text-secondary">#{room?.roomId}</p>
+            <h1 className="text-xl font-serif font-bold" style={{ color: '#c9a227' }}>{room?.name}</h1>
+            <p className="text-sm" style={{ color: '#6b6558' }}>#{room?.roomId}</p>
           </div>
-          <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} title={connected ? '已连接' : '未连接'} />
+          <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'}`} title={connected ? '已连接' : '未连接'} />
         </div>
 
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1"
+            className="px-3 py-1.5 rounded text-sm flex items-center gap-1.5 border border-[#3a3a3a]/60 
+                       text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
+                       transition-all"
           >
             {activeTab === 'chat' ? <Swords size={14} /> : <Send size={14} />}
             {activeTab === 'chat' ? '战斗' : '聊天'}
           </button>
           <button
             onClick={() => setShowPrivateChat(true)}
-            className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1 relative"
+            className="px-3 py-1.5 rounded text-sm flex items-center gap-1.5 border border-[#3a3a3a]/60 
+                       text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
+                       transition-all relative"
           >
             <MessageSquare size={14} />
             私聊
             {privateUnreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-coc-accent-red text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 bg-[#a63848] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-md">
                 {privateUnreadCount}
               </span>
             )}
           </button>
           <div className="relative group">
-            <button className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1">
+            <button className="px-3 py-1.5 rounded text-sm flex items-center gap-1 border border-[#3a3a3a]/60 
+                              text-[#8b8375] hover:border-[#c9a227]/40 hover:text-[#c9a227] hover:bg-[#c9a227]/5 
+                              transition-all">
               <span>更多</span>
               <ChevronDown size={12} />
             </button>
-            <div className="absolute right-0 top-full mt-1 w-40 bg-coc-bg-secondary border border-coc-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1">
+            <div className="absolute right-0 top-full mt-1 w-44 backdrop-blur-md bg-black/80 
+                            border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60
+                            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1">
               {[
                 { label: '线索', icon: Search, show: showCluePanel, toggle: () => setShowCluePanel(!showCluePanel) },
                 { label: 'NPC', icon: User, show: showNpcPanel, toggle: () => setShowNpcPanel(!showNpcPanel) },
@@ -771,12 +780,12 @@ export function RoomPage() {
                 { label: '投骰', icon: History, show: false, link: `/rooms/${roomId}/dice-history` },
               ].map(item => (
                 item.link ? (
-                  <Link key={item.label} to={item.link} className="flex items-center gap-2 px-3 py-1.5 text-sm text-coc-text-secondary hover:bg-coc-bg-tertiary hover:text-coc-text-primary transition-colors">
+                  <Link key={item.label} to={item.link} className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#8b8375] hover:bg-[#c9a227]/10 hover:text-[#c9a227] transition-colors">
                     <item.icon size={14} />
                     {item.label}
                   </Link>
                 ) : (
-                  <button key={item.label} onClick={item.toggle} className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${item.show ? 'text-coc-gold bg-coc-gold/5' : 'text-coc-text-secondary hover:bg-coc-bg-tertiary hover:text-coc-text-primary'}`}>
+                  <button key={item.label} onClick={item.toggle} className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${item.show ? 'text-[#c9a227] bg-[#c9a227]/10' : 'text-[#8b8375] hover:bg-[#c9a227]/10 hover:text-[#c9a227]'}`}>
                     <item.icon size={14} />
                     {item.label}
                   </button>
@@ -787,19 +796,23 @@ export function RoomPage() {
           {room?.isCreator && (
             <button
               onClick={() => setShowGMKit(!showGMKit)}
-              className={`btn-v2 text-sm flex items-center gap-1 border-coc-gold/30 ${showGMKit ? 'bg-coc-gold/15 text-coc-gold' : 'coc-btn-secondary text-coc-gold'}`}
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border transition-all ${showGMKit ? 'bg-[#c9a227]/15 text-[#c9a227] border-[#c9a227]/40' : 'border-[#3a3a3a]/60 text-[#c9a227] hover:border-[#c9a227]/40 hover:bg-[#c9a227]/5'}`}
             >
               <Crown size={14} />
               KP
             </button>
           )}
-          <div className="w-px h-5 bg-coc-border/40 mx-1" />
-          <button onClick={handleLeaveRoom} className="btn-v2 coc-btn-secondary text-sm flex items-center gap-1">
+          <div className="w-px h-5 mx-1" style={{ background: 'rgba(58,58,58,0.5)' }} />
+          <button onClick={handleLeaveRoom} className="px-3 py-1.5 rounded text-sm flex items-center gap-1 border border-[#3a3a3a]/60 
+                       text-[#8b8375] hover:border-[#a63848]/40 hover:text-[#a63848] hover:bg-[#a63848]/5 
+                       transition-all">
             <DoorOpen size={14} />
             离开
           </button>
           {room?.isCreator && (
-            <button onClick={handleCloseRoom} className="btn-v2 coc-btn-secondary text-sm text-red-400 hover:text-red-300">
+            <button onClick={handleCloseRoom} className="px-3 py-1.5 rounded text-sm text-[#a63848] hover:text-[#e8d4a0] 
+                       border border-[#a63848]/30 hover:border-[#a63848]/60 hover:bg-[#a63848]/10
+                       transition-all">
               关闭
             </button>
           )}
@@ -828,14 +841,14 @@ export function RoomPage() {
 
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* 左侧：成员列表 */}
-          <div className="w-[200px] shrink-0 space-y-3 overflow-y-auto min-h-0 border-r border-coc-border/20 pr-3">
+          <div className="w-[200px] shrink-0 space-y-3 overflow-y-auto min-h-0 border-r border-[#3a3a3a]/30 pr-3">
           {/* 当前状态 - 水平紧凑条 */}
           {selectedCharacter && (
             <div className="flex items-center gap-2 px-3 py-2 bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg">
               <Tooltip content={`HP ${selectedCharacter.hp}/${selectedCharacter.maxHp || selectedCharacter.hp}`}>
                 <div className="flex-1 flex items-center gap-1">
                   <span className="text-[10px] text-coc-accent-red font-bold">HP</span>
-                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                     <div className="h-full bg-coc-accent-red rounded-full" style={{ width: `${(selectedCharacter.hp / (selectedCharacter.maxHp || selectedCharacter.hp || 1)) * 100}%` }} />
                   </div>
                 </div>
@@ -843,7 +856,7 @@ export function RoomPage() {
               <Tooltip content={`MP ${selectedCharacter.mp}/${selectedCharacter.maxMp || selectedCharacter.mp}`}>
                 <div className="flex-1 flex items-center gap-1">
                   <span className="text-[10px] text-coc-accent-cyan font-bold">MP</span>
-                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                     <div className="h-full bg-coc-accent-cyan rounded-full" style={{ width: `${(selectedCharacter.mp / (selectedCharacter.maxMp || selectedCharacter.mp || 1)) * 100}%` }} />
                   </div>
                 </div>
@@ -851,7 +864,7 @@ export function RoomPage() {
               <Tooltip content={`SAN ${selectedCharacter.san}/${selectedCharacter.maxSan || selectedCharacter.san}`}>
                 <div className="flex-1 flex items-center gap-1">
                   <span className="text-[10px] text-yellow-400 font-bold">SAN</span>
-                  <div className="flex-1 h-1.5 bg-coc-bg-tertiary rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                     <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(selectedCharacter.san / (selectedCharacter.maxSan || selectedCharacter.san || 1)) * 100}%` }} />
                   </div>
                 </div>
@@ -881,8 +894,8 @@ export function RoomPage() {
             />
           )}
 
-          <div className="bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg p-3">
-            <h3 className="text-xs font-bold text-coc-text-muted mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
+          <div className="backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 rounded-lg p-3 shadow-md">
+            <h3 className="text-xs font-bold mb-2.5 flex items-center gap-1.5 uppercase tracking-wider" style={{ color: "#6b6558" }}>
               <Users size={12} />
               调查员 ({room?.members.length || 0})
             </h3>
@@ -892,7 +905,7 @@ export function RoomPage() {
                 return (
                 <div
                   key={member.id}
-                  className="p-2.5 bg-coc-bg-tertiary rounded-lg cursor-pointer hover:bg-coc-bg-primary transition-colors"
+                  className="p-2.5 rounded-lg cursor-pointer transition-all border border-transparent backdrop-blur-sm bg-black/20 hover:bg-black/40 hover:border-[#c9a227]/30 shadow-sm"
                   onClick={() => {
                     setSelectedMember(member);
                     setShowMemberDetail(true);
@@ -909,7 +922,7 @@ export function RoomPage() {
                           alt=""
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-coc-bg-secondary border border-coc-border flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#3a3a3a] flex items-center justify-center">
                           <User size={18} className="text-coc-text-muted" />
                         </div>
                       )}
@@ -972,7 +985,7 @@ export function RoomPage() {
                       </div>
                     </div>
                   ) : (
-                    <span className="text-xs text-coc-text-muted">观察者</span>
+                    <span className="text-xs" style={{ color: "#6b6558" }}>观察者</span>
                   )}
 
                   {/* 状态标签 */}
@@ -1000,7 +1013,7 @@ export function RoomPage() {
 
           {/* 战斗控制 */}
           {activeTab === 'combat' && room?.isCreator && (
-            <div className="bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg p-3">
+            <div className="backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 rounded-lg p-3 shadow-md">
               <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
                 <Swords size={12} />
                 战斗控制
@@ -1113,7 +1126,7 @@ export function RoomPage() {
                       return (
                         <StaggerItem key={msg.id}>
                           <div className="flex justify-center">
-                            <div className="max-w-[85%] px-4 py-2 rounded-lg bg-coc-gold/10 border border-coc-gold/50 italic text-sm text-coc-text-primary text-center shadow-sm">
+                            <div className="max-w-[85%] px-5 py-3 rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/60 italic text-sm text-center shadow-md" style={{ color: "#e8d4a0" }}>
                               {msg.content}
                               <span className="ml-2 text-xs text-coc-text-muted not-italic">
                                 {new Date(msg.timestamp).toLocaleTimeString()}
@@ -1129,11 +1142,11 @@ export function RoomPage() {
                         <div className="flex justify-start gap-3">
                           <Avatar />
                           <div
-                            className={`max-w-[75%] px-3 py-2 rounded-lg relative group border border-coc-border/40 shadow-sm ${
+                            className={`max-w-[75%] px-4 py-3 rounded-lg relative group border shadow-md ${
                               msg.type === 'dice'
-                                ? 'bg-coc-bg-tertiary border-coc-gold/30'
+                                ? 'bg-[#1a1a1a] border-[#c9a227]/50'
                                 : isMe
-                                ? 'bg-coc-bg-tertiary border-l-2 border-l-coc-gold border-coc-border/40'
+                                ? 'bg-[#1a1a1a] border-l-2 border-l-[#c9a227] border-[#3a3a3a]/60'
                                 : 'bg-coc-bg-tertiary'
                             }`}
                           >
@@ -1141,22 +1154,22 @@ export function RoomPage() {
                               {isKPMessage ? (
                                 <>
                                   <Crown size={14} className="text-coc-accent-gold" />
-                                  <span className="text-coc-accent-gold">{displayName}</span>
+                                  <span style={{ color: "#c9a227" }}>{displayName}</span>
                                 </>
                               ) : (
-                                <span className="text-coc-text-primary">{displayName}</span>
+                                <span style={{ color: "#e8d4a0" }}>{displayName}</span>
                               )}
                               {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
                               <Tooltip content={new Date(msg.timestamp).toLocaleString()}>
-                                <span className="text-xs font-normal text-coc-text-muted ml-auto cursor-help">
+                                <span className="text-xs font-normal ml-auto cursor-help" style={{ color: "#6b6558" }}>
                                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </Tooltip>
                             </div>
-                            <p className="text-sm text-coc-text-primary">{msg.content}</p>
+                            <p className="text-sm leading-relaxed" style={{ color: "#d4c5a8" }}>{msg.content}</p>
 
                             {msg.type === 'dice' && msg.rollData?.successLevel && (
-                              <div className="text-xs mt-1 pt-1 border-t border-coc-border text-coc-text-muted">
+                              <div className="text-xs mt-2 pt-2 border-t border-[#3a3a3a]/60" style={{ color: "#8b8375" }}>
                                 <Tooltip content={getSuccessExplanation(msg.rollData.successLevel)}>
                                   <span className="cursor-help">{msg.rollData.successLevel} → {getSuccessExplanation(msg.rollData.successLevel)}</span>
                                 </Tooltip>
@@ -1191,7 +1204,7 @@ export function RoomPage() {
               {/* 输入框 */}
               <form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-coc-border space-y-2 flex-shrink-0"
+                className="p-4 border-t border-[#3a3a3a]/40 space-y-2 flex-shrink-0 backdrop-blur-md bg-black/20"
               >
                 <div className="flex items-center gap-2">
                   <QuickPhrases
