@@ -80,11 +80,13 @@ else
 fi
 
 # ===== 5. 部署前端产物 =====
+# 铁律：前端产物必须先同步到 $WEB_DIR/dist/，由本脚本复制到 public/
+# 禁止直接 rsync 到 $SERVER_DIR/public/ — 会删除 uploads/
+
 echo "[*] 检查前端产物..."
 if [ -f "$WEB_DIR/dist/index.html" ]; then
   echo "[*] 部署前端: index.html"
-  cp $WEB_DIR/dist/index.html $WEB_DIR/dist/index.html.new
-  mv $WEB_DIR/dist/index.html.new $SERVER_DIR/public/index.html
+  cp $WEB_DIR/dist/index.html $SERVER_DIR/public/index.html
 fi
 
 if [ -d "$WEB_DIR/dist/assets" ]; then
@@ -93,7 +95,7 @@ if [ -d "$WEB_DIR/dist/assets" ]; then
   cp -r $WEB_DIR/dist/assets/* $SERVER_DIR/public/assets/
 fi
 
-# 部署根目录静态文件（排除 uploads 目录，防止用户上传文件被删除）
+# 部署根目录静态文件（排除 uploads/ 目录）
 echo "[*] 部署前端: 根目录静态文件"
 for f in $(ls $WEB_DIR/dist/ 2>/dev/null | grep -v -E '^(assets|index\.html|uploads)$'); do
   if [ -f "$WEB_DIR/dist/$f" ]; then
@@ -105,6 +107,11 @@ for f in $(ls $WEB_DIR/dist/ 2>/dev/null | grep -v -E '^(assets|index\.html|uplo
     cp -r $WEB_DIR/dist/$f/* $SERVER_DIR/public/$f/
   fi
 done
+
+# 保护 uploads：如果 dist 里意外包含 uploads，跳过
+if [ -d "$WEB_DIR/dist/uploads" ]; then
+  echo "[!] 警告：dist 目录包含 uploads/，已自动跳过"
+fi
 
 # ===== 6. Post-deploy: 恢复 uploads 检查 =====
 if [ ! -d "$UPLOADS_DIR" ] || [ ! "$(ls -A $UPLOADS_DIR 2>/dev/null)" ]; then
