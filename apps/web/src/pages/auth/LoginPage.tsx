@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
-import { AbyssBackground, TentacleSilhouette } from '@components/ui/AbyssEffects';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -40,16 +39,10 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* 深渊背景 */}
-      <AbyssBackground variant="calm" />
-      
-      {/* 触手装饰 */}
-      <TentacleSilhouette position="bottom" />
       
       {/* 主卡片 */}
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="relative border border-coc-void rounded-lg p-8 
-                        backdrop-blur-sm bg-black/20">
+        <div className="relative border border-coc-void/50 rounded-lg p-8 bg-black/30">
           {/* 顶部符文装饰 */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
             <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-coc-gold"></div>
