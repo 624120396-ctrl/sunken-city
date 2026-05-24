@@ -8,7 +8,7 @@ const BG_MAP: Record<string, string> = {
   // 幻梦境主题
   '/profile': '/images/bg-dreamscape.png',
   // 默认
-  default: '/images/bg05.png',
+  default: '/bg-vellum.png',
 };
 
 export function usePageBackground() {
