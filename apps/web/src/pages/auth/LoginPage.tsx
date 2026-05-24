@@ -38,7 +38,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0a0a0f]">
       
       {/* 主卡片 */}
       <div className="relative z-10 w-full max-w-md mx-4">
