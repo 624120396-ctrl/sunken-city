@@ -42,8 +42,8 @@ export function LoginPage() {
       
       {/* 主卡片 */}
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="relative border border-coc-void/50 rounded-lg p-8 
-                        backdrop-blur-md bg-black/20">
+        <div className="relative border border-coc-void/80 rounded-lg p-8 
+                        backdrop-blur-md bg-black/40 shadow-2xl">
           {/* 顶部符文装饰 */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
             <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-coc-gold"></div>
