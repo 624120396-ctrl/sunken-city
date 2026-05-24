@@ -1,6 +1,6 @@
 {
   "name": "@sunken-city/web",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "displayName": "沉没之城 - 前端应用",
   "type": "module",
   "scripts": {
