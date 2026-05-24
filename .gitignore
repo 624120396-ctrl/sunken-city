@@ -59,4 +59,4 @@ migration/
 
 # Misc
 *.bak
-*.bak.*
+*.bak.*dist.tar.gz

@@ -200,10 +200,10 @@ export function DashboardPage() {
   const rank = rankInfo?.rank;
 
   const quickActions = [
-    { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员' },
-    { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间' },
-    { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团' },
-    { to: '/solo', icon: Ghost, title: '幻影脚本', subtitle: '单人剧本模式' },
+    { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
+    { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
+    { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
+    { to: '/solo', icon: Ghost, title: '幻影脚本', subtitle: '单人剧本模式', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
   ];
 
   return (
@@ -327,16 +327,21 @@ export function DashboardPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Link to={action.to} className="block">
-                  <CthulhuCard3D variant="abyss" className="h-full">
-                    <div className="p-4 flex flex-col h-full min-h-[120px]">
-                      <div className="w-10 h-10 rounded-lg bg-[#1a1a24] border border-[#c9a227]/30 flex items-center justify-center mb-3">
+                <Link to={action.to} className="block group">
+                  <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/80 backdrop-blur-[10px] shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                    {/* 底部血红色渐变 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
+                    {/* 顶部微光 */}
+                    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+                    {/* 内容 */}
+                    <div className="relative p-4 flex flex-col h-full min-h-[140px]">
+                      <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-3 group-hover:border-[#c9a227]/25 group-hover:bg-[#c9a227]/5 transition-all duration-300">
                         <action.icon size={20} className="text-[#e8d4a0]" strokeWidth={1.5} />
                       </div>
                       <h3 className="font-bold text-sm text-[#f5f0e6] tracking-wide">{action.title}</h3>
                       <p className="text-xs text-[#a69b85] mt-1">{action.subtitle}</p>
                     </div>
-                  </CthulhuCard3D>
+                  </div>
                 </Link>
               </motion.div>
             ))}
