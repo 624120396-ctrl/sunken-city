@@ -215,7 +215,7 @@ export function DashboardPage() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="w-full"
       >
-        <div className="relative rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+        <div className="relative rounded-xl overflow-hidden border border-[#3a3a3a]/40 backdrop-blur-md bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
           {/* 顶部金色渐变装饰线 */}
           <div className="absolute top-0 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent pointer-events-none" />
           
@@ -240,7 +240,7 @@ export function DashboardPage() {
                     />
                   )}
                   {rank?.level && (
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#12121a] border border-[#c9a227]/40 flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-black/50 border border-[#c9a227]/40 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-[#c9a227]">Lv.{rank.level}</span>
                     </div>
                   )}
@@ -264,7 +264,7 @@ export function DashboardPage() {
               <div className="md:ml-auto flex items-center gap-4">
                 {/* 锈蚀硬币徽章 */}
                 <div className="flex flex-col items-center gap-1">
-                  <div className="relative w-12 h-12 rounded-full bg-[#12121a] border border-[#c9a227]/30 flex items-center justify-center shadow-[0_0_12px_rgba(201,162,39,0.15)]">
+                  <div className="relative w-12 h-12 rounded-full bg-black/50 border border-[#c9a227]/30 flex items-center justify-center shadow-[0_0_12px_rgba(201,162,39,0.15)]">
                     <Coins size={20} className="text-[#c9a227]" />
                   </div>
                   <span className="text-lg font-bold text-[#e8d4a0]">{user?.coins ?? 0}</span>
@@ -273,7 +273,7 @@ export function DashboardPage() {
 
                 {/* 虚银徽章 */}
                 <div className="flex flex-col items-center gap-1">
-                  <div className="relative w-12 h-12 rounded-full bg-[#12121a] border border-purple-400/30 flex items-center justify-center shadow-[0_0_12px_rgba(139,38,53,0.15)]">
+                  <div className="relative w-12 h-12 rounded-full bg-black/50 border border-purple-400/30 flex items-center justify-center shadow-[0_0_12px_rgba(139,38,53,0.15)]">
                     <Sparkles size={20} className="text-purple-400" />
                   </div>
                   <span className="text-lg font-bold text-[#e8d4a0]">{user?.stardust ?? 0}</span>
@@ -336,7 +336,7 @@ export function DashboardPage() {
                 transition={{ duration: 0.4, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link to={action.to} className="block group">
-                  <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                  <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
                     {/* 背景图（如有） */}
                     {action.bgImage && (
                       <img
@@ -384,7 +384,7 @@ export function DashboardPage() {
           >
             {/* 卡片1 - 深渊公告（左，-15deg） */}
             <div
-              className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+              className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/50 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
               style={{
                 transform: whispersHovered ? 'rotate(0deg)' : 'rotate(-15deg)',
                 margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -420,15 +420,15 @@ export function DashboardPage() {
               </div>
 
               {/* 底部标签 */}
-              <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
-                <span className="text-xs text-white/70">深渊公告</span>
+              <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
+                <span className="text-xs text-[#d4c5a8]">深渊公告</span>
               </div>
             </div>
 
             {/* 卡片2 - 位阶天梯（中，0deg） */}
             <Link to="/ranks" className="block">
               <div
-                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/50 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(0deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -469,8 +469,8 @@ export function DashboardPage() {
                 </div>
 
                 {/* 底部标签 */}
-                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
-                  <span className="text-xs text-white/70">位阶天梯</span>
+                <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
+                  <span className="text-xs text-[#d4c5a8]">位阶天梯</span>
                 </div>
               </div>
             </Link>
@@ -478,7 +478,7 @@ export function DashboardPage() {
             {/* 卡片3 - 印记图鉴（右，+15deg） */}
             <Link to="/titles" className="block">
               <div
-                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative w-[180px] h-[220px] backdrop-blur-md bg-black/50 border border-[#3a3a3a]/40 rounded-xl flex flex-col items-center justify-center transition-all duration-500 shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(15deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -510,8 +510,8 @@ export function DashboardPage() {
                 </div>
 
                 {/* 底部标签 */}
-                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
-                  <span className="text-xs text-white/70">印记图鉴</span>
+                <div className="absolute bottom-0 w-full h-10 bg-black/50 flex items-center justify-center border-t border-[#3a3a3a]/40">
+                  <span className="text-xs text-[#d4c5a8]">印记图鉴</span>
                 </div>
               </div>
             </Link>
@@ -553,7 +553,7 @@ export function DashboardPage() {
                 className="flex-shrink-0 w-80"
               >
                 <Link to={`/characters/${char.id}`} className="block group">
-                  <div className="relative h-full min-h-[180px] rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                  <div className="relative h-full min-h-[180px] rounded-xl overflow-hidden border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
                     {/* 背景图：形象或默认 */}
                     <div className="absolute inset-0 overflow-hidden">
                       <img
@@ -623,7 +623,7 @@ export function DashboardPage() {
           )}
         </div>
 
-        <GlassCard hoverGlow size="lg" className="relative">
+        <GlassCard hoverGlow size="lg" className="relative backdrop-blur-md bg-black/50">
           {/* 背景装饰 */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#c9a227]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#8b2635]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
