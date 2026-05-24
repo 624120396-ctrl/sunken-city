@@ -123,7 +123,7 @@ export const CthulhuCard3D = React.forwardRef<HTMLDivElement, CthulhuCard3DProps
         {/* 主卡片体 */}
         <Component
           className={cn(
-            'relative rounded-lg overflow-hidden backdrop-blur-sm',
+            'relative rounded-lg overflow-hidden',
             v.bg,
             'border',
             v.border,
