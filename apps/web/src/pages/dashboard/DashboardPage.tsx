@@ -211,8 +211,8 @@ export function DashboardPage() {
                   )}
                 </div>
                 <div>
-                  <div className="text-xs text-[#6b6558] mb-1">欢迎从深渊归来</div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-[#d4c5a8] tracking-wide">
+                  <div className="text-xs text-[#a69b85] mb-1">欢迎从深渊归来</div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-[#f5f0e6] tracking-wide">
                     {user?.nickname}
                   </h1>
                   <Link
@@ -233,14 +233,14 @@ export function DashboardPage() {
                       <Coins size={14} className="text-[#c9a227]" />
                       <span className="text-xl font-bold">{user?.coins ?? 0}</span>
                     </div>
-                    <span className="text-[10px] text-[#6b6558]">锈蚀硬币</span>
+                    <span className="text-[10px] text-[#a69b85]">锈蚀硬币</span>
                   </div>
                   <div className="flex flex-col md:items-end">
-                    <div className="flex items-center gap-1.5 text-[#d4c5a8]">
+                    <div className="flex items-center gap-1.5 text-[#f5f0e6]">
                       <Sparkles size={14} className="text-purple-400" />
                       <span className="text-xl font-bold">{user?.stardust ?? 0}</span>
                     </div>
-                    <span className="text-[10px] text-[#6b6558]">虚银</span>
+                    <span className="text-[10px] text-[#a69b85]">虚银</span>
                   </div>
                 </div>
                 <CthulhuButton
@@ -344,7 +344,7 @@ export function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-[#6b6558]">
+                <div className="text-center py-6 text-[#a69b85]">
                   <Clock size={20} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">暂无新公告</p>
                 </div>
