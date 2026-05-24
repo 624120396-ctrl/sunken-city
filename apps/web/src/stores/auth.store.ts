@@ -16,6 +16,7 @@ interface User {
   stardust: number;
   equippedFrame?: string;
   frameUrl?: string;
+  preferredBackground?: string | null;
   rank?: {
     level: number;
     name: string;

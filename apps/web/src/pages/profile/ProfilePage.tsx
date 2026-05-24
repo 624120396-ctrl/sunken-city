@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package, Coins, Sparkles, Wand2 } from 'lucide-react';
+import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package, Coins, Sparkles, Wand2, ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -46,6 +46,8 @@ export function ProfilePage() {
     bestReplyCount: number;
   } | null>(null);
 
+  const [selectedBackground, setSelectedBackground] = useState(user?.preferredBackground || 'bg-vellum');
+  const [savingBackground, setSavingBackground] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
@@ -130,6 +132,25 @@ export function ProfilePage() {
     setAvatarUrl('');
   };
 
+  const handleSaveBackground = async () => {
+    try {
+      setSavingBackground(true);
+      const res = await apiFetch('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ preferredBackground: selectedBackground }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || '保存失败');
+      }
+      updateUser(data.data.user);
+      alert('全局背景已更新');
+    } catch (err) {
+      alert('保存失败：' + (err as Error).message);
+    } finally {
+      setSavingBackground(false);
+    }
+  };
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim()) return;
     try {
@@ -334,6 +355,59 @@ export function ProfilePage() {
           </form>
         </div>
       </RuneBorder>
+
+      {/* 全局背景选择 */}
+      <div className="backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 rounded-xl p-6 shadow-lg shadow-black/40">
+        <h2 className="text-lg font-bold text-[#e8d4a0] mb-4 flex items-center gap-2">
+          <ImageIcon className="w-5 h-5 text-[#c9a227]" />
+          全局背景
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+          {[
+            { id: 'bg-vellum', name: '羊皮纸', url: '/bg-vellum.png' },
+            { id: 'bg-sunken', name: '沉没之城', url: '/bg-sunken.png' },
+            { id: 'bg-ocean-blue', name: '深海蓝', url: '/bg-ocean-blue.png' },
+            { id: 'bg-ruins-beige', name: '废墟米', url: '/bg-ruins-beige.png' },
+            { id: 'bg-deep-sea', name: '深海遗迹', url: '/bg-deep-sea.png' },
+            { id: 'bg-underwater-city', name: '水下城邦', url: '/bg-underwater-city.png' },
+            { id: 'bg-void-runes', name: '虚空符文', url: '/bg-void-runes.png' },
+          ].map((bg) => (
+            <button
+              key={bg.id}
+              type="button"
+              onClick={() => setSelectedBackground(bg.id)}
+              className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                selectedBackground === bg.id
+                  ? 'border-[#c9a227] ring-2 ring-[#c9a227]/30'
+                  : 'border-transparent hover:border-[#3a3a3a]/60'
+              }`}
+            >
+              <img
+                src={bg.url}
+                alt={bg.name}
+                className="w-full h-24 object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                <span className="text-xs text-[#e8d4a0]">{bg.name}</span>
+              </div>
+              {selectedBackground === bg.id && (
+                <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#c9a227] flex items-center justify-center">
+                  <span className="text-xs text-black font-bold">✓</span>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={handleSaveBackground}
+          disabled={savingBackground}
+          className="inline-flex items-center gap-2 px-5 py-2 bg-[#c9a227] text-black rounded hover:bg-[#e8d4a0] transition-colors font-medium disabled:opacity-50"
+        >
+          <Save className="w-4 h-4" />
+          {savingBackground ? '保存中...' : '保存背景'}
+        </button>
+      </div>
 
       {/* 背包卡片 */}
       <RuneBorder variant="madness" intensity="normal">

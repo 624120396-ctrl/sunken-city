@@ -171,6 +171,7 @@ router.get('/me', async (req, res, next) => {
         coins: true,
         stardust: true,
         equippedFrame: true,
+        preferredBackground: true,
       },
     });
 
@@ -205,6 +206,9 @@ router.patch('/me', authMiddleware, async (req, res, next) => {
     if (avatarUrl !== undefined) {
       updateData.avatarUrl = avatarUrl || null;
     }
+    if (req.body.preferredBackground !== undefined) {
+      updateData.preferredBackground = req.body.preferredBackground || null;
+    }
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -220,6 +224,7 @@ router.patch('/me', authMiddleware, async (req, res, next) => {
         coins: true,
         stardust: true,
         equippedFrame: true,
+        preferredBackground: true,
       },
     });
 
@@ -376,4 +381,23 @@ router.post('/daily-checkin', authMiddleware, async (req, res, next) => {
   }
 });
 
+
+
+// 获取可用全局背景列表
+router.get('/backgrounds', async (req, res, next) => {
+  try {
+    const backgrounds = [
+      { id: 'bg-vellum', name: '羊皮纸', url: '/bg-vellum.png', thumb: '/bg-vellum.png' },
+      { id: 'bg-sunken', name: '沉没之城', url: '/bg-sunken.png', thumb: '/bg-sunken.png' },
+      { id: 'bg-ocean-blue', name: '深海蓝', url: '/bg-ocean-blue.png', thumb: '/bg-ocean-blue.png' },
+      { id: 'bg-ruins-beige', name: '废墟米', url: '/bg-ruins-beige.png', thumb: '/bg-ruins-beige.png' },
+      { id: 'bg-deep-sea', name: '深海遗迹', url: '/bg-deep-sea.png', thumb: '/bg-deep-sea.png' },
+      { id: 'bg-underwater-city', name: '水下城邦', url: '/bg-underwater-city.png', thumb: '/bg-underwater-city.png' },
+      { id: 'bg-void-runes', name: '虚空符文', url: '/bg-void-runes.png', thumb: '/bg-void-runes.png' },
+    ];
+    res.json({ success: true, data: { backgrounds } });
+  } catch (error) {
+    next(error);
+  }
+});
 export default router;

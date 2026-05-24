@@ -25,6 +25,9 @@ model User {
   // 装备
   equippedFrame     String?  // 当前装备的头像框 key
 
+  // 全局背景偏好
+  preferredBackground String?  // 用户选择的全局背景图路径
+
   // 展示角色（社交资料卡使用，与房间内绑定角色解耦）
   displayedCharacterId String?
   displayedCharacter   Character? @relation("UserDisplayedCharacter", fields: [displayedCharacterId], references: [id])
