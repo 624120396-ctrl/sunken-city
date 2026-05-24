@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 const BG_MAP: Record<string, string> = {
   // 默认全局羊皮纸背景
-  default: '/bg-vellum.png',
+  default: '/bg-sunken.png',
 };
 
 export function usePageBackground() {
