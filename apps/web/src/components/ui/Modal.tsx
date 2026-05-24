@@ -16,20 +16,24 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* 遮罩 */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* 弹窗 */}
       <div
         className={cn(
-          'relative w-full max-w-md backdrop-blur-md bg-black/60 rounded-lg border border-[#3a3a3a]/60 shadow-2xl shadow-black/80',
+          'relative w-full max-w-md backdrop-blur-xl bg-black/30 rounded-xl border border-[#3a3a3a]/50 shadow-2xl shadow-black/80 overflow-hidden',
           className
         )}
       >
+        {/* 磨砂玻璃质感叠加层 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 backdrop-blur-md bg-black/10 pointer-events-none" />
+
         {/* 头部 */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#3a3a3a]/40">
+          <div className="relative flex items-center justify-between px-6 py-4 border-b border-[#3a3a3a]/40">
             <h3 className="text-lg font-bold" style={{ color: '#c9a227' }}>{title}</h3>
             <button
               onClick={onClose}
@@ -44,7 +48,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
         )}
 
         {/* 内容 */}
-        <div className="p-6" style={{ color: '#d4c5a8' }}>{children}</div>
+        <div className="relative p-6" style={{ color: '#d4c5a8' }}>{children}</div>
       </div>
     </div>
   );
