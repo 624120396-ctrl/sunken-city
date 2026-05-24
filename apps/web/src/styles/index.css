@@ -651,6 +651,20 @@
   animation: abyss-drift 20s linear infinite;
 }
 
+/* 调查员卡片背景图缓慢平移动画 */
+@keyframes character-pan {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10%);
+  }
+}
+
+.animate-character-pan {
+  animation: character-pan 10s ease-in-out infinite;
+}
+
 /* ===== 金色铭牌导航选中效果（即梦风格） ===== */
 .nav-item-active {
   position: relative;

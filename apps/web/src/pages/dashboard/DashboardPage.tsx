@@ -30,6 +30,7 @@ interface Character {
   maxHp: number;
   maxMp: number;
   maxSan: number;
+  portraitUrl?: string | null;
 }
 
 // ===== Glassmorphism 卡片（Uiverse ugly-lion-23 暗黑极简风） =====
@@ -544,24 +545,40 @@ export function DashboardPage() {
                 transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
                 className="flex-shrink-0 w-80"
               >
-                <Link to={`/characters/${char.id}`} className="block">
-                  <CthulhuCard3D variant="abyss">
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-bold text-lg text-[#f5f0e6]">{char.name}</h3>
-                          <p className="text-xs text-[#a69b85] tracking-wider">{char.occupation}</p>
-                        </div>
-                        {char.san < 30 && (
-                          <OccultBadge type="eye2" size="sm" pulse label="疯狂" />
-                        )}
+                <Link to={`/characters/${char.id}`} className="block group">
+                  <div className="relative h-full min-h-[180px] rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                    {/* 背景图：形象或默认 */}
+                    <div className="absolute inset-0 overflow-hidden">
+                      <img
+                        src={char.portraitUrl || '/dashboard-character-default.png'}
+                        alt=""
+                        className="w-full h-[120%] object-cover object-top animate-character-pan"
+                        draggable={false}
+                      />
+                    </div>
+                    {/* 磨砂玻璃覆盖层 - 仅左侧 */}
+                    <div className="absolute inset-y-0 left-0 w-[45%] backdrop-blur-[13px] bg-[#0a0a0f]/40 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
+                    {/* 底部血红色渐变 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
+                    {/* 顶部微光 */}
+                    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+                    {/* 内容 */}
+                    <div className="relative p-5 flex flex-col h-full min-h-[180px] max-w-[55%]">
+                      <div className="mb-2">
+                        <h3 className="font-bold text-base text-[#f5f0e6] tracking-wide">{char.name}</h3>
+                        <p className="text-xs text-[#a69b85] tracking-wider mt-0.5">{char.occupation}</p>
                       </div>
-                      <div className="space-y-2.5">
+                      <div className="space-y-2 mt-auto">
                         <CthulhuProgress type="status" variant="hp" current={char.hp} max={char.maxHp} />
                         <CthulhuProgress type="status" variant="san" current={char.san} max={char.maxSan} />
                       </div>
+                      {char.san < 30 && (
+                        <div className="mt-2">
+                          <OccultBadge type="eye2" size="sm" pulse label="疯狂" />
+                        </div>
+                      )}
                     </div>
-                  </CthulhuCard3D>
+                  </div>
                 </Link>
               </motion.div>
             ))}
