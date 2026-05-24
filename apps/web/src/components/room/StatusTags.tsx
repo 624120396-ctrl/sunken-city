@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus } from 'lucide-react';
 
 // 状态标记类型
@@ -39,8 +40,20 @@ interface StatusTagsProps {
 
 export function StatusTags({ tags, isEditable, onChange, size = 'md' }: StatusTagsProps) {
   const [showSelector, setShowSelector] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const activeConfigs = STATUS_CONFIG.filter(cfg => tags.includes(cfg.id));
+
+  useLayoutEffect(() => {
+    if (showSelector && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, [showSelector]);
 
   const handleAdd = (tagId: StatusTag) => {
     if (!tags.includes(tagId)) {
@@ -79,26 +92,31 @@ export function StatusTags({ tags, isEditable, onChange, size = 'md' }: StatusTa
       {isEditable && (
         <div className="relative">
           <button
+            ref={btnRef}
             onClick={() => setShowSelector(!showSelector)}
             className={`inline-flex items-center gap-1 rounded border border-dashed border-coc-text-muted text-coc-text-muted hover:text-coc-text-primary hover:border-coc-text-primary transition-colors ${sizeClasses}`}
           >
             <Plus size={size === 'sm' ? 10 : 12} />
           </button>
 
-          {showSelector && (
-            <div className="absolute top-full left-0 mt-1 z-20 bg-coc-bg-secondary border border-coc-border rounded-lg shadow-lg p-2 min-w-[120px]">
+          {showSelector && createPortal(
+            <div 
+              className="fixed z-[9999] bg-[#1a1a1a] border border-[#3a3a3a] rounded-lg shadow-2xl shadow-black/60 p-2 min-w-[120px]"
+              style={{ top: dropdownPos.top, left: dropdownPos.left }}
+            >
               {STATUS_CONFIG
                 .filter(cfg => !tags.includes(cfg.id))
                 .map(cfg => (
                   <button
                     key={cfg.id}
                     onClick={() => handleAdd(cfg.id)}
-                    className={`w-full text-left px-2 py-1 rounded text-sm ${cfg.color} hover:bg-coc-bg-tertiary transition-colors`}
+                    className={`w-full text-left px-2 py-1 rounded text-sm ${cfg.color} hover:bg-black/40 transition-colors`}
                   >
                     {cfg.label}
                   </button>
                 ))}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       )}

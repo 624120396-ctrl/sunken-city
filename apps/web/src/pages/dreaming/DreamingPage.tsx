@@ -266,10 +266,26 @@ export function DreamingPage() {
                 >
                   <div className={`w-full h-full rounded-xl overflow-hidden bg-coc-bg-tertiary relative`}>
                     {currentCardMeta?.imageUrl ? (
-                      <img src={currentCardMeta.imageUrl} alt={currentCardMeta.name} className="w-full h-full object-cover" />
+                      <>
+                        <img 
+                          src={currentCardMeta.imageUrl} 
+                          alt={currentCardMeta.name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="absolute inset-0 hidden flex-col items-center justify-center bg-[#1a1a1a]">
+                          <Sparkles size={32} className="text-[#6b6558] mb-2" />
+                          <span className="text-sm text-[#6b6558]">图鉴素材暂缺</span>
+                        </div>
+                      </>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-coc-text-muted">
-                        <span className="text-sm">暂无图鉴素材</span>
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <Sparkles size={32} className="text-[#6b6558] mb-2" />
+                        <span className="text-sm text-[#6b6558]">暂无图鉴素材</span>
                       </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
@@ -361,7 +377,22 @@ export function DreamingPage() {
               } overflow-hidden bg-coc-bg-secondary`}
             >
               {c.unlocked && c.imageUrl ? (
-                <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                <>
+                  <img 
+                    src={c.imageUrl} 
+                    alt={c.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className="absolute inset-0 hidden flex-col items-center justify-center bg-[#1a1a1a]">
+                    <Sparkles size={24} className="text-[#6b6558] mb-2" />
+                    <span className="text-xs text-[#6b6558]">素材暂缺</span>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-coc-bg-tertiary">
                   <Sparkles size={24} className={c.unlocked ? 'text-coc-accent-gold' : 'text-coc-text-muted/30'} />
