@@ -32,27 +32,37 @@ interface Character {
   maxSan: number;
 }
 
-// ===== Glassmorphism 卡片组件（Uiverse ugly-lion-23 风格） =====
-const GlassCard = ({ children, className = '', hoverGlow = false }: { children: React.ReactNode; className?: string; hoverGlow?: boolean }) => (
-  <div
-    className={`
-      relative rounded-xl overflow-hidden
-      bg-[#0a0a0f]/90
-      border border-white/[0.08]
-      shadow-[0_4px_24px_rgba(0,0,0,0.4)]
-      transition-all duration-300
-      ${hoverGlow ? 'hover:border-[#c9a227]/30 hover:shadow-[0_0_20px_rgba(201,162,39,0.1)]' : ''}
-      ${className}
-    `}
-  >
-    {/* 顶部高光条 */}
-    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-[#c9a227]/30 to-transparent" />
-    {/* 内容 */}
-    <div className="relative">
-      {children}
+// ===== Glassmorphism 卡片（Uiverse ugly-lion-23 暗黑极简风） =====
+const GlassCard = ({ children, className = '', hoverGlow = false, size = 'md' }: { children: React.ReactNode; className?: string; hoverGlow?: boolean; size?: 'sm' | 'md' | 'lg' }) => {
+  const sizeClasses = {
+    sm: 'p-4',
+    md: 'p-5',
+    lg: 'p-6',
+  };
+  return (
+    <div
+      className={`
+        relative rounded-xl overflow-hidden
+        bg-coc-abyss/90
+        border border-white/[0.08]
+        shadow-[0_4px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)]
+        transition-all duration-300 ease-out
+        ${hoverGlow ? 'hover:border-[#c9a227]/25 hover:shadow-[0_0_30px_rgba(201,162,39,0.08),inset_0_1px_0_rgba(255,255,255,0.08)]' : ''}
+        ${sizeClasses[size]}
+        ${className}
+      `}
+    >
+      {/* 顶部微光条 */}
+      <div className="absolute top-0 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+      {/* 左上高光点 */}
+      <div className="absolute top-2 left-2 w-8 h-8 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-sm pointer-events-none" />
+      {/* 内容 */}
+      <div className="relative">
+        {children}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export function DashboardPage() {
   const { user, updateUser, token } = useAuthStore();
@@ -332,7 +342,7 @@ export function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* 右侧：旧日低语（3张Glass卡片） */}
+        {/* 右侧：旧日低语（3张Glass卡片 - ugly-lion-23 风格） */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -344,17 +354,21 @@ export function DashboardPage() {
           </GoldOrnament.Title>
 
           {/* 公告 Glass卡片 */}
-          <GlassCard hoverGlow className="p-5">
+          <GlassCard hoverGlow size="md">
+            <div className="flex items-center gap-2 mb-4">
+              <Megaphone size={16} className="text-[#c9a227]" />
+              <h3 className="text-sm font-bold text-[#d4c5a8] tracking-wider">深渊公告</h3>
+            </div>
             {announcements.length > 0 ? (
               <div className="space-y-3">
                 {announcements.slice(0, 3).map((ann) => (
                   <div key={ann.id} className="flex items-start gap-3">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
-                    <div className="flex-1">
+                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-[#f5f0e6]">{ann.title}</span>
+                        <span className="text-sm text-[#f5f0e6] truncate">{ann.title}</span>
                         {ann.isPinned && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/20 text-[#c9a227] rounded">置顶</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/15 text-[#c9a227] rounded shrink-0">置顶</span>
                         )}
                       </div>
                       <p className="text-xs text-[#a69b85] mt-1 line-clamp-2">{ann.content}</p>
@@ -363,8 +377,7 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-[#a69b85]">
-                <Megaphone size={20} className="mx-auto mb-2 opacity-50" />
+              <div className="text-center py-4 text-[#6b6558]">
                 <p className="text-sm">暂无新公告</p>
               </div>
             )}
@@ -373,27 +386,27 @@ export function DashboardPage() {
           {/* 位阶 + 印记 Glass卡片 */}
           <div className="grid grid-cols-2 gap-3">
             <Link to="/ranks" className="block">
-              <GlassCard hoverGlow className="p-4">
+              <GlassCard hoverGlow size="sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#c9a227]/10 border border-[#c9a227]/20 flex items-center justify-center">
-                    <Crown size={20} className="text-[#c9a227]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#c9a227]/8 border border-[#c9a227]/15 flex items-center justify-center shrink-0">
+                    <Crown size={20} className="text-[#c9a227]" strokeWidth={1.5} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-bold text-sm text-[#f5f0e6]">位阶天梯</h3>
-                    <p className="text-xs text-[#a69b85]">灵魂碎片来源</p>
+                    <p className="text-xs text-[#6b6558] mt-0.5">灵魂碎片来源</p>
                   </div>
                 </div>
               </GlassCard>
             </Link>
             <Link to="/titles" className="block">
-              <GlassCard hoverGlow className="p-4">
+              <GlassCard hoverGlow size="sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#8b2635]/10 border border-[#8b2635]/20 flex items-center justify-center">
-                    <Award size={20} className="text-[#8b2635]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#8b2635]/8 border border-[#8b2635]/15 flex items-center justify-center shrink-0">
+                    <Award size={20} className="text-[#8b2635]" strokeWidth={1.5} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-bold text-sm text-[#f5f0e6]">印记图鉴</h3>
-                    <p className="text-xs text-[#a69b85]">称号与成就</p>
+                    <p className="text-xs text-[#6b6558] mt-0.5">称号与成就</p>
                   </div>
                 </div>
               </GlassCard>
@@ -459,9 +472,11 @@ export function DashboardPage() {
           </div>
         ) : (
           <GlassCard className="p-12 text-center">
-            <div className="text-4xl mb-4 opacity-30">🌑</div>
-            <p className="text-[#a69b85] font-bold mb-2">暂无调查员记录在案</p>
-            <p className="text-sm text-[#a69b85] mb-6">每一位伟大的调查员都有一个开始</p>
+            <div className="w-14 h-14 rounded-full bg-[#1a1a24] border border-[#2a2a35] flex items-center justify-center mx-auto mb-4">
+              <User size={24} className="text-[#6b6558]" />
+            </div>
+            <p className="text-[#a69b85] font-bold mb-1">暂无调查员记录在案</p>
+            <p className="text-sm text-[#6b6558] mb-6">每一位伟大的调查员都有一个开始</p>
             <Link to="/characters/new">
               <CthulhuButton size="md" variant="primary" icon={<User size={18} />}>
                 创建第一个调查员
@@ -477,60 +492,69 @@ export function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center justify-between mb-3">
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">深渊广场</h2>
           </GoldOrnament.Title>
           {!onlineLoading && (
-            <span className="px-2 py-0.5 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded">
+            <span className="px-2.5 py-1 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded-md font-medium">
               {onlineCount} 人在线
             </span>
           )}
         </div>
 
-        <GlassCard hoverGlow className="p-6">
-          {onlineLoading ? (
-            <div className="flex items-center gap-2 text-[#a69b85] text-sm">
-              <Loader2 size={16} className="animate-spin" />
-              正在感应深渊中的灵魂...
-            </div>
-          ) : onlineUsers.length === 0 ? (
-            <div className="text-center py-8 text-[#a69b85]">
-              <Users size={32} className="mx-auto mb-3 opacity-30" />
-              <p className="font-bold text-lg">深渊之中空无一人</p>
-              <p className="text-sm mt-1">此刻只有你在守望这座城市</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {onlineUsers.map((u, idx) => (
-                  <button
-                    key={`${u.userId}-${idx}`}
-                    type="button"
-                    onClick={() => setSelectedOnlineUser(u)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a24] border border-[#2a2a35] rounded-full hover:border-[#c9a227]/30 transition-colors"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-[#12121a] border border-[#2a2a35] flex items-center justify-center text-[10px] text-[#6b6558] overflow-hidden">
-                      {u.avatarUrl ? (
-                        <img src={u.avatarUrl} alt={u.nickname} className="w-full h-full object-cover" />
-                      ) : (
-                        u.nickname.charAt(0)
-                      )}
-                    </div>
-                    <span className="text-sm text-[#d4c5a8]">{u.nickname}</span>
-                  </button>
-                ))}
+        <GlassCard hoverGlow size="lg" className="relative">
+          {/* 背景装饰 */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#c9a227]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#8b2635]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+          <div className="relative">
+            {onlineLoading ? (
+              <div className="flex items-center gap-2 text-[#a69b85] text-sm">
+                <Loader2 size={16} className="animate-spin" />
+                正在感应深渊中的灵魂...
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-[#2a2a35]/50">
-                <span className="text-xs text-[#6b6558]">在线灵魂会在深渊广场上显现</span>
-                <Link to="/rooms">
-                  <CthulhuButton size="sm" icon={<ChevronRight size={14} />}>
-                    进入房间广场
-                  </CthulhuButton>
-                </Link>
+            ) : onlineUsers.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 rounded-full bg-[#1a1a24] border border-[#2a2a35] flex items-center justify-center mx-auto mb-4">
+                  <Users size={28} className="text-[#6b6558]" />
+                </div>
+                <p className="font-bold text-lg text-[#d4c5a8]">深渊之中空无一人</p>
+                <p className="text-sm text-[#6b6558] mt-1">此刻只有你在守望这座城市</p>
               </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex flex-wrap gap-2">
+                  {onlineUsers.map((u, idx) => (
+                    <button
+                      key={`${u.userId}-${idx}`}
+                      type="button"
+                      onClick={() => setSelectedOnlineUser(u)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[#12121a] border border-[#2a2a35] rounded-full hover:border-[#c9a227]/30 hover:bg-[#1a1a24] transition-all"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#0a0a0f] border border-[#2a2a35] flex items-center justify-center text-[10px] text-[#6b6558] overflow-hidden">
+                        {u.avatarUrl ? (
+                          <img src={u.avatarUrl} alt={u.nickname} className="w-full h-full object-cover" />
+                        ) : (
+                          u.nickname.charAt(0)
+                        )}
+                      </div>
+                      <span className="text-sm text-[#d4c5a8]">{u.nickname}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#2a2a35]/40">
+              <span className="text-xs text-[#6b6558]">在线灵魂会在深渊广场上显现</span>
+              <Link to="/rooms">
+                <CthulhuButton size="sm" icon={<ChevronRight size={14} />}>
+                  进入房间广场
+                </CthulhuButton>
+              </Link>
             </div>
-          )}
+          </div>
         </GlassCard>
       </motion.div>
 

@@ -20,14 +20,14 @@ interface CthulhuCard3DProps {
 
 const variantStyles = {
   abyss: {
-    bg: 'bg-[#0a0a0f]',
+    bg: 'bg-coc-abyss',
     border: 'border-[#3a3a45]/60',
     borderHover: 'hover:border-[#c9a227]/30',
     topLight: 'via-[#c9a227]/50',
     texture: 'tentacle-texture',
   },
   blood: {
-    bg: 'bg-[#0a0505]',
+    bg: 'bg-coc-deep',
     border: 'border-[#8b2635]/50',
     borderHover: 'hover:border-[#8b2635]/60',
     topLight: 'via-[#8b2635]/50',
@@ -41,7 +41,7 @@ const variantStyles = {
     texture: 'gold-grain',
   },
   parchment: {
-    bg: 'bg-[#12121a]',
+    bg: 'bg-coc-bg-secondary',
     border: 'border-[#6b6558]/40',
     borderHover: 'hover:border-[#c9a227]/20',
     topLight: 'via-[#6b6558]/40',
