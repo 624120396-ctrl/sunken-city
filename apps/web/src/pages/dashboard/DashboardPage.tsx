@@ -215,7 +215,7 @@ export function DashboardPage() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="w-full"
       >
-        <div className="relative rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+        <div className="relative rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/40 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
           {/* 顶部金色渐变装饰线 */}
           <div className="absolute top-0 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent pointer-events-none" />
           
