@@ -46,22 +46,22 @@ export function ForumListPage() {
             <Link
               key={b.key}
               to={`/forums/board/${b.key}`}
-              className="group p-6 card-layer-2 min-h-[220px] flex flex-col justify-between"
+              className="group p-6 backdrop-blur-md bg-black/50 border border-[#3a3a3a]/40 rounded-lg min-h-[220px] flex flex-col justify-between shadow-lg shadow-black/40 hover:border-[#c9a227]/30 transition-all"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-xl font-bold group-hover:text-[#c9a227] transition-colors truncate" style={{ color: '#FFFEFC' }}>
+                    <h2 className="text-xl font-bold group-hover:text-[#c9a227] transition-colors truncate text-[#e8d4a0]">
                       {b.name}
                     </h2>
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-2xl font-bold" style={{ color: '#FFFEFC' }}>{b.postCount}</span>
-                    <span className="text-xs" style={{ color: '#8b8375' }}>主题</span>
+                    <span className="text-2xl font-bold text-[#e8d4a0]">{b.postCount}</span>
+                    <span className="text-xs text-[#8b8375]">主题</span>
                   </div>
                 </div>
                 {b.description && (
-                  <p className="text-sm text-[#6b6558] mt-3 leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-[#b0a898] mt-3 leading-relaxed whitespace-pre-line">
                     {b.description}
                   </p>
                 )}
@@ -70,7 +70,7 @@ export function ForumListPage() {
               <div className="mt-4 flex items-center justify-end">
                 <Icon
                   size={32}
-                  className="text-[#6b6558] group-hover:text-[#c9a227] transition-colors"
+                  className="text-[#8b8375] group-hover:text-[#c9a227] transition-colors"
                 />
               </div>
             </Link>
