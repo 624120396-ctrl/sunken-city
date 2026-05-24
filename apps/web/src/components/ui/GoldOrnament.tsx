@@ -16,18 +16,18 @@ interface GoldLineProps {
 export const GoldLine: React.FC<GoldLineProps> = ({ variant = 'horizontal', className, glow = false }) => {
   const baseClasses = cn(
     'pointer-events-none',
-    variant === 'horizontal' && 'h-px w-full',
-    variant === 'vertical' && 'w-px h-full',
-    variant === 'gradient' && 'h-px w-full bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent',
-    variant === 'shimmer' && 'h-px w-full relative overflow-hidden',
-    glow && 'shadow-[0_0_8px_rgba(201,162,39,0.3)]',
+    variant === 'horizontal' && 'h-[2px] w-full',
+    variant === 'vertical' && 'w-[2px] h-full',
+    variant === 'gradient' && 'h-[2px] w-full bg-gradient-to-r from-transparent via-[#c9a227]/70 to-transparent',
+    variant === 'shimmer' && 'h-[2px] w-full relative overflow-hidden',
+    glow && 'shadow-[0_0_12px_rgba(201,162,39,0.5)]',
     className
   );
 
   if (variant === 'shimmer') {
     return (
       <div className={baseClasses}>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#c9a227]/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#c9a227]/50 to-transparent" />
         <div className="shimmer-line" />
       </div>
     );
@@ -82,9 +82,9 @@ interface TitleOrnamentProps {
 export const TitleOrnament: React.FC<TitleOrnamentProps> = ({ children, className, lineClassName }) => {
   return (
     <div className={cn('relative inline-flex items-center gap-3', className)}>
-      <GoldLine variant="gradient" className={cn('w-8', lineClassName)} />
+      <GoldLine variant="gradient" className={cn('w-14', lineClassName)} glow />
       {children}
-      <GoldLine variant="gradient" className={cn('w-8', lineClassName)} />
+      <GoldLine variant="gradient" className={cn('w-14', lineClassName)} glow />
     </div>
   );
 };
