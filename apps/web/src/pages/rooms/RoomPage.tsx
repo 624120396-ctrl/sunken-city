@@ -1465,7 +1465,7 @@ export function RoomPage() {
         title="选择调查员"
       >
         <div className="space-y-4">
-          <p className="text-sm text-coc-text-secondary">
+          <p className="text-sm" style={{ color: '#8b8375' }}>
             进入房间需要绑定一个调查员角色卡
           </p>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -1480,7 +1480,8 @@ export function RoomPage() {
                 />
                 <Link
                   to="/characters/new"
-                  className="text-coc-accent-red hover:underline mt-2 inline-block"
+                  className="hover:underline mt-2 inline-block"
+                  style={{ color: '#a63848' }}
                 >
                   创建调查员
                 </Link>
@@ -1493,10 +1494,11 @@ export function RoomPage() {
                     setSelectedCharacter(char);
                     handleJoinRoom(char.id);
                   }}
-                  className="w-full p-3 bg-coc-bg-tertiary rounded hover:bg-coc-accent-red/20 transition-colors text-left"
+                  className="w-full p-3 rounded transition-colors text-left border border-[#3a3a3a]/40 hover:bg-[#a63848]/15 hover:border-[#a63848]/30"
+                  style={{ background: 'rgba(0,0,0,0.2)', color: '#d4c5a8' }}
                 >
                   <div className="font-medium">{char.name}</div>
-                  <div className="text-sm text-coc-text-secondary">
+                  <div className="text-sm" style={{ color: '#8b8375' }}>
                     {char.occupation} | HP:{char.hp} MP:{char.mp} SAN:{char.san}
                   </div>
                 </button>
@@ -1505,7 +1507,12 @@ export function RoomPage() {
           </div>
           <button
             onClick={() => handleJoinRoom()}
-            className="btn-v2 w-full coc-btn-secondary"
+            className="btn-v2 w-full"
+            style={{ 
+              background: 'rgba(0,0,0,0.3)', 
+              border: '1px solid rgba(58,58,58,0.6)', 
+              color: '#8b8375',
+            }}
           >
             以观察者身份加入
           </button>
@@ -1525,7 +1532,7 @@ export function RoomPage() {
               {/* 显示当前角色的武器 */}
               {currentCombatant?.weapons && (
                 <div className="p-3 rounded backdrop-blur-sm bg-black/20 border border-[#3a3a3a]/40">
-                  <div className="text-sm text-coc-text-secondary mb-2">选择武器</div>
+                  <div className="text-sm mb-2" style={{ color: "#8b8375" }}>选择武器</div>
                   <div className="space-y-1">
                     {currentCombatant.weapons.length > 0 ? (
                       currentCombatant.weapons.map((w: any, i: number) => {
@@ -1540,16 +1547,16 @@ export function RoomPage() {
                             className={`w-full text-sm flex justify-between items-center p-2 rounded ${
                               isEquipped
                                 ? 'bg-[#a63848]/15 border border-[#a63848]/50'
-                                : 'hover:bg-coc-bg-primary'
+                                : 'border-transparent hover:bg-black/40'
                             }`}
                           >
-                            <span>{w.name} {isEquipped && <span className="text-coc-accent-red">(已装备)</span>}</span>
+                            <span>{w.name} {isEquipped && <span style={{ color: "#a63848" }}>(已装备)</span>}</span>
                             <span style={{ color: "#c9a227" }}>{w.damage}</span>
                           </button>
                         );
                       })
                     ) : (
-                      <div className="text-sm text-coc-text-muted">徒手 (1D3伤害)</div>
+                      <div className="text-sm" style={{ color: "#6b6558" }}>徒手 (1D3伤害)</div>
                     )}
                   </div>
                 </div>
@@ -1666,15 +1673,15 @@ export function RoomPage() {
         title="理智侵蚀"
       >
         <div className="space-y-4 w-[320px] md:w-[400px]">
-          <p className="text-sm text-coc-text-secondary">
+          <p className="text-sm" style={{ color: "#8b8375" }}>
             为遭遇恐怖的调查员扣除理智。单次损失 ≥ 5 且智力检定成功（≤INT）时，将陷入 1D10 小时临时疯狂。
           </p>
           <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
             {room?.members.filter(m => m.character).map((member) => (
-              <div key={member.userId} className="flex items-center justify-between p-2 rounded bg-coc-bg-tertiary">
+              <div key={member.userId} className="flex items-center justify-between p-2 rounded backdrop-blur-sm bg-black/20 border border-[#3a3a3a]/40">
                 <div className="text-sm">
                   {member.nickname}
-                  <span className="text-coc-text-muted ml-1">({member.character!.name}) [{member.character!.san}SAN]</span>
+                  <span className="ml-1" style={{ color: "#6b6558" }}>({member.character!.name}) [{member.character!.san}SAN]</span>
                 </div>
                 <input
                   type="number"
@@ -1685,25 +1692,25 @@ export function RoomPage() {
                     const val = parseInt(e.target.value) || 0;
                     setSanityTargets(prev => ({ ...prev, [member.userId]: Math.max(0, Math.min(val, member.character!.san)) }));
                   }}
-                  className="w-16 px-2 py-1 rounded bg-coc-bg-primary border border-coc-border text-center text-sm"
+                  className="w-16 px-2 py-1 rounded text-center text-sm" style={{ background: "#1a1a1a", border: "1px solid #3a3a3a", color: "#d4c5a8" }}
                 />
               </div>
             ))}
           </div>
           <div>
-            <label className="text-xs text-coc-text-secondary">场景描述（可选）</label>
+            <label className="text-xs" style={{ color: "#8b8375" }}>场景描述（可选）</label>
             <textarea
               value={sanityDescription}
               onChange={(e) => setSanityDescription(e.target.value)}
               placeholder="例如：目睹深潜者从海中浮现..."
-              className="w-full mt-1 px-3 py-2 rounded bg-coc-bg-primary border border-coc-border text-sm resize-none"
+              className="w-full mt-1 px-3 py-2 rounded text-sm resize-none" style={{ background: "#1a1a1a", border: "1px solid #3a3a3a", color: "#d4c5a8" }}
               rows={2}
             />
           </div>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowSanityModal(false)}
-              className="px-4 py-2 rounded text-sm border border-coc-border hover:bg-coc-bg-tertiary"
+              className="px-4 py-2 rounded text-sm border border-[#3a3a3a] transition-colors" style={{ color: "#8b8375" }} onMouseEnter={(e)=>(e.currentTarget.style.background="rgba(0,0,0,0.3)")} onMouseLeave={(e)=>(e.currentTarget.style.background="transparent")}
             >
               取消
             </button>
