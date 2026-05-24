@@ -103,8 +103,8 @@ function PostRow({
     <Link
       key={post.id}
       to={`/forums/${post.id}`}
-      className={`group block p-4 rounded border border-[#3a3a3a]/40 hover:border-coc-gold/50 transition-colors relative overflow-hidden ${
-        post.isEssence ? 'bg-gradient-to-r from-coc-gold/5 to-transparent' : 'bg-black/20'
+      className={`group block p-4 rounded border border-[#3a3a3a]/40 hover:border-[#c9a227]/50 transition-colors relative overflow-hidden backdrop-blur-md bg-black/80 ${
+        post.isEssence ? 'bg-gradient-to-r from-[#c9a227]/5 to-transparent' : ''
       }`}
     >
       {/* hover 金色竖线 */}
