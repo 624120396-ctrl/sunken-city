@@ -771,7 +771,7 @@ export function RoomPage() {
             </button>
             <div className="absolute right-0 top-full mt-1 w-44 backdrop-blur-md bg-black/80 
                             border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60
-                            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1">
+                            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[9999] py-1">
               {[
                 { label: '线索', icon: Search, show: showCluePanel, toggle: () => setShowCluePanel(!showCluePanel) },
                 { label: 'NPC', icon: User, show: showNpcPanel, toggle: () => setShowNpcPanel(!showNpcPanel) },
