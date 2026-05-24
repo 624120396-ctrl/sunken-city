@@ -1309,8 +1309,8 @@ export function RoomPage() {
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <Swords size={48} className="mx-auto text-coc-text-muted mb-4" />
-                    <p className="text-coc-text-secondary">战斗未开始</p>
+                    <Swords size={48} className="mx-auto mb-4" style={{ color: "#6b6558" }} />
+                    <p style={{ color: "#8b8375" }}>战斗未开始</p>
                     {room?.isCreator && (
                       <MagneticButton
                         variant="blood"
@@ -1326,7 +1326,7 @@ export function RoomPage() {
               ) : combatState.status === 'ENDED' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-coc-text-secondary">战斗已结束</p>
+                    <p style={{ color: "#8b8375" }}>战斗已结束</p>
                     {room?.isCreator && (
                       <MagneticButton
                         variant="blood"
@@ -1342,28 +1342,28 @@ export function RoomPage() {
               ) : (
                 <>
                   {/* 战斗状态 */}
-                  <div className="p-4 border-b border-coc-border">
+                  <div className="p-4 border-b border-[#3a3a3a]/40 backdrop-blur-sm bg-black/10">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-coc-accent-red font-bold">第 {combatState.currentRound} 回合</span>
+                        <span className="font-bold" style={{ color: "#a63848" }}>第 {combatState.currentRound} 回合</span>
                         <span className="mx-2">|</span>
-                        <span>当前: {combatState.turnOrder[combatState.currentTurnIndex]?.nickname}</span>
+                        <span style={{ color: "#e8d4a0" }}>当前: {combatState.turnOrder[combatState.currentTurnIndex]?.nickname}</span>
                       </div>
-                      {isMyTurn && <span className="text-coc-accent-gold animate-pulse">你的回合</span>}
+                      {isMyTurn && <span className="animate-pulse font-medium" style={{ color: "#c9a227" }}>你的回合</span>}
                     </div>
                   </div>
 
                   {/* 行动顺序 */}
-                  <div className="p-4 border-b border-coc-border">
-                    <h4 className="text-sm text-coc-text-secondary mb-2">行动顺序</h4>
+                  <div className="p-4 border-b border-[#3a3a3a]/40 backdrop-blur-sm bg-black/10">
+                    <h4 className="text-sm mb-2" style={{ color: "#6b6558" }}>行动顺序</h4>
                     <div className="flex gap-2 overflow-x-auto">
                       {combatState.turnOrder.map((c, i) => (
                         <div
                           key={c.userId}
-                          className={`flex-shrink-0 p-2 rounded ${
+                          className={`flex-shrink-0 p-2 rounded border transition-all ${
                             i === combatState.currentTurnIndex
-                              ? 'bg-coc-accent-red text-white'
-                              : 'bg-coc-bg-tertiary'
+                              ? 'bg-[#a63848]/20 border-[#a63848]/60 text-[#e8d4a0] shadow-[0_0_8px_rgba(166,56,72,0.3)]'
+                              : 'bg-black/20 border-[#3a3a3a]/40 text-[#8b8375]'
                           }`}
                         >
                           <div className="text-sm font-medium">{c.nickname}</div>
@@ -1374,14 +1374,14 @@ export function RoomPage() {
                   </div>
 
                   {/* 战斗日志 */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2 backdrop-blur-sm bg-black/10">
                     {combatState.log.map((entry) => (
                       <div key={entry.id} className="text-sm">
-                        <span className="text-coc-text-muted">[{entry.round}]</span>{' '}
-                        <span className="text-coc-accent-gold">{entry.actor}</span>{' '}
+                        <span style={{ color: "#6b6558" }}>[{entry.round}]</span>{' '}
+                        <span style={{ color: "#c9a227" }}>{entry.actor}</span>{' '}
                         <span>{entry.action}</span>
-                        {entry.target && <span className="text-coc-accent-cyan"> → {entry.target}</span>}
-                        <span className="text-coc-text-secondary">: {entry.result}</span>
+                        {entry.target && <span style={{ color: "#4db8b8" }}> → {entry.target}</span>}
+                        <span style={{ color: "#8b8375" }}>: {entry.result}</span>
                       </div>
                     ))}
                   </div>
@@ -1524,7 +1524,7 @@ export function RoomPage() {
             <div className="space-y-4">
               {/* 显示当前角色的武器 */}
               {currentCombatant?.weapons && (
-                <div className="p-3 bg-coc-bg-tertiary rounded">
+                <div className="p-3 rounded backdrop-blur-sm bg-black/20 border border-[#3a3a3a]/40">
                   <div className="text-sm text-coc-text-secondary mb-2">选择武器</div>
                   <div className="space-y-1">
                     {currentCombatant.weapons.length > 0 ? (
@@ -1539,12 +1539,12 @@ export function RoomPage() {
                             }}
                             className={`w-full text-sm flex justify-between items-center p-2 rounded ${
                               isEquipped
-                                ? 'bg-coc-accent-red/20 border border-coc-accent-red'
+                                ? 'bg-[#a63848]/15 border border-[#a63848]/50'
                                 : 'hover:bg-coc-bg-primary'
                             }`}
                           >
                             <span>{w.name} {isEquipped && <span className="text-coc-accent-red">(已装备)</span>}</span>
-                            <span className="text-coc-accent-gold">{w.damage}</span>
+                            <span style={{ color: "#c9a227" }}>{w.damage}</span>
                           </button>
                         );
                       })
@@ -1556,7 +1556,7 @@ export function RoomPage() {
               )}
 
           <div>
-            <label className="block text-sm text-coc-text-secondary mb-1">攻击目标</label>
+            <label className="block text-sm mb-1" style={{ color: "#8b8375" }}>攻击目标</label>
             <select
               value={attackTarget}
               onChange={(e) => setAttackTarget(e.target.value)}
@@ -1572,7 +1572,7 @@ export function RoomPage() {
           </div>
 
           {attackTarget && combatState?.turnOrder.find(c => c.userId === attackTarget)?.equippedArmor && (
-            <div className="text-xs text-coc-text-secondary">
+            <div className="text-xs" style={{ color: "#6b6558" }}>
               目标护甲: {combatState.turnOrder.find(c => c.userId === attackTarget)?.equippedArmor?.name}
               (护甲值: {combatState.turnOrder.find(c => c.userId === attackTarget)?.equippedArmor?.rating})
             </div>
