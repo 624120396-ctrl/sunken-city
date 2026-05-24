@@ -245,8 +245,8 @@ export function DreamingPage() {
                         <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity">
                           <Sparkles size={36} className="text-[#c9a227]" />
                         </div>
-                        <div className="absolute bottom-3 left-0 right-0 text-center text-sm font-medium text-[#8b8375]">溺者之牌</div>
-                        <div className="absolute top-3 left-0 right-0 text-center text-xs text-[#8b8375] opacity-70">{c.rarity === 'legendary' ? '传说' : c.rarity === 'epic' ? '史诗' : c.rarity === 'rare' ? '稀有' : '普通'}</div>
+                        <div className="absolute bottom-3 left-0 right-0 text-center text-sm font-medium text-[#d4c5a8] drop-shadow-md">溺者之牌</div>
+                        <div className="absolute top-3 left-0 right-0 text-center text-xs text-[#b0a898] drop-shadow-sm">{c.rarity === 'legendary' ? '传说' : c.rarity === 'epic' ? '史诗' : c.rarity === 'rare' ? '稀有' : '普通'}</div>
                       </button>
                     </TiltCard>
                   ))}
@@ -290,7 +290,7 @@ export function DreamingPage() {
                     )}
                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
                       <div className={`font-ritual text-xl drop-shadow-lg ${rarityColor[currentCardMeta?.rarity || 'common']}`}>{currentCardMeta?.name || '未知'}</div>
-                      <div className="text-sm text-[#8b8375] mt-1">{positionLabel(todayDraw.position)}</div>
+                      <div className="text-sm text-[#d4c5a8] mt-1 drop-shadow-sm">{positionLabel(todayDraw.position)}</div>
                     </div>
                   </div>
                 </TiltCard>
@@ -299,7 +299,7 @@ export function DreamingPage() {
                 <div className="flex-1 w-full">
                   {!todayDraw.isRevealed && !todayDraw.isDeepRevealed && (
                     <div className="space-y-4">
-                      <p className="text-[#d4c5a8] text-lg mb-2">你抽中了一张牌，但梦境的呓语尚未被解读。</p>
+                      <p className="text-[#d4c5a8] text-lg mb-2 drop-shadow-sm">你抽中了一张牌，但梦境的呓语尚未被解读。</p>
                       <div className="flex flex-wrap gap-3">
                         <button
                           onClick={() => handleReveal(false)}
@@ -327,8 +327,8 @@ export function DreamingPage() {
                   {(todayDraw.isRevealed || todayDraw.isDeepRevealed) && (
                     <div className="space-y-4">
                       <div className="bg-black/30 backdrop-blur-sm border border-[#3a3a3a]/40 rounded-lg p-5">
-                        <p className="text-sm text-[#8b8375] mb-2">普通解牌结果</p>
-                        <p className="text-[#e8d4a0] text-lg leading-relaxed drop-shadow-md">{todayDraw.revealText}</p>
+                        <p className="text-sm text-[#b0a898] mb-2 drop-shadow-sm">普通解牌结果</p>
+                        <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.revealText}</p>
                       </div>
 
                       {!todayDraw.isDeepRevealed && (
@@ -346,16 +346,16 @@ export function DreamingPage() {
 
                       {todayDraw.isDeepRevealed && todayDraw.deepRevealText && (
                         <div className="bg-black/30 backdrop-blur-sm border-l-4 border-purple-500 rounded-lg p-5">
-                          <p className="text-sm text-purple-400 mb-2">深度解牌结果</p>
-                          <p className="text-[#e8d4a0] text-lg leading-relaxed drop-shadow-md">{todayDraw.deepRevealText}</p>
+                          <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌结果</p>
+                          <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.deepRevealText}</p>
                         </div>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.buff && (
                         <div className="bg-black/30 backdrop-blur-sm border-l-4 border-purple-500 rounded-lg p-5">
-                          <p className="text-sm text-purple-400 mb-2">深度解牌 · 触须效应</p>
-                          <p className="text-[#e8d4a0] text-lg font-medium drop-shadow-md">{todayDraw.buff.name}</p>
-                          <p className="text-sm text-[#8b8375] mt-2">{todayDraw.buff.description}</p>
+                          <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌 · 触须效应</p>
+                          <p className="text-[#f0e4cc] text-lg font-medium drop-shadow-md">{todayDraw.buff.name}</p>
+                          <p className="text-sm text-[#b0a898] mt-2">{todayDraw.buff.description}</p>
                         </div>
                       )}
                     </div>
@@ -399,10 +399,10 @@ export function DreamingPage() {
                 </div>
               )}
               <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                <div className={`text-base font-ritual truncate drop-shadow-md ${c.unlocked ? rarityColor[c.rarity] : 'text-[#6b6558]'}`}>
+                <div className={`text-base font-ritual truncate drop-shadow-md ${c.unlocked ? rarityColor[c.rarity] : 'text-[#9b9080]'}`}>
                   {c.unlocked ? c.name : '???'}
                 </div>
-                <div className="text-xs text-[#8b8375] mt-1">{c.drawCount > 0 ? `已抽中 ${c.drawCount} 次` : '未解锁'}</div>
+                <div className="text-xs text-[#b0a898] mt-1">{c.drawCount > 0 ? `已抽中 ${c.drawCount} 次` : '未解锁'}</div>
               </div>
             </div>
           ))}
@@ -429,15 +429,15 @@ export function DreamingPage() {
                   </span>
                   <span className="text-sm text-[#8b8375]">{positionLabel(h.position)}</span>
                 </div>
-                <div className="text-sm text-[#8b8375] mt-1">{new Date(h.drawnAt).toLocaleString()}</div>
+                <div className="text-sm text-[#b0a898] mt-1 drop-shadow-sm">{new Date(h.drawnAt).toLocaleString()}</div>
               </div>
               <div className="text-right text-base">
                 {h.isDeepRevealed ? (
-                  <span className="text-purple-400">已深度解牌</span>
+                  <span className="text-purple-300 drop-shadow-sm">已深度解牌</span>
                 ) : h.isRevealed ? (
-                  <span className="text-[#8b8375]">已解牌</span>
+                  <span className="text-[#b0a898] drop-shadow-sm">已解牌</span>
                 ) : (
-                  <span className="text-[#6b6558]">未解牌</span>
+                  <span className="text-[#9b9080] drop-shadow-sm">未解牌</span>
                 )}
               </div>
             </div>
