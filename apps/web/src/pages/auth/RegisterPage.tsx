@@ -42,26 +42,10 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center coc-bg-abyss relative overflow-hidden">
-      {/* 背景装饰层 */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* 右侧血色微光 */}
-        <div className="absolute top-1/2 right-0 w-[600px] h-[600px] -translate-y-1/2
-                        bg-gradient-radial from-coc-blood/5 via-transparent to-transparent 
-                        blur-3xl opacity-40"></div>
-        
-        {/* 底部深渊 */}
-        <div className="absolute bottom-0 left-0 right-0 h-[300px]
-                        bg-gradient-to-t from-coc-madness/5 via-transparent to-transparent"></div>
-      </div>
-
       {/* 主卡片 */}
       <div className="relative w-full max-w-md mx-4">
-        {/* 外发光边框 */}
-        <div className="absolute -inset-[1px] bg-gradient-to-b from-coc-madness/20 via-coc-blood/10 to-transparent 
-                        rounded-lg blur-sm opacity-50"></div>
-        
-        <div className="relative bg-coc-surface/95 border border-coc-void rounded-lg p-8 
-                        backdrop-blur-sm coc-card-bottom">
+        <div className="relative border border-coc-void/80 rounded-lg p-8 
+                        backdrop-blur-md bg-black/40 shadow-2xl">
           {/* 顶部符文装饰 */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
             <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-coc-madness"></div>
@@ -71,26 +55,41 @@ export function RegisterPage() {
 
           {/* Logo 区域 */}
           <div className="text-center mb-10 pt-4">
-            {/* 召唤符号 */}
+            {/* 用 logo 素材替换 */}
             <div className="relative inline-block mb-6">
-              <div className="text-5xl animate-breathe">
-                ⚜️
+              <img
+                src="/logo.png"
+                alt="沉没之城"
+                className="w-64 h-auto mx-auto drop-shadow-[0_0_12px_rgba(201,162,39,0.4)]"
+                onError={(e) => {
+                  // 如果 logo 加载失败，回退到文字
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden">
+                {/* 召唤符号 */}
+                <div className="relative inline-block mb-6">
+                  <div className="text-5xl animate-breathe">
+                    ⚜️
+                  </div>
+                  <div className="absolute -inset-4 bg-coc-madness/10 rounded-full blur-xl opacity-0 
+                                  group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                
+                {/* 标题 */}
+                <h1 className="text-4xl font-ritual font-bold coc-text-metal mb-3 tracking-widest">
+                  沉没之城
+                </h1>
+                
+                <p className="text-sm font-rune text-coc-parchment-faded tracking-[0.3em] uppercase mb-1">
+                  Sunken City
+                </p>            
+                <p className="text-xs text-coc-madness/60 font-rune tracking-wider">
+                  v1.1 · 深渊凝视
+                </p>
               </div>
-              <div className="absolute -inset-4 bg-coc-madness/10 rounded-full blur-xl opacity-0 
-                              group-hover:opacity-100 transition-opacity"></div>
             </div>
-            
-            {/* 标题 */}
-            <h1 className="text-4xl font-ritual font-bold coc-text-metal mb-3 tracking-widest">
-              沉没之城
-            </h1>
-            
-            <p className="text-sm font-rune text-coc-parchment-faded tracking-[0.3em] uppercase mb-1">
-              Sunken City
-            </p>            
-            <p className="text-xs text-coc-madness/60 font-rune tracking-wider">
-              v1.1 · 深渊凝视
-            </p>
           </div>
 
           {/* 错误提示 */}
@@ -175,7 +174,7 @@ export function RegisterPage() {
             <p className="text-sm text-coc-parchment-dim">
               已接受召唤？
               <a href="/login" 
-                 className="ml-2 text-coc-blood hover:text-coc-blood-glow transition-colors 
+                 className="ml-2 text-coc-gold hover:text-coc-gold-glow transition-colors 
                             font-ritual tracking-wide"
               >
                 揭开帷幕
@@ -186,7 +185,7 @@ export function RegisterPage() {
           {/* 底部符文装饰 */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-20">
             <div className="w-8 h-[1px] bg-gradient-to-r from-transparent to-coc-parchment-faded"></div>
-            <div className="text-coc-parchment-faded text-xs font-rune">⚜</div>
+            <div className="text-coc-parchment-faded text-xs font-rune">✦</div>
             <div className="w-8 h-[1px] bg-gradient-to-l from-transparent to-coc-parchment-faded"></div>
           </div>
         </div>
