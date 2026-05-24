@@ -201,7 +201,7 @@ export function DashboardPage() {
 
   const quickActions = [
     { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', bgImage: '/dashboard-card-character.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
-    { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
+    { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', bgImage: '/dashboard-card-room.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/solo', icon: Ghost, title: '幻影脚本', subtitle: '单人剧本模式', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
   ];
