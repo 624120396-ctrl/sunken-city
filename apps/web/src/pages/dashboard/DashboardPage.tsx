@@ -200,7 +200,7 @@ export function DashboardPage() {
   const rank = rankInfo?.rank;
 
   const quickActions = [
-    { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
+    { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', bgImage: '/dashboard-card-character.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/solo', icon: Ghost, title: '幻影脚本', subtitle: '单人剧本模式', bgImage: '', glowColor: 'from-[#8b2635]/40 via-transparent' },
@@ -329,6 +329,17 @@ export function DashboardPage() {
               >
                 <Link to={action.to} className="block group">
                   <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-white/[0.08] bg-[#12121a]/80 backdrop-blur-[10px] shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                    {/* 背景图（如有） */}
+                    {action.bgImage && (
+                      <>
+                        <img
+                          src={action.bgImage}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/80 via-[#0a0a0f]/40 to-[#0a0a0f]/20" />
+                      </>
+                    )}
                     {/* 底部血红色渐变 */}
                     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
                     {/* 顶部微光 */}
