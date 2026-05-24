@@ -721,7 +721,7 @@ export function RoomPage() {
   return (
     <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-lg
+      <div className="relative z-50 flex items-center justify-between mb-4 px-3 py-2 rounded-lg
                       backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 shadow-md">
         <div className="flex items-center gap-4">
           <Link to="/rooms" className="p-2 rounded border border-[#3a3a3a]/60 text-[#c9a227] 
@@ -761,7 +761,7 @@ export function RoomPage() {
               </span>
             )}
           </button>
-          <div className="relative group">
+          <div className="relative group z-[100]">
             <button className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
                               bg-[url('/btn-off.png')] bg-cover bg-center
                               hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
