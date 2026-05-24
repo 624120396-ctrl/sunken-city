@@ -200,18 +200,18 @@ export function ProfilePage() {
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="flex items-center gap-1 text-coc-parchment-dim hover:text-coc-parchment transition-colors"
+            className="flex items-center gap-1 text-coc-parchment-dim hover:text-[#e8d4a0] transition-colors"
           >
             <ChevronLeft size={20} />
             <span>返回控制台</span>
           </Link>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-coc-parchment">
-            <Coins size={16} className="text-coc-gold" />
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
+            <Coins size={16} className="text-[#c9a227]" />
             <span>锈蚀硬币: {user?.coins ?? 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-coc-parchment">
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
             <Sparkles size={16} className="text-purple-400" />
             <span>虚银: {user?.stardust ?? 0}</span>
           </div>
@@ -220,15 +220,15 @@ export function ProfilePage() {
 
       {/* 页面标题 */}
       <div className="flex items-center gap-3">
-        <User className="w-7 h-7 text-coc-gold" />
-        <h1 className="text-2xl font-ritual font-bold text-coc-parchment">个人中心</h1>
+        <User className="w-7 h-7 text-[#c9a227]" />
+        <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">个人中心</h1>
       </div>
 
       {/* 资料卡片 */}
       <RuneBorder variant="gold" intensity="normal">
         <div className="coc-bg-parchment p-6">
-          <h2 className="text-lg font-ritual font-bold text-coc-parchment mb-6 flex items-center gap-2">
-            <Camera className="w-5 h-5 text-coc-gold" />
+          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
+            <Camera className="w-5 h-5 text-[#c9a227]" />
             基本资料
           </h2>
 
@@ -248,8 +248,8 @@ export function ProfilePage() {
                   />
                 )}
                 {uploading && (
-                  <div className="absolute inset-0 bg-coc-abyss/70 flex items-center justify-center">
-                    <span className="text-xs text-coc-parchment">上传中...</span>
+                  <div className="absolute inset-0 bg-[#0a0a0f]/70 flex items-center justify-center">
+                    <span className="text-xs text-[#e8d4a0]">上传中...</span>
                   </div>
                 )}
               </div>
@@ -259,7 +259,7 @@ export function ProfilePage() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-coc-abyss border border-coc-void text-coc-parchment rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0f] border border-coc-void text-[#e8d4a0] rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
                   >
                     <Upload className="w-4 h-4" />
                     上传头像
@@ -268,7 +268,7 @@ export function ProfilePage() {
                     type="button"
                     onClick={() => setShowAiModal(true)}
                     disabled={aiGenerating}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-coc-abyss border border-coc-void text-coc-gold rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0f] border border-coc-void text-[#c9a227] rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
                   >
                     <Wand2 className="w-4 h-4" />
                     AI 生成
@@ -277,7 +277,7 @@ export function ProfilePage() {
                     <button
                       type="button"
                       onClick={clearAvatar}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-coc-parchment-dim hover:text-coc-blood transition-colors text-sm"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-coc-parchment-dim hover:text-[#a63848] transition-colors text-sm"
                     >
                       <X className="w-4 h-4" />
                       清除
@@ -296,7 +296,7 @@ export function ProfilePage() {
             </div>
 
             {user?.displayId != null && (
-              <div className="font-mono text-xs text-coc-gold mb-2">用户编号：#{String(user.displayId).padStart(8, '0')}</div>
+              <div className="font-mono text-xs text-[#c9a227] mb-2">用户编号：#{String(user.displayId).padStart(8, '0')}</div>
             )}
 
             <div>
@@ -306,7 +306,7 @@ export function ProfilePage() {
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
                 placeholder="https://example.com/avatar.png"
-                className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none"
+                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
               />
             </div>
 
@@ -317,7 +317,7 @@ export function ProfilePage() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 maxLength={20}
-                className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none"
+                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
               />
             </div>
 
@@ -338,7 +338,7 @@ export function ProfilePage() {
       {/* 背包卡片 */}
       <RuneBorder variant="madness" intensity="normal">
         <div className="coc-bg-parchment p-6">
-          <h2 className="text-lg font-ritual font-bold text-coc-parchment mb-6 flex items-center gap-2">
+          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Package className="w-5 h-5 text-coc-madness-glow" />
             我的背包
           </h2>
@@ -346,12 +346,12 @@ export function ProfilePage() {
           {inventoryLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-coc-abyss/40 rounded animate-pulse" />
+                <div key={i} className="h-32 bg-[#0a0a0f]/40 rounded animate-pulse" />
               ))}
             </div>
           ) : inventory.length === 0 ? (
             <div className="text-center py-10 text-coc-parchment-dim">
-              背包空空如也，去<Link to="/shop" className="text-coc-gold hover:underline">拉莱耶遗珍</Link>看看吧。
+              背包空空如也，去<Link to="/shop" className="text-[#c9a227] hover:underline">拉莱耶遗珍</Link>看看吧。
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -364,10 +364,10 @@ export function ProfilePage() {
                 return (
                   <div
                     key={inv.id}
-                    className={`p-3 rounded border ${rarityColor[inv.item?.rarity || 'common'] || 'border-coc-void'} bg-coc-abyss/30 flex flex-col gap-2`}
+                    className={`p-3 rounded border ${rarityColor[inv.item?.rarity || 'common'] || 'border-coc-void'} bg-[#0a0a0f]/30 flex flex-col gap-2`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-coc-parchment truncate">{inv.item?.name || inv.itemKey}</span>
+                      <span className="font-medium text-[#e8d4a0] truncate">{inv.item?.name || inv.itemKey}</span>
                       {inv.quantity > 1 && (
                         <span className="text-xs text-coc-parchment-dim">x{inv.quantity}</span>
                       )}
@@ -420,7 +420,7 @@ export function ProfilePage() {
       {/* 论坛足迹卡片 */}
       <RuneBorder variant="madness" intensity="normal">
         <div className="coc-bg-parchment p-6">
-          <h2 className="text-lg font-ritual font-bold text-coc-parchment mb-6 flex items-center gap-2">
+          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-coc-madness-glow" />
             论坛足迹
           </h2>
@@ -428,26 +428,26 @@ export function ProfilePage() {
             <div className="text-center py-6 text-coc-parchment-dim">加载中...</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded bg-coc-abyss/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-coc-parchment">{forumStats.postCount}</div>
+              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
+                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.postCount}</div>
                 <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
                   <FileText size={12} /> 主题帖
                 </div>
               </div>
-              <div className="p-4 rounded bg-coc-abyss/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-coc-parchment">{forumStats.replyCount}</div>
+              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
+                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.replyCount}</div>
                 <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
                   <MessageSquare size={12} /> 回复
                 </div>
               </div>
-              <div className="p-4 rounded bg-coc-abyss/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-coc-parchment">{forumStats.likeCountReceived}</div>
+              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
+                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.likeCountReceived}</div>
                 <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
                   <ThumbsUp size={12} /> 获赞
                 </div>
               </div>
-              <div className="p-4 rounded bg-coc-abyss/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-coc-parchment">{forumStats.bestReplyCount}</div>
+              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
+                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.bestReplyCount}</div>
                 <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
                   <Award size={12} /> 最佳回复
                 </div>
@@ -459,7 +459,7 @@ export function ProfilePage() {
 
       <RuneBorder variant="madness" intensity="normal">
         <div className="coc-bg-parchment p-6">
-          <h2 className="text-lg font-ritual font-bold text-coc-parchment mb-6 flex items-center gap-2">
+          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Lock className="w-5 h-5 text-coc-madness-glow" />
             修改密码
           </h2>
@@ -471,12 +471,12 @@ export function ProfilePage() {
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-madness focus:outline-none pr-10"
+                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrent((v) => !v)}
-                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-coc-parchment"
+                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-[#e8d4a0]"
               >
                 {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -488,12 +488,12 @@ export function ProfilePage() {
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-madness focus:outline-none pr-10"
+                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-coc-parchment"
+                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-[#e8d4a0]"
               >
                 {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -505,7 +505,7 @@ export function ProfilePage() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-madness focus:outline-none"
+                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none"
               />
             </div>
 
@@ -513,7 +513,7 @@ export function ProfilePage() {
               <button
                 type="submit"
                 disabled={changingPassword}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-coc-madness text-coc-parchment rounded hover:bg-coc-madness-glow transition-colors font-medium disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-coc-madness text-[#e8d4a0] rounded hover:bg-coc-madness-glow transition-colors font-medium disabled:opacity-50"
               >
                 <Lock className="w-4 h-4" />
                 {changingPassword ? '修改中...' : '修改密码'}
@@ -526,13 +526,13 @@ export function ProfilePage() {
       {/* AI 生成头像弹窗 */}
       {showAiModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-md p-6 rounded-lg bg-coc-bg-secondary border border-coc-border shadow-xl space-y-4">
-            <h3 className="text-lg font-ritual font-bold text-coc-parchment">AI 生成头像</h3>
+          <div className="w-full max-w-md p-6 rounded-lg bg-black/20 border border-[#3a3a3a]/40 shadow-xl shadow-black/60 space-y-4">
+            <h3 className="text-lg font-ritual font-bold text-[#e8d4a0]">AI 生成头像</h3>
             <textarea
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="描述你想要的头像风格，例如：克苏鲁风格，年轻的侦探，戴着圆顶礼帽，眼神锐利，黑白素描"
-              className="w-full px-3 py-2 bg-coc-abyss border border-coc-void rounded text-coc-parchment focus:border-coc-gold focus:outline-none min-h-[100px]"
+              className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none min-h-[100px]"
               maxLength={600}
             />
             <div className="flex items-center justify-between">
@@ -540,7 +540,7 @@ export function ProfilePage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setShowAiModal(false); setAiPrompt(''); }}
-                  className="px-4 py-2 text-coc-parchment-dim hover:text-coc-parchment transition-colors"
+                  className="px-4 py-2 text-coc-parchment-dim hover:text-[#e8d4a0] transition-colors"
                 >
                   取消
                 </button>

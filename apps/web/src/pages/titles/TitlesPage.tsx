@@ -141,7 +141,7 @@ export function TitlesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-coc-deep flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-coc-gold animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#c9a227] animate-spin" />
       </div>
     );
   }
@@ -149,11 +149,11 @@ export function TitlesPage() {
   if (error || titles.length === 0) {
     return (
       <div className="min-h-screen bg-coc-deep flex items-center justify-center">
-        <div className="text-coc-parchment text-center">
+        <div className="text-[#e8d4a0] text-center">
           <p className="mb-4">{error || '暂无印记数据'}</p>
           <button 
             onClick={loadData}
-            className="px-4 py-2 bg-coc-gold/20 text-coc-gold rounded hover:bg-coc-gold/30"
+            className="px-4 py-2 bg-coc-gold/20 text-[#c9a227] rounded hover:bg-coc-gold/30"
           >
             重试
           </button>
@@ -167,23 +167,23 @@ export function TitlesPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-screen bg-coc-bg pb-12"
+      className="min-h-screen backdrop-blur-md bg-black/40 pb-12"
     >
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-40 overlay-layer-3 border-b border-coc-border">
+      <div className="sticky top-0 z-40 overlay-layer-3 border-b border-[#3a3a3a]/40">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link 
               to="/" 
-              className="flex items-center gap-2 text-coc-text-muted hover:text-coc-gold transition-colors"
+              className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
             >
               <ChevronLeft size={20} />
               <span className="font-rune">返回</span>
             </Link>
             
             <div className="flex items-center gap-3">
-              <Award className="text-coc-gold" size={24} />
-              <h1 className="text-xl font-ritual font-bold text-coc-gold">
+              <Award className="text-[#c9a227]" size={24} />
+              <h1 className="text-xl font-ritual font-bold text-[#c9a227]">
                 印记图鉴
               </h1>
             </div>
@@ -196,7 +196,7 @@ export function TitlesPage() {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* 收集进度 */}
         <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-coc-bg-elevated p-6">
+          <div className="bg-[#1a1a1a] p-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative w-24 h-24">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -223,21 +223,21 @@ export function TitlesPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-ritual font-bold text-coc-gold">
+                  <span className="text-2xl font-ritual font-bold text-[#c9a227]">
                     {progress}%
                   </span>
                 </div>
               </div>
               
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-ritual font-bold text-coc-parchment mb-2">
+                <h2 className="text-2xl font-ritual font-bold text-[#e8d4a0] mb-2">
                   收集进度
                 </h2>
-                <p className="text-coc-text-muted">
-                  已收集 <span className="text-coc-gold font-bold">{unlockedCount}</span> / {totalTitles} 个印记
+                <p className="text-[#6b6558]">
+                  已收集 <span className="text-[#c9a227] font-bold">{unlockedCount}</span> / {totalTitles} 个印记
                 </p>
                 {displayedTitleKey && (
-                  <p className="text-sm text-coc-gold mt-2">
+                  <p className="text-sm text-[#c9a227] mt-2">
                     当前展示: <span className="font-medium">
                       {titles.find(t => t.key === displayedTitleKey)?.name || '位阶名称'}
                     </span>
@@ -250,8 +250,8 @@ export function TitlesPage() {
                 onClick={() => setShowLocked(!showLocked)}
                 className={`px-4 py-2 rounded font-rune text-sm transition-colors
                   ${showLocked 
-                    ? 'bg-coc-gold/20 text-coc-gold border border-coc-gold/40' 
-                    : 'bg-coc-bg text-coc-text-muted border border-coc-border hover:border-coc-gold/50'}`}
+                    ? 'bg-coc-gold/20 text-[#c9a227] border border-coc-gold/40' 
+                    : 'backdrop-blur-md bg-black/40 text-[#6b6558] border border-[#3a3a3a]/40 hover:border-coc-gold/50'}`}
               >
                 {showLocked ? '显示全部' : '仅显示已解锁'}
               </button>
@@ -263,7 +263,7 @@ export function TitlesPage() {
         <div className="space-y-4">
           {/* 分类筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <Filter size={16} className="text-coc-text-muted mr-2" />
+            <Filter size={16} className="text-[#6b6558] mr-2" />
             {categories.map((cat) => (
               <button
                 key={cat.id}
@@ -271,7 +271,7 @@ export function TitlesPage() {
                 className={`px-3 py-1.5 rounded text-sm font-rune transition-colors border
                   ${selectedCategory === cat.id
                     ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                    : 'bg-coc-bg-elevated text-coc-text-muted border-coc-border hover:border-coc-gold/50 hover:text-coc-parchment'}`}
+                    : 'bg-[#1a1a1a] text-[#6b6558] border-[#3a3a3a]/40 hover:border-coc-gold/50 hover:text-[#e8d4a0]'}`}
               >
                 <cat.icon size={14} className="inline mr-1" />
                 {cat.name}
@@ -281,7 +281,7 @@ export function TitlesPage() {
           
           {/* 稀有度筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <Sparkles size={16} className="text-coc-text-muted mr-2" />
+            <Sparkles size={16} className="text-[#6b6558] mr-2" />
             {rarities.map((rarity) => (
               <button
                 key={rarity.id}
@@ -289,7 +289,7 @@ export function TitlesPage() {
                 className={`px-3 py-1.5 rounded text-sm font-rune transition-colors border
                   ${selectedRarity === rarity.id
                     ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                    : 'bg-coc-bg-elevated text-coc-text-muted border-coc-border hover:border-coc-gold/50'}`}
+                    : 'bg-[#1a1a1a] text-[#6b6558] border-[#3a3a3a]/40 hover:border-coc-gold/50'}`}
                 style={selectedRarity === rarity.id ? {} : { color: rarity.color }}
               >
                 {rarity.name}
@@ -323,7 +323,7 @@ export function TitlesPage() {
                     {isUnlocked ? (
                       <span className="text-4xl">{title.icon}</span>
                     ) : title.isHidden ? (
-                      <HelpCircle size={36} className="mx-auto text-coc-text-muted" />
+                      <HelpCircle size={36} className="mx-auto text-[#6b6558]" />
                     ) : (
                       <span className="text-4xl grayscale opacity-40">{title.icon}</span>
                     )}
@@ -350,7 +350,7 @@ export function TitlesPage() {
                   
                   {/* 锁定状态 */}
                   {!isUnlocked && (
-                    <div className="flex items-center justify-center gap-1 mt-2 text-coc-text-muted">
+                    <div className="flex items-center justify-center gap-1 mt-2 text-[#6b6558]">
                       <Lock size={12} />
                       <span className="text-xs font-rune">未解锁</span>
                     </div>
@@ -358,7 +358,7 @@ export function TitlesPage() {
                   
                   {/* 展示中标记 */}
                   {isDisplayed && (
-                    <div className="flex items-center justify-center gap-1 mt-2 text-coc-gold">
+                    <div className="flex items-center justify-center gap-1 mt-2 text-[#c9a227]">
                       <Check size={12} />
                       <span className="text-xs font-rune">展示中</span>
                     </div>
@@ -379,7 +379,7 @@ export function TitlesPage() {
               transition={{ duration: 0.3 }}
               className="card-layer-2 rounded-lg overflow-hidden"
             >
-              <div className="bg-coc-bg-elevated p-6">
+              <div className="bg-[#1a1a1a] p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <span className="text-5xl">{selectedTitle.icon}</span>
@@ -394,7 +394,7 @@ export function TitlesPage() {
                         >
                           {RARITY_CONFIG[selectedTitle.rarity]?.label}
                         </span>
-                        <span className="text-xs text-coc-text-muted">
+                        <span className="text-xs text-[#6b6558]">
                           {CATEGORY_CONFIG[selectedTitle.category]?.label}
                         </span>
                       </div>
@@ -409,29 +409,29 @@ export function TitlesPage() {
                   
                   <button 
                     onClick={() => setSelectedTitle(null)}
-                    className="text-coc-text-muted hover:text-coc-parchment"
+                    className="text-[#6b6558] hover:text-[#e8d4a0]"
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <p className="text-coc-text-muted mb-4">
+                <p className="text-[#6b6558] mb-4">
                   {selectedTitle.description}
                 </p>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-coc-bg rounded border border-coc-border">
-                    <span className="text-sm text-coc-text-muted">获取条件</span>
-                    <span className="text-sm text-coc-parchment font-rune">
+                  <div className="flex items-center justify-between p-3 backdrop-blur-md bg-black/40 rounded border border-[#3a3a3a]/40">
+                    <span className="text-sm text-[#6b6558]">获取条件</span>
+                    <span className="text-sm text-[#e8d4a0] font-rune">
                       {selectedTitle.isHidden && !unlockedKeys.includes(selectedTitle.key)
                         ? selectedTitle.hint || '???'
                         : selectedTitle.condition}
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-coc-bg rounded border border-coc-border">
-                    <span className="text-sm text-coc-text-muted">奖励灵魂碎片</span>
-                    <span className="text-sm text-coc-gold font-rune">
+                  <div className="flex items-center justify-between p-3 backdrop-blur-md bg-black/40 rounded border border-[#3a3a3a]/40">
+                    <span className="text-sm text-[#6b6558]">奖励灵魂碎片</span>
+                    <span className="text-sm text-[#c9a227] font-rune">
                       +{selectedTitle.expReward} SP
                     </span>
                   </div>
@@ -445,8 +445,8 @@ export function TitlesPage() {
                         <button
                           onClick={() => handleSetDisplayed(null)}
                           disabled={settingDisplay === 'none'}
-                          className="flex-1 py-2 bg-coc-bg text-coc-text-muted rounded font-rune
-                                   hover:bg-coc-bg-elevated transition-colors border border-coc-border disabled:opacity-50"
+                          className="flex-1 py-2 backdrop-blur-md bg-black/40 text-[#6b6558] rounded font-rune
+                                   hover:bg-[#1a1a1a] transition-colors border border-[#3a3a3a]/40 disabled:opacity-50"
                         >
                           {settingDisplay === 'none' ? '设置中...' : '取消展示'}
                         </button>
@@ -462,7 +462,7 @@ export function TitlesPage() {
                       )}
                     </>
                   ) : (
-                    <div className="flex-1 py-2 bg-coc-bg/50 text-coc-text-muted rounded font-rune text-center border border-coc-border">
+                    <div className="flex-1 py-2 bg-coc-bg/50 text-[#6b6558] rounded font-rune text-center border border-[#3a3a3a]/40">
                       尚未解锁
                     </div>
                   )}

@@ -273,7 +273,7 @@ export function FriendListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coc-accent-red border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
       </div>
     );
   }
@@ -282,7 +282,7 @@ export function FriendListPage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Users className="text-coc-accent-red" size={28} />
+          <Users className="text-[#a63848]" size={28} />
           <h1 className="text-2xl font-serif font-bold">我的好友</h1>
         </div>
         <button onClick={() => setShowAddModal(true)} className="coc-btn-primary flex items-center gap-2">
@@ -292,7 +292,7 @@ export function FriendListPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-4 border-b border-coc-border pb-2">
+      <div className="flex gap-2 mb-4 border-b border-[#3a3a3a]/40 pb-2">
         {[
           { key: 'all', label: `全部好友 (${friends.length})` },
           { key: 'online', label: `在线 (${friends.filter((f) => onlineFriends.has(f.userId)).length})` },
@@ -304,8 +304,8 @@ export function FriendListPage() {
             className={cn(
               'px-4 py-2 text-sm rounded-t transition-colors',
               activeTab === tab.key
-                ? 'text-coc-accent-red border-b-2 border-coc-accent-red'
-                : 'text-coc-text-secondary hover:text-coc-text-primary'
+                ? 'text-[#a63848] border-b-2 border-[#a63848]'
+                : 'text-[#8b8375] hover:text-[#d4c5a8]'
             )}
           >
             {tab.label}
@@ -316,7 +316,7 @@ export function FriendListPage() {
       {(activeTab === 'all' || activeTab === 'online') && (
         <>
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-coc-text-muted" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6558]" size={16} />
             <input
               type="text"
               value={search}
@@ -342,12 +342,12 @@ export function FriendListPage() {
                 return (
                   <div
                     key={friend.userId}
-                    className="coc-card p-4 flex flex-col gap-3 cursor-pointer hover:border-coc-accent-red/50 transition-colors"
+                    className="coc-card p-4 flex flex-col gap-3 cursor-pointer hover:border-[#a63848]/50 transition-colors"
                     onClick={() => setSelectedFriend(friend)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-coc-bg-tertiary flex items-center justify-center text-lg font-bold overflow-hidden">
+                        <div className="w-12 h-12 rounded-full bg-black/20 flex items-center justify-center text-lg font-bold overflow-hidden">
                           {friend.avatarUrl ? (
                             <img src={friend.avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -363,8 +363,8 @@ export function FriendListPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-bold truncate">{friend.nickname}</div>
-                        <div className="font-mono text-[10px] text-coc-gold">#{String(friend.displayId).padStart(8, '0')}</div>
-                        <div className="text-xs text-coc-text-secondary truncate">
+                        <div className="font-mono text-[10px] text-[#c9a227]">#{String(friend.displayId).padStart(8, '0')}</div>
+                        <div className="text-xs text-[#8b8375] truncate">
                           {isOnline ? (roomInfo ? `房间 ${roomInfo.roomId}` : '在线') : '离线'}
                         </div>
                       </div>
@@ -385,7 +385,7 @@ export function FriendListPage() {
                           e.stopPropagation();
                           handleRemoveFriend(friend.userId);
                         }}
-                        className="px-2 py-1.5 text-red-400 hover:bg-red-400/10 rounded border border-coc-border text-xs"
+                        className="px-2 py-1.5 text-red-400 hover:bg-red-400/10 rounded border border-[#3a3a3a]/40 text-xs"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -402,12 +402,12 @@ export function FriendListPage() {
         <div className="space-y-4">
           {pendingReceived.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-coc-text-secondary mb-2">收到的好友请求</h3>
+              <h3 className="text-sm font-bold text-[#8b8375] mb-2">收到的好友请求</h3>
               <div className="space-y-2">
                 {pendingReceived.map((req) => (
                   <div key={req.id} className="coc-card p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-coc-bg-tertiary flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center font-bold">
                         {req.sender.avatarUrl ? (
                           <img src={req.sender.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -416,9 +416,9 @@ export function FriendListPage() {
                       </div>
                       <div>
                         <div className="font-bold">{req.sender.nickname}</div>
-                        <div className="font-mono text-[10px] text-coc-gold">#{String(req.sender.displayId).padStart(8, '0')}</div>
-                        {req.message && <div className="text-xs text-coc-text-muted">附言：{req.message}</div>}
-                        <div className="text-[10px] text-coc-text-muted">{formatTimeAgo(req.createdAt)}</div>
+                        <div className="font-mono text-[10px] text-[#c9a227]">#{String(req.sender.displayId).padStart(8, '0')}</div>
+                        {req.message && <div className="text-xs text-[#6b6558]">附言：{req.message}</div>}
+                        <div className="text-[10px] text-[#6b6558]">{formatTimeAgo(req.createdAt)}</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -445,12 +445,12 @@ export function FriendListPage() {
 
           {pendingSent.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-coc-text-secondary mb-2">已发送的请求</h3>
+              <h3 className="text-sm font-bold text-[#8b8375] mb-2">已发送的请求</h3>
               <div className="space-y-2">
                 {pendingSent.map((req) => (
                   <div key={req.id} className="coc-card p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-coc-bg-tertiary flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center font-bold">
                         {req.receiver.avatarUrl ? (
                           <img src={req.receiver.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -459,14 +459,14 @@ export function FriendListPage() {
                       </div>
                       <div>
                         <div className="font-bold">{req.receiver.nickname}</div>
-                        <div className="font-mono text-[10px] text-coc-gold">#{String(req.receiver.displayId).padStart(8, '0')}</div>
-                        <div className="text-[10px] text-coc-text-muted">{formatTimeAgo(req.createdAt)} · 等待回应</div>
+                        <div className="font-mono text-[10px] text-[#c9a227]">#{String(req.receiver.displayId).padStart(8, '0')}</div>
+                        <div className="text-[10px] text-[#6b6558]">{formatTimeAgo(req.createdAt)} · 等待回应</div>
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteRequest(req.id)}
                       disabled={processing}
-                      className="text-xs text-red-400 hover:bg-red-400/10 px-3 py-1.5 rounded border border-coc-border"
+                      className="text-xs text-red-400 hover:bg-red-400/10 px-3 py-1.5 rounded border border-[#3a3a3a]/40"
                     >
                       撤回
                     </button>
@@ -477,7 +477,7 @@ export function FriendListPage() {
           )}
 
           {pendingReceived.length === 0 && pendingSent.length === 0 && (
-            <div className="text-center py-12 text-coc-text-muted">暂无待处理的好友请求</div>
+            <div className="text-center py-12 text-[#6b6558]">暂无待处理的好友请求</div>
           )}
         </div>
       )}
@@ -486,7 +486,7 @@ export function FriendListPage() {
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="添加好友">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-coc-text-secondary mb-1">对方昵称</label>
+            <label className="block text-sm text-[#8b8375] mb-1">对方昵称</label>
             <input
               type="text"
               value={targetNickname}
@@ -496,7 +496,7 @@ export function FriendListPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-coc-text-secondary mb-1">附言（可选）</label>
+            <label className="block text-sm text-[#8b8375] mb-1">附言（可选）</label>
             <input
               type="text"
               value={addMessage}
@@ -526,7 +526,7 @@ export function FriendListPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="relative w-16 h-16 shrink-0">
-                <div className="w-16 h-16 rounded-full bg-coc-bg-tertiary flex items-center justify-center text-xl font-bold overflow-hidden">
+                <div className="w-16 h-16 rounded-full bg-black/20 flex items-center justify-center text-xl font-bold overflow-hidden">
                   {selectedFriend.avatarUrl ? (
                     <img src={selectedFriend.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -536,8 +536,8 @@ export function FriendListPage() {
               </div>
               <div>
                 <div className="text-lg font-bold">{selectedFriend.nickname}</div>
-                <div className="font-mono text-xs text-coc-gold">#{String(selectedFriend.displayId).padStart(8, '0')}</div>
-                <div className="text-sm text-coc-text-secondary">
+                <div className="font-mono text-xs text-[#c9a227]">#{String(selectedFriend.displayId).padStart(8, '0')}</div>
+                <div className="text-sm text-[#8b8375]">
                   {onlineFriends.has(selectedFriend.userId) ? '在线' : '离线'} · EXP {selectedFriend.exp}
                 </div>
               </div>
