@@ -721,7 +721,8 @@ export function RoomPage() {
   return (
     <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-4 px-1">
+      <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-lg
+                      backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 shadow-md">
         <div className="flex items-center gap-4">
           <Link to="/rooms" className="p-2 rounded border border-[#3a3a3a]/60 text-[#c9a227] 
                      hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10 transition-all">
