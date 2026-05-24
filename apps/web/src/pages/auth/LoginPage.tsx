@@ -48,12 +48,8 @@ export function LoginPage() {
       
       {/* 主卡片 */}
       <div className="relative z-10 w-full max-w-md mx-4">
-        {/* 外发光边框 */}
-        <div className="absolute -inset-[1px] bg-gradient-to-b from-coc-gold/20 via-coc-blood/10 to-transparent 
-                        rounded-lg blur-sm opacity-50"></div>
-        
-        <div className="relative bg-coc-surface/95 border border-coc-void rounded-lg p-8 
-                        backdrop-blur-sm coc-card-bottom">
+        <div className="relative border border-coc-void rounded-lg p-8 
+                        backdrop-blur-sm bg-black/20">
           {/* 顶部符文装饰 */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
             <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-coc-gold"></div>
@@ -63,26 +59,41 @@ export function LoginPage() {
 
           {/* Logo 区域 */}
           <div className="text-center mb-10 pt-4">
-            {/* 深海符号 */}
+            {/* 用 logo 素材替换 */}
             <div className="relative inline-block mb-6">
-              <div className="text-5xl animate-breathe">
-                🌊
+              <img
+                src="/logo.png"
+                alt="沉没之城"
+                className="w-48 h-auto mx-auto drop-shadow-[0_0_12px_rgba(201,162,39,0.4)]"
+                onError={(e) => {
+                  // 如果 logo 加载失败，回退到文字
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden">
+                {/* 深海符号 */}
+                <div className="relative inline-block mb-6">
+                  <div className="text-5xl animate-breathe">
+                    🌊
+                  </div>
+                  <div className="absolute -inset-4 bg-coc-blood/10 rounded-full blur-xl opacity-0 
+                                  group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                
+                {/* 标题 */}
+                <h1 className="text-4xl font-ritual font-bold coc-text-metal mb-3 tracking-widest">
+                  沉没之城
+                </h1>
+                
+                <p className="text-sm font-rune text-coc-parchment-faded tracking-[0.3em] uppercase mb-1">
+                  Sunken City
+                </p>            
+                <p className="text-xs text-coc-blood/60 font-rune tracking-wider">
+                  v1.1 · 深渊凝视
+                </p>
               </div>
-              <div className="absolute -inset-4 bg-coc-blood/10 rounded-full blur-xl opacity-0 
-                              group-hover:opacity-100 transition-opacity"></div>
             </div>
-            
-            {/* 标题 */}
-            <h1 className="text-4xl font-ritual font-bold coc-text-metal mb-3 tracking-widest">
-              沉没之城
-            </h1>
-            
-            <p className="text-sm font-rune text-coc-parchment-faded tracking-[0.3em] uppercase mb-1">
-              Sunken City
-            </p>            
-            <p className="text-xs text-coc-blood/60 font-rune tracking-wider">
-              v1.1 · 深渊凝视
-            </p>
           </div>
 
           {/* 错误提示 */}
