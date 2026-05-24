@@ -220,13 +220,13 @@ export function ForumBoardPage() {
       </div>
 
       {/* 版主展示 */}
-      <div className="rounded-lg border border-coc-gold/30 bg-gradient-to-r from-coc-gold/10 to-transparent px-4 py-3">
+      <div className="rounded-lg border border-[#c9a227]/30 backdrop-blur-md bg-black/80 px-4 py-3 shadow-lg shadow-black/40">
         <div className="flex flex-wrap items-center gap-3">
           {moderators.length > 0 ? (
             moderators.map((mod: any) => (
               <div
                 key={mod.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/50 bg-[#1a1a1a] shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c9a227]/50 backdrop-blur-md bg-black/60 shadow-sm"
               >
                 <span className="text-base text-[#c9a227] font-bold tracking-wide">
                   {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
@@ -237,11 +237,11 @@ export function ForumBoardPage() {
               </div>
             ))
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-coc-gold/30 bg-[#1a1a1a]/50">
-              <span className="text-base text-coc-gold/70 font-bold tracking-wide">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c9a227]/30 backdrop-blur-md bg-black/40">
+              <span className="text-base text-[#c9a227]/70 font-bold tracking-wide">
                 {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
               </span>
-              <span className="text-sm text-[#6b6558]">虚位以待</span>
+              <span className="text-sm text-[#9b9080]">虚位以待</span>
             </div>
           )}
         </div>

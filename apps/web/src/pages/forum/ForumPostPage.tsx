@@ -286,7 +286,7 @@ export function ForumPostPage() {
       ) : (
         <>
           {/* 主贴 */}
-          <div className="p-4 bg-black/20 border border-[#3a3a3a]/40 rounded-lg space-y-3 border-l-2 border-l-coc-gold/40">
+          <div className="p-4 backdrop-blur-md bg-black/80 border border-[#3a3a3a]/40 rounded-lg space-y-3 border-l-2 border-l-[#c9a227]/40 shadow-lg shadow-black/40">
             <div className="flex items-start gap-3">
               <AvatarWithFrame
                 avatarUrl={post.author.avatarUrl}
@@ -442,7 +442,7 @@ export function ForumPostPage() {
 
           {/* 回复框 */}
           {!post.isLocked && (
-            <div className="p-4 bg-black/20 border border-[#3a3a3a]/40 rounded-lg space-y-3">
+            <div className="p-4 backdrop-blur-md bg-black/80 border border-[#3a3a3a]/40 rounded-lg space-y-3 shadow-lg shadow-black/40">
               <RichTextEditor
                 value={replyContent}
                 onChange={setReplyContent}
@@ -512,10 +512,10 @@ function ReplyItem({
 
   return (
     <div
-      className={`p-4 border rounded-lg ${
+      className={`p-4 border rounded-lg shadow-lg shadow-black/40 ${
         reply.isBestReply
-          ? 'bg-amber-500/10 border-amber-500/40 relative overflow-hidden'
-          : 'bg-black/20 border-coc-border'
+          ? 'backdrop-blur-md bg-black/80 border-amber-500/40 relative overflow-hidden'
+          : 'backdrop-blur-md bg-black/80 border-[#3a3a3a]/40'
       }`}
     >
       {reply.isBestReply && (
