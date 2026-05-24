@@ -93,9 +93,9 @@ if [ -d "$WEB_DIR/dist/assets" ]; then
   cp -r $WEB_DIR/dist/assets/* $SERVER_DIR/public/assets/
 fi
 
-# 部署根目录静态文件（背景图、logo、images、frames等）
+# 部署根目录静态文件（排除 uploads 目录，防止用户上传文件被删除）
 echo "[*] 部署前端: 根目录静态文件"
-for f in $(ls $WEB_DIR/dist/ 2>/dev/null | grep -v -E '^(assets|index\.html)$'); do
+for f in $(ls $WEB_DIR/dist/ 2>/dev/null | grep -v -E '^(assets|index\.html|uploads)$'); do
   if [ -f "$WEB_DIR/dist/$f" ]; then
     echo "    → $f"
     cp $WEB_DIR/dist/$f $SERVER_DIR/public/
