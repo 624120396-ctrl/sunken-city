@@ -325,7 +325,7 @@ export function DashboardPage() {
           className="lg:col-span-2 space-y-3"
         >
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">开启仪式</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">开启仪式</h2>
           </GoldOrnament.Title>
           <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
@@ -374,7 +374,7 @@ export function DashboardPage() {
           className="lg:col-span-3"
         >
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">旧日低语</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">旧日低语</h2>
           </GoldOrnament.Title>
 
           <div
@@ -527,7 +527,7 @@ export function DashboardPage() {
       >
         <div className="flex items-center justify-between mb-3">
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">我的调查员</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">我的调查员</h2>
           </GoldOrnament.Title>
           <Link to="/characters" className="text-sm hover:opacity-80 transition-opacity tracking-wider text-[#c9a227]">
             查看全部 →
@@ -614,7 +614,7 @@ export function DashboardPage() {
       >
         <div className="flex items-center justify-between mb-3">
           <GoldOrnament.Title>
-            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">深渊广场</h2>
+            <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">深渊广场</h2>
           </GoldOrnament.Title>
           {!onlineLoading && (
             <span className="px-2.5 py-1 bg-[#c9a227]/10 border border-[#c9a227]/30 text-[#c9a227] text-xs rounded-md font-medium">
