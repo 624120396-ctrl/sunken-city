@@ -2,14 +2,49 @@
 ## 确认决策：技术驱动 + 现代化布局 + 动效进度条
 
 **已确认决策：**
-- ✅ 浅色主内容区保留（`#F7F4E9 → #F3F0E6`）
+- ✅ 浅色主内容区已移除，统一为古城背景图 `/bg-sunken.png`
 - ✅ 中文字体沿用当前
-- ✅ R3F Canvas **按需挂载**（非全局）
-- ✅ 磨砂玻璃 `backdrop-filter: blur(10px)` **保留叠加**
+- ✅ R3F Canvas **按需挂载**（非全局）— 待实施
+- ✅ 磨砂玻璃 `backdrop-filter: blur(16px)` **已应用**（用户面板、调查员卡片）
 - ✅ **不需要性能降级**（全开效果）
-- ✅ 进度条组件需要迭代优化（增加动效、强化质感）
-- ✅ **卡片不堆叠** — 采用现代化网格布局
-- ✅ 引入现代化设计元素
+- ✅ 进度条组件需要迭代优化（增加动效、强化质感）— 待实施
+- ✅ **卡片不堆叠** — Dashboard Bento Grid 已完成
+- ✅ 引入现代化设计元素 — 金色渐变文字、扫光动效、阴影过渡已完成
+
+---
+
+## 实施状态总览
+
+### ✅ 已完成（Dashboard v2.5）
+
+| 模块 | 状态 | 备注 |
+|------|------|------|
+| Dashboard Bento Grid 布局 | ✅ | 用户信息 + 功能2×2 + 公告/位阶 + 深渊横幅 + 调查员横条 |
+| 全局背景图统一 | ✅ | `/bg-sunken.png` 古城漂浮水面，所有页面统一 |
+| 导航栏选中态 | ✅ | 暗红色边框图片（展开/收缩双态）+ 白色/金色扫光动效 |
+| 导航栏/顶部栏阴影过渡 | ✅ | 侧边栏右侧阴影 + 顶部栏底部阴影 + 2px金色渐变分隔线 |
+| 标题配色优化 | ✅ | `#f5f0e6` → `#c9a227` 深金色 + drop-shadow |
+| 调查员卡片全新设计 | ✅ | 背景图(角色portrait/默认克苏鲁图) + 磨砂玻璃 + 血红色渐变 + 10秒垂直平移动画 |
+| 用户信息面板 | ✅ | 暗色磨砂玻璃卡片 + 顶部金色渐变线 + 货币徽章(圆形底+图标+数字) |
+| 玻璃拟态升级 | ✅ | `backdrop-blur-md` + `bg-[#12121a]/40` + 白色细边框 |
+
+### 🔄 待实施
+
+| 模块 | 优先级 | 备注 |
+|------|--------|------|
+| `CthulhuProgress` 动效升级 | P1 | XP流光注入、状态脉冲警告、收集分段弹出 |
+| `CthulhuCard3D` 3D倾斜效果 | P1 | 鼠标追踪3D旋转 + conic-gradient旋转边框 |
+| 磁吸按钮 `CthulhuButton` | P1 | 鼠标位置→弹簧位移 + 流光扫过 |
+| R3F 氛围粒子 | P1 | DashboardParticles（金色Sparkles+扭曲符文）等按需挂载 |
+| 论坛 Masonry 瀑布流 | P2 | 板块卡片大小交错 |
+| 背包横向展开 | P2 | 标签页切换 + 列表式卡片 |
+| 好友横向在线条 | P2 | 在线优先 + 磁吸添加按钮 |
+| 黑水港沉浸式卡片 | P2 | HarborBubbles 气泡 + 抛竿动画 |
+| 溺者之牌 3D翻转 | P2 | CardFlipSpace + 卡牌mesh翻转 |
+| 故事书网格+视差 | P2 | 2列网格 + stagger入场 |
+| 调查员名册横向条 | P2 | 角色卡片条 + 属性条 HP/MP/SAN |
+| 骨架屏升级 | P2 | Shimmer Effect 微光扫过 |
+| 视差滚动 | P2 | 各区块不同速度滚动 |
 
 ---
 
@@ -61,10 +96,15 @@ Dashboard 各区域垂直堆叠：用户信息→功能入口→公告→位阶�
 
 ## 二、现代化设计元素引入
 
-### 2.1 玻璃拟态升级（Glassmorphism V2）
+### 2.1 玻璃拟态升级（Glassmorphism V2）— 🔄 部分完成
 
-当前磨砂玻璃是基础版，升级为：
+当前磨砂玻璃已升级为：
+- ✅ `backdrop-filter: blur(16px)` 已应用（用户面板、调查员卡片、导航栏）
+- ✅ `bg-[#12121a]/40` 暗色半透明底已应用
+- ✅ 白色细边框 `border-white/[0.08]` 已应用
+- 🔄 `saturate(120%)` + 内高光阴影 — 待实施
 
+完整版：
 ```css
 .glass-v2 {
   background: rgba(18, 18, 26, 0.7);
@@ -77,13 +117,9 @@ Dashboard 各区域垂直堆叠：用户信息→功能入口→公告→位阶�
 }
 ```
 
-**升级点：**
-- blur从10px提升到16px（更清晰背景+更明显的磨砂感）
-- 增加 `saturate(120%)` — 让背景色更浓郁
-- 增加内阴影顶部高光 — 制造玻璃厚度感
-- 边框从纯色改为极低透明度金色
+---
 
-### 2.2 磁吸按钮（Magnetic Button）
+### 2.2 磁吸按钮（Magnetic Button）— 🔄 待实施
 
 ```tsx
 const MagneticButton = ({ children }) => {
@@ -114,7 +150,7 @@ const MagneticButton = ({ children }) => {
 
 **应用：** 所有主要按钮（进入房间、抛竿、占卜、添加好友）
 
-### 2.3 骨架屏升级（Shimmer Effect）
+### 2.3 骨架屏升级（Shimmer Effect）— 🔄 待实施
 
 ```tsx
 const ShimmerSkeleton = () => (
@@ -128,7 +164,7 @@ const ShimmerSkeleton = () => (
 );
 ```
 
-### 2.4 渐变色文字（Gradient Text）
+### 2.4 渐变色文字（Gradient Text）— ✅ 已完成（标题配色）
 
 ```css
 .gradient-gold {
@@ -148,20 +184,22 @@ const ShimmerSkeleton = () => (
 
 **应用：** 页面大标题、重要数字、用户昵称
 
-### 2.5 微交互系统（Micro-interactions）
+### 2.5 微交互系统（Micro-interactions）— 🔄 部分完成
 
 每个可交互元素必须有反馈：
 
-| 元素 | 默认 | Hover | Active/Click |
-|------|------|-------|-------------|
-| 卡片 | 静态 | 3D倾斜 + 边框发光 + 抬升2px | 按下0.98缩放 |
-| 按钮 | 静态 | 磁吸位移 + 流光扫过 + 抬升 | 弹簧按下 + 涟漪 |
-| 输入框 | 暗底 | 金色边框显现 + 内发光 | 波纹扩散 |
-| 标签页 | 静态 | 文字金色 | 指示器滑动 |
-| 头像 | 静态 | 暗金ring发光 + 轻微放大 | — |
-| 图标 | 静态 | 颜色变金 + 轻微弹跳 | — |
+| 元素 | 默认 | Hover | Active/Click | 状态 |
+|------|------|-------|-------------|------|
+| 卡片 | 静态 | 3D倾斜 + 边框发光 + 抬升2px | 按下0.98缩放 | 🔄 待实施 |
+| 按钮 | 静态 | 磁吸位移 + 流光扫过 + 抬升 | 弹簧按下 + 涟漪 | 🔄 待实施 |
+| 输入框 | 暗底 | 金色边框显现 + 内发光 | 波纹扩散 | 🔄 待实施 |
+| 标签页 | 静态 | 文字金色 | 指示器滑动 | 🔄 待实施 |
+| 头像 | 静态 | 暗金ring发光 + 轻微放大 | — | 🔄 待实施 |
+| 图标 | 静态 | 颜色变金 + 轻微弹跳 | — | 🔄 待实施 |
+| 导航栏选中态 | 暗红边框图 | 白色扫光条 3秒循环 / hover 金色扫光 | — | ✅ 已完成 |
+| 分隔线 | 静态 | — | — | ✅ 已完成（2px金色渐变） |
 
-### 2.6 视差滚动（Parallax Scrolling）
+### 2.6 视差滚动（Parallax Scrolling）— 🔄 待实施
 
 ```tsx
 const ParallaxSection = ({ children, speed = 0.5 }) => {
@@ -180,7 +218,7 @@ const ParallaxSection = ({ children, speed = 0.5 }) => {
 
 ---
 
-## 三、进度条组件重构 `CthulhuProgress`
+## 三、进度条组件重构 `CthulhuProgress` — 🔄 待实施
 
 ### 3.1 XP/等级进度条（Dashboard顶部）
 
@@ -349,14 +387,14 @@ const CollectionProgress = ({ collected, total, label }) => {
 
 ### UI 层（6个组件）
 
-| 组件 | 核心能力 | 文件 |
-|------|---------|------|
-| `CthulhuCard3D` | 3D倾斜 + conic-gradient旋转边框 + 弹簧物理 + Bento Grid适配 | `ui/CthulhuCard3D.tsx` |
-| `CthulhuButton` | 磁吸位移 + 流光扫过 + 弹簧按下 + 3变体（主/危险/幽灵） | `ui/CthulhuButton.tsx` |
-| `AnimatedBorder` | CSS `@property` 旋转边框（hover触发/持续旋转） | `ui/AnimatedBorder.tsx` |
-| `GoldOrnament` | 金色装饰线/四角/分隔线（纯CSS程序化） | `ui/GoldOrnament.tsx` |
-| `CthulhuProgress` | XP流光/状态脉冲/收集分段（三合一） | `ui/CthulhuProgress.tsx` |
-| `OccultBadge` | 克苏鲁徽章系统 + CSS mask-image纹理化 | `ui/OccultBadge.tsx` |
+| 组件 | 核心能力 | 文件 | 状态 |
+|------|---------|------|------|
+| `CthulhuCard3D` | 3D倾斜 + conic-gradient旋转边框 + 弹簧物理 + Bento Grid适配 | `ui/CthulhuCard3D.tsx` | 🔄 部分完成（边框发光已用，3D倾斜待实施） |
+| `CthulhuButton` | 磁吸位移 + 流光扫过 + 弹簧按下 + 3变体（主/危险/幽灵） | `ui/CthulhuButton.tsx` | 🔄 待实施 |
+| `AnimatedBorder` | CSS `@property` 旋转边框（hover触发/持续旋转） | `ui/AnimatedBorder.tsx` | ✅ 已完成（导航栏扫光动效） |
+| `GoldOrnament` | 金色装饰线/四角/分隔线（纯CSS程序化） | `ui/GoldOrnament.tsx` | ✅ 已完成 |
+| `CthulhuProgress` | XP流光/状态脉冲/收集分段（三合一） | `ui/CthulhuProgress.tsx` | 🔄 待实施（当前为静态条） |
+| `OccultBadge` | 克苏鲁徽章系统 + CSS mask-image纹理化 | `ui/OccultBadge.tsx` | 🔄 待实施 |
 
 ### 氛围层（按需挂载）
 
@@ -381,11 +419,11 @@ const CollectionProgress = ({ collected, total, label }) => {
 
 ## 五、具体页面改造（技术+布局双升级）
 
-### P0 — Dashboard（Bento Grid布局）
+### P0 — Dashboard（Bento Grid布局）— ✅ 已完成 v2.5
 
 ```
 ┌──────────────────────────────────────────────────────┐ 用户信息面板（宽×短）
-│  头像 + 昵称 + 等级徽章  │  SP 1595  ⚡60  │ 每日签到 │  XP进度条（流光）
+│  头像 + 昵称 + 等级徽章  │  SP 1595  ⚡60  │ 每日签到 │  XP进度条（待流光动效）
 ├──────────────────────┬─────────────────────────────────┤
 │  功能入口（2×2）      │  公告 + 位阶（竖高）             │
 │  ┌────┐  ┌────┐    │  ┌─────────────┐                │
@@ -402,13 +440,18 @@ const CollectionProgress = ({ collected, total, label }) => {
 └──────────────────────────────────────────────────────┘
 ```
 
-**技术实现：**
-- 用户信息面板：`CthulhuCard3D`（无3D倾斜，只做边框发光） + `CthulhuProgress(XP)`
-- 功能入口：4个 `CthulhuCard3D` + 磁吸按钮 `CthulhuButton` + stagger入场
-- 公告/位阶：右侧竖高 `CthulhuCard3D variant-parchment` + `CthulhuProgress(收集)`
-- 深渊广场：横幅 `CthulhuCard3D variant-blood` + `AnimatedBorder` 持续旋转 + 磁吸大按钮
-- 调查员：横向滚动容器 + `CthulhuCard3D` × N + 拖拽/滚轮交互
-- 全局：`DashboardParticles` R3F氛围 + 磨砂玻璃叠加
+**已实施：**
+- ✅ 用户信息面板：暗色磨砂玻璃 + 顶部金色渐变线 + 货币徽章
+- ✅ 功能入口：4个卡片 + stagger入场
+- ✅ 公告/位阶：右侧竖高卡片
+- ✅ 深渊广场：横幅 + 血氛围
+- ✅ 调查员：横向滚动容器 + 背景图 + 磨砂玻璃 + 10秒平移动画
+- ✅ 全局：`/bg-sunken.png` 古城背景 + 导航栏阴影 + 金色分隔线
+
+**待实施：**
+- 🔄 `DashboardParticles` R3F氛围粒子
+- 🔄 `CthulhuProgress` XP流光动效
+- 🔄 磁吸按钮
 
 ### P1 — 论坛（Masonry瀑布流）
 
@@ -529,58 +572,56 @@ const CollectionProgress = ({ collected, total, label }) => {
 
 ## 七、实施顺序
 
-### Phase 1：地基（1-2天）
-1. 安装 `clsx`（如未安装）
-2. 更新 `index.css` — CSS变量 + @property + 工具类
-3. 创建 `useMouseTilt.ts` + `useMagnetic.ts` + `useGlow.ts` + `useScrollParallax.ts`
-4. 创建 `CthulhuCard3D.tsx`（3D倾斜 + 边框发光 + 变体）
-5. 创建 `CthulhuButton.tsx`（磁吸 + 流光 + 3变体）
-6. 创建 `AnimatedBorder.tsx`（旋转边框）
-7. 创建 `CthulhuProgress.tsx`（三合一进度条）
-8. 创建 `GoldOrnament.tsx` + `OccultBadge.tsx`
+### Phase 1：Dashboard v2.5 地基（✅ 已完成 — 2026-05-24）
+1. ✅ 全局背景图统一 `/bg-sunken.png`
+2. ✅ 导航栏选中态（暗红边框图 + 扫光动效）
+3. ✅ 导航栏/顶部栏阴影过渡 + 金色渐变分隔线
+4. ✅ Dashboard Bento Grid 布局重构
+5. ✅ 标题配色优化（深金色 `#c9a227`）
+6. ✅ 调查员卡片全新设计（背景图 + 磨砂玻璃 + 血红色渐变 + 动画）
+7. ✅ 用户信息面板（磨砂玻璃 + 金色渐变线 + 货币徽章）
+8. ✅ `GoldOrnament` 装饰线组件
 
-### Phase 2：Dashboard Bento Grid（2天）
-1. 用户信息面板 + XP进度条
-2. 功能入口2×2网格 + 磁吸按钮
-3. 公告+位阶右侧竖高卡片
-4. 深渊广场横幅 + 血氛围
-5. 调查员横向条
-6. 挂载 `DashboardParticles`
-7. 全局磨砂玻璃叠加
+### Phase 2：核心动效组件（🔄 下一步）
+1. `CthulhuProgress` 动效升级 — XP流光注入、状态脉冲、收集分段
+2. `CthulhuCard3D` 3D倾斜效果 — 鼠标追踪旋转
+3. `CthulhuButton` 磁吸按钮 — 弹簧位移 + 流光扫过
+4. R3F 氛围粒子 — `DashboardParticles` 按需挂载
 
-### Phase 3：各功能页（每个0.5-1天）
-1. 论坛 — masonry + ForumTentacles
+### Phase 3：各功能页改造（🔄 待排期）
+1. 论坛 — masonry + `ForumTentacles`
 2. 背包 — 横向展开 + 标签页动画
 3. 好友 — 横向条 + 磁吸添加
-4. 黑水港 — HarborBubbles + 抛竿动画
-5. 溺者之牌 — CardFlipSpace + 3D翻转
+4. 黑水港 — `HarborBubbles` + 抛竿动画
+5. 溺者之牌 — `CardFlipSpace` + 3D翻转
 6. 故事书 — 网格 + 视差
-7. 调查员 — 横向条 + 属性条
+7. 调查员名册 — 横向条 + HP/MP/SAN属性条
 
-### Phase 4：全局打磨（0.5天）
+### Phase 4：全局打磨（🔄 待排期）
 1. AnimatePresence 页面过渡
-2. 侧边栏选中态流光
-3. 顶部Header glass-v2
+2. 骨架屏 `ShimmerSkeleton`
+3. 视差滚动 `useScrollParallax`
 4. 空状态统一 + motion
 5. 整体色调微调
 
 ---
 
-## 八、最终预期效果
+## 八、当前效果 vs 预期效果
 
-| 维度 | 改造前 | 改造后 |
-|------|--------|--------|
-| **布局** | 垂直卡片堆叠 | Bento Grid + 非对称 + 横向条 |
-| **卡片** | 扁平黑底 | 3D倾斜 + 旋转边框 + 深度层次 |
-| **按钮** | 纯色矩形 | 磁吸位移 + 流光扫过 + 弹簧物理 |
-| **进度条** | 纯色填充 | 流光注入 + 脉冲警告 + 分段弹出 |
-| **氛围** | 静态背景图 | R3F粒子 + 扭曲材质 + 后处理 |
-| **交互** | 无/简单变色 | 每个元素都有微反馈 |
-| **现代感** | 传统卡片风 | Bento + Glassmorphism V2 + 视差 |
-| **克苏鲁感** | 静态图标 | 粒子化 + 扭曲 + 血光 + 触手 |
+| 维度 | 改造前 | 当前（v2.5） | 预期（终版） |
+|------|--------|-------------|-------------|
+| **布局** | 垂直卡片堆叠 | ✅ Bento Grid + 非对称 + 横向条 | 同上 |
+| **卡片** | 扁平黑底 | ✅ 磨砂玻璃 + 阴影 + 血红色渐变 | + 3D倾斜 + 旋转边框 |
+| **按钮** | 纯色矩形 | 当前静态按钮 | + 磁吸位移 + 流光扫过 + 弹簧物理 |
+| **进度条** | 纯色填充 | 当前静态条 | + 流光注入 + 脉冲警告 + 分段弹出 |
+| **氛围** | 静态背景图 | ✅ 古城漂浮水面 `/bg-sunken.png` | + R3F粒子 + 扭曲材质 + 后处理 |
+| **交互** | 无/简单变色 | ✅ 导航栏扫光 + 卡片hover | + 每个元素都有微反馈 |
+| **现代感** | 传统卡片风 | ✅ Bento + Glassmorphism + 阴影过渡 | + 视差 |
+| **克苏鲁感** | 静态图标 | ✅ 血红色渐变 + 暗红色边框 + 金色分隔线 | + 粒子化 + 扭曲 + 触手 |
 
 ---
 
-*方案版本: V2.3（终版 — 确认决策已融入）*
-*撰写时间: 2026-05-24*
-*核心变化: Bento Grid布局 + 磁吸按钮 + 动效进度条 + 现代化微交互*
+*方案版本: V2.3（Dashboard v2.5 已完成 — 2026-05-24）*
+*更新时间: 2026-05-24 20:15 CST*
+*核心变化: Dashboard Bento Grid + 古城背景 + 导航栏扫光 + 磨砂玻璃用户面板 + 调查员卡片动画*
+*下一步: CthulhuProgress动效 / CthulhuCard3D倾斜 / 磁吸按钮 / R3F氛围粒子*
