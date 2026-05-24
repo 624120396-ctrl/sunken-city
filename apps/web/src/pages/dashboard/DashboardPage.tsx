@@ -338,7 +338,7 @@ export function DashboardPage() {
                       />
                     )}
                     {/* 磨砂玻璃覆盖层 - 仅左侧1/5 */}
-                    <div className="absolute inset-y-0 left-0 w-[22%] backdrop-blur-[1px] bg-[#0a0a0f]/30 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
+                    <div className="absolute inset-y-0 left-0 w-[22%] backdrop-blur-[13px] bg-[#0a0a0f]/30 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
                     {/* 底部血红色渐变 */}
                     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
                     {/* 顶部微光 */}
