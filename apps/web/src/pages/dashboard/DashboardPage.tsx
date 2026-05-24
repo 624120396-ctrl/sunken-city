@@ -79,6 +79,7 @@ export function DashboardPage() {
   const [onlineUsers, setOnlineUsers] = useState<(UserProfile & { userId: string })[]>([]);
   const [onlineLoading, setOnlineLoading] = useState(true);
   const [selectedOnlineUser, setSelectedOnlineUser] = useState<UserProfile | null>(null);
+  const [whispersHovered, setWhispersHovered] = useState(false);
 
   useEffect(() => {
     fetchCharacters();
@@ -342,74 +343,154 @@ export function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* 右侧：旧日低语（3张Glass卡片 - ugly-lion-23 风格） */}
+        {/* 右侧：旧日低语（3张堆叠玻璃卡片 - ugly-lion-23 风格） */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="lg:col-span-3 space-y-3"
+          className="lg:col-span-3"
         >
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#f5f0e6]">旧日低语</h2>
           </GoldOrnament.Title>
 
-          {/* 公告 Glass卡片 */}
-          <GlassCard hoverGlow size="md">
-            <div className="flex items-center gap-2 mb-4">
-              <Megaphone size={16} className="text-[#c9a227]" />
-              <h3 className="text-sm font-bold text-[#d4c5a8] tracking-wider">深渊公告</h3>
-            </div>
-            {announcements.length > 0 ? (
-              <div className="space-y-3">
-                {announcements.slice(0, 3).map((ann) => (
-                  <div key={ann.id} className="flex items-start gap-3">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-[#f5f0e6] truncate">{ann.title}</span>
-                        {ann.isPinned && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-[#c9a227]/15 text-[#c9a227] rounded shrink-0">置顶</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[#a69b85] mt-1 line-clamp-2">{ann.content}</p>
-                    </div>
-                  </div>
-                ))}
+          <div
+            className="flex justify-center items-center h-[260px] mt-3"
+            onMouseEnter={() => setWhispersHovered(true)}
+            onMouseLeave={() => setWhispersHovered(false)}
+          >
+            {/* 卡片1 - 深渊公告（左，-15deg） */}
+            <div
+              className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+              style={{
+                transform: whispersHovered ? 'rotate(0deg)' : 'rotate(-15deg)',
+                margin: whispersHovered ? '0 10px' : '0 -45px',
+                zIndex: 1,
+              }}
+            >
+              {/* 折叠态图标 */}
+              <div className={`flex flex-col items-center gap-3 transition-opacity duration-300 ${whispersHovered ? 'opacity-0' : 'opacity-100'}`}>
+                <Megaphone size={40} className="text-[#c9a227]" strokeWidth={1.5} />
               </div>
-            ) : (
-              <div className="text-center py-4 text-[#6b6558]">
-                <p className="text-sm">暂无新公告</p>
-              </div>
-            )}
-          </GlassCard>
 
-          {/* 位阶 + 印记 Glass卡片 */}
-          <div className="grid grid-cols-2 gap-3">
+              {/* 展开态内容 */}
+              <div className={`absolute inset-0 p-3 pt-4 transition-opacity duration-300 ${whispersHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'} overflow-y-auto`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Megaphone size={14} className="text-[#c9a227]" />
+                  <span className="text-xs font-bold text-[#d4c5a8] tracking-wider">深渊公告</span>
+                </div>
+                {announcements.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {announcements.slice(0, 3).map((ann) => (
+                      <div key={ann.id} className="flex items-start gap-2">
+                        <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${ann.isPinned ? 'bg-[#c9a227]' : 'bg-[#6b6558]'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs text-[#f5f0e6] truncate">{ann.title}</div>
+                          <p className="text-[10px] text-[#6b6558] line-clamp-1">{ann.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#6b6558]">暂无新公告</p>
+                )}
+              </div>
+
+              {/* 底部标签 */}
+              <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                <span className="text-xs text-white/70">深渊公告</span>
+              </div>
+            </div>
+
+            {/* 卡片2 - 位阶天梯（中，0deg） */}
             <Link to="/ranks" className="block">
-              <GlassCard hoverGlow size="sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#c9a227]/8 border border-[#c9a227]/15 flex items-center justify-center shrink-0">
-                    <Crown size={20} className="text-[#c9a227]" strokeWidth={1.5} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-[#f5f0e6]">位阶天梯</h3>
-                    <p className="text-xs text-[#6b6558] mt-0.5">灵魂碎片来源</p>
-                  </div>
+              <div
+                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                style={{
+                  transform: whispersHovered ? 'rotate(0deg)' : 'rotate(0deg)',
+                  margin: whispersHovered ? '0 10px' : '0 -45px',
+                  zIndex: 2,
+                }}
+              >
+                {/* 折叠态图标 */}
+                <div className={`flex flex-col items-center gap-3 transition-opacity duration-300 ${whispersHovered ? 'opacity-0' : 'opacity-100'}`}>
+                  <Crown size={40} className="text-[#c9a227]" strokeWidth={1.5} />
                 </div>
-              </GlassCard>
+
+                {/* 展开态内容 */}
+                <div className={`absolute inset-0 p-3 pt-4 transition-opacity duration-300 ${whispersHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'} overflow-y-auto`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Crown size={14} className="text-[#c9a227]" />
+                    <span className="text-xs font-bold text-[#d4c5a8] tracking-wider">位阶天梯</span>
+                  </div>
+                  {!rankLoading && rank?.name ? (
+                    <div className="space-y-2">
+                      <div className="text-sm text-[#f5f0e6] font-bold">{rank.name}</div>
+                      <div className="text-[10px] text-[#6b6558]">Lv.{rank.level}</div>
+                      {rankInfo?.nextRank && (
+                        <div className="mt-2">
+                          <div className="h-1 bg-[#1a1a24] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#c9a227]/60 rounded-full"
+                              style={{ width: `${(rankInfo.exp / (rankInfo.exp + rankInfo.expToNext)) * 100}%` }}
+                            />
+                          </div>
+                          <div className="text-[10px] text-[#6b6558] mt-1">{rankInfo.exp} / {rankInfo.exp + rankInfo.expToNext} SP</div>
+                        </div>
+                      )}
+                      <div className="text-[10px] text-[#c9a227] mt-2">点击查看天梯 →</div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#6b6558]">暂无位阶信息</p>
+                  )}
+                </div>
+
+                {/* 底部标签 */}
+                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                  <span className="text-xs text-white/70">位阶天梯</span>
+                </div>
+              </div>
             </Link>
+
+            {/* 卡片3 - 印记图鉴（右，+15deg） */}
             <Link to="/titles" className="block">
-              <GlassCard hoverGlow size="sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#8b2635]/8 border border-[#8b2635]/15 flex items-center justify-center shrink-0">
-                    <Award size={20} className="text-[#8b2635]" strokeWidth={1.5} />
+              <div
+                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                style={{
+                  transform: whispersHovered ? 'rotate(0deg)' : 'rotate(15deg)',
+                  margin: whispersHovered ? '0 10px' : '0 -45px',
+                  zIndex: 1,
+                }}
+              >
+                {/* 折叠态图标 */}
+                <div className={`flex flex-col items-center gap-3 transition-opacity duration-300 ${whispersHovered ? 'opacity-0' : 'opacity-100'}`}>
+                  <Award size={40} className="text-[#8b2635]" strokeWidth={1.5} />
+                </div>
+
+                {/* 展开态内容 */}
+                <div className={`absolute inset-0 p-3 pt-4 transition-opacity duration-300 ${whispersHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'} overflow-y-auto`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award size={14} className="text-[#8b2635]" />
+                    <span className="text-xs font-bold text-[#d4c5a8] tracking-wider">印记图鉴</span>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-[#f5f0e6]">印记图鉴</h3>
-                    <p className="text-xs text-[#6b6558] mt-0.5">称号与成就</p>
+                  <div className="space-y-2">
+                    {user?.displayedTitleName ? (
+                      <>
+                        <div className="text-sm text-[#f5f0e6] font-bold">{user.displayedTitleName}</div>
+                        <div className="text-[10px] text-[#6b6558]">当前佩戴称号</div>
+                      </>
+                    ) : (
+                      <p className="text-xs text-[#6b6558]">尚未佩戴任何称号</p>
+                    )}
+                    <div className="text-[10px] text-[#c9a227] mt-2">查看全部称号 →</div>
                   </div>
                 </div>
-              </GlassCard>
+
+                {/* 底部标签 */}
+                <div className="absolute bottom-0 w-full h-10 bg-white/5 flex items-center justify-center border-t border-white/5">
+                  <span className="text-xs text-white/70">印记图鉴</span>
+                </div>
+              </div>
             </Link>
           </div>
         </motion.div>
