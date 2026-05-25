@@ -1176,12 +1176,15 @@ export function RoomPage() {
         </div>
 
         {/* 右侧：聊天/战斗区 */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden pl-3">
+        <div className={cn(
+          "flex-1 flex flex-col min-h-0 overflow-hidden",
+          isMobile ? "pl-0" : "pl-3"
+        )}>
           {activeTab === 'chat' ? (
-            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="default" runeCorners innerClassName={cn("flex-1 flex flex-col min-h-0", isMobile ? "p-1" : "p-4")}>
               {/* ===== 新增：场景描述卡片 ===== */}
               {(sceneDesc || room?.isCreator) && (
-                <div className="px-4 pt-4 flex-shrink-0">
+                <div className={cn("flex-shrink-0", isMobile ? "px-1 pt-1" : "px-4 pt-4")}>
                   <SceneCard
                     description={sceneDesc}
                     isKP={!!room?.isCreator}
@@ -1230,7 +1233,10 @@ export function RoomPage() {
                       return (
                         <StaggerItem key={msg.id}>
                           <div className="flex justify-center">
-                            <div className="max-w-[85%] px-5 py-3 rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/60 italic text-sm text-center shadow-md" style={{ color: "#e8d4a0" }}>
+                            <div className={cn(
+                              "max-w-[85%] rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/60 italic text-sm text-center shadow-md",
+                              isMobile ? "px-2 py-2" : "px-5 py-3"
+                            )} style={{ color: "#e8d4a0" }}>
                               {msg.content}
                               <span className="ml-2 text-xs text-coc-text-muted not-italic">
                                 {new Date(msg.timestamp).toLocaleTimeString()}
@@ -1246,13 +1252,15 @@ export function RoomPage() {
                         <div className="flex justify-start gap-3">
                           <Avatar />
                           <div
-                            className={`max-w-[75%] px-4 py-3 rounded-lg relative group border shadow-md ${
+                            className={cn(
+                              "max-w-[75%] rounded-lg relative group border shadow-md",
+                              isMobile ? "px-2 py-2" : "px-4 py-3",
                               msg.type === 'dice'
                                 ? 'bg-[#1a1a1a] border-[#c9a227]/50'
                                 : isMe
                                 ? 'bg-[#1a1a1a] border-l-2 border-l-[#c9a227] border-[#3a3a3a]/60'
                                 : 'bg-coc-bg-tertiary'
-                            }`}
+                            )}
                           >
                     <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
                               {isKPMessage ? (
@@ -1308,7 +1316,10 @@ export function RoomPage() {
               {/* 输入框 */}
               <form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-[#3a3a3a]/40 space-y-2 flex-shrink-0 backdrop-blur-md bg-black/20"
+                className={cn(
+                  "border-t border-[#3a3a3a]/40 space-y-2 flex-shrink-0 backdrop-blur-md bg-black/20",
+                  isMobile ? "p-1" : "p-4"
+                )}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1">
@@ -1413,7 +1424,7 @@ export function RoomPage() {
             </DoubleBezelCard>
           ) : (
             /* 战斗面板 */
-            <DoubleBezelCard variant="blood" runeCorners innerClassName="p-4 flex-1 flex flex-col min-h-0">
+            <DoubleBezelCard variant="blood" runeCorners innerClassName={cn("flex-1 flex flex-col min-h-0", isMobile ? "p-1" : "p-4")}>
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
