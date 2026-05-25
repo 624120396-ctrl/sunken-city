@@ -197,6 +197,7 @@ export function RoomPage() {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [showMobileMembers, setShowMobileMembers] = useState(false);
   const [showCharacterModal, setShowCharacterModal] = useState(false);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
@@ -751,23 +752,25 @@ export function RoomPage() {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-            className="px-4 py-1.5 rounded text-sm flex items-center gap-1.5 text-[#e8d4a0]
-                       bg-[url('/btn-off.png')] bg-cover bg-center
-                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                       transition-all min-w-[80px] justify-center"
+            className={cn(
+              "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
+              isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+            )}
+            title={activeTab === 'chat' ? '战斗' : '聊天'}
           >
-            {activeTab === 'chat' ? <Swords size={14} /> : <Send size={14} />}
-            {activeTab === 'chat' ? '战斗' : '聊天'}
+            {activeTab === 'chat' ? <Swords size={isMobile ? 18 : 14} /> : <Send size={isMobile ? 18 : 14} />}
+            {!isMobile && (activeTab === 'chat' ? '战斗' : '聊天')}
           </button>
           <button
             onClick={() => setShowPrivateChat(true)}
-            className="px-4 py-1.5 rounded text-sm flex items-center gap-1.5 text-[#e8d4a0]
-                       bg-[url('/btn-off.png')] bg-cover bg-center
-                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                       transition-all min-w-[80px] justify-center relative"
+            className={cn(
+              "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center relative",
+              isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+            )}
+            title="私聊"
           >
-            <MessageSquare size={14} />
-            私聊
+            <MessageSquare size={isMobile ? 18 : 14} />
+            {!isMobile && <span>私聊</span>}
             {privateUnreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-[#a63848] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-md">
                 {privateUnreadCount}
@@ -775,17 +778,18 @@ export function RoomPage() {
             )}
           </button>
           <div className="relative group z-[100]">
-            <button className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
-                              bg-[url('/btn-off.png')] bg-cover bg-center
-                              hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                              transition-all min-w-[80px] justify-center">
-              <span>更多</span>
-              <ChevronDown size={12} />
+            <button className={cn(
+                "rounded flex items-center gap-1 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
+                isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+              )}>
+              <span className={isMobile ? "hidden" : ""}>更多</span>
+              <ChevronDown size={isMobile ? 18 : 12} />
             </button>
             <div className="absolute right-0 top-full mt-1 w-44 backdrop-blur-md bg-black/80 
                             border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60
                             opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[9999] py-1">
               {[
+                { label: '成员', icon: Users, show: showMobileMembers, toggle: () => setShowMobileMembers(!showMobileMembers) },
                 { label: '线索', icon: Search, show: showCluePanel, toggle: () => setShowCluePanel(!showCluePanel) },
                 { label: 'NPC', icon: User, show: showNpcPanel, toggle: () => setShowNpcPanel(!showNpcPanel) },
                 { label: '战斗', icon: Swords, show: showCombatTimeline, toggle: () => setShowCombatTimeline(!showCombatTimeline) },
@@ -864,12 +868,11 @@ export function RoomPage() {
 
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* 左侧：成员列表 */}
-          <div
-            className={cn(
-              'shrink-0 flex flex-col min-h-0 border-r border-[#3a3a3a]/30 transition-all duration-300',
-              roomLeftPanelCollapsed ? 'w-14' : 'w-[200px]'
-            )}
-          >
+          <div className={cn(
+          'shrink-0 flex-col min-h-0 border-r border-[#3a3a3a]/30 transition-all duration-300',
+          roomLeftPanelCollapsed ? 'w-14' : 'w-[200px]',
+          isMobile ? 'hidden md:flex' : 'flex'
+        )}>
             {/* 收放按钮 */}
             <button
               onClick={toggleRoomLeftPanel}
@@ -1769,6 +1772,57 @@ export function RoomPage() {
             }}
           />
         )}
+      </Modal>
+
+      {/* 移动端成员列表弹窗 */}
+      <Modal
+        isOpen={showMobileMembers}
+        onClose={() => setShowMobileMembers(false)}
+        title="调查员"
+      >
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          {room?.members.map((member) => {
+            const char = member.displayedCharacter || member.character;
+            return (
+              <div
+                key={member.id}
+                className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer border border-transparent backdrop-blur-sm bg-black/20 hover:bg-black/40 hover:border-[#c9a227]/30"
+                onClick={() => {
+                  setSelectedMember(member);
+                  setShowMemberDetail(true);
+                  setShowMobileMembers(false);
+                }}
+              >
+                <div className="relative w-10 h-10 flex-shrink-0">
+                  {member.avatarUrl ? (
+                    <img src={member.avatarUrl} className="w-10 h-10 rounded-full object-cover border border-coc-border bg-coc-bg-secondary" alt="" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#1a1a1a] border border-[#3a3a3a] flex items-center justify-center">
+                      <User size={18} className="text-coc-text-muted" />
+                    </div>
+                  )}
+                  {member.frameUrl && (
+                    <img src={member.frameUrl} className="absolute inset-0 w-full h-full pointer-events-none" style={{ transform: 'scale(1.3)' }} alt="" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium text-sm truncate">{char?.name || member.nickname}</span>
+                    {member.role === 'KP' && <Crown size={12} className="text-coc-accent-gold flex-shrink-0" />}
+                  </div>
+                  {char?.name && <div className="text-xs text-coc-text-secondary truncate">{member.nickname}</div>}
+                  {char && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-coc-accent-red">HP {char.hp}/{char.maxHp || char.hp}</span>
+                      <span className="text-xs text-coc-accent-cyan">MP {char.mp}/{char.maxMp || char.mp}</span>
+                      <span className="text-xs text-yellow-400">SAN {char.san}/{char.maxSan || char.san}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </Modal>
 
       {/* SAN 扣除弹窗 */}
