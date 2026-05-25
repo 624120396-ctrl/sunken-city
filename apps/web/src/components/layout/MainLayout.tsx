@@ -151,7 +151,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <aside
         className={cn(
           'fixed top-14 left-0 bottom-0 sidenav-v2 z-40 flex flex-col shrink-0',
-          'transition-all duration-300 ease-in-out overflow-hidden',
+          'transition-all duration-300 ease-in-out',
           sidebarCollapsed ? 'w-14' : 'w-56'
         )}
       >

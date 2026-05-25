@@ -1185,6 +1185,7 @@
   filter: contrast(1.25) brightness(0.92) saturate(1.1);
   opacity: 0.55;
   z-index: -1;
+  pointer-events: none;
 }
 
 /* 遮罩渐变 */
@@ -1232,6 +1233,7 @@
   filter: contrast(1.25) brightness(0.92) saturate(1.1);
   opacity: 0.55;
   z-index: -1;
+  pointer-events: none;
 }
 
 /* 遮罩渐变 */
