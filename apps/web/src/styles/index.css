@@ -1170,31 +1170,16 @@
 
 /* ===== v1.7.1 导航栏样式 ===== */
 .topnav-v2 {
-  position: relative;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* 纹理层 */
-.topnav-v2::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url('/images/nav-texture.jpg') center/cover;
-  filter: contrast(1.25) brightness(0.92) saturate(1.1);
-  opacity: 0.55;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* 遮罩渐变 */
-.topnav-v2 {
   background: linear-gradient(
     to bottom,
     rgba(10, 10, 15, 0.82) 0%,
     rgba(10, 10, 15, 0.70) 100%
-  );
+  ), url('/images/nav-texture.jpg');
+  background-size: 100% 100%, cover;
+  background-blend-mode: multiply;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* 顶部栏底部金色渐变细线 */
@@ -1218,31 +1203,16 @@
 }
 
 .sidenav-v2 {
-  position: relative;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* 纹理层 */
-.sidenav-v2::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url('/images/nav-texture.jpg') center/cover;
-  filter: contrast(1.25) brightness(0.92) saturate(1.1);
-  opacity: 0.55;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* 遮罩渐变 */
-.sidenav-v2 {
   background: linear-gradient(
     to right,
     rgba(10, 10, 15, 0.82) 0%,
     rgba(10, 10, 15, 0.70) 100%
-  );
+  ), url('/images/nav-texture.jpg');
+  background-size: 100% 100%, cover;
+  background-blend-mode: multiply;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* 侧边栏右侧金色渐变细线 */
