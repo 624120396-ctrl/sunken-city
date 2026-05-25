@@ -13,7 +13,7 @@ export const BG_OPTIONS: Record<string, { name: string; url: string }> = {
   'bg-void-runes': { name: '虚空符文', url: '/bg-void-runes.png' },
 };
 
-export const DEFAULT_BG = '/bg-vellum.png';
+export const DEFAULT_BG = '/bg-sunken.png';
 
 export function usePageBackground() {
   const location = useLocation();
