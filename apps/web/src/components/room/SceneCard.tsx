@@ -37,7 +37,7 @@ function TypewriterText({ text, speed = 30 }: { text: string; speed?: number }) 
 }
 
 export function SceneCard({ description, isKP, onUpdate }: SceneCardProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(description || '');
   const [aiPrompt, setAiPrompt] = useState('');

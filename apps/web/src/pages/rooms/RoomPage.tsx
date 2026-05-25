@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -266,11 +266,14 @@ export function RoomPage() {
     }
   }, [roomId]);
 
+  const [showChatTools, setShowChatTools] = useState(!isMobile);
+
   // 移动端默认收起左面板
   useEffect(() => {
     if (isMobile && !roomLeftPanelCollapsed) {
       setRoomLeftPanelCollapsed(true);
     }
+    setShowChatTools(!isMobile);
   }, [isMobile]);
 
   const addClue = (clue: any) => {
@@ -1304,35 +1307,49 @@ export function RoomPage() {
                 onSubmit={handleSendMessage}
                 className="p-4 border-t border-[#3a3a3a]/40 space-y-2 flex-shrink-0 backdrop-blur-md bg-black/20"
               >
-                <div className="flex items-center gap-2">
-                  <QuickPhrases
-                    onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
-                  />
-                  {room?.isCreator && (
-                    <>
-                      <SecretDiceToggle
-                        isSecret={isSecretDice}
-                        onToggle={() => setIsSecretDice(!isSecretDice)}
-                        disabled={!connected}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const initial: Record<string, number> = {};
-                          room?.members.forEach(m => {
-                            if (m.character) initial[m.userId] = 0;
-                          });
-                          setSanityTargets(initial);
-                          setSanityDescription('');
-                          setShowSanityModal(true);
-                        }}
-                        disabled={!connected}
-                        className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
-                      >
-                        理智侵蚀
-                      </button>
-                    </>
-                  )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1">
+                    {showChatTools && (
+                      <>
+                        <QuickPhrases
+                          onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
+                        />
+                        {room?.isCreator && (
+                          <>
+                            <SecretDiceToggle
+                              isSecret={isSecretDice}
+                              onToggle={() => setIsSecretDice(!isSecretDice)}
+                              disabled={!connected}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const initial: Record<string, number> = {};
+                                room?.members.forEach(m => {
+                                  if (m.character) initial[m.userId] = 0;
+                                });
+                                setSanityTargets(initial);
+                                setSanityDescription('');
+                                setShowSanityModal(true);
+                              }}
+                              disabled={!connected}
+                              className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
+                            >
+                              理智侵蚀
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowChatTools(!showChatTools)}
+                    className="p-1 text-[#6b6558] hover:text-[#c9a227] transition-colors flex-shrink-0"
+                    title={showChatTools ? '收起工具' : '展开工具'}
+                  >
+                    {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
                 </div>
                 <div className="flex gap-2">
                   <MentionInput
