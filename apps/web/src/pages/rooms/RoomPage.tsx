@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
+import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
+import { useLayoutStore } from '@stores/layout.store';
 import { Modal } from '@components/ui/Modal';
 import { Tooltip } from '@components/ui/Tooltip';
 import { UserProfileCard } from '@components/UserProfileCard';
@@ -190,6 +192,7 @@ export function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { roomLeftPanelCollapsed, toggleRoomLeftPanel, setRoomLeftPanelCollapsed, isMobile } = useLayoutStore();
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -262,6 +265,13 @@ export function RoomPage() {
       }
     }
   }, [roomId]);
+
+  // 移动端默认收起左面板
+  useEffect(() => {
+    if (isMobile && !roomLeftPanelCollapsed) {
+      setRoomLeftPanelCollapsed(true);
+    }
+  }, [isMobile]);
 
   const addClue = (clue: any) => {
     const newClues = [clue, ...clues];
@@ -851,7 +861,83 @@ export function RoomPage() {
 
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* 左侧：成员列表 */}
-          <div className="w-[200px] shrink-0 space-y-3 overflow-y-auto min-h-0 border-r border-[#3a3a3a]/30 pr-3">
+          <div
+            className={cn(
+              'shrink-0 flex flex-col min-h-0 border-r border-[#3a3a3a]/30 transition-all duration-300',
+              roomLeftPanelCollapsed ? 'w-14' : 'w-[200px]'
+            )}
+          >
+            {/* 收放按钮 */}
+            <button
+              onClick={toggleRoomLeftPanel}
+              className="w-full flex items-center justify-center py-2 border-b border-[#3a3a3a]/20 hover:bg-[rgba(201,162,39,0.08)] transition-colors flex-shrink-0"
+            >
+              {roomLeftPanelCollapsed ? (
+                <ChevronRight size={16} style={{ color: '#6b6558' }} />
+              ) : (
+                <ChevronLeft size={16} style={{ color: '#6b6558' }} />
+              )}
+            </button>
+
+            {/* 收起态：竖向图标栏 */}
+            {roomLeftPanelCollapsed ? (
+              <div className="flex-1 overflow-y-auto py-2 space-y-3 px-1">
+                {room?.members.map((member) => {
+                  const char = member.displayedCharacter || member.character;
+                  return (
+                    <Tooltip key={member.id} content={char?.name || member.nickname} position="right">
+                      <div
+                        className="flex flex-col items-center gap-1 cursor-pointer py-1"
+                        onClick={() => {
+                          setSelectedMember(member);
+                          setShowMemberDetail(true);
+                        }}
+                      >
+                        <div className="relative w-9 h-9">
+                          {member.avatarUrl ? (
+                            <img
+                              src={member.avatarUrl}
+                              className="w-9 h-9 rounded-full object-cover border border-coc-border bg-coc-bg-secondary"
+                              alt=""
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#3a3a3a] flex items-center justify-center">
+                              <User size={18} className="text-coc-text-muted" />
+                            </div>
+                          )}
+                          {member.frameUrl && (
+                            <img
+                              src={member.frameUrl}
+                              className="absolute inset-0 w-full h-full pointer-events-none"
+                              style={{ transform: 'scale(1.3)' }}
+                              alt=""
+                            />
+                          )}
+                        </div>
+                        {/* 状态点 */}
+                        {char && (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <div
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ background: char.hp > char.maxHp * 0.3 ? '#a63848' : char.hp > 0 ? '#c9a227' : '#3a3a3a' }}
+                            />
+                            <div
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ background: char.mp > 0 ? '#4db8b8' : '#3a3a3a' }}
+                            />
+                            <div
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ background: char.san > char.maxSan * 0.3 ? '#fbbf24' : char.san > 0 ? '#c9a227' : '#3a3a3a' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto space-y-3 pr-3 py-2">
           {/* 当前状态 - 水平紧凑条 */}
           {selectedCharacter && (
             <div className="flex items-center gap-2 px-3 py-2 bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg">
@@ -1079,6 +1165,8 @@ export function RoomPage() {
               </div>
             </div>
           )}
+        </div>
+        )}
         </div>
 
         {/* 右侧：聊天/战斗区 */}
