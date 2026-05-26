@@ -1596,7 +1596,15 @@
   box-shadow: 0 0 8px rgba(201, 162, 39, 0.4);
 }
 
-/* ===== v1.7.1 SAN崩溃动画 ===== */
+  /* ===== iOS Safari 底部工具栏适配 ===== */
+  @supports (-webkit-touch-callout: none) {
+    .ios-bottom-fix {
+      padding-bottom: max(env(safe-area-inset-bottom), 55px) !important;
+    }
+    .ios-nav-height {
+      height: calc(4rem + max(env(safe-area-inset-bottom), 55px)) !important;
+    }
+  }
 .san-broken {
   animation: sanity-flicker 4s ease-in-out infinite;
 }
