@@ -25,15 +25,13 @@ export function MainLayout({ children }: MainLayoutProps) {
     setMobile,
   } = useLayoutStore();
 
-  // 检测移动端 + iOS
+  // 检测移动端
   useEffect(() => {
     const check = () => setMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, [setMobile]);
-
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   const navItems = [
     { path: '/', label: '首页', icon: Home },
@@ -114,13 +112,13 @@ export function MainLayout({ children }: MainLayoutProps) {
           />
         )}
 
-        {/* 主内容区 - 浅色背景 */}
-        <main className={cn("content-area pt-14 px-4 pb-[calc(4rem+env(safe-area-inset-bottom))] min-h-[100dvh] overflow-auto relative z-0", isIOS && "ios-bottom-fix")}>
+        {/* 主内容区 - 移动端内容延伸到底部 */}
+        <main className="content-area pt-14 px-4 pb-[env(safe-area-inset-bottom)] min-h-[100dvh] overflow-auto relative z-0">
           {children}
         </main>
 
-        {/* 移动端底部Tab栏 */}
-        <nav className={cn("fixed bottom-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] mobile-tab-v2 z-50 flex items-center justify-around px-2", isIOS && "ios-nav-height")}>
+        {/* 移动端底部Tab栏 - 透明背景悬浮 */}
+        <nav className="fixed bottom-0 left-0 right-0 h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] mobile-tab-v2 z-50 flex items-center justify-around px-2">
           {mobileTabItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
