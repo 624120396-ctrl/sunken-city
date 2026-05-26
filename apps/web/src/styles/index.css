@@ -197,16 +197,22 @@
     scroll-behavior: smooth;
   }
 
+  html {
+    background-color: #0a0a0f;
+  }
+
   body {
     font-family: 'Geist', 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #d4c5a8;
     min-height: 100dvh;
+    background-color: #0a0a0f;
     /* 全局背景图 — 无 fallback 背景色，无遮罩，无噪点，无伪元素 */
     background-image: url('/bg-sunken.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
+    overscroll-behavior-y: none;
   }
 
   /* 标题字体 */
