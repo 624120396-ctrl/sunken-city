@@ -113,12 +113,12 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* 主内容区 - 浅色背景 */}
-        <main className="content-area pt-14 px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] min-h-[100dvh] overflow-auto relative z-0">
+        <main className="content-area pt-14 px-4 pb-[calc(4rem+env(safe-area-inset-bottom))] min-h-[100dvh] overflow-auto relative z-0">
           {children}
         </main>
 
         {/* 移动端底部Tab栏 */}
-        <nav className="fixed bottom-0 left-0 right-0 h-16 pb-[env(safe-area-inset-bottom)] mobile-tab-v2 z-50 flex items-center justify-around px-2">
+        <nav className="fixed bottom-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] mobile-tab-v2 z-50 flex items-center justify-around px-2">
           {mobileTabItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);

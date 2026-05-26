@@ -215,6 +215,12 @@
     overscroll-behavior-y: none;
   }
 
+  #root {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* 标题字体 */
   h1, h2, h3 {
     font-family: 'Geist', 'Cinzel', 'Noto Serif SC', Georgia, serif;
