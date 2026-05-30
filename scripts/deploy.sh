@@ -9,8 +9,22 @@ BACKUP_DIR=/opt/coc-platform-data/backups/uploads
 DB_BACKUP_DIR=/opt/coc-platform-data/backups/auto
 DATE=$(date +%Y%m%d_%H%M%S)
 
+# ===== 0. 部署追溯记录 =====
+DEPLOY_LOG=/opt/coc-platform-data/deploy.log
+DEPLOY_COMMIT=$(cd $COC_ROOT && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DEPLOY_BRANCH=$(cd $COC_ROOT && git branch --show-current 2>/dev/null || echo "unknown")
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') | START | commit=$DEPLOY_COMMIT | branch=$DEPLOY_BRANCH | user=$(whoami)" >> "$DEPLOY_LOG"
+
+# 保留最近100条部署记录
+if [ -f "$DEPLOY_LOG" ]; then
+  tail -n 100 "$DEPLOY_LOG" > "$DEPLOY_LOG.tmp" && mv "$DEPLOY_LOG.tmp" "$DEPLOY_LOG"
+fi
+
 echo "=== 沉没之城部署脚本 ==="
 echo "时间: $(date)"
+echo "当前 commit: $DEPLOY_COMMIT ($DEPLOY_BRANCH)"
+echo "部署日志: $DEPLOY_LOG"
 
 # ===== Pre-deploy: 备份数据库 =====
 if [ -f "/opt/coc-platform-data/dev.db" ]; then
@@ -126,13 +140,19 @@ if [ ! -d "$UPLOADS_DIR" ] || [ ! "$(ls -A $UPLOADS_DIR 2>/dev/null)" ]; then
   fi
 fi
 
-# ===== 7. 健康检查 =====
+# ===== 7. 健康检查 + 部署记录 =====
+DEPLOY_STATUS="OK"
 sleep 2
 HEALTH=$(curl -s http://localhost:3001/health 2>/dev/null | grep -c '"status":"ok"' || echo 0)
 if [ "$HEALTH" -gt 0 ]; then
   echo "[*] 健康检查通过 ✓"
+  DEPLOY_STATUS="OK"
 else
   echo "[WARNING] 健康检查未通过，请检查服务状态"
+  DEPLOY_STATUS="WARN"
 fi
 
+echo "$(date '+%Y-%m-%d %H:%M:%S') | END | status=$DEPLOY_STATUS | commit=$DEPLOY_COMMIT | branch=$DEPLOY_BRANCH" >> "$DEPLOY_LOG"
+
 echo "[*] 部署完成: $(date)"
+echo "[*] 日志: tail -n 5 $DEPLOY_LOG"
