@@ -26,7 +26,7 @@ Agent-Limitation: 已知局限或后续TODO"
 git push origin develop
 
 # 4. 服务器拉取并重启
-ssh root@43.254.167.183 "cd /opt/coc-platform && git pull && pm2 restart coc-server"
+ssh root@64.90.30.232 "cd /opt/coc-platform && git pull && pm2 restart coc-server"
 ```
 
 **前端部署**：本地 build → rsync dist → SSH 调用 deploy.sh（详见 TOOLS.md 部署规则）

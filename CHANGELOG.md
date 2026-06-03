@@ -104,9 +104,9 @@ apps/web/src/
 
 | 项目 | 信息 |
 |------|------|
-| 服务器 IP | 43.254.167.183 |
-| 访问地址 | http://43.254.167.183 |
-| 管理后台 | http://43.254.167.183/admin |
+| 服务器 IP | 64.90.30.232 |
+| 访问地址 | https://coc.city |
+| 管理后台 | https://coc.city/admin |
 | PM2 进程 | coc-server |
 | 数据库 | SQLite (prisma/dev.db) |
 

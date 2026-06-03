@@ -6,10 +6,11 @@ set -euo pipefail
 # 解决 prisma/schema.prisma 与 dev.db 漏同步导致的线上事故
 # ============================================================
 
-HOST="root@43.254.167.183"
+HOST="root@64.90.30.232"
+PASS="4dHaDDDwe1UkcXMx"
 REMOTE_BASE="/opt/coc-platform"
 LOCAL_BASE="/root/.openclaw/workspace/coc-platform"
-PASS="jPTL4QKVLtOEnrM"
+PASS="4dHaDDDwe1UkcXMx"
 
 echo "[1/6] 构建前端..."
 cd "$LOCAL_BASE/apps/web"
