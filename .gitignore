@@ -60,3 +60,7 @@ migration/
 # Misc
 *.bak
 *.bak.*dist.tar.gz
+# Server generated / user-uploaded files
+apps/server/public/Golden_avatar_frame*.png
+apps/server/public/frame_golden_rune.png
+apps/server/public/index.html

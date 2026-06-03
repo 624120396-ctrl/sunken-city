@@ -2,55 +2,22 @@
 set -euo pipefail
 
 # ============================================================
-# coc-platform 一键部署脚本
-# 解决 prisma/schema.prisma 与 dev.db 漏同步导致的线上事故
+# coc-platform 服务器本地部署脚本
+# 由本地 workspace 的 deploy.sh 通过 SSH 调用
+# 负责：dist → public 复制、数据库同步、服务重启
 # ============================================================
 
-HOST="root@43.254.167.183"
 REMOTE_BASE="/opt/coc-platform"
-LOCAL_BASE="/root/.openclaw/workspace/coc-platform"
-PASS="jPTL4QKVLtOEnrM"
 
-echo "[1/6] 构建前端..."
-cd "$LOCAL_BASE/apps/web"
-npm run build
+echo "[1/3] 同步前端 dist 到 public/..."
+rsync -avz --delete "$REMOTE_BASE/apps/web/dist/" "$REMOTE_BASE/apps/server/public/"
 
-echo "[2/6] 构建后端..."
-cd "$LOCAL_BASE/apps/server"
-npm run build
+echo "[2/3] 推送数据库结构变更..."
+cd "$REMOTE_BASE/apps/server"
+npx prisma db push --accept-data-loss 2>/dev/null || true
 
-echo "[3/6] 同步前端 dist..."
-sshpass -p "$PASS" rsync -avz --delete \
-  "$LOCAL_BASE/apps/web/dist/" \
-  "$HOST:$REMOTE_BASE/apps/web/dist/"
+echo "[3/3] 重启服务..."
+pm2 restart coc-server --update-env
+pm2 save
 
-echo "[4/6] 同步后端产物与关键 schema/db..."
-sshpass -p "$PASS" rsync -avz --delete \
-  "$LOCAL_BASE/apps/server/dist/" \
-  "$HOST:$REMOTE_BASE/apps/server/dist/"
-
-# ⚠️ 关键：schema 和 db 必须同时同步，缺一不可
-sshpass -p "$PASS" rsync -avz \
-  "$LOCAL_BASE/apps/server/prisma/schema.prisma" \
-  "$HOST:$REMOTE_BASE/apps/server/prisma/schema.prisma"
-
-sshpass -p "$PASS" rsync -avz \
-  "$LOCAL_BASE/apps/server/prisma/dev.db" \
-  "$HOST:$REMOTE_BASE/apps/server/prisma/dev.db"
-
-echo "[5/6] 服务端同步数据库结构、重新生成 Prisma Client 并重启..."
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no "$HOST" bash -lc "
-  set -e
-  cd $REMOTE_BASE/apps/server
-  echo '    -> 推送 Schema 变更到数据库'
-  npx prisma db push --accept-data-loss
-  echo '    -> 生成 Prisma Client'
-  npx prisma generate
-  echo '    -> 重启 coc-server'
-  pm2 restart coc-server --update-env
-  echo '    -> 验证状态'
-  sleep 1
-  pm2 status coc-server
-"
-
-echo "[6/6] 部署完成"
+echo "[OK] 部署完成"
