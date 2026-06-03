@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setAuth } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [expiredNotice, setExpiredNotice] = useState(false);
+
+  // 检测是否因令牌过期被重定向
+  useEffect(() => {
+    if (searchParams.get('expired') === '1') {
+      setExpiredNotice(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +98,14 @@ export function LoginPage() {
               </div>
             </div>
           </div>
+
+      {/* 令牌过期提示 */}
+          {expiredNotice && (
+            <div className="mb-4 p-4 bg-coc-gold/10 border border-coc-gold/30 rounded 
+                            text-coc-gold text-sm text-center">
+              <span className="font-rune">⚠ 你的会话已过期，请重新登录</span>
+            </div>
+          )}
 
           {/* 错误提示 */}
           {error && (

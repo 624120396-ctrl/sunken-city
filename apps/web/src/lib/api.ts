@@ -3,6 +3,9 @@ import { useAuthStore } from '@stores/auth.store';
 // API基础URL
 const API_BASE_URL = '/api';
 
+// 是否正在处理401（防止重复跳转）
+let isHandling401 = false;
+
 // 带认证的fetch封装
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const { token } = useAuthStore.getState();
@@ -20,6 +23,17 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers,
   });
+
+  // 自动处理401：令牌过期或无效
+  if (response.status === 401 && !isHandling401) {
+    isHandling401 = true;
+    const { clearAuth } = useAuthStore.getState();
+    clearAuth();
+    // 延迟跳转，避免 race condition
+    setTimeout(() => {
+      window.location.href = '/login?expired=1';
+    }, 100);
+  }
   
   return response;
 }
