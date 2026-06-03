@@ -78,7 +78,7 @@ router.post('/register', async (req, res, next) => {
         isAdmin: user.isAdmin,
       },
       process.env.JWT_SECRET || 'dev-secret',
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     res.status(201).json({
@@ -116,7 +116,7 @@ router.post('/login', async (req, res, next) => {
         isAdmin: user.isAdmin,
       },
       process.env.JWT_SECRET || 'dev-secret',
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     const frameUrl = await getFrameUrl(user.equippedFrame);
