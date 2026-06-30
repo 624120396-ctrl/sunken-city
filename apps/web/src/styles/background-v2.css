@@ -1,9 +1,10 @@
 .coc-app-bg {
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: 0;
   background-color: var(--coc-bg-abyss);
   overflow: hidden;
+  pointer-events: none;
 }
 
 .coc-app-bg__image {

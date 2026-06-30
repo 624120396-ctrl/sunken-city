@@ -22,7 +22,7 @@ export function AppShellV2({ children }: AppShellV2Props) {
   }, [setMobile]);
 
   return (
-    <div className="relative min-h-[100dvh] text-[var(--coc-text-primary)]">
+    <div className="relative isolate min-h-[100dvh] text-[var(--coc-text-primary)]">
       <AppBackground />
       <TopNav />
       {!isMobile && <SideNavV2 collapsed={sidebarCollapsed} onToggle={toggleSidebar} />}
