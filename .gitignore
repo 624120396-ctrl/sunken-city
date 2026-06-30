@@ -47,7 +47,10 @@ prisma/backups/
 prisma/migrations/*/migration_lock.toml
 
 # Runtime uploads & generated files
+apps/server/prisma/*.db
+apps/server/prisma/*.db*
 apps/server/public/uploads/
+apps/server/public/assets/
 apps/server/tmp/
 apps/server/dist/
 tmp/
