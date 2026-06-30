@@ -28,7 +28,7 @@ export function TopNav() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 topnav-v2 z-50 flex items-center px-4 gap-4">
+    <header className="fixed top-0 left-0 right-0 h-14 topnav-v2 z-50 flex items-center px-3 md:px-4 gap-2 md:gap-4">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-3 shrink-0">
         <img
@@ -46,7 +46,7 @@ export function TopNav() {
       </Link>
 
       {/* 搜索栏 */}
-      <div className="flex-1 max-w-md mx-auto">
+      <div className="hidden md:block flex-1 max-w-md mx-auto">
         <div
           className="coc-search-v2 cursor-text"
           onClick={() => {
@@ -61,7 +61,7 @@ export function TopNav() {
       </div>
 
       {/* 右侧操作区 */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="ml-auto flex items-center gap-3 shrink-0">
         {/* 通知铃铛 */}
         <NotificationBell />
 

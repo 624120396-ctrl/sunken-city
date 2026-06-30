@@ -326,7 +326,7 @@ export function DashboardPage() {
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">开启仪式</h2>
           </GoldOrnament.Title>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
               <motion.div
                 key={action.to + action.title}
