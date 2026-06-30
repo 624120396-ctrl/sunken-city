@@ -5,3 +5,4 @@ export { Tabs, type TabItem } from './Tabs';
 export { ListRow } from './ListRow';
 export { Stat } from './Stat';
 export { EmptyState } from './EmptyState';
+export { CharacterCard, type CharacterCardData } from './CharacterCard';

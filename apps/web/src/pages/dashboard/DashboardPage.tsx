@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { io } from 'socket.io-client';
-import { User, Scroll, Sparkles, Star, Coins, Gift, CheckCircle2, Loader2, Ghost, ChevronRight, Users, Crown, Award, Megaphone } from 'lucide-react';
+import { User, Scroll, Sparkles, Star, Coins, Gift, CheckCircle2, Loader2, ChevronRight, Users, Crown, Award, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -17,7 +17,7 @@ import type { UserProfile } from '@components/UserProfileCard';
 import { CthulhuButton } from '@components/ui/CthulhuButton';
 import { CthulhuProgress } from '@components/ui/CthulhuProgress';
 import { GoldOrnament } from '@components/ui/GoldOrnament';
-import { OccultBadge } from '@components/ui/OccultBadge';
+import { CharacterCard } from '@components/system';
 
 interface Character {
   id: string;
@@ -203,7 +203,6 @@ export function DashboardPage() {
     { to: '/characters/new', icon: User, title: '记录命运', subtitle: '创建调查员', bgImage: '/dashboard-card-character.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/rooms', icon: Scroll, title: '开启故事', subtitle: '创建跑团房间', bgImage: '/dashboard-card-room.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
     { to: '/rooms', icon: Sparkles, title: '进入深渊', subtitle: '加入已有跑团', bgImage: '/dashboard-card-abyss.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
-    { to: '/solo', icon: Ghost, title: '幻影剧本', subtitle: '单人剧本模式', bgImage: '/dashboard-card-solo.png', glowColor: 'from-[#8b2635]/40 via-transparent' },
   ];
 
   return (
@@ -552,41 +551,7 @@ export function DashboardPage() {
                 transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
                 className="flex-shrink-0 w-80"
               >
-                <Link to={`/characters/${char.id}`} className="block group">
-                  <div className="relative h-full min-h-[180px] rounded-xl overflow-hidden border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
-                    {/* 背景图：形象或默认 */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <img
-                        src={char.portraitUrl || '/dashboard-character-default.png'}
-                        alt=""
-                        className="w-full h-[120%] object-cover object-top animate-character-pan"
-                        draggable={false}
-                      />
-                    </div>
-                    {/* 磨砂玻璃覆盖层 - 仅左侧 */}
-                    <div className="absolute inset-y-0 left-0 w-[45%] backdrop-blur-[13px] bg-[#0a0a0f]/40 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
-                    {/* 底部血红色渐变 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
-                    {/* 顶部微光 */}
-                    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
-                    {/* 内容 */}
-                    <div className="relative p-5 flex flex-col h-full min-h-[180px] max-w-[55%]">
-                      <div className="mb-2">
-                        <h3 className="font-bold text-base text-[#f5f0e6] tracking-wide">{char.name}</h3>
-                        <p className="text-xs text-[#a69b85] tracking-wider mt-0.5">{char.occupation}</p>
-                      </div>
-                      <div className="space-y-2 mt-auto">
-                        <CthulhuProgress type="status" variant="hp" current={char.hp} max={char.maxHp} />
-                        <CthulhuProgress type="status" variant="san" current={char.san} max={char.maxSan} />
-                      </div>
-                      {char.san < 30 && (
-                        <div className="mt-2">
-                          <OccultBadge type="eye2" size="sm" pulse label="疯狂" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+                <CharacterCard character={char} />
               </motion.div>
             ))}
           </div>
