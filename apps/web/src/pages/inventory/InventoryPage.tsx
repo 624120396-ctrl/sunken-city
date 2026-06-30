@@ -194,16 +194,16 @@ export function InventoryPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 py-6 md:px-0 md:py-0">
       <div className="flex items-center gap-3">
         <Backpack className="w-6 h-6" style={{ color: '#c9a227' }} />
         <div>
-          <h1 className="text-xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>背包</h1>
+          <h1 className="text-xl font-ritual font-bold text-[#e8d4a0]">背包</h1>
           <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto">
         {[
           { key: 'general', label: '道具' },
           { key: 'titles', label: '印记' },
@@ -212,7 +212,7 @@ export function InventoryPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as any)}
-            className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
+            className={`min-h-11 shrink-0 rounded px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
                 ? 'bg-coc-gold text-coc-abyss'
                 : 'bg-black/20 text-[#8b8375] hover:text-[#e8d4a0]'
