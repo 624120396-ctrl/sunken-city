@@ -71,20 +71,20 @@ export function RoomListPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-serif font-bold" style={{ color: '#c9a227' }}>故事书</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold whitespace-nowrap" style={{ color: '#c9a227' }}>故事书</h1>
           <div 
-            className="w-16 h-[1px]" 
+            className="hidden sm:block w-16 h-[1px]"
             style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.6) 0%, transparent 100%)' }} 
           />
         </div>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:w-auto">
           <button
             onClick={() => setShowJoinModal(true)}
-            className="btn-v2 flex items-center gap-2 px-4 py-2 border border-[#c9a227]/30 
+            className="btn-v2 min-h-11 flex items-center justify-center gap-2 px-4 py-2 border border-[#c9a227]/30
                        text-[#c9a227] rounded hover:bg-[#c9a227]/10 transition-colors"
           >
             <DoorOpen size={18} />
@@ -92,7 +92,7 @@ export function RoomListPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn-v2 flex items-center gap-2 px-4 py-2 bg-[#c9a227] text-[#0a0a0f] 
+            className="btn-v2 min-h-11 flex items-center justify-center gap-2 px-4 py-2 bg-[#c9a227] text-[#0a0a0f]
                        rounded hover:bg-[#e8d4a0] transition-colors font-medium"
           >
             <Plus size={18} />
