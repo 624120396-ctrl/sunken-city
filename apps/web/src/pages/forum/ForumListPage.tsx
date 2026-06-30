@@ -22,17 +22,17 @@ export function ForumListPage() {
   const boards = boardsData?.boards || [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           <div>
-            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>旧日低语</h1>
-            <p className="text-sm mt-1" style={{ color: '#6b6558' }}>选择版块，进入你的讨论领域</p>
+            <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">旧日低语</h1>
+            <p className="text-sm mt-1 text-[#b0a898]">选择版块，进入你的讨论领域</p>
           </div>
-          <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+          <div className="hidden sm:block w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-[#6b6558] text-sm">
+        <div className="flex items-center gap-2 text-[#b0a898] text-sm">
           <LayoutGrid size={16} />
           <span>共 {boards.length} 个版块</span>
         </div>
@@ -46,7 +46,7 @@ export function ForumListPage() {
             <Link
               key={b.key}
               to={`/forums/board/${b.key}`}
-              className="group p-6 backdrop-blur-md bg-black/50 border border-[#3a3a3a]/40 rounded-lg min-h-[220px] flex flex-col justify-between shadow-lg shadow-black/40 hover:border-[#c9a227]/30 transition-all"
+              className="group card-layer-2 p-5 md:p-6 min-h-[190px] md:min-h-[220px] flex flex-col justify-between rounded-lg hover:border-[#c9a227]/50 transition-all"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
@@ -61,7 +61,7 @@ export function ForumListPage() {
                   </div>
                 </div>
                 {b.description && (
-                  <p className="text-sm text-[#b0a898] mt-3 leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-[#b0a898] mt-3 leading-relaxed whitespace-pre-line line-clamp-4">
                     {b.description}
                   </p>
                 )}

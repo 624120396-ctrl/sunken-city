@@ -70,16 +70,16 @@ export function ShopPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           <ShoppingBag className="w-7 h-7" style={{ color: '#c9a227' }} />
           <div>
-            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>拉莱耶遗珍</h1>
+            <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">拉莱耶遗珍</h1>
             <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
           </div>
         </div>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-1.5 text-[#e8d4a0]">
             <Coins size={16} className="text-[#c9a227]" />
             <span>{user?.coins ?? 0}</span>
@@ -91,7 +91,7 @@ export function ShopPage() {
         </div>
       </div>
 
-      <div className="p-4 bg-coc-void/60 border border-coc-gold/20 rounded-lg text-sm text-coc-parchment-dim space-y-2 leading-relaxed">
+      <div className="card-layer-2 p-4 md:p-5 rounded-lg text-sm text-coc-parchment-dim space-y-2 leading-relaxed">
         <p>并非每一件物品都应当留存于日光之下。</p>
         <p>
           本馆所陈，皆自深海古城打捞，或是神秘存在将不可名状之物凝固为可触的实物
@@ -103,12 +103,12 @@ export function ShopPage() {
 
       {/* 分类过滤 */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter size={16} className="text-coc-parchment-dim" />
+        <Filter size={16} className="text-coc-parchment-dim shrink-0" />
         {CATEGORIES.map((c) => (
           <button
             key={c.value}
             onClick={() => setCategory(c.value)}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
+            className={`min-h-10 px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
               category === c.value
                 ? 'bg-coc-gold text-coc-abyss border-coc-gold'
                 : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
@@ -146,7 +146,7 @@ export function ShopPage() {
               className="card-layer-2 h-full"
             >
               <div className="h-full p-4 flex flex-col gap-3">
-                <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-[#0a0a0f]/30 flex items-center justify-center`}>
+                <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-[#0a0a0f]/45 flex items-center justify-center`}>
                   {item.iconUrl ? (
                     <img src={item.iconUrl} alt={item.name} className="max-h-28 object-contain" />
                   ) : (
@@ -154,8 +154,8 @@ export function ShopPage() {
                   )}
                 </div>
 
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="font-ritual font-bold text-[#e8d4a0]">{item.name}</p>
                     <Tooltip content={{
                     common: '普通藏品 — 基础装饰',
@@ -171,7 +171,7 @@ export function ShopPage() {
 
                 <p className="text-sm text-coc-parchment-dim line-clamp-2">{item.description}</p>
 
-                  <div className="mt-auto pt-2 flex items-center justify-between">
+                  <div className="mt-auto pt-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-1 text-sm">
                       {item.currency === 'coin' ? (
                         <>
@@ -188,7 +188,7 @@ export function ShopPage() {
                     <button
                       onClick={() => handlePurchase(item)}
                       disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
-                      className="relative btn-v2 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
+                      className="relative btn-v2 min-h-10 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
                     >
                       <ParticleBurst trigger={burstItem === item.key} onComplete={() => setBurstItem(null)} />
                       {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
