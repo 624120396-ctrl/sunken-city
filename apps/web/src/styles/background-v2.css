@@ -1,0 +1,38 @@
+.coc-app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: var(--coc-bg-abyss);
+  overflow: hidden;
+}
+
+.coc-app-bg__image {
+  position: absolute;
+  inset: -24px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: saturate(0.84) contrast(1.05) brightness(0.72);
+  transform: scale(1.02);
+}
+
+.coc-app-bg__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(201, 162, 39, 0.08), transparent 28%),
+    linear-gradient(90deg, rgba(4, 5, 8, 0.84), rgba(4, 5, 8, 0.46) 45%, rgba(4, 5, 8, 0.74)),
+    linear-gradient(180deg, rgba(4, 5, 8, 0.76), rgba(4, 5, 8, 0.18) 36%, rgba(4, 5, 8, 0.86));
+}
+
+@media (max-width: 767px) {
+  .coc-app-bg__image {
+    filter: saturate(0.72) contrast(1) brightness(0.52);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coc-app-bg__image {
+    transform: none;
+  }
+}

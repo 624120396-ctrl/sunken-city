@@ -1,3 +1,7 @@
+@import './tokens-v2.css';
+@import './background-v2.css';
+@import './system-v2.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -2064,4 +2068,3 @@
 @media (min-width: 768px) {
   .hide-desktop { display: none !important; }
 }
-

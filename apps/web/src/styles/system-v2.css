@@ -1,0 +1,43 @@
+.coc-surface-v2 {
+  border: 1px solid var(--coc-border-subtle);
+  border-radius: var(--coc-radius-card);
+  background: var(--coc-surface-1);
+  box-shadow: var(--coc-shadow-panel);
+}
+
+.coc-surface-v2[data-variant="solid"] {
+  background: var(--coc-surface-2);
+}
+
+.coc-surface-v2[data-variant="glass"] {
+  background: rgba(12, 15, 22, 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.coc-card-v2 {
+  position: relative;
+  border-radius: var(--coc-radius-card);
+  border: 1px solid var(--coc-border-subtle);
+  background: rgba(10, 11, 17, 0.72);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.coc-card-v2[data-interactive="true"] {
+  transition:
+    transform var(--coc-motion-base) var(--coc-ease-out),
+    border-color var(--coc-motion-base),
+    box-shadow var(--coc-motion-base);
+}
+
+.coc-card-v2[data-interactive="true"]:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, 0.26);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.44), var(--coc-shadow-glow-gold);
+}
+
+.coc-focus-ring:focus-visible {
+  outline: 2px solid var(--coc-accent-gold);
+  outline-offset: 2px;
+}
