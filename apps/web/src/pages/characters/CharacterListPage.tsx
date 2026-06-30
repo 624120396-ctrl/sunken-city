@@ -81,18 +81,18 @@ export function CharacterListPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+    <div className="p-4 md:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex items-center gap-3 min-w-0">
           <div>
-            <h1 className="text-2xl font-ritual font-bold" style={{ color: '#1a1a1a' }}>调查员名册</h1>
-            <p className="text-sm mt-1" style={{ color: '#6b6558' }}>每一张卡都是一段不可删除的命运</p>
+            <h1 className="text-xl sm:text-2xl font-ritual font-bold" style={{ color: '#e8d4a0' }}>调查员名册</h1>
+            <p className="text-sm mt-1" style={{ color: '#8b8375' }}>每一张卡都是一段不可删除的命运</p>
           </div>
-          <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+          <div className="hidden sm:block w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
         </div>
         <button
           onClick={() => navigate('/characters/new')}
-          className="coc-btn-primary flex items-center gap-2"
+          className="coc-btn-primary min-h-11 flex items-center justify-center gap-2 sm:w-auto"
         >
           <Plus size={18} />
           记录命运
@@ -113,7 +113,7 @@ export function CharacterListPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
           {characters.map((char) => (
             <FlipCard
               key={char.id}
