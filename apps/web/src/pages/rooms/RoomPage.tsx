@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -242,6 +242,7 @@ export function RoomPage() {
   const [showGMKit, setShowGMKit] = useState(false);
   const [showSubRooms, setShowSubRooms] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -438,6 +439,11 @@ export function RoomPage() {
       const response = await apiFetch(`/rooms/${roomId}`);
       const data = await handleApiResponse<{ room: Room }>(response);
       setRoom(data.room);
+      const myMember = data.room.members?.find((m: RoomMember) => m.userId === user?.id);
+      const myCharacter = myMember?.character || myMember?.displayedCharacter;
+      if (myCharacter) {
+        setSelectedCharacter(myCharacter);
+      }
 
       // 加载场景描述和氛围
       // @ts-ignore - 等待后端类型更新
@@ -722,6 +728,16 @@ export function RoomPage() {
     socket.current?.emit('combat:end', { roomId });
   };
 
+  const openMyCharacter = () => {
+    const myMember = room?.members?.find((m) => m.userId === user?.id);
+    if (myMember) {
+      setSelectedMember(myMember);
+      setShowMemberDetail(true);
+    } else {
+      setShowMobileMembers(true);
+    }
+  };
+
   const isMyTurn = combatState?.status === 'IN_PROGRESS' && combatState.turnOrder[combatState.currentTurnIndex]?.userId === user?.id;
 
   if (loading) {
@@ -749,12 +765,12 @@ export function RoomPage() {
           <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'}`} title={connected ? '已连接' : '未连接'} />
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="hidden md:flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
             className={cn(
               "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
-              isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+              isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
             )}
             title={activeTab === 'chat' ? '战斗' : '聊天'}
           >
@@ -765,7 +781,7 @@ export function RoomPage() {
             onClick={() => setShowPrivateChat(true)}
             className={cn(
               "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center relative",
-              isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+              isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
             )}
             title="私聊"
           >
@@ -780,7 +796,7 @@ export function RoomPage() {
           <div className="relative group z-[100]">
             <button className={cn(
                 "rounded flex items-center gap-1 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
-                isMobile ? "w-9 h-9 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
+                isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
               )}>
               <span className={isMobile ? "hidden" : ""}>更多</span>
               <ChevronDown size={isMobile ? 18 : 12} />
@@ -853,6 +869,155 @@ export function RoomPage() {
         phases={room?.phases}
         isKP={!!room?.isCreator}
       />
+
+      {isMobile && (
+        <div
+          data-testid="room-mobile-pl-actions"
+          className="md:hidden mb-2 space-y-2 rounded-xl border border-[#3a3a3a]/50 bg-black/45 p-1.5 shadow-lg shadow-black/40 backdrop-blur-md"
+        >
+          <div className="grid grid-cols-6 gap-1.5">
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="成员"
+              title="成员"
+              onClick={() => setShowMobileMembers(true)}
+              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+            >
+              <Users size={18} />
+            </button>
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="角色"
+              title="角色"
+              onClick={openMyCharacter}
+              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+            >
+              <User size={18} />
+            </button>
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="掷骰"
+              title="掷骰"
+              onClick={() => {
+                setActiveTab('chat');
+                setShowChatTools(true);
+              }}
+              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+            >
+              <Dice5 size={18} />
+            </button>
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="线索"
+              title="线索"
+              onClick={() => setShowCluePanel(true)}
+              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+            >
+              <Search size={18} />
+            </button>
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="私聊"
+              title="私聊"
+              onClick={() => setShowPrivateChat(true)}
+              className="btn-v2 relative flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+            >
+              <MessageSquare size={18} />
+              {privateUnreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#a63848] px-1 text-[9px] text-white">
+                  {privateUnreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              data-room-mobile-action="true"
+              aria-label="更多"
+              title="更多"
+              onClick={() => setShowMobileToolTray((v) => !v)}
+              className={cn(
+                "btn-v2 flex min-h-11 items-center justify-center rounded-lg border",
+                showMobileToolTray
+                  ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
+                  : "border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              )}
+            >
+              <ChevronDown size={18} />
+            </button>
+          </div>
+
+          {showMobileToolTray && (
+            <div className="grid grid-cols-2 gap-2 border-t border-[#3a3a3a]/40 pt-2">
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <Swords size={15} />
+                {activeTab === 'chat' ? '战斗视图' : '聊天视图'}
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                onClick={() => setShowNpcPanel(true)}
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <User size={15} />
+                NPC
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                onClick={() => setShowSubRooms(true)}
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <GitBranch size={15} />
+                子房间
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                onClick={() => setShowCombatTimeline(true)}
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <ScrollText size={15} />
+                战斗记录
+              </button>
+              <Link
+                to={`/rooms/${roomId}/report`}
+                data-room-mobile-action="true"
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <FileText size={15} />
+                报告
+              </Link>
+              <Link
+                to={`/rooms/${roomId}/dice-history`}
+                data-room-mobile-action="true"
+                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+              >
+                <History size={15} />
+                投骰历史
+              </Link>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                onClick={handleLeaveRoom}
+                className="btn-v2 col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#a63848]/40 bg-[#4a111a]/35 px-2 text-xs text-[#f1b7bd]"
+              >
+                <DoorOpen size={15} />
+                离开房间
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 主内容区 */}
       <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
@@ -1509,6 +1674,80 @@ export function RoomPage() {
             </DoubleBezelCard>
           )}
         </div>
+        <aside
+          data-testid="room-desktop-command-rail"
+          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 rounded-xl border border-[#3a3a3a]/45 bg-black/40 p-2 shadow-lg shadow-black/40 backdrop-blur-md"
+        >
+          {[
+            { label: '成员', icon: Users, active: !roomLeftPanelCollapsed, onClick: toggleRoomLeftPanel },
+            { label: '线索', icon: Search, active: showCluePanel, onClick: () => setShowCluePanel((v) => !v) },
+            { label: 'NPC', icon: User, active: showNpcPanel, onClick: () => setShowNpcPanel((v) => !v) },
+            { label: '战斗', icon: Swords, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
+            { label: '子房间', icon: GitBranch, active: showSubRooms, onClick: () => setShowSubRooms((v) => !v) },
+            { label: '日志', icon: ScrollText, active: showLogPanel, onClick: () => setShowLogPanel((v) => !v) },
+            { label: '事件', icon: History, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
+            { label: '统计', icon: BarChart3, active: showStats, onClick: () => { fetchRoomStats(); setShowStats((v) => !v); } },
+          ].map((item) => (
+            <Tooltip key={item.label} content={item.label}>
+              <button
+                type="button"
+                data-room-desktop-action="true"
+                aria-label={item.label}
+                onClick={item.onClick}
+                className={cn(
+                  'btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
+                  item.active
+                    ? 'border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]'
+                    : 'border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]'
+                )}
+              >
+                <item.icon size={18} />
+              </button>
+            </Tooltip>
+          ))}
+
+          {room?.isCreator && (
+            <Tooltip content="KP工具">
+              <button
+                type="button"
+                data-room-desktop-action="true"
+                aria-label="KP工具"
+                onClick={() => setShowGMKit((v) => !v)}
+                className={cn(
+                  'btn-v2 mt-1 flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
+                  showGMKit
+                    ? 'border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]'
+                    : 'border-[#a63848]/45 bg-[#4a111a]/30 text-[#e8d4a0] hover:border-[#c9a227]/45'
+                )}
+              >
+                <Crown size={18} />
+              </button>
+            </Tooltip>
+          )}
+
+          <div className="mt-auto flex flex-col gap-2">
+            <Tooltip content="报告">
+              <Link
+                to={`/rooms/${roomId}/report`}
+                data-room-desktop-action="true"
+                aria-label="报告"
+                className="btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]"
+              >
+                <FileText size={18} />
+              </Link>
+            </Tooltip>
+            <Tooltip content="投骰历史">
+              <Link
+                to={`/rooms/${roomId}/dice-history`}
+                data-room-desktop-action="true"
+                aria-label="投骰历史"
+                className="btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]"
+              >
+                <Dice5 size={18} />
+              </Link>
+            </Tooltip>
+          </div>
+        </aside>
       </div>
       {/* ===== V2.1 新增：跑团 Log 面板 ===== */}
       {showLogPanel && (
