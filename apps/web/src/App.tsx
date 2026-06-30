@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useAuthStore } from '@stores/auth.store';
-import { usePageBackground } from '@hooks/usePageBackground';
 import { AnimatePresence } from 'motion/react';
 import { ToastProvider } from '@components/ui/Toast';
 import { CommandPalette } from '@components/ui/CommandPalette';
@@ -10,8 +9,8 @@ import { CommandPalette } from '@components/ui/CommandPalette';
 import { PageTransition } from '@components/ui/Animation';
 
 // 布局
-import { MainLayout } from '@components/layout/MainLayout';
 import { AdminLayout } from '@components/layout/AdminLayout';
+import { AppShellV2 } from '@components/layout/AppShellV2';
 
 // 页面
 import { LoginPage } from '@pages/auth/LoginPage';
@@ -75,8 +74,6 @@ function App() {
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
 
-  usePageBackground();
-
   if (!isAuthenticated) {
     return (
       <Routes>
@@ -107,7 +104,7 @@ function App() {
 
       {/* 主站路由 */}
       <Route path="*" element={
-        <MainLayout>
+        <AppShellV2>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<PageTransition><DashboardPage /></PageTransition>} />
@@ -146,7 +143,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AnimatePresence>
-        </MainLayout>
+        </AppShellV2>
       } />
     </Routes>
     </ToastProvider>
