@@ -5,6 +5,7 @@ import { ArrowLeft, RefreshCw, Check, X } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS } from '@lib/coc7-data';
 import { rollSkillGrowth } from '@lib/combat-data';
+import { Button, DataCard, PageShell, ReadablePanel } from '@components/system';
 
 interface SkillGrowth {
   skillKey: string;
@@ -95,26 +96,25 @@ export function CharacterGrowthPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate(`/characters/${id}`)}
-          className="rounded border border-[#3a3a3a] transition-colors p-2"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-serif font-bold">战后技能成长 - {character.name}</h1>
-      </div>
+    <PageShell
+      title={`战后技能成长 - ${character.name}`}
+      eyebrow="skill growth"
+      description="选择本局成功使用过的技能，执行 COC7 成长检定并保存结果。"
+      actions={
+        <Button variant="secondary" onClick={() => navigate(`/characters/${id}`)} icon={<ArrowLeft size={18} />}>
+          返回档案
+        </Button>
+      }
+    >
 
-      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 mb-6">
-        <h2 className="font-bold mb-4">使用说明</h2>
-        <div className="text-sm text-[#8b8375] space-y-2">
+      <ReadablePanel title="使用说明" eyebrow="growth rules" className="mb-6">
+        <div className="space-y-2">
           <p>1. 选择本局游戏中<strong>成功使用过</strong>的技能</p>
           <p>2. 每个选中技能可以进行一次成长检定</p>
           <p>3. COC7成长规则：掷1D100，结果<strong>大于</strong>当前技能值则成长成功</p>
           <p>4. 成长成功时，技能提升1D10点</p>
         </div>
-      </DoubleBezelCard>
+      </ReadablePanel>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 技能选择 */}
@@ -181,24 +181,26 @@ export function CharacterGrowthPage() {
           <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
             <h3 className="font-bold mb-4">操作</h3>
             <div className="space-y-3">
-              <button
+              <Button
                 onClick={rollAllGrowth}
                 disabled={selectedSkills.size === 0 || loading}
-                className="w-full coc-btn-primary flex items-center justify-center gap-2"
+                variant="primary"
+                className="w-full"
+                icon={<RefreshCw size={18} />}
               >
-                <RefreshCw size={18} />
                 执行成长检定
-              </button>
+              </Button>
               
               {growthResults.length > 0 && (
-                <button
+                <Button
                   onClick={saveGrowth}
                   disabled={loading || saved}
-                  className="w-full rounded border border-[#3a3a3a] transition-colors flex items-center justify-center gap-2"
+                  variant="secondary"
+                  className="w-full"
+                  icon={saved ? <Check size={18} /> : <X size={18} />}
                 >
-                  {saved ? <Check size={18} /> : <X size={18} />}
                   {saved ? '已保存' : '保存成长结果'}
-                </button>
+                </Button>
               )}
             </div>
 
@@ -206,24 +208,9 @@ export function CharacterGrowthPage() {
               <div className="mt-6">
                 <h4 className="font-bold mb-3">成长统计</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-black/20 rounded text-center">
-                    <div className="text-2xl font-bold text-green-400">
-                      {growthResults.filter(r => r.success).length}
-                    </div>
-                    <div className="text-xs text-[#8b8375]">成长成功</div>
-                  </div>
-                  <div className="p-3 bg-black/20 rounded text-center">
-                    <div className="text-2xl font-bold text-red-400">
-                      {growthResults.filter(r => !r.success).length}
-                    </div>
-                    <div className="text-xs text-[#8b8375]">成长失败</div>
-                  </div>
-                  <div className="p-3 bg-black/20 rounded text-center col-span-2">
-                    <div className="text-2xl font-bold text-[#c9a227]">
-                      {growthResults.filter(r => r.success).reduce((sum, r) => sum + (r.newValue - r.oldValue), 0)}
-                    </div>
-                    <div className="text-xs text-[#8b8375]">总成长点数</div>
-                  </div>
+                  <DataCard label="成长成功" value={growthResults.filter(r => r.success).length} tone="ocean" />
+                  <DataCard label="成长失败" value={growthResults.filter(r => !r.success).length} tone="blood" />
+                  <DataCard className="col-span-2" label="总成长点数" value={growthResults.filter(r => r.success).reduce((sum, r) => sum + (r.newValue - r.oldValue), 0)} tone="gold" />
                 </div>
               </div>
             )}
@@ -264,6 +251,6 @@ export function CharacterGrowthPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

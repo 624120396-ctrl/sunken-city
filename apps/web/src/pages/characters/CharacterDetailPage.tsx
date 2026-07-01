@@ -7,6 +7,7 @@ import { COC7E_SKILLS, SKILL_CATEGORIES } from '@lib/coc7-data';
 import { apiFetch } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
+import { PageShell, Surface } from '@components/system';
 
 interface Character {
   id: string;
@@ -285,9 +286,13 @@ export function CharacterDetailPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <PageShell
+      title="调查员档案"
+      eyebrow="investigator dossier"
+      description="查看属性、技能、战斗配置和背景档案。保留原有角色数据解析、导出、删除和形象生成流程。"
+    >
       {/* ===== 焦点图顶部：角色卡 Hero ===== */}
-      <div className="relative overflow-hidden rounded-xl border border-coc-void bg-coc-surface p-4 md:p-5">
+      <Surface variant="page" tone="gold" padding="md">
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
           {/* 左侧：形象立绘 */}
           <div className="w-full md:w-40 lg:w-44 flex-shrink-0">
@@ -380,10 +385,10 @@ export function CharacterDetailPage() {
             </div>
           </div>
         </div>
-      </div>
+      </Surface>
 
       {/* ===== 标签页 ===== */}
-      <div className="border-b border-coc-void">
+      <Surface variant="panel" padding="none" className="overflow-x-auto">
         <div className="flex gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -404,7 +409,7 @@ export function CharacterDetailPage() {
             );
           })}
         </div>
-      </div>
+      </Surface>
 
       {/* ===== 内容区域 ===== */}
       <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
@@ -563,7 +568,7 @@ export function CharacterDetailPage() {
       {/* ===== 形象铸造弹窗 ===== */}
       {showPortraitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-lg bg-black/20 border border-coc-void shadow-xl shadow-black/60 space-y-4 p-6">
+          <Surface variant="elevated" padding="lg" className="w-full max-w-md space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-ritual font-bold text-[#e8d4a0]">塑造调查员形象</h3>
               <button onClick={() => setShowPortraitModal(false)} className="text-[#6b6558] hover:text-[#e8d4a0]">
@@ -634,9 +639,9 @@ export function CharacterDetailPage() {
                 </button>
               </>
             )}
-          </div>
+          </Surface>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

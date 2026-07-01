@@ -29,6 +29,8 @@ const inventoryPage = readProjectFile('src/pages/inventory/InventoryPage.tsx');
 const marketPage = readProjectFile('src/pages/market/RelicMarketPage.tsx');
 const dashboardPage = readProjectFile('src/pages/dashboard/DashboardPage.tsx');
 const characterListPage = readProjectFile('src/pages/characters/CharacterListPage.tsx');
+const characterDetailPage = readProjectFile('src/pages/characters/CharacterDetailPage.tsx');
+const characterGrowthPage = readProjectFile('src/pages/characters/CharacterGrowthPage.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -149,5 +151,13 @@ assertContract(
 );
 
 assertContract(!characterListPage.includes('card-layer-2'), 'CharacterListPage must not use card-layer-2.');
+
+for (const [name, source] of Object.entries({
+  CharacterDetailPage: characterDetailPage,
+  CharacterGrowthPage: characterGrowthPage,
+})) {
+  assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
+  assertContract(source.includes('PageShell'), `${name} must use PageShell.`);
+}
 
 console.log('UI system contract check passed.');
