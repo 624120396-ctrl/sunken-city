@@ -147,11 +147,14 @@ for (const [name, source] of Object.entries({
 }
 
 assertContract(
-  dashboardPage.includes("from '@components/system'") &&
-    dashboardPage.includes('PageShell') &&
-    dashboardPage.includes('ActionCard') &&
-    dashboardPage.includes('DataCard'),
-  'DashboardPage must use PageShell, ActionCard, and DataCard.'
+  dashboardPage.includes('/dashboard-card-character.png') &&
+    dashboardPage.includes('/dashboard-card-room.png') &&
+    dashboardPage.includes('/dashboard-card-abyss.png') &&
+    dashboardPage.includes('whispersHovered') &&
+    dashboardPage.includes('GlassCard') &&
+    !dashboardPage.includes('PageShell') &&
+    !dashboardPage.includes('ActionCard'),
+  'DashboardPage must preserve the immersive image cards and stacked whisper cards.'
 );
 
 assertContract(

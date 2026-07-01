@@ -17,7 +17,7 @@ import type { UserProfile } from '@components/UserProfileCard';
 import { CthulhuButton } from '@components/ui/CthulhuButton';
 import { CthulhuProgress } from '@components/ui/CthulhuProgress';
 import { GoldOrnament } from '@components/ui/GoldOrnament';
-import { ActionCard, CharacterCard, DataCard, PageShell, Surface } from '@components/system';
+import { CharacterCard } from '@components/system';
 
 interface Character {
   id: string;
@@ -206,12 +206,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <PageShell
-      title="潮汐控制台"
-      eyebrow="keeper dashboard"
-      description="集中查看身份、资源、调查员和在线状态。PC 端保留沉浸控制台感，移动端保持入口清晰。"
-      className="pb-8"
-    >
+    <div className="space-y-6 pb-8">
       {/* ===== Layer 1: 用户信息面板 ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -219,7 +214,7 @@ export function DashboardPage() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="w-full"
       >
-        <Surface variant="page" tone="gold" padding="none" className="transition-all duration-300 hover:border-[#8b2635]/20">
+        <div className="relative rounded-xl overflow-hidden border border-[#3a3a3a]/40 backdrop-blur-md bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/20 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
           {/* 顶部金色渐变装饰线 */}
           <div className="absolute top-0 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent pointer-events-none" />
           
@@ -266,8 +261,23 @@ export function DashboardPage() {
 
               {/* 右侧：货币徽章 + 签到 */}
               <div className="md:ml-auto flex items-center gap-4">
-                <DataCard label="锈蚀硬币" value={user?.coins ?? 0} tone="gold" icon={<Coins size={18} />} className="w-28" />
-                <DataCard label="虚银" value={user?.stardust ?? 0} tone="madness" icon={<Sparkles size={18} />} className="w-28" />
+                {/* 锈蚀硬币徽章 */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative w-12 h-12 rounded-full bg-black/50 border border-[#c9a227]/30 flex items-center justify-center shadow-[0_0_12px_rgba(201,162,39,0.15)]">
+                    <Coins size={20} className="text-[#c9a227]" />
+                  </div>
+                  <span className="text-lg font-bold text-[#e8d4a0]">{user?.coins ?? 0}</span>
+                  <span className="text-[10px] text-[#a69b85]">锈蚀硬币</span>
+                </div>
+
+                {/* 虚银徽章 */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative w-12 h-12 rounded-full bg-black/50 border border-purple-400/30 flex items-center justify-center shadow-[0_0_12px_rgba(139,38,53,0.15)]">
+                    <Sparkles size={20} className="text-purple-400" />
+                  </div>
+                  <span className="text-lg font-bold text-[#e8d4a0]">{user?.stardust ?? 0}</span>
+                  <span className="text-[10px] text-[#a69b85]">虚银</span>
+                </div>
 
                 <div className="ml-2">
                   <CthulhuButton
@@ -301,7 +311,7 @@ export function DashboardPage() {
               </div>
             )}
           </div>
-        </Surface>
+        </div>
       </motion.div>
 
       {/* ===== Layer 2: Bento Grid（功能入口 + 旧日低语Glass卡片） ===== */}
@@ -325,21 +335,30 @@ export function DashboardPage() {
                 transition={{ duration: 0.4, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link to={action.to} className="block group">
-                  <ActionCard
-                    title={action.title}
-                    description={action.subtitle}
-                    icon={<action.icon size={20} />}
-                    tone="blood"
-                    className="h-full min-h-[140px]"
-                    media={
+                  <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                    {/* 背景图（如有） */}
+                    {action.bgImage && (
                       <img
                         src={action.bgImage}
                         alt=""
-                        className="h-full w-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
-                    }
-                    actions={<ChevronRight size={16} />}
-                  />
+                    )}
+                    {/* 磨砂玻璃覆盖层 - 仅左侧1/5 */}
+                    <div className="absolute inset-y-0 left-0 w-[22%] backdrop-blur-[13px] bg-[#0a0a0f]/30 pointer-events-none" style={{ maskImage: 'linear-gradient(to right, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }} />
+                    {/* 底部血红色渐变 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
+                    {/* 顶部微光 */}
+                    <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+                    {/* 内容 */}
+                    <div className="relative p-4 flex flex-col h-full min-h-[140px] max-w-[55%]">
+                      <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-3 group-hover:border-[#c9a227]/25 group-hover:bg-[#c9a227]/5 transition-all duration-300">
+                        <action.icon size={20} className="text-[#e8d4a0]" strokeWidth={1.5} />
+                      </div>
+                      <h3 className="font-bold text-sm text-[#f5f0e6] tracking-wide">{action.title}</h3>
+                      <p className="text-xs text-[#a69b85] mt-1">{action.subtitle}</p>
+                    </div>
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -629,6 +648,6 @@ export function DashboardPage() {
         isOpen={!!selectedOnlineUser}
         onClose={() => setSelectedOnlineUser(null)}
       />
-    </PageShell>
+    </div>
   );
 }
