@@ -4,6 +4,7 @@ import { Plus, Heart, Brain, Zap, TrendingUp, Eye, User } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { FlipCard } from '@components/ui/FlipCard';
+import { Button, PageShell, Surface } from '@components/system';
 
 interface Character {
   id: string;
@@ -81,37 +82,30 @@ export function CharacterListPage() {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div className="flex items-center gap-3 min-w-0">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-ritual font-bold" style={{ color: '#e8d4a0' }}>调查员名册</h1>
-            <p className="text-sm mt-1" style={{ color: '#8b8375' }}>每一张卡都是一段不可删除的命运</p>
-          </div>
-          <div className="hidden sm:block w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
-        </div>
-        <button
-          onClick={() => navigate('/characters/new')}
-          className="coc-btn-primary min-h-11 flex items-center justify-center gap-2 sm:w-auto"
-        >
-          <Plus size={18} />
+    <PageShell
+      title="调查员名册"
+      eyebrow="investigator archive"
+      description="每一张卡都是一段不可删除的命运。保留翻转卡片展示，同时让页面壳和空状态在明亮背景下可读。"
+      actions={
+        <Button variant="primary" onClick={() => navigate('/characters/new')} icon={<Plus size={18} />}>
           记录命运
-        </button>
-      </div>
+        </Button>
+      }
+    >
 
       {characters.length === 0 ? (
-        <div className="card-layer-2 text-center py-16 rounded-lg relative corner-ornament">
+        <Surface variant="solid" padding="lg" className="text-center py-16 relative corner-ornament">
           <div className="text-4xl mb-4">🎭</div>
-          <p className="font-ritual" style={{ color: '#FFFEFC' }}>暂无调查员</p>
-          <p className="text-sm mt-2" style={{ color: '#8b8375' }}>创建你的第一个调查员开始冒险</p>
-          <button
+          <p className="font-ritual text-[var(--coc-on-surface-primary)]">暂无调查员</p>
+          <p className="text-sm mt-2 text-[var(--coc-on-surface-secondary)]">创建你的第一个调查员开始冒险</p>
+          <Button
             onClick={() => navigate('/characters/new')}
-            className="mt-4 hover:underline"
-            style={{ color: '#a63848' }}
+            variant="primary"
+            className="mt-4"
           >
             创建调查员
-          </button>
-        </div>
+          </Button>
+        </Surface>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
           {characters.map((char) => (
@@ -244,6 +238,6 @@ export function CharacterListPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

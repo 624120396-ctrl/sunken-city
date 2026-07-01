@@ -27,6 +27,8 @@ const economyShell = readProjectFile('src/components/economy/EconomyPageShell.ts
 const shopPage = readProjectFile('src/pages/shop/ShopPage.tsx');
 const inventoryPage = readProjectFile('src/pages/inventory/InventoryPage.tsx');
 const marketPage = readProjectFile('src/pages/market/RelicMarketPage.tsx');
+const dashboardPage = readProjectFile('src/pages/dashboard/DashboardPage.tsx');
+const characterListPage = readProjectFile('src/pages/characters/CharacterListPage.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -129,5 +131,23 @@ for (const [name, source] of Object.entries({
   assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
   assertContract(!source.includes('card-layer-2'), `${name} must not use card-layer-2.`);
 }
+
+assertContract(
+  dashboardPage.includes("from '@components/system'") &&
+    dashboardPage.includes('PageShell') &&
+    dashboardPage.includes('ActionCard') &&
+    dashboardPage.includes('DataCard'),
+  'DashboardPage must use PageShell, ActionCard, and DataCard.'
+);
+
+assertContract(
+  characterListPage.includes("from '@components/system'") &&
+    characterListPage.includes('PageShell') &&
+    characterListPage.includes('Surface') &&
+    characterListPage.includes('Button'),
+  'CharacterListPage must use the readable system shell.'
+);
+
+assertContract(!characterListPage.includes('card-layer-2'), 'CharacterListPage must not use card-layer-2.');
 
 console.log('UI system contract check passed.');
