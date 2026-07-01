@@ -1,4 +1,4 @@
-import { motion, type Variants } from 'motion/react';
+import { motion, type HTMLMotionProps, type Variants } from 'motion/react';
 import { cn } from '@lib/utils';
 import type { ReactNode } from 'react';
 
@@ -67,7 +67,7 @@ const itemVariants: Variants = {
   },
 };
 
-interface StaggerListProps {
+interface StaggerListProps extends HTMLMotionProps<'div'> {
   children: ReactNode;
   className?: string;
   /** 子元素间隔（秒） */
@@ -81,9 +81,11 @@ export function StaggerList({
   className,
   staggerDelay = 0.06,
   initialDelay = 0.05,
+  ...props
 }: StaggerListProps) {
   return (
     <motion.div
+      {...props}
       className={className}
       variants={{
         hidden: { opacity: 0 },

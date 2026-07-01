@@ -1356,7 +1356,7 @@ export function RoomPage() {
           {activeTab === 'chat' ? (
             <DoubleBezelCard variant="default" runeCorners innerClassName={cn("flex-1 flex flex-col min-h-0", isMobile ? "p-1" : "p-4")}>
               {/* ===== 新增：场景描述卡片 ===== */}
-              {(sceneDesc || room?.isCreator) && (
+              {!isMobile && (sceneDesc || room?.isCreator) && (
                 <div className={cn("flex-shrink-0", isMobile ? "px-1 pt-1" : "px-4 pt-4")}>
                   <SceneCard
                     description={sceneDesc}
@@ -1367,7 +1367,14 @@ export function RoomPage() {
               )}
 
               {/* 消息列表 */}
-              <StaggerList className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0" staggerDelay={0.03}>
+              <StaggerList
+                data-testid="room-message-list"
+                className={cn(
+                  "flex-1 overflow-y-auto min-h-0",
+                  isMobile ? "p-2 space-y-2" : "p-4 space-y-3"
+                )}
+                staggerDelay={0.03}
+              >
                 {messages.length === 0 ? (
                   <StaggerItem>
                     <EmptyState
@@ -1387,16 +1394,16 @@ export function RoomPage() {
                     const displayName = sender?.character?.name || sender?.displayedCharacter?.name || msg.nickname;
 
                     const Avatar = () => (
-                      <div className="relative w-10 h-10 flex-shrink-0">
+                      <div className={cn("relative flex-shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
                         {sender?.avatarUrl ? (
                           <img
                             src={sender.avatarUrl}
-                            className="w-10 h-10 rounded-full object-cover border border-coc-bg-tertiary bg-coc-bg-secondary"
+                            className="h-full w-full rounded-full object-cover border border-coc-bg-tertiary bg-coc-bg-secondary"
                             alt=""
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-coc-bg-tertiary border border-coc-border flex items-center justify-center">
-                            <User size={20} className="text-coc-text-muted" />
+                          <div className="h-full w-full rounded-full bg-coc-bg-tertiary border border-coc-border flex items-center justify-center">
+                            <User size={isMobile ? 16 : 20} className="text-coc-text-muted" />
                           </div>
                         )}
                       </div>
@@ -1422,11 +1429,12 @@ export function RoomPage() {
 
                     return (
                       <StaggerItem key={msg.id}>
-                        <div className="flex justify-start gap-3">
+                        <div className={cn("flex justify-start", isMobile ? "gap-2" : "gap-3")}>
                           <Avatar />
                           <div
                             className={cn(
-                              "max-w-[75%] rounded-lg relative group border shadow-md",
+                              "rounded-lg relative group border shadow-md",
+                              isMobile ? "max-w-[82%]" : "max-w-[75%]",
                               isMobile ? "px-2 py-2" : "px-4 py-3",
                               msg.type === 'dice'
                                 ? 'bg-[#1a1a1a] border-[#c9a227]/50'
