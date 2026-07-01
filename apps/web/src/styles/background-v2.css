@@ -13,7 +13,7 @@
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  filter: saturate(0.94) contrast(1.03) brightness(0.9);
+  filter: saturate(1.08) contrast(0.98) brightness(1.35);
   transform: scale(1.02);
 }
 
@@ -21,22 +21,22 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 18%, rgba(232, 212, 160, 0.10), transparent 30%),
-    radial-gradient(ellipse at 54% 58%, rgba(54, 104, 118, 0.16), transparent 46%),
-    linear-gradient(90deg, rgba(6, 10, 14, 0.58), rgba(7, 16, 22, 0.18) 45%, rgba(6, 10, 14, 0.48)),
-    linear-gradient(180deg, rgba(6, 8, 11, 0.48), rgba(6, 14, 20, 0.08) 38%, rgba(6, 8, 11, 0.62));
+    radial-gradient(circle at 50% 18%, rgba(255, 231, 176, 0.14), transparent 32%),
+    radial-gradient(ellipse at 55% 58%, rgba(80, 144, 160, 0.18), transparent 50%),
+    linear-gradient(90deg, rgba(6, 10, 14, 0.28), rgba(7, 16, 22, 0.02) 45%, rgba(6, 10, 14, 0.22)),
+    linear-gradient(180deg, rgba(6, 8, 11, 0.24), rgba(6, 14, 20, 0) 38%, rgba(6, 8, 11, 0.30));
 }
 
 @media (max-width: 767px) {
   .coc-app-bg__image {
-    filter: saturate(0.82) contrast(1.02) brightness(0.72);
+    filter: saturate(1) contrast(1) brightness(1.08);
   }
 
   .coc-app-bg__veil {
     background:
-      radial-gradient(circle at 50% 16%, rgba(232, 212, 160, 0.08), transparent 28%),
-      linear-gradient(90deg, rgba(6, 10, 14, 0.62), rgba(7, 16, 22, 0.24) 48%, rgba(6, 10, 14, 0.54)),
-      linear-gradient(180deg, rgba(6, 8, 11, 0.54), rgba(6, 14, 20, 0.14) 36%, rgba(6, 8, 11, 0.66));
+      radial-gradient(circle at 50% 16%, rgba(255, 231, 176, 0.10), transparent 30%),
+      linear-gradient(90deg, rgba(6, 10, 14, 0.36), rgba(7, 16, 22, 0.08) 48%, rgba(6, 10, 14, 0.30)),
+      linear-gradient(180deg, rgba(6, 8, 11, 0.34), rgba(6, 14, 20, 0.02) 36%, rgba(6, 8, 11, 0.38));
   }
 }
 
