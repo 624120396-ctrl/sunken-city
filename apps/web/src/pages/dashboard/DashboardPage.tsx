@@ -206,7 +206,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="mx-auto w-full max-w-[72rem] space-y-6 pb-8 xl:max-w-[86rem] 2xl:max-w-[104rem] [@media(min-width:2200px)]:max-w-[118rem]">
       {/* ===== Layer 1: 用户信息面板 ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -315,18 +315,18 @@ export function DashboardPage() {
       </motion.div>
 
       {/* ===== Layer 2: Bento Grid（功能入口 + 旧日低语Glass卡片） ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         {/* 左侧：快捷入口 2×2 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="lg:col-span-2 space-y-3"
+          className="space-y-3 xl:col-span-5"
         >
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">开启仪式</h2>
           </GoldOrnament.Title>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [@media(min-width:2200px)]:grid-cols-3">
             {quickActions.map((action, i) => (
               <motion.div
                 key={action.to + action.title}
@@ -370,20 +370,20 @@ export function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="lg:col-span-3"
+          className="xl:col-span-7"
         >
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">旧日低语</h2>
           </GoldOrnament.Title>
 
           <div
-            className="flex justify-center items-center h-[260px] mt-3"
+            className="mt-3 flex h-[260px] items-center justify-center xl:h-[280px] [@media(min-width:2200px)]:h-[300px]"
             onMouseEnter={() => setWhispersHovered(true)}
             onMouseLeave={() => setWhispersHovered(false)}
           >
             {/* 卡片1 - 深渊公告（左，-15deg） */}
             <div
-              className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+              className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
               style={{
                 transform: whispersHovered ? 'rotate(0deg)' : 'rotate(-15deg)',
                 margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -427,7 +427,7 @@ export function DashboardPage() {
             {/* 卡片2 - 位阶天梯（中，0deg） */}
             <Link to="/ranks" className="block">
               <div
-                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(0deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -477,7 +477,7 @@ export function DashboardPage() {
             {/* 卡片3 - 印记图鉴（右，+15deg） */}
             <Link to="/titles" className="block">
               <div
-                className="relative w-[180px] h-[220px] bg-gradient-to-b from-white/[0.08] to-transparent border border-white/10 rounded-xl flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-[10px] shadow-[0_25px_25px_rgba(0,0,0,0.25)] overflow-hidden"
+                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(15deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -534,22 +534,21 @@ export function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex-shrink-0 w-80">
+              <div key={i}>
                 <SkeletonCard />
               </div>
             ))}
           </div>
         ) : characters.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
             {characters.map((char, i) => (
               <motion.div
                 key={char.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-                className="flex-shrink-0 w-80"
               >
                 <CharacterCard character={char} />
               </motion.div>

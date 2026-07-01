@@ -152,9 +152,12 @@ assertContract(
     dashboardPage.includes('/dashboard-card-abyss.png') &&
     dashboardPage.includes('whispersHovered') &&
     dashboardPage.includes('GlassCard') &&
+    dashboardPage.includes('[@media(min-width:2200px)]:max-w-[118rem]') &&
+    dashboardPage.includes('[@media(min-width:2200px)]:grid-cols-3') &&
+    dashboardPage.includes('[@media(min-width:2200px)]:grid-cols-4') &&
     !dashboardPage.includes('PageShell') &&
     !dashboardPage.includes('ActionCard'),
-  'DashboardPage must preserve the immersive image cards and stacked whisper cards.'
+  'DashboardPage must preserve immersive cards with adaptive widescreen layout.'
 );
 
 assertContract(
