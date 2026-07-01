@@ -206,7 +206,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[72rem] space-y-6 pb-8 xl:max-w-[86rem] 2xl:max-w-[104rem] [@media(min-width:2200px)]:max-w-[118rem]">
+    <div className="w-full space-y-6 pb-8 xl:space-y-7 2xl:space-y-8 [@media(min-width:2200px)]:space-y-10">
       {/* ===== Layer 1: 用户信息面板 ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -218,7 +218,7 @@ export function DashboardPage() {
           {/* 顶部金色渐变装饰线 */}
           <div className="absolute top-0 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-[#c9a227]/40 to-transparent pointer-events-none" />
           
-          <div className="p-6 md:p-8">
+          <div className="p-6 md:p-8 2xl:p-10">
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               {/* 左侧：头像 + 身份 */}
               <div className="flex items-center gap-4">
@@ -315,7 +315,7 @@ export function DashboardPage() {
       </motion.div>
 
       {/* ===== Layer 2: Bento Grid（功能入口 + 旧日低语Glass卡片） ===== */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 2xl:gap-6 [@media(min-width:2200px)]:gap-8">
         {/* 左侧：快捷入口 2×2 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -326,7 +326,7 @@ export function DashboardPage() {
           <GoldOrnament.Title>
             <h2 className="text-lg font-bold tracking-wider text-[#c9a227] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] px-8 py-1 bg-[url('/images/title-glow.png')] bg-cover bg-center bg-no-repeat">开启仪式</h2>
           </GoldOrnament.Title>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [@media(min-width:2200px)]:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:gap-4 [@media(min-width:2200px)]:grid-cols-3 [@media(min-width:2200px)]:gap-5">
             {quickActions.map((action, i) => (
               <motion.div
                 key={action.to + action.title}
@@ -335,7 +335,7 @@ export function DashboardPage() {
                 transition={{ duration: 0.4, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link to={action.to} className="block group">
-                  <div className="relative h-full min-h-[140px] rounded-xl overflow-hidden border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)]">
+                  <div className="relative h-full min-h-[140px] overflow-hidden rounded-xl border border-[#3a3a3a]/40 bg-black/50 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-[#8b2635]/30 hover:shadow-[0_0_30px_rgba(139,38,53,0.12)] 2xl:min-h-[160px] [@media(min-width:2200px)]:min-h-[180px]">
                     {/* 背景图（如有） */}
                     {action.bgImage && (
                       <img
@@ -351,7 +351,7 @@ export function DashboardPage() {
                     {/* 顶部微光 */}
                     <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
                     {/* 内容 */}
-                    <div className="relative p-4 flex flex-col h-full min-h-[140px] max-w-[55%]">
+                    <div className="relative flex h-full min-h-[140px] max-w-[62%] flex-col p-4 2xl:min-h-[160px] 2xl:p-5 [@media(min-width:2200px)]:min-h-[180px]">
                       <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-3 group-hover:border-[#c9a227]/25 group-hover:bg-[#c9a227]/5 transition-all duration-300">
                         <action.icon size={20} className="text-[#e8d4a0]" strokeWidth={1.5} />
                       </div>
@@ -377,13 +377,13 @@ export function DashboardPage() {
           </GoldOrnament.Title>
 
           <div
-            className="mt-3 flex h-[260px] items-center justify-center xl:h-[280px] [@media(min-width:2200px)]:h-[300px]"
+            className="mt-3 flex h-[260px] items-center justify-center xl:h-[280px] 2xl:h-[300px] [@media(min-width:2200px)]:h-[340px]"
             onMouseEnter={() => setWhispersHovered(true)}
             onMouseLeave={() => setWhispersHovered(false)}
           >
             {/* 卡片1 - 深渊公告（左，-15deg） */}
             <div
-              className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
+              className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 2xl:h-[240px] 2xl:w-[200px] [@media(min-width:2200px)]:h-[270px] [@media(min-width:2200px)]:w-[230px]"
               style={{
                 transform: whispersHovered ? 'rotate(0deg)' : 'rotate(-15deg)',
                 margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -427,7 +427,7 @@ export function DashboardPage() {
             {/* 卡片2 - 位阶天梯（中，0deg） */}
             <Link to="/ranks" className="block">
               <div
-                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
+                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 2xl:h-[240px] 2xl:w-[200px] [@media(min-width:2200px)]:h-[270px] [@media(min-width:2200px)]:w-[230px]"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(0deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',
@@ -477,7 +477,7 @@ export function DashboardPage() {
             {/* 卡片3 - 印记图鉴（右，+15deg） */}
             <Link to="/titles" className="block">
               <div
-                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 [@media(min-width:2200px)]:h-[240px] [@media(min-width:2200px)]:w-[210px]"
+                className="relative flex h-[220px] w-[180px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent shadow-[0_25px_25px_rgba(0,0,0,0.25)] backdrop-blur-[10px] transition-all duration-500 2xl:h-[240px] 2xl:w-[200px] [@media(min-width:2200px)]:h-[270px] [@media(min-width:2200px)]:w-[230px]"
                 style={{
                   transform: whispersHovered ? 'rotate(0deg)' : 'rotate(15deg)',
                   margin: whispersHovered ? '0 10px' : '0 -45px',

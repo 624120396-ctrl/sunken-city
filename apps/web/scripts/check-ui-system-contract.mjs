@@ -126,6 +126,13 @@ assertContract(
 );
 
 assertContract(
+  systemCss.includes('@media (min-width: 2200px)') &&
+    systemCss.includes('width: 100%') &&
+    systemCss.includes('minmax(24rem, 30rem)'),
+  'PageShell must expand to the available content width on ultrawide desktop screens.'
+);
+
+assertContract(
   !roomListPage.includes('CthulhuCard3D') && !roomListPage.includes('card-layer-2'),
   'RoomListPage must not use legacy 3D cards or card-layer-2.'
 );
@@ -152,7 +159,8 @@ assertContract(
     dashboardPage.includes('/dashboard-card-abyss.png') &&
     dashboardPage.includes('whispersHovered') &&
     dashboardPage.includes('GlassCard') &&
-    dashboardPage.includes('[@media(min-width:2200px)]:max-w-[118rem]') &&
+    dashboardPage.includes('[@media(min-width:2200px)]:space-y-10') &&
+    !dashboardPage.includes('max-w-[118rem]') &&
     dashboardPage.includes('[@media(min-width:2200px)]:grid-cols-3') &&
     dashboardPage.includes('grid-cols-[repeat(auto-fit,minmax(15rem,17rem))]') &&
     !dashboardPage.includes('PageShell') &&
