@@ -25,6 +25,17 @@ export function QuickRollBar({
   const [tempSkills, setTempSkills] = useState(quickSkills);
 
   const getSkillDef = (key: string) => COC7E_SKILLS.find((s) => s.key === key);
+  const getCompactSkillName = (name: string) => {
+    const compactNames: Record<string, string> = {
+      图书馆使用: '图书馆',
+      克苏鲁神话: '神话',
+      信用评级: '信用',
+      乔装打扮: '乔装',
+      电子学: '电子',
+      计算机使用: '计算机',
+    };
+    return compactNames[name] || name;
+  };
 
   const handleSave = () => {
     onUpdateQuickSkills?.(tempSkills.slice(0, 6));
@@ -64,6 +75,7 @@ export function QuickRollBar({
         {quickSkills.map((skillKey) => {
           const def = getSkillDef(skillKey);
           const skillName = def?.name || skillKey;
+          const displayName = compact ? getCompactSkillName(skillName) : skillName;
           const skillValue = characterSkills[skillKey] ?? def?.baseValue ?? 0;
 
           return (
@@ -77,7 +89,7 @@ export function QuickRollBar({
                   : 'px-3 py-1.5 text-sm'
               )}
             >
-              <span className={cn('text-coc-text-secondary', compact && 'min-w-0 truncate')}>{skillName}</span>
+              <span className={cn('text-coc-text-secondary', compact && 'min-w-0 truncate')} title={skillName}>{displayName}</span>
               <span className={cn('text-coc-accent-gold', compact ? 'ml-0.5' : 'ml-1')}>{skillValue}</span>
             </button>
           );
