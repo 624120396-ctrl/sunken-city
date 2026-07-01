@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Settings, X, GripVertical } from 'lucide-react';
 import { COC7E_SKILLS } from '@lib/coc7-data';
 import { Modal } from '@components/ui/Modal';
+import { cn } from '@lib/utils';
 
 interface QuickRollBarProps {
   quickSkills: string[];
@@ -9,6 +10,7 @@ interface QuickRollBarProps {
   onRoll: (skillName: string, skillValue: number) => void;
   onUpdateQuickSkills?: (skills: string[]) => void;
   isEditable?: boolean;
+  compact?: boolean;
 }
 
 export function QuickRollBar({
@@ -17,6 +19,7 @@ export function QuickRollBar({
   onRoll,
   onUpdateQuickSkills,
   isEditable,
+  compact = false,
 }: QuickRollBarProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [tempSkills, setTempSkills] = useState(quickSkills);
@@ -49,7 +52,15 @@ export function QuickRollBar({
 
   return (
     <>
-      <div className="flex items-center gap-2 px-4 py-2 bg-coc-bg-secondary border-t border-coc-border overflow-x-auto">
+      <div
+        data-testid="room-quick-roll-bar"
+        className={cn(
+          'flex items-center bg-coc-bg-secondary border-t border-coc-border overflow-x-auto',
+          compact
+            ? 'h-10 gap-1.5 px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            : 'gap-2 px-4 py-2'
+        )}
+      >
         {quickSkills.map((skillKey) => {
           const def = getSkillDef(skillKey);
           const skillName = def?.name || skillKey;
@@ -59,10 +70,15 @@ export function QuickRollBar({
             <button
               key={skillKey}
               onClick={() => onRoll(skillName, skillValue)}
-              className="flex-shrink-0 px-3 py-1.5 bg-coc-bg-tertiary hover:bg-coc-accent-gold/20 border border-coc-border hover:border-coc-accent-gold rounded text-sm transition-colors"
+              className={cn(
+                'flex-shrink-0 bg-coc-bg-tertiary hover:bg-coc-accent-gold/20 border border-coc-border hover:border-coc-accent-gold rounded transition-colors',
+                compact
+                  ? 'flex h-8 min-w-[52px] max-w-[72px] items-center justify-center px-1.5 text-[11px] leading-none'
+                  : 'px-3 py-1.5 text-sm'
+              )}
             >
-              <span className="text-coc-text-secondary">{skillName}</span>
-              <span className="ml-1 text-coc-accent-gold">{skillValue}</span>
+              <span className={cn('text-coc-text-secondary', compact && 'min-w-0 truncate')}>{skillName}</span>
+              <span className={cn('text-coc-accent-gold', compact ? 'ml-0.5' : 'ml-1')}>{skillValue}</span>
             </button>
           );
         })}
@@ -73,10 +89,13 @@ export function QuickRollBar({
               setTempSkills(quickSkills);
               setShowSettings(true);
             }}
-            className="flex-shrink-0 p-1.5 text-coc-text-muted hover:text-coc-accent-gold transition-colors"
+            className={cn(
+              'flex-shrink-0 text-coc-text-muted hover:text-coc-accent-gold transition-colors',
+              compact ? 'flex h-8 w-8 items-center justify-center p-0' : 'p-1.5'
+            )}
             title="设置快捷技能"
           >
-            <Settings size={16} />
+            <Settings size={compact ? 14 : 16} />
           </button>
         )}
       </div>

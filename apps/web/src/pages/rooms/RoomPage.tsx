@@ -1533,6 +1533,7 @@ export function RoomPage() {
                     }
                   }}
                   isEditable={true}
+                  compact={isMobile}
                 />
                 </div>
               )}
