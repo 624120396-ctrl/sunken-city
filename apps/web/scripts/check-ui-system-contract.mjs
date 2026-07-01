@@ -41,6 +41,8 @@ const forumNewPostPage = readProjectFile('src/pages/forum/ForumNewPostPage.tsx')
 const ranksPage = readProjectFile('src/pages/ranks/RanksPage.tsx');
 const titlesPage = readProjectFile('src/pages/titles/TitlesPage.tsx');
 const roomPage = readProjectFile('src/pages/rooms/RoomPage.tsx');
+const legacyCard = readProjectFile('src/components/system/Card.tsx');
+const skeleton = readProjectFile('src/components/ui/Skeleton.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -216,5 +218,15 @@ assertContract(
   !roomPage.includes('DoubleBezelCard'),
   'RoomPage must not depend on DoubleBezelCard for the main gameplay shell.'
 );
+
+for (const [name, source] of Object.entries({
+  SystemCard: legacyCard,
+  Skeleton: skeleton,
+})) {
+  assertContract(
+    !source.includes('card-layer-2') && !source.includes('coc-card-v2') && source.includes('Surface'),
+    `${name} must be backed by Surface instead of legacy card classes.`
+  );
+}
 
 console.log('UI system contract check passed.');

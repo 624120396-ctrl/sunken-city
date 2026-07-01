@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Surface } from '@components/system';
 
 interface SkeletonProps {
   className?: string;
@@ -34,7 +35,7 @@ export function SkeletonText({ lines = 1, className = '' }: { lines?: number; cl
  */
 export function SkeletonCard({ className = '' }: { className?: string }) {
   return (
-    <div className={`card-layer-2 p-5 space-y-4 ${className}`}>
+    <Surface variant="panel" padding="lg" className={`space-y-4 ${className}`}>
       <Skeleton className="h-5 w-1/3" />
       <Skeleton className="h-3 w-full" />
       <Skeleton className="h-3 w-3/4" />
@@ -42,7 +43,7 @@ export function SkeletonCard({ className = '' }: { className?: string }) {
         <Skeleton className="h-8 w-20" />
         <Skeleton className="h-8 w-20" />
       </div>
-    </div>
+    </Surface>
   );
 }
 

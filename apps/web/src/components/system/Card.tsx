@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '@lib/utils';
+import { Surface, type SurfaceTone } from './Surface';
 
 type CardVariant = 'default' | 'featured' | 'room' | 'character' | 'item' | 'log';
 
@@ -15,14 +16,25 @@ export function Card({
   children,
   ...props
 }: CardProps) {
+  const toneByVariant: Record<CardVariant, SurfaceTone> = {
+    default: 'neutral',
+    featured: 'gold',
+    room: 'ocean',
+    character: 'gold',
+    item: 'madness',
+    log: 'ocean',
+  };
+
   return (
-    <div
-      data-variant={variant}
-      data-interactive={interactive ? 'true' : 'false'}
-      className={cn('coc-card-v2', className)}
+    <Surface
+      variant="panel"
+      tone={toneByVariant[variant]}
+      interactive={interactive}
+      data-card-variant={variant}
+      className={cn(className)}
       {...props}
     >
       {children}
-    </div>
+    </Surface>
   );
 }

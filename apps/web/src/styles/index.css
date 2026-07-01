@@ -57,28 +57,6 @@
   background-color: var(--coc-v2-bg);
 }
 
-/* Layer 2 — 卡片：磨砂玻璃 + 黑色阴影 */
-.card-layer-2 {
-  background: rgba(18, 18, 26, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: box-shadow 0.3s ease-out, transform 0.25s ease-out, border-color 0.3s ease-out;
-}
-
-.card-layer-2:hover {
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(201, 162, 39, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transform: translateY(-3px);
-  border-color: rgba(201, 162, 39, 0.15);
-}
-
 /* Layer 3 — 悬浮遮罩 */
 .overlay-layer-3 {
   background: rgba(10, 10, 15, 0.75);
@@ -1415,46 +1393,6 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* ===== v1.7.1 卡片（适配浅色内容区） ===== */
-.coc-card-v2 {
-  background: linear-gradient(
-    135deg,
-    rgba(18, 18, 26, 0.85) 0%,
-    rgba(10, 10, 15, 0.92) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(201, 162, 39, 0.15);
-  border-radius: 12px;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.3s var(--ease-abyss);
-  position: relative;
-  overflow: hidden;
-}
-
-.coc-card-v2:hover {
-  border-color: rgba(201, 162, 39, 0.3);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(201, 162, 39, 0.1);
-  transform: translateY(-3px);
-}
-
-/* 卡片大理石纹理叠加 */
-.coc-card-v2::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(ellipse at 30% 20%, rgba(201, 162, 39, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(139, 38, 53, 0.02) 0%, transparent 50%);
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  border-radius: inherit;
-}
-
 /* 重要卡片 */
 .coc-card-important {
   background: linear-gradient(
@@ -1473,30 +1411,6 @@
 .coc-card-important:hover {
   transform: scale(1.01);
   border-color: rgba(201, 162, 39, 0.35);
-}
-
-/* ===== v1.7.1 玻璃卡片 ===== */
-.coc-glass-v2 {
-  background: linear-gradient(
-    135deg,
-    rgba(18, 18, 26, 0.7) 0%,
-    rgba(10, 10, 15, 0.8) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(201, 162, 39, 0.15);
-  border-radius: 12px;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
-}
-
-.coc-glass-v2:hover {
-  border-color: rgba(201, 162, 39, 0.3);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(201, 162, 39, 0.1);
 }
 
 /* ===== v1.7.1 按钮 ===== */
@@ -1699,12 +1613,6 @@
 
 .text-content-muted {
   color: var(--content-text-muted);
-}
-
-/* 内容区内的深色卡片文字保持浅色 */
-.coc-card-v2 .text-content-primary,
-.coc-card-v2 .text-content-muted {
-  color: var(--coc-v2-text);
 }
 
 /* ===== v1.7.1 标题装饰线（金箔枝叶） ===== */
