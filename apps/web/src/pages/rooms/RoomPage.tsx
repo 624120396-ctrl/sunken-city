@@ -1498,55 +1498,82 @@ export function RoomPage() {
               <form
                 onSubmit={handleSendMessage}
                 className={cn(
-                  "border-t border-[#3a3a3a]/40 space-y-2 flex-shrink-0 backdrop-blur-md bg-black/20",
-                  isMobile ? "p-1" : "p-4"
+                  "border-t border-[#3a3a3a]/40 flex-shrink-0 backdrop-blur-md bg-black/20",
+                  isMobile ? "p-1" : "space-y-2 p-4"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-1">
-                    {showChatTools && (
-                      <>
-                        <QuickPhrases
-                          onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
-                        />
-                        {room?.isCreator && (
-                          <>
-                            <SecretDiceToggle
-                              isSecret={isSecretDice}
-                              onToggle={() => setIsSecretDice(!isSecretDice)}
-                              disabled={!connected}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const initial: Record<string, number> = {};
-                                room?.members.forEach(m => {
-                                  if (m.character) initial[m.userId] = 0;
-                                });
-                                setSanityTargets(initial);
-                                setSanityDescription('');
-                                setShowSanityModal(true);
-                              }}
-                              disabled={!connected}
-                              className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
-                            >
-                              理智侵蚀
-                            </button>
-                          </>
-                        )}
-                      </>
+                {(!isMobile || showChatTools) && (
+                  <div
+                    data-testid="room-chat-tools-row"
+                    className={cn(
+                      "flex items-center justify-between",
+                      isMobile && "pb-1"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      {showChatTools && (
+                        <>
+                          <QuickPhrases
+                            onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
+                          />
+                          {room?.isCreator && (
+                            <>
+                              <SecretDiceToggle
+                                isSecret={isSecretDice}
+                                onToggle={() => setIsSecretDice(!isSecretDice)}
+                                disabled={!connected}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const initial: Record<string, number> = {};
+                                  room?.members.forEach(m => {
+                                    if (m.character) initial[m.userId] = 0;
+                                  });
+                                  setSanityTargets(initial);
+                                  setSanityDescription('');
+                                  setShowSanityModal(true);
+                                }}
+                                disabled={!connected}
+                                className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
+                              >
+                                理智侵蚀
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {!isMobile && (
+                      <button
+                        type="button"
+                        onClick={() => setShowChatTools(!showChatTools)}
+                        className="p-1 text-[#6b6558] hover:text-[#c9a227] transition-colors flex-shrink-0"
+                        title={showChatTools ? '收起工具' : '展开工具'}
+                      >
+                        {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowChatTools(!showChatTools)}
-                    className="p-1 text-[#6b6558] hover:text-[#c9a227] transition-colors flex-shrink-0"
-                    title={showChatTools ? '收起工具' : '展开工具'}
-                  >
-                    {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
-                </div>
-                <div className="flex gap-2">
+                )}
+                <div className={cn("flex gap-2", isMobile && "items-center")}>
+                  {isMobile && (
+                    <button
+                      type="button"
+                      data-testid="room-chat-tools-toggle"
+                      onClick={() => setShowChatTools(!showChatTools)}
+                      className={cn(
+                        "btn-v2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        showChatTools
+                          ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
+                          : "border-[#3a3a3a]/60 bg-[#0f1016]/75 text-[#8b8375] hover:text-[#c9a227]"
+                      )}
+                      title={showChatTools ? '收起工具' : '展开工具'}
+                      aria-label={showChatTools ? '收起聊天工具' : '展开聊天工具'}
+                    >
+                      {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                  )}
                   <MentionInput
                     value={inputMessage}
                     onChange={setInputMessage}
