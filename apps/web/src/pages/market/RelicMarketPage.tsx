@@ -16,6 +16,7 @@ import { getRarityColorClass } from '@data/relics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
+import { Surface } from '@components/system';
 
 interface Listing {
   id: string;
@@ -179,9 +180,12 @@ export function RelicMarketPage() {
       l.relicSnapshot?.durability ?? l.relicSnapshot?.maxDurability ?? null;
     const rarity = meta?.rarity || 'common';
     return (
-      <div
+      <Surface
         key={l.id}
-        className={`card-layer-2 rounded border p-4 ${getRarityColorClass(rarity).split(' ')[1]}`}
+        variant="panel"
+        tone={rarity === 'legendary' || rarity === 'epic' ? 'blood' : rarity === 'rare' ? 'gold' : 'neutral'}
+        padding="md"
+        className={getRarityColorClass(rarity).split(' ')[1]}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -246,7 +250,7 @@ export function RelicMarketPage() {
             </button>
           )}
         </div>
-      </div>
+      </Surface>
     );
   };
 
@@ -279,7 +283,7 @@ export function RelicMarketPage() {
     >
       <div>
 
-      <div className="mb-4 flex items-center gap-2 overflow-x-auto border-b border-[#3a3a3a]/40">
+      <Surface variant="panel" padding="sm" className="mb-4 flex items-center gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('market')}
           className={`min-h-11 shrink-0 px-4 py-2 text-sm ${
@@ -300,11 +304,11 @@ export function RelicMarketPage() {
         >
           我的挂单
         </button>
-      </div>
+      </Surface>
 
       {activeTab === 'market' && (
         <>
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Surface variant="panel" padding="md" className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
@@ -325,7 +329,7 @@ export function RelicMarketPage() {
             >
               刷新
             </button>
-          </div>
+          </Surface>
           {isLoading ? (
             <EmptyState
               icon={EmptyIcons.Shop}
@@ -373,7 +377,7 @@ export function RelicMarketPage() {
       {/* 上架 Modal */}
       {showListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-lg border border-[#3a3a3a]/60 bg-[#09090d]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-md md:p-6">
+          <Surface variant="elevated" padding="lg" className="w-full max-w-md">
             <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">上架遗物</h3>
             <div className="mb-4">
               <label className="mb-1 block text-xs text-[#b0a898]">
@@ -477,14 +481,14 @@ export function RelicMarketPage() {
                 {listMutation.isPending ? '上架中...' : '确认上架'}
               </button>
             </div>
-          </div>
+          </Surface>
         </div>
       )}
 
       {/* 购买 Modal */}
       {buyTradeId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-lg border border-[#3a3a3a]/60 bg-[#09090d]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-md md:p-6">
+          <Surface variant="elevated" padding="lg" className="w-full max-w-sm">
             <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">购买遗物</h3>
             <p className="mb-3 text-sm text-[#b0a898]">
               请选择要接收该遗物的角色卡
@@ -519,7 +523,7 @@ export function RelicMarketPage() {
                 {buyMutation.isPending ? '购买中...' : '确认购买'}
               </button>
             </div>
-          </div>
+          </Surface>
         </div>
       )}
       </div>

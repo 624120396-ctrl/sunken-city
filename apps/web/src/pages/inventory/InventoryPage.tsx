@@ -7,6 +7,7 @@ import { cn } from '@lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
+import { Surface } from '@components/system';
 
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
@@ -217,8 +218,7 @@ export function InventoryPage() {
       }
     >
       <div className="space-y-4">
-
-      <div className="flex gap-2 overflow-x-auto">
+      <Surface variant="panel" padding="sm" className="flex gap-2 overflow-x-auto">
         {[
           { key: 'general', label: '道具' },
           { key: 'titles', label: '印记' },
@@ -236,11 +236,11 @@ export function InventoryPage() {
             {t.label}
           </button>
         ))}
-      </div>
+      </Surface>
 
       {tab === 'general' && (
-        <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-[#1a1a1a] p-4">
+        <Surface variant="solid" padding="md">
+          <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : generalItems.length === 0 ? (
@@ -279,12 +279,12 @@ export function InventoryPage() {
               </div>
             )}
           </div>
-        </div>
+        </Surface>
       )}
 
       {tab === 'titles' && (
-        <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-[#1a1a1a] p-4">
+        <Surface variant="solid" padding="md">
+          <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
             ) : titleItems.length === 0 ? (
@@ -312,13 +312,13 @@ export function InventoryPage() {
               </div>
             )}
           </div>
-        </div>
+        </Surface>
       )}
 
       {tab === 'relics' && (
         <div className="space-y-4">
-          <div className="card-layer-2 rounded-lg overflow-hidden">
-            <div className="bg-[#1a1a1a] p-4">
+          <Surface variant="solid" padding="md">
+            <div>
               <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
@@ -340,10 +340,10 @@ export function InventoryPage() {
                 </div>
               )}
             </div>
-          </div>
+          </Surface>
 
-          <div className="card-layer-2 rounded-lg overflow-hidden">
-            <div className="bg-[#1a1a1a] p-4">
+          <Surface variant="solid" padding="md">
+            <div>
               <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">未绑定遗物</h2>
               {unboundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
@@ -370,16 +370,17 @@ export function InventoryPage() {
                 </div>
               )}
             </div>
-          </div>
+          </Surface>
         </div>
       )}
 
       {/* 开箱结果弹窗 */}
       {lootboxResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overlay-layer-3 p-4">
-          <div
+          <Surface
+            variant="elevated"
             className={cn(
-              'relative w-full max-w-sm rounded-xl border-2 bg-coc-bg-overlay p-5 transition-shadow duration-300 modal-layer-3',
+              'relative w-full max-w-sm border-2 p-5 transition-shadow duration-300',
               flash
                 ? 'border-coc-gold shadow-[0_0_40px_rgba(251,191,36,0.6)]'
                 : 'border-coc-blood'
@@ -461,7 +462,7 @@ export function InventoryPage() {
             >
               收下它们
             </button>
-          </div>
+          </Surface>
         </div>
       )}
       </div>

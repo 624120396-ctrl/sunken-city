@@ -22,6 +22,11 @@ const backgroundCss = readProjectFile('src/styles/background-v2.css');
 const systemCss = readProjectFile('src/styles/system-v2.css');
 const surface = readProjectFile('src/components/system/Surface.tsx');
 const systemIndex = readProjectFile('src/components/system/index.ts');
+const roomListPage = readProjectFile('src/pages/rooms/RoomListPage.tsx');
+const economyShell = readProjectFile('src/components/economy/EconomyPageShell.tsx');
+const shopPage = readProjectFile('src/pages/shop/ShopPage.tsx');
+const inventoryPage = readProjectFile('src/pages/inventory/InventoryPage.tsx');
+const marketPage = readProjectFile('src/pages/market/RelicMarketPage.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -93,6 +98,36 @@ for (const component of ['PageShell', 'ReadablePanel', 'ActionCard', 'DataCard']
     systemIndex.includes(`export { ${component}`),
     `System index must export ${component}.`
   );
+}
+
+assertContract(
+  roomListPage.includes("from '@components/system'") &&
+    roomListPage.includes('PageShell') &&
+    roomListPage.includes('ActionCard') &&
+    roomListPage.includes('ReadablePanel') &&
+    roomListPage.includes('DataCard'),
+  'RoomListPage must use the readable system components.'
+);
+
+assertContract(
+  !roomListPage.includes('CthulhuCard3D') && !roomListPage.includes('card-layer-2'),
+  'RoomListPage must not use legacy 3D cards or card-layer-2.'
+);
+
+assertContract(
+  economyShell.includes("from '@components/system'") &&
+    economyShell.includes('PageShell') &&
+    economyShell.includes('ActionCard'),
+  'EconomyPageShell must use PageShell and ActionCard.'
+);
+
+for (const [name, source] of Object.entries({
+  ShopPage: shopPage,
+  InventoryPage: inventoryPage,
+  RelicMarketPage: marketPage,
+})) {
+  assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
+  assertContract(!source.includes('card-layer-2'), `${name} must not use card-layer-2.`);
 }
 
 console.log('UI system contract check passed.');

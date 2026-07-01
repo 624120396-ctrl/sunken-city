@@ -8,6 +8,7 @@ import { getShopItems, purchaseItem, type ShopItem } from '@services/shop.servic
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
+import { ReadablePanel, Surface } from '@components/system';
 
 const rarityBorder: Record<string, string> = {
   common: 'border-coc-parchment-dim',
@@ -89,8 +90,7 @@ export function ShopPage() {
       }
     >
       <div className="space-y-5">
-
-      <div className="card-layer-2 p-4 md:p-5 rounded-lg text-sm text-coc-parchment-dim space-y-2 leading-relaxed">
+      <ReadablePanel title="馆藏说明" eyebrow="archive notice" tone="gold">
         <p>并非每一件物品都应当留存于日光之下。</p>
         <p>
           本馆所陈，皆自深海古城打捞，或是神秘存在将不可名状之物凝固为可触的实物
@@ -98,10 +98,10 @@ export function ShopPage() {
           每一件藏品都经“考古学会”名义鉴定，但其真实来历……我们建议您保持沉默。
         </p>
         <p className="text-coc-gold/80">理性选购，勿溯其源。</p>
-      </div>
+      </ReadablePanel>
 
       {/* 分类过滤 */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <Surface variant="panel" padding="md" className="flex items-center gap-2 flex-wrap">
         <Filter size={16} className="text-coc-parchment-dim shrink-0" />
         {CATEGORIES.map((c) => (
           <button
@@ -116,13 +116,13 @@ export function ShopPage() {
             {c.label}
           </button>
         ))}
-      </div>
+      </Surface>
 
       {/* 商品网格 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-64 bg-[#0a0a0f]/40 rounded animate-pulse border border-coc-void" />
+            <Surface key={i} variant="panel" padding="md" className="h-64 animate-pulse" />
           ))
         ) : error ? (
           <div className="col-span-full text-center py-16 text-red-300">
@@ -140,9 +140,12 @@ export function ShopPage() {
           </div>
         ) : (
           items?.map((item) => (
-            <div
+            <Surface
               key={item.key}
-              className="card-layer-2 h-full"
+              variant="panel"
+              tone={item.rarity === 'mythical' || item.rarity === 'legendary' ? 'blood' : item.rarity === 'rare' ? 'gold' : 'neutral'}
+              padding="none"
+              className="h-full"
             >
               <div className="h-full p-4 flex flex-col gap-3">
                 <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-[#0a0a0f]/45 flex items-center justify-center`}>
@@ -194,7 +197,7 @@ export function ShopPage() {
                     </button>
                   </div>
               </div>
-            </div>
+            </Surface>
           ))
         )}
       </div>

@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@lib/utils';
 import { Surface } from './Surface';
 
 type PageShellLayout = 'single' | 'with-aside';
 
-interface PageShellProps {
+interface PageShellProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
   eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
@@ -12,7 +12,6 @@ interface PageShellProps {
   aside?: ReactNode;
   children: ReactNode;
   layout?: PageShellLayout;
-  className?: string;
   contentClassName?: string;
 }
 
@@ -26,9 +25,10 @@ export function PageShell({
   layout = aside ? 'with-aside' : 'single',
   className,
   contentClassName,
+  ...props
 }: PageShellProps) {
   return (
-    <section className={cn('coc-page-shell', className)} data-layout={layout}>
+    <section className={cn('coc-page-shell', className)} data-layout={layout} {...props}>
       <Surface variant="page" padding="lg" className="coc-page-shell__header">
         <div className="min-w-0">
           {eyebrow && <div className="coc-page-shell__eyebrow">{eyebrow}</div>}
