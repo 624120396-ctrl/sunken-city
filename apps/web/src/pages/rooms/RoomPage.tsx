@@ -242,6 +242,7 @@ export function RoomPage() {
   const [showGMKit, setShowGMKit] = useState(false);
   const [showSubRooms, setShowSubRooms] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [showMobileActionDrawer, setShowMobileActionDrawer] = useState(false);
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
@@ -823,8 +824,36 @@ export function RoomPage() {
       {isMobile && (
         <div
           data-testid="room-mobile-pl-actions"
-          className="md:hidden mb-2 space-y-2 rounded-xl border border-[#3a3a3a]/50 bg-black/45 p-1.5 shadow-lg shadow-black/40 backdrop-blur-md"
+          className={cn(
+            'md:hidden mb-2 rounded-xl border border-[#3a3a3a]/50 bg-black/45 shadow-lg shadow-black/40 backdrop-blur-md transition-all duration-200',
+            showMobileActionDrawer ? 'space-y-2 p-1.5' : 'p-1'
+          )}
         >
+          <button
+            type="button"
+            data-testid="room-mobile-action-drawer-toggle"
+            aria-expanded={showMobileActionDrawer}
+            onClick={() => {
+              if (showMobileActionDrawer) setShowMobileToolTray(false);
+              setShowMobileActionDrawer((visible) => !visible);
+            }}
+            className="btn-v2 flex h-8 w-full items-center justify-between rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/75 px-3 text-[#e8d4a0]"
+          >
+            <span className="flex items-center gap-2 text-xs">
+              {showMobileActionDrawer ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              工具抽屉
+            </span>
+            <span className="flex items-center gap-2 text-[#8b8375]">
+              <Users size={13} />
+              <User size={13} />
+              <Dice5 size={13} />
+              <Search size={13} />
+              <MessageSquare size={13} />
+            </span>
+          </button>
+
+          {showMobileActionDrawer && (
+          <>
           <div className="grid grid-cols-6 gap-1.5">
             <button
               type="button"
@@ -965,6 +994,8 @@ export function RoomPage() {
                 离开房间
               </button>
             </div>
+          )}
+          </>
           )}
         </div>
       )}
