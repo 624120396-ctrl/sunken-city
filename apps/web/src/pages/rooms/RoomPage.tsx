@@ -753,15 +753,15 @@ export function RoomPage() {
     <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
       <div
-        data-testid={isMobile ? 'room-mobile-compact-header' : 'room-desktop-header'}
+        data-testid={isMobile ? 'room-mobile-play-header' : 'room-desktop-header'}
         className={cn(
           'relative z-50 flex items-center backdrop-blur-md border border-[#3a3a3a]/40 shadow-md',
           isMobile
-            ? 'mb-2 h-10 w-fit gap-2 rounded-xl bg-black/35 px-1.5 py-1'
+            ? 'mb-2 w-full flex-col items-stretch gap-1.5 rounded-xl bg-black/45 px-2 py-1.5'
             : 'mb-4 justify-between rounded-lg bg-black/40 px-3 py-2'
         )}
       >
-        <div className={cn("flex items-center", isMobile ? "gap-2" : "gap-4")}>
+        <div className={cn("flex items-center", isMobile ? "w-full gap-2" : "gap-4")}>
           <Link
             to="/rooms"
             aria-label="返回房间列表"
@@ -772,7 +772,28 @@ export function RoomPage() {
           >
             <ArrowLeft size={20} />
           </Link>
-          {!isMobile && (
+          {isMobile ? (
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-baseline gap-1.5">
+                <span className="truncate text-sm font-serif font-bold leading-tight text-[#c9a227]">{room?.name}</span>
+                <span className="shrink-0 text-[10px] leading-tight text-[#6b6558]">#{room?.roomId}</span>
+              </div>
+              <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-none text-[#8b8375]">
+                {room?.currentScene ? (
+                  <>
+                    <span className="truncate">{room.currentScene.title}</span>
+                    {room.currentScene.atmosphere && (
+                      <span className="shrink-0 rounded bg-[#c9a227]/15 px-1 py-0.5 text-[#c9a227]">{room.currentScene.atmosphere}</span>
+                    )}
+                  </>
+                ) : room?.currentPhase ? (
+                  <span className="truncate">{room.currentPhase.title}</span>
+                ) : (
+                  <span className="italic">自由模式</span>
+                )}
+              </div>
+            </div>
+          ) : (
             <div>
               <h1 className="text-xl font-serif font-bold" style={{ color: '#c9a227' }}>{room?.name}</h1>
               <p className="text-sm" style={{ color: '#6b6558' }}>#{room?.roomId}</p>
@@ -786,6 +807,21 @@ export function RoomPage() {
             )}
             title={connected ? '已连接' : '未连接'}
           />
+          {isMobile && (
+            <button
+              type="button"
+              data-testid="room-mobile-action-drawer-toggle"
+              aria-expanded={showMobileActionDrawer}
+              onClick={() => {
+                if (showMobileActionDrawer) setShowMobileToolTray(false);
+                setShowMobileActionDrawer((visible) => !visible);
+              }}
+              className="btn-v2 flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/75 px-2 text-xs text-[#e8d4a0]"
+            >
+              工具
+              {showMobileActionDrawer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          )}
         </div>
 
         <div className="hidden md:flex items-center gap-1.5">
@@ -833,193 +869,162 @@ export function RoomPage() {
             </button>
           )}
         </div>
+
+        {isMobile && showMobileActionDrawer && (
+          <>
+            <div className="grid grid-cols-6 gap-1.5">
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="成员"
+                title="成员"
+                onClick={() => setShowMobileMembers(true)}
+                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              >
+                <Users size={18} />
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="角色"
+                title="角色"
+                onClick={openMyCharacter}
+                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              >
+                <User size={18} />
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="掷骰"
+                title="掷骰"
+                onClick={() => {
+                  setActiveTab('chat');
+                  setShowChatTools(true);
+                }}
+                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              >
+                <Dice5 size={18} />
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="线索"
+                title="线索"
+                onClick={() => setShowCluePanel(true)}
+                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              >
+                <Search size={18} />
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="私聊"
+                title="私聊"
+                onClick={() => setShowPrivateChat(true)}
+                className="btn-v2 relative flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+              >
+                <MessageSquare size={18} />
+                {privateUnreadCount > 0 && (
+                  <span className="absolute right-1 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#a63848] px-1 text-[9px] text-white">
+                    {privateUnreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                data-room-mobile-action="true"
+                aria-label="更多"
+                title="更多"
+                onClick={() => setShowMobileToolTray((v) => !v)}
+                className={cn(
+                  "btn-v2 flex min-h-11 items-center justify-center rounded-lg border",
+                  showMobileToolTray
+                    ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
+                    : "border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+                )}
+              >
+                <ChevronDown size={18} />
+              </button>
+            </div>
+
+            {showMobileToolTray && (
+              <div className="grid grid-cols-2 gap-2 border-t border-[#3a3a3a]/40 pt-2">
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <Swords size={15} />
+                  {activeTab === 'chat' ? '战斗视图' : '聊天视图'}
+                </button>
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={() => setShowNpcPanel(true)}
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <User size={15} />
+                  NPC
+                </button>
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={() => setShowSubRooms(true)}
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <GitBranch size={15} />
+                  子房间
+                </button>
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={() => setShowCombatTimeline(true)}
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <ScrollText size={15} />
+                  战斗记录
+                </button>
+                <Link
+                  to={`/rooms/${roomId}/report`}
+                  data-room-mobile-action="true"
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <FileText size={15} />
+                  报告
+                </Link>
+                <Link
+                  to={`/rooms/${roomId}/dice-history`}
+                  data-room-mobile-action="true"
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <History size={15} />
+                  投骰历史
+                </Link>
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={handleLeaveRoom}
+                  className="btn-v2 col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#a63848]/40 bg-[#4a111a]/35 px-2 text-xs text-[#f1b7bd]"
+                >
+                  <DoorOpen size={15} />
+                  离开房间
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ===== V2.1 新增：房间状态栏 ===== */}
-      <RoomStatusBar
-        currentPhase={room?.currentPhase || null}
-        currentScene={room?.currentScene || null}
-        phases={room?.phases}
-        isKP={!!room?.isCreator}
-      />
-
-      {isMobile && (
-        <div
-          data-testid="room-mobile-pl-actions"
-          className={cn(
-            'md:hidden mb-2 rounded-xl border border-[#3a3a3a]/50 bg-black/45 shadow-lg shadow-black/40 backdrop-blur-md transition-all duration-200',
-            showMobileActionDrawer ? 'space-y-2 p-1.5' : 'p-1'
-          )}
-        >
-          <button
-            type="button"
-            data-testid="room-mobile-action-drawer-toggle"
-            aria-expanded={showMobileActionDrawer}
-            onClick={() => {
-              if (showMobileActionDrawer) setShowMobileToolTray(false);
-              setShowMobileActionDrawer((visible) => !visible);
-            }}
-            className="btn-v2 flex h-8 w-full items-center justify-between rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/75 px-3 text-[#e8d4a0]"
-          >
-            <span className="flex items-center gap-2 text-xs">
-              {showMobileActionDrawer ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              工具抽屉
-            </span>
-            <span className="flex items-center gap-2 text-[#8b8375]">
-              <Users size={13} />
-              <User size={13} />
-              <Dice5 size={13} />
-              <Search size={13} />
-              <MessageSquare size={13} />
-            </span>
-          </button>
-
-          {showMobileActionDrawer && (
-          <>
-          <div className="grid grid-cols-6 gap-1.5">
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="成员"
-              title="成员"
-              onClick={() => setShowMobileMembers(true)}
-              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-            >
-              <Users size={18} />
-            </button>
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="角色"
-              title="角色"
-              onClick={openMyCharacter}
-              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-            >
-              <User size={18} />
-            </button>
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="掷骰"
-              title="掷骰"
-              onClick={() => {
-                setActiveTab('chat');
-                setShowChatTools(true);
-              }}
-              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-            >
-              <Dice5 size={18} />
-            </button>
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="线索"
-              title="线索"
-              onClick={() => setShowCluePanel(true)}
-              className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-            >
-              <Search size={18} />
-            </button>
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="私聊"
-              title="私聊"
-              onClick={() => setShowPrivateChat(true)}
-              className="btn-v2 relative flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-            >
-              <MessageSquare size={18} />
-              {privateUnreadCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#a63848] px-1 text-[9px] text-white">
-                  {privateUnreadCount}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              data-room-mobile-action="true"
-              aria-label="更多"
-              title="更多"
-              onClick={() => setShowMobileToolTray((v) => !v)}
-              className={cn(
-                "btn-v2 flex min-h-11 items-center justify-center rounded-lg border",
-                showMobileToolTray
-                  ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
-                  : "border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-              )}
-            >
-              <ChevronDown size={18} />
-            </button>
-          </div>
-
-          {showMobileToolTray && (
-            <div className="grid grid-cols-2 gap-2 border-t border-[#3a3a3a]/40 pt-2">
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <Swords size={15} />
-                {activeTab === 'chat' ? '战斗视图' : '聊天视图'}
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                onClick={() => setShowNpcPanel(true)}
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <User size={15} />
-                NPC
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                onClick={() => setShowSubRooms(true)}
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <GitBranch size={15} />
-                子房间
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                onClick={() => setShowCombatTimeline(true)}
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <ScrollText size={15} />
-                战斗记录
-              </button>
-              <Link
-                to={`/rooms/${roomId}/report`}
-                data-room-mobile-action="true"
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <FileText size={15} />
-                报告
-              </Link>
-              <Link
-                to={`/rooms/${roomId}/dice-history`}
-                data-room-mobile-action="true"
-                className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-              >
-                <History size={15} />
-                投骰历史
-              </Link>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                onClick={handleLeaveRoom}
-                className="btn-v2 col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#a63848]/40 bg-[#4a111a]/35 px-2 text-xs text-[#f1b7bd]"
-              >
-                <DoorOpen size={15} />
-                离开房间
-              </button>
-            </div>
-          )}
-          </>
-          )}
-        </div>
+      {!isMobile && (
+        <RoomStatusBar
+          currentPhase={room?.currentPhase || null}
+          currentScene={room?.currentScene || null}
+          phases={room?.phases}
+          isKP={!!room?.isCreator}
+        />
       )}
 
       {/* 主内容区 */}
