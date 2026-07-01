@@ -62,14 +62,37 @@ Use:
 - polished obsidian panels
 - parchment-compatible surfaces
 - restrained gold highlights
+- selective blood-red warning and forbidden-ritual accents
 - crisp icon-first controls
 - compact mobile drawers
+
+Color ratio guidance:
+
+- Deep blue-black, smoked gray, and parchment warm white should carry large background and surface areas.
+- Gold should express brand, rarity, ritual quality, and primary actions.
+- Blood red should be a high-intensity accent only, ideally no more than 5%-8% of a screen's primary UI area.
+- Purple or uncanny tones should express madness, mystery, and old-god power without competing with blood red as the warning color.
+
+Blood red is appropriate for:
+
+- combat, damage, near-death states, and danger confirmation
+- forbidden relics, corruption, curses, and sanity collapse edges
+- critical warnings, failed feedback, and irreversible actions
+- urgent room-state alerts such as combat start, low HP, or important failed rolls
+
+Blood red is not appropriate for:
+
+- large background veils
+- ordinary body copy, ordinary buttons, or ordinary card borders
+- competing with gold on the same piece of information
+- translucent red text on bright backgrounds
 
 Avoid:
 
 - global black veil as a readability crutch
 - gray text on gray translucent panels
 - low-opacity gold body copy
+- large blood-red backgrounds that create cheap horror
 - page-specific overlay patches
 - mobile toolbars that take space from chat
 - decorative headers that compete with gameplay
@@ -106,6 +129,24 @@ All meaningful content must sit on a named surface:
 | `glass` | short decorative previews only |
 | `elevated` | drawers, popovers, modals, command surfaces |
 | `danger` | destructive confirmation |
+
+Recommended accent tokens:
+
+```css
+:root {
+  --coc-accent-gold: #d6aa22;
+  --coc-accent-blood: #b21f2d;
+  --coc-accent-blood-strong: #e13a4a;
+  --coc-accent-blood-muted: #7a1a22;
+  --coc-accent-blood-surface: rgba(124, 18, 28, 0.18);
+}
+
+[data-bg-profile="luminous"] {
+  --coc-accent-blood: #9b1824;
+  --coc-accent-blood-strong: #bd2432;
+  --coc-accent-blood-surface: rgba(155, 24, 36, 0.14);
+}
+```
 
 Each surface needs stable:
 

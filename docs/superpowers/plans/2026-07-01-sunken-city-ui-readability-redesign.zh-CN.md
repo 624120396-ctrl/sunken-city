@@ -63,16 +63,39 @@
 - 深海冷雾
 - 可读烟熏玻璃
 - 克制金色仪式感
+- 适量血红警示与禁忌感
 - 非纯黑克苏鲁
 - 明暗背景可切换
 - PC 酷炫沉浸
 - 移动端 PL 优先
+
+色彩比例建议：
+
+- 深海蓝黑、烟熏灰、羊皮纸暖白作为大面积背景与 Surface 基底。
+- 金色作为品牌、稀有度、仪式感、主行动强调。
+- 血红色作为少量高强度强调，不超过单屏主要 UI 面积的 5%-8%。
+- 紫色/诡异色用于疯狂、神秘、旧日力量等状态，不与血红争夺主警示语义。
+
+血红色适用场景：
+
+- 战斗、伤害、濒死、危险确认。
+- 禁忌物、污染、诅咒、理智崩坏边缘状态。
+- 关键警告、失败反馈、不可逆操作。
+- 房间内的紧急状态提示，例如战斗开始、HP 过低、重要骰点失败。
+
+血红色不适用场景：
+
+- 大面积背景遮罩。
+- 普通正文、普通按钮、普通卡片边框。
+- 与金色同时高亮同一信息，造成主次冲突。
+- 明亮背景下的低透明红字。
 
 避免：
 
 - 全局黑幕遮罩
 - 灰底灰字
 - 低透明金色正文
+- 大面积血红背景导致廉价恐怖感
 - 逐页补丁式修复
 - 移动端信息堆叠
 - 背景图与正文直接竞争
@@ -204,6 +227,12 @@ export interface BackgroundOption {
   --coc-on-surface-muted: #aa9a7d;
   --coc-on-light-primary: #1c1b18;
   --coc-on-light-secondary: #4e4738;
+
+  --coc-accent-gold: #d6aa22;
+  --coc-accent-blood: #b21f2d;
+  --coc-accent-blood-strong: #e13a4a;
+  --coc-accent-blood-muted: #7a1a22;
+  --coc-accent-blood-surface: rgba(124, 18, 28, 0.18);
 }
 
 [data-bg-profile="luminous"] {
@@ -213,6 +242,9 @@ export interface BackgroundOption {
   --coc-on-surface-primary: #1d1b16;
   --coc-on-surface-secondary: #4d4638;
   --coc-on-surface-muted: #71664e;
+  --coc-accent-blood: #9b1824;
+  --coc-accent-blood-strong: #bd2432;
+  --coc-accent-blood-surface: rgba(155, 24, 36, 0.14);
 }
 ```
 
@@ -227,6 +259,12 @@ type SurfaceVariant = 'page' | 'panel' | 'solid' | 'glass' | 'elevated' | 'dange
 type SurfaceTone = 'neutral' | 'gold' | 'blood' | 'ocean' | 'madness';
 type SurfaceDensity = 'compact' | 'normal' | 'spacious';
 ```
+
+`blood` tone 的使用边界：
+
+- 可用于 `danger` Surface、战斗状态条、HP 低值、失败骰点、危险徽章和破坏性操作确认。
+- 不可用于普通导航激活态；普通激活态仍优先使用金色或中性高亮。
+- 在移动端房间页中，血红只提示紧急状态，不应占用聊天主区域。
 
 原则：
 
