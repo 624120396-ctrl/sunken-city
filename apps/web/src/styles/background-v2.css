@@ -13,7 +13,7 @@
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  filter: saturate(1.08) contrast(0.98) brightness(1.35);
+  filter: saturate(1.08) contrast(0.98) brightness(1.18);
   transform: scale(1.02);
 }
 
@@ -27,6 +27,38 @@
     linear-gradient(180deg, rgba(6, 8, 11, 0.24), rgba(6, 14, 20, 0) 38%, rgba(6, 8, 11, 0.30));
 }
 
+.coc-app-bg[data-bg-profile="luminous"] {
+  background-color: #e9ddbd;
+}
+
+.coc-app-bg[data-bg-profile="luminous"] .coc-app-bg__image {
+  filter: saturate(1.02) contrast(1.02) brightness(1.04);
+}
+
+.coc-app-bg[data-bg-profile="luminous"] .coc-app-bg__veil {
+  background:
+    radial-gradient(circle at 50% 14%, rgba(255, 246, 216, 0.20), transparent 34%),
+    radial-gradient(ellipse at 55% 62%, rgba(83, 135, 148, 0.10), transparent 54%),
+    linear-gradient(90deg, rgba(235, 222, 188, 0.16), rgba(255, 250, 230, 0.02) 46%, rgba(102, 82, 48, 0.10)),
+    linear-gradient(180deg, rgba(246, 238, 214, 0.10), rgba(255, 250, 230, 0) 44%, rgba(68, 50, 30, 0.12));
+}
+
+.coc-app-bg[data-bg-profile="balanced"] .coc-app-bg__image {
+  filter: saturate(1.08) contrast(0.98) brightness(1.18);
+}
+
+.coc-app-bg[data-bg-profile="dark"] .coc-app-bg__image {
+  filter: saturate(1.06) contrast(1.05) brightness(0.88);
+}
+
+.coc-app-bg[data-bg-profile="dark"] .coc-app-bg__veil {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 231, 176, 0.10), transparent 30%),
+    radial-gradient(ellipse at 55% 58%, rgba(56, 116, 136, 0.18), transparent 48%),
+    linear-gradient(90deg, rgba(3, 6, 10, 0.34), rgba(7, 16, 22, 0.06) 45%, rgba(3, 6, 10, 0.32)),
+    linear-gradient(180deg, rgba(3, 5, 8, 0.32), rgba(6, 14, 20, 0.04) 38%, rgba(3, 5, 8, 0.42));
+}
+
 @media (max-width: 767px) {
   .coc-app-bg__image {
     filter: saturate(1) contrast(1) brightness(1.08);
@@ -37,6 +69,21 @@
       radial-gradient(circle at 50% 16%, rgba(255, 231, 176, 0.10), transparent 30%),
       linear-gradient(90deg, rgba(6, 10, 14, 0.36), rgba(7, 16, 22, 0.08) 48%, rgba(6, 10, 14, 0.30)),
       linear-gradient(180deg, rgba(6, 8, 11, 0.34), rgba(6, 14, 20, 0.02) 36%, rgba(6, 8, 11, 0.38));
+  }
+
+  .coc-app-bg[data-bg-profile="luminous"] .coc-app-bg__image {
+    filter: saturate(1) contrast(1.02) brightness(1);
+  }
+
+  .coc-app-bg[data-bg-profile="luminous"] .coc-app-bg__veil {
+    background:
+      radial-gradient(circle at 50% 12%, rgba(255, 246, 216, 0.16), transparent 30%),
+      linear-gradient(90deg, rgba(245, 234, 205, 0.20), rgba(255, 250, 230, 0.04) 50%, rgba(94, 74, 40, 0.12)),
+      linear-gradient(180deg, rgba(246, 238, 214, 0.10), rgba(255, 250, 230, 0.02) 40%, rgba(68, 50, 30, 0.16));
+  }
+
+  .coc-app-bg[data-bg-profile="dark"] .coc-app-bg__image {
+    filter: saturate(1) contrast(1.03) brightness(0.84);
   }
 }
 

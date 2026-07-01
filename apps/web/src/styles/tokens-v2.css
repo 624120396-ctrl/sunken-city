@@ -1,16 +1,36 @@
 :root {
   --coc-bg-abyss: #06070b;
   --coc-bg-page: #0a0d12;
-  --coc-surface-0: rgba(8, 9, 14, 0.94);
-  --coc-surface-1: rgba(16, 18, 26, 0.86);
-  --coc-surface-2: rgba(22, 24, 34, 0.94);
+
+  --coc-surface-page: rgba(16, 18, 22, 0.78);
+  --coc-surface-panel: rgba(12, 15, 20, 0.84);
+  --coc-surface-solid: rgba(9, 11, 15, 0.93);
+  --coc-surface-glass: rgba(16, 22, 28, 0.50);
+  --coc-surface-elevated: rgba(8, 10, 14, 0.96);
+  --coc-surface-danger: rgba(58, 12, 19, 0.92);
   --coc-surface-muted: rgba(21, 24, 31, 0.72);
+
+  --coc-surface-0: var(--coc-surface-elevated);
+  --coc-surface-1: var(--coc-surface-panel);
+  --coc-surface-2: var(--coc-surface-solid);
+
   --coc-border-subtle: rgba(212, 197, 168, 0.12);
   --coc-border-strong: rgba(201, 162, 39, 0.34);
-  --coc-accent-gold: #c9a227;
+  --coc-border-danger: rgba(225, 58, 74, 0.42);
+
+  --coc-on-surface-primary: #f8eed8;
+  --coc-on-surface-secondary: #dccda9;
+  --coc-on-surface-muted: #aa9a7d;
+  --coc-on-light-primary: #1c1b18;
+  --coc-on-light-secondary: #4e4738;
+
+  --coc-accent-gold: #d6aa22;
   --coc-accent-gold-strong: #e8d4a0;
-  --coc-accent-blood: #8b2635;
-  --coc-accent-blood-strong: #b94355;
+  --coc-accent-gold-muted: #8d7027;
+  --coc-accent-blood: #b21f2d;
+  --coc-accent-blood-strong: #e13a4a;
+  --coc-accent-blood-muted: #7a1a22;
+  --coc-accent-blood-surface: rgba(124, 18, 28, 0.18);
   --coc-accent-madness: #7a4fa1;
   --coc-accent-ocean: #3d8fa3;
   --coc-success: #4fa36a;
@@ -24,9 +44,61 @@
   --coc-radius-control: 4px;
   --coc-radius-card: 8px;
   --coc-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.38);
+  --coc-shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.48);
   --coc-shadow-glow-gold: 0 0 24px rgba(201, 162, 39, 0.12);
+  --coc-shadow-glow-blood: 0 0 24px rgba(178, 31, 45, 0.14);
   --coc-motion-fast: 150ms;
   --coc-motion-base: 220ms;
   --coc-motion-slow: 320ms;
   --coc-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-bg-profile="luminous"] {
+  --coc-surface-page: rgba(250, 244, 224, 0.86);
+  --coc-surface-panel: rgba(245, 238, 214, 0.90);
+  --coc-surface-solid: rgba(255, 250, 235, 0.96);
+  --coc-surface-glass: rgba(252, 245, 224, 0.70);
+  --coc-surface-elevated: rgba(255, 250, 235, 0.98);
+  --coc-surface-danger: rgba(255, 237, 231, 0.96);
+  --coc-border-subtle: rgba(73, 61, 42, 0.18);
+  --coc-border-strong: rgba(142, 102, 20, 0.42);
+  --coc-border-danger: rgba(155, 24, 36, 0.34);
+  --coc-on-surface-primary: #1d1b16;
+  --coc-on-surface-secondary: #4d4638;
+  --coc-on-surface-muted: #71664e;
+  --coc-accent-gold: #9f7719;
+  --coc-accent-gold-strong: #6f5213;
+  --coc-accent-gold-muted: #8d7027;
+  --coc-accent-blood: #9b1824;
+  --coc-accent-blood-strong: #bd2432;
+  --coc-accent-blood-muted: #7a1a22;
+  --coc-accent-blood-surface: rgba(155, 24, 36, 0.14);
+  --coc-accent-madness: #68428c;
+  --coc-accent-ocean: #1e6f7f;
+  --coc-shadow-panel: 0 18px 42px rgba(57, 42, 20, 0.16);
+  --coc-shadow-elevated: 0 24px 56px rgba(57, 42, 20, 0.22);
+  --coc-shadow-glow-gold: 0 0 22px rgba(142, 102, 20, 0.14);
+  --coc-shadow-glow-blood: 0 0 22px rgba(155, 24, 36, 0.12);
+}
+
+:root[data-bg-profile="balanced"] {
+  --coc-surface-page: rgba(16, 18, 22, 0.78);
+  --coc-surface-panel: rgba(12, 15, 20, 0.84);
+  --coc-surface-solid: rgba(9, 11, 15, 0.93);
+  --coc-surface-glass: rgba(16, 22, 28, 0.50);
+  --coc-surface-elevated: rgba(8, 10, 14, 0.96);
+  --coc-surface-danger: rgba(58, 12, 19, 0.92);
+}
+
+:root[data-bg-profile="dark"] {
+  --coc-surface-page: rgba(20, 22, 28, 0.84);
+  --coc-surface-panel: rgba(15, 18, 24, 0.88);
+  --coc-surface-solid: rgba(12, 14, 19, 0.95);
+  --coc-surface-glass: rgba(18, 24, 32, 0.58);
+  --coc-surface-elevated: rgba(9, 11, 16, 0.98);
+  --coc-surface-danger: rgba(64, 13, 21, 0.94);
+  --coc-border-subtle: rgba(226, 210, 176, 0.14);
+  --coc-border-strong: rgba(214, 170, 34, 0.38);
+  --coc-shadow-panel: 0 20px 56px rgba(0, 0, 0, 0.48);
+  --coc-shadow-elevated: 0 28px 72px rgba(0, 0, 0, 0.58);
 }

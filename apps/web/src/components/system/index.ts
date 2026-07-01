@@ -1,4 +1,9 @@
 export { Surface } from './Surface';
+export type { SurfaceDensity, SurfacePadding, SurfaceTone, SurfaceVariant } from './Surface';
+export { PageShell } from './PageShell';
+export { ReadablePanel } from './ReadablePanel';
+export { ActionCard } from './ActionCard';
+export { DataCard } from './DataCard';
 export { Card } from './Card';
 export { Button } from './Button';
 export { Tabs, type TabItem } from './Tabs';

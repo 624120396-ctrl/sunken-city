@@ -1,11 +1,15 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '@lib/utils';
 
-type SurfaceVariant = 'base' | 'panel' | 'elevated' | 'glass' | 'solid' | 'danger';
-type SurfacePadding = 'none' | 'sm' | 'md' | 'lg';
+export type SurfaceVariant = 'page' | 'panel' | 'solid' | 'glass' | 'elevated' | 'danger';
+export type SurfaceTone = 'neutral' | 'gold' | 'blood' | 'ocean' | 'madness';
+export type SurfaceDensity = 'compact' | 'normal' | 'spacious';
+export type SurfacePadding = 'none' | 'sm' | 'md' | 'lg';
 
 interface SurfaceProps extends HTMLAttributes<HTMLDivElement> {
   variant?: SurfaceVariant;
+  tone?: SurfaceTone;
+  density?: SurfaceDensity;
   padding?: SurfacePadding;
   interactive?: boolean;
 }
@@ -19,6 +23,8 @@ const paddingClass: Record<SurfacePadding, string> = {
 
 export function Surface({
   variant = 'panel',
+  tone = 'neutral',
+  density = 'normal',
   padding = 'md',
   interactive = false,
   className,
@@ -28,6 +34,8 @@ export function Surface({
   return (
     <div
       data-variant={variant}
+      data-tone={tone}
+      data-density={density}
       data-interactive={interactive ? 'true' : 'false'}
       className={cn('coc-surface-v2', paddingClass[padding], className)}
       {...props}

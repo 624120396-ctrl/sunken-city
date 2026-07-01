@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@stores/auth.store';
 import { DEFAULT_BACKGROUND_ID, getBackgroundById } from './backgroundOptions';
 
@@ -7,8 +7,16 @@ export function AppBackground() {
   const [failed, setFailed] = useState(false);
   const selected = getBackgroundById(failed ? DEFAULT_BACKGROUND_ID : preferredBackground);
 
+  useEffect(() => {
+    document.documentElement.dataset.bgProfile = selected.readabilityProfile;
+
+    return () => {
+      delete document.documentElement.dataset.bgProfile;
+    };
+  }, [selected.readabilityProfile]);
+
   return (
-    <div className="coc-app-bg" aria-hidden="true">
+    <div className="coc-app-bg" data-bg-profile={selected.readabilityProfile} aria-hidden="true">
       <div
         key={selected.id}
         className="coc-app-bg__image"
