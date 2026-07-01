@@ -1133,55 +1133,11 @@ export function RoomPage() {
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto space-y-3 pr-3 py-2">
-          {/* 当前状态 - 水平紧凑条 */}
-          {selectedCharacter && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-coc-bg-secondary/50 border border-coc-border/30 rounded-lg">
-              <Tooltip content={`HP ${selectedCharacter.hp}/${selectedCharacter.maxHp || selectedCharacter.hp}`}>
-                <div className="flex-1 flex items-center gap-1">
-                  <span className="text-[10px] text-coc-accent-red font-bold">HP</span>
-                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                    <div className="h-full bg-coc-accent-red rounded-full" style={{ width: `${(selectedCharacter.hp / (selectedCharacter.maxHp || selectedCharacter.hp || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              </Tooltip>
-              <Tooltip content={`MP ${selectedCharacter.mp}/${selectedCharacter.maxMp || selectedCharacter.mp}`}>
-                <div className="flex-1 flex items-center gap-1">
-                  <span className="text-[10px] text-coc-accent-cyan font-bold">MP</span>
-                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                    <div className="h-full bg-coc-accent-cyan rounded-full" style={{ width: `${(selectedCharacter.mp / (selectedCharacter.maxMp || selectedCharacter.mp || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              </Tooltip>
-              <Tooltip content={`SAN ${selectedCharacter.san}/${selectedCharacter.maxSan || selectedCharacter.san}`}>
-                <div className="flex-1 flex items-center gap-1">
-                  <span className="text-[10px] text-yellow-400 font-bold">SAN</span>
-                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(selectedCharacter.san / (selectedCharacter.maxSan || selectedCharacter.san || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              </Tooltip>
-            </div>
-          )}
-
           {/* v1.5 PlayerHud */}
           {selectedCharacter && (
             <PlayerHud
               character={selectedCharacter}
               statusTags={memberStatuses[room?.members?.find(m => m.userId === user?.id)?.id || ''] || []}
-              quickSkills={(() => {
-                const qs = selectedCharacter.quickSkills
-                  ? typeof selectedCharacter.quickSkills === 'string'
-                    ? JSON.parse(selectedCharacter.quickSkills)
-                    : selectedCharacter.quickSkills
-                  : [];
-                const skills = selectedCharacter.skills
-                  ? typeof selectedCharacter.skills === 'string'
-                    ? JSON.parse(selectedCharacter.skills)
-                    : selectedCharacter.skills
-                  : {};
-                return qs.map((name: string) => ({ name, value: skills[name] || 0 })).filter((s: any) => s.value > 0);
-              })()}
-              onQuickRoll={handleRollDice}
             />
           )}
 
