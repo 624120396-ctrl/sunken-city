@@ -752,18 +752,40 @@ export function RoomPage() {
   return (
     <div className="h-[calc(100dvh-8rem)] flex flex-col">
       {/* 头部 */}
-      <div className="relative z-50 flex items-center justify-between mb-4 px-3 py-2 rounded-lg
-                      backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 shadow-md">
-        <div className="flex items-center gap-4">
-          <Link to="/rooms" className="p-2 rounded border border-[#3a3a3a]/60 text-[#c9a227] 
-                     hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10 transition-all">
+      <div
+        data-testid={isMobile ? 'room-mobile-compact-header' : 'room-desktop-header'}
+        className={cn(
+          'relative z-50 flex items-center backdrop-blur-md border border-[#3a3a3a]/40 shadow-md',
+          isMobile
+            ? 'mb-2 h-10 w-fit gap-2 rounded-xl bg-black/35 px-1.5 py-1'
+            : 'mb-4 justify-between rounded-lg bg-black/40 px-3 py-2'
+        )}
+      >
+        <div className={cn("flex items-center", isMobile ? "gap-2" : "gap-4")}>
+          <Link
+            to="/rooms"
+            aria-label="返回房间列表"
+            className={cn(
+              "rounded border border-[#3a3a3a]/60 text-[#c9a227] hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10 transition-all",
+              isMobile ? "flex h-8 w-8 items-center justify-center p-0" : "p-2"
+            )}
+          >
             <ArrowLeft size={20} />
           </Link>
-          <div>
-            <h1 className="text-xl font-serif font-bold" style={{ color: '#c9a227' }}>{room?.name}</h1>
-            <p className="text-sm" style={{ color: '#6b6558' }}>#{room?.roomId}</p>
-          </div>
-          <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'}`} title={connected ? '已连接' : '未连接'} />
+          {!isMobile && (
+            <div>
+              <h1 className="text-xl font-serif font-bold" style={{ color: '#c9a227' }}>{room?.name}</h1>
+              <p className="text-sm" style={{ color: '#6b6558' }}>#{room?.roomId}</p>
+            </div>
+          )}
+          <div
+            className={cn(
+              "rounded-full",
+              isMobile ? "h-2 w-2" : "h-2.5 w-2.5",
+              connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'
+            )}
+            title={connected ? '已连接' : '未连接'}
+          />
         </div>
 
         <div className="hidden md:flex items-center gap-1.5">
