@@ -793,56 +793,6 @@ export function RoomPage() {
               </span>
             )}
           </button>
-          <div className="relative group z-[100]">
-            <button className={cn(
-                "rounded flex items-center gap-1 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
-                isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
-              )}>
-              <span className={isMobile ? "hidden" : ""}>更多</span>
-              <ChevronDown size={isMobile ? 18 : 12} />
-            </button>
-            <div className="absolute right-0 top-full mt-1 w-44 backdrop-blur-md bg-black/80 
-                            border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60
-                            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[9999] py-1">
-              {[
-                { label: '成员', icon: Users, show: showMobileMembers, toggle: () => setShowMobileMembers(!showMobileMembers) },
-                { label: '线索', icon: Search, show: showCluePanel, toggle: () => setShowCluePanel(!showCluePanel) },
-                { label: 'NPC', icon: User, show: showNpcPanel, toggle: () => setShowNpcPanel(!showNpcPanel) },
-                { label: '战斗', icon: Swords, show: showCombatTimeline, toggle: () => setShowCombatTimeline(!showCombatTimeline) },
-                { label: 'AI', icon: Sparkles, show: showAI, toggle: () => setShowAI(!showAI) },
-                { label: '子房间', icon: GitBranch, show: showSubRooms, toggle: () => setShowSubRooms(!showSubRooms) },
-                { label: 'Log', icon: ScrollText, show: showLogPanel, toggle: () => setShowLogPanel(!showLogPanel) },
-                { label: '统计', icon: BarChart3, show: showStats, toggle: () => { fetchRoomStats(); setShowStats(!showStats); } },
-                { label: '报告', icon: FileText, show: false, link: `/rooms/${roomId}/report` },
-                { label: '投骰', icon: History, show: false, link: `/rooms/${roomId}/dice-history` },
-              ].map(item => (
-                item.link ? (
-                  <Link key={item.label} to={item.link} className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#8b8375] hover:bg-[#c9a227]/10 hover:text-[#c9a227] transition-colors">
-                    <item.icon size={14} />
-                    {item.label}
-                  </Link>
-                ) : (
-                  <button key={item.label} onClick={item.toggle} className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${item.show ? 'text-[#c9a227] bg-[#c9a227]/10' : 'text-[#8b8375] hover:bg-[#c9a227]/10 hover:text-[#c9a227]'}`}>
-                    <item.icon size={14} />
-                    {item.label}
-                  </button>
-                )
-              ))}
-            </div>
-          </div>
-          {room?.isCreator && (
-            <button
-              onClick={() => setShowGMKit(!showGMKit)}
-              className={`px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
-                          bg-[url('/btn-off.png')] bg-cover bg-center
-                          hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                          transition-all min-w-[60px] justify-center
-                          ${showGMKit ? "bg-[url('/btn-on.png')] text-white" : ""}`}
-            >
-              <Crown size={14} />
-              KP
-            </button>
-          )}
           <div className="w-px h-5 mx-1" style={{ background: 'rgba(58,58,58,0.5)' }} />
           <button onClick={handleLeaveRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
                        bg-[url('/btn-off.png')] bg-cover bg-center
@@ -1683,6 +1633,7 @@ export function RoomPage() {
             { label: '线索', icon: Search, active: showCluePanel, onClick: () => setShowCluePanel((v) => !v) },
             { label: 'NPC', icon: User, active: showNpcPanel, onClick: () => setShowNpcPanel((v) => !v) },
             { label: '战斗', icon: Swords, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
+            { label: 'AI', icon: Sparkles, active: showAI, onClick: () => setShowAI((v) => !v) },
             { label: '子房间', icon: GitBranch, active: showSubRooms, onClick: () => setShowSubRooms((v) => !v) },
             { label: '日志', icon: ScrollText, active: showLogPanel, onClick: () => setShowLogPanel((v) => !v) },
             { label: '事件', icon: History, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
