@@ -29,14 +29,16 @@ export function CharacterCard({ character }: CharacterCardProps) {
             draggable={false}
           />
         </div>
+        <div className="absolute inset-x-0 top-0 h-[42%] bg-gradient-to-b from-[#050509]/80 via-[#050509]/35 to-transparent pointer-events-none" />
+        <div className="absolute left-0 top-0 h-[34%] w-[58%] bg-gradient-to-br from-[#050509]/70 via-[#050509]/25 to-transparent pointer-events-none" />
         <div
-          className="absolute inset-y-0 left-0 w-[62%] backdrop-blur-[13px] bg-[#0a0a0f]/40 pointer-events-none"
+          className="absolute bottom-0 left-0 h-[36%] w-[88%] backdrop-blur-[7px] bg-[#12060a]/24 pointer-events-none"
           style={{
-            maskImage: 'linear-gradient(to right, black 60%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)',
+            maskImage: 'linear-gradient(to top, black 45%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to top, black 45%, transparent 100%)',
           }}
         />
-        <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-[#8b2635]/30 via-[#8b2635]/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-[46%] bg-gradient-to-t from-[#8b2635]/35 via-[#8b2635]/10 to-transparent pointer-events-none" />
         <div className="absolute top-0 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
         <div className="relative p-5 flex flex-col h-full min-h-[280px] max-w-[72%]">
           <div className="mb-2">
