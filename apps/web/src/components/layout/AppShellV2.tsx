@@ -15,7 +15,7 @@ interface AppShellV2Props {
 export function AppShellV2({ children }: AppShellV2Props) {
   const { sidebarCollapsed, isMobile, setMobile, toggleSidebar } = useLayoutStore();
   const location = useLocation();
-  const isMobileRoomFocus = isMobile && /^\/rooms\/[^/]+$/.test(location.pathname);
+  const isRoomFocus = /^\/rooms\/[^/]+$/.test(location.pathname);
 
   useEffect(() => {
     const check = () => setMobile(window.innerWidth < 768);
@@ -27,15 +27,17 @@ export function AppShellV2({ children }: AppShellV2Props) {
   return (
     <div className="relative isolate min-h-[100dvh] text-[var(--coc-text-primary)]">
       <AppBackground />
-      {!isMobileRoomFocus && <TopNav />}
-      {!isMobile && <SideNavV2 collapsed={sidebarCollapsed} onToggle={toggleSidebar} />}
+      {!isRoomFocus && <TopNav />}
+      {!isMobile && !isRoomFocus && <SideNavV2 collapsed={sidebarCollapsed} onToggle={toggleSidebar} />}
       <main
         className={cn(
           'fixed bottom-0 right-0 z-0 overflow-auto transition-all',
-          isMobileRoomFocus
+          isRoomFocus && isMobile
             ? 'left-0 top-0 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2'
             : isMobile
             ? 'left-0 top-14 px-3 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-3'
+            : isRoomFocus
+              ? 'left-0 top-0 p-5'
             : sidebarCollapsed
               ? 'left-14 top-14 p-5'
               : 'left-56 top-14 p-5'
@@ -43,7 +45,7 @@ export function AppShellV2({ children }: AppShellV2Props) {
       >
         {children}
       </main>
-      {isMobile && !isMobileRoomFocus && <MobileNavV2 />}
+      {isMobile && !isRoomFocus && <MobileNavV2 />}
     </div>
   );
 }
