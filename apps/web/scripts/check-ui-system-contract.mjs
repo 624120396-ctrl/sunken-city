@@ -31,6 +31,7 @@ const dashboardPage = readProjectFile('src/pages/dashboard/DashboardPage.tsx');
 const characterListPage = readProjectFile('src/pages/characters/CharacterListPage.tsx');
 const characterDetailPage = readProjectFile('src/pages/characters/CharacterDetailPage.tsx');
 const characterGrowthPage = readProjectFile('src/pages/characters/CharacterGrowthPage.tsx');
+const characterCreatePage = readProjectFile('src/pages/characters/CharacterCreateV2Page.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -155,6 +156,7 @@ assertContract(!characterListPage.includes('card-layer-2'), 'CharacterListPage m
 for (const [name, source] of Object.entries({
   CharacterDetailPage: characterDetailPage,
   CharacterGrowthPage: characterGrowthPage,
+  CharacterCreateV2Page: characterCreatePage,
 })) {
   assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
   assertContract(source.includes('PageShell'), `${name} must use PageShell.`);

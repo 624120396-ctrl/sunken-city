@@ -4,6 +4,7 @@ import { ArrowLeft, Dice5, ChevronRight, ChevronLeft, User, Sparkles, RefreshCw 
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS, getDefaultSkills, resolveDynamicBases, getOccupationInfo, COC7E_OCCUPATIONS } from '@lib/coc7-data';
 import { calculateDerivedAttributes } from '@lib/coc-data';
+import { PageShell, Surface } from '@components/system';
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   str: '力量 STR', con: '体质 CON', siz: '体型 SIZ', dex: '敏捷 DEX',
@@ -290,10 +291,14 @@ export function CharacterCreateV2Page() {
   const prevStep = () => { if (step > 1) setStep(step - 1); };
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-[#d4c5a8] font-body pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur border-b border-[#3a3a3a]/40">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <PageShell
+      title="创建调查员"
+      eyebrow="investigator intake"
+      description="按 COC7 规则完成属性、年龄、职业、技能和背景信息。先迁移外层可读结构，内部步骤保持原逻辑。"
+      className="pb-20"
+    >
+      <Surface variant="panel" padding="none">
+        <div className="px-4 py-3 flex items-center justify-between">
           <button onClick={() => navigate('/characters')} className="flex items-center gap-1 text-[#8b8375] hover:text-[#a63848] transition-colors">
             <ArrowLeft size={18} />
             <span>返回</span>
@@ -305,11 +310,11 @@ export function CharacterCreateV2Page() {
         <div className="h-0.5 bg-black/20">
           <div className="h-full bg-[#a63848] transition-all" style={{ width: `${(step / totalSteps) * 100}%` }} />
         </div>
-      </div>
+      </Surface>
 
-      <div className="max-w-4xl mx-auto px-4 pt-6">
+      <div className="max-w-4xl mx-auto w-full">
         {error && (
-          <div className="mb-4 p-3 rounded bg-coc-blood.dark/30 border border-coc-blood text-coc-blood.glow text-sm">{error}</div>
+          <Surface variant="danger" padding="sm" className="mb-4 text-sm">{error}</Surface>
         )}
 
         {/* Step 1: Method */}
@@ -718,7 +723,7 @@ export function CharacterCreateV2Page() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
