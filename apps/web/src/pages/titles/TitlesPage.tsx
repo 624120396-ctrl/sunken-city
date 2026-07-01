@@ -6,6 +6,7 @@ import {
   Layers, Compass, Sword, Users, Waves, Star, HelpCircle, X
 } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
+import { PageShell, Surface } from '@components/system';
 import { 
   getTitles, 
   getMyTitles, 
@@ -167,36 +168,30 @@ export function TitlesPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-screen backdrop-blur-md bg-black/40 pb-12"
+      className="pb-12"
     >
-      {/* 顶部导航 */}
-      <div className="sticky top-0 z-40 overlay-layer-3 border-b border-[#3a3a3a]/40">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
-            >
-              <ChevronLeft size={20} />
-              <span className="font-rune">返回</span>
-            </Link>
-            
-            <div className="flex items-center gap-3">
-              <Award className="text-[#c9a227]" size={24} />
-              <h1 className="text-xl font-ritual font-bold text-[#c9a227]">
-                印记图鉴
-              </h1>
-            </div>
-            
-            <div className="w-20" />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+      <PageShell
+        eyebrow="title archive"
+        title={
+          <span className="flex items-center gap-3">
+            <Award className="text-[var(--coc-accent-gold)]" size={26} />
+            印记图鉴
+          </span>
+        }
+        description="查看已解锁印记、展示状态和筛选条件。"
+        actions={
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
+          >
+            <ChevronLeft size={20} />
+            <span className="font-rune">返回</span>
+          </Link>
+        }
+        contentClassName="max-w-6xl"
+      >
         {/* 收集进度 */}
-        <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-[#1a1a1a] p-6">
+        <Surface variant="solid" tone="gold" padding="lg">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative w-24 h-24">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -256,11 +251,10 @@ export function TitlesPage() {
                 {showLocked ? '显示全部' : '仅显示已解锁'}
               </button>
             </div>
-          </div>
-        </div>
+        </Surface>
 
         {/* 筛选器 */}
-        <div className="space-y-4">
+        <Surface variant="panel" padding="md" className="space-y-4">
           {/* 分类筛选 */}
           <div className="flex flex-wrap items-center gap-2">
             <Filter size={16} className="text-[#6b6558] mr-2" />
@@ -296,7 +290,7 @@ export function TitlesPage() {
               </button>
             ))}
           </div>
-        </div>
+        </Surface>
 
         {/* 印记网格 */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -314,7 +308,7 @@ export function TitlesPage() {
                 onClick={() => setSelectedTitle(title)}
                 className="text-left group"
               >
-                <div className={`card-layer-2 rounded-lg p-4 h-full transition-all ${
+                <Surface variant="panel" padding="md" interactive className={`h-full transition-all ${
                   isDisplayed ? 'ring-1 ring-coc-gold/50' : ''
                 } ${!isUnlocked ? 'opacity-60' : ''}`}
                 >
@@ -363,7 +357,7 @@ export function TitlesPage() {
                       <span className="text-xs font-rune">展示中</span>
                     </div>
                   )}
-                </div>
+                </Surface>
               </motion.button>
             );
           })}
@@ -377,9 +371,9 @@ export function TitlesPage() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="card-layer-2 rounded-lg overflow-hidden"
+              className="overflow-hidden"
             >
-              <div className="bg-[#1a1a1a] p-6">
+              <Surface variant="solid" tone="gold" padding="lg">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <span className="text-5xl">{selectedTitle.icon}</span>
@@ -467,11 +461,11 @@ export function TitlesPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Surface>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </PageShell>
     </motion.div>
   );
 }

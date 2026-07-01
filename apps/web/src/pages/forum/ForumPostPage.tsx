@@ -31,6 +31,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { formatTimeAgo } from '../../lib/utils';
 import { HtmlContent } from '../../components/HtmlContent';
 import { RichTextEditor } from '../../components/RichTextEditor';
+import { PageShell, Surface } from '@components/system';
 
 function Badge({
   children,
@@ -252,8 +253,20 @@ export function ForumPostPage() {
   const canModeratePost = isAdmin || isBoardModerator;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-      <div className="flex items-center gap-3">
+    <PageShell
+      eyebrow="forum post"
+      title={post?.title || '加载中...'}
+      description="正文、回复与版主操作。长文本区域使用稳定可读层。"
+      actions={
+        (isAuthor || canModeratePost) && (
+          <button onClick={handleDeletePost} className="text-red-400 hover:text-red-300 p-2">
+            <Trash2 size={18} />
+          </button>
+        )
+      }
+      contentClassName="max-w-4xl"
+    >
+      <Surface variant="panel" padding="sm" className="flex items-center gap-3">
         <Link
           to={post?.board.key ? `/forums/board/${post.board.key}` : '/forums'}
           className="coc-btn-secondary p-2"
@@ -272,21 +285,15 @@ export function ForumPostPage() {
               '旧日低语'
             )}
           </div>
-          <h1 className="text-xl font-bold text-[#e8d4a0] truncate">{post?.title || '加载中...'}</h1>
         </div>
-        {(isAuthor || canModeratePost) && (
-          <button onClick={handleDeletePost} className="text-red-400 hover:text-red-300 p-2">
-            <Trash2 size={18} />
-          </button>
-        )}
-      </div>
+      </Surface>
 
       {loading || !post ? (
         <div className="text-center py-12 text-[#6b6558]">加载中...</div>
       ) : (
         <>
           {/* 主贴 */}
-          <div className="p-4 backdrop-blur-md bg-black/80 border border-[#3a3a3a]/40 rounded-lg space-y-3 border-l-2 border-l-[#c9a227]/40 shadow-lg shadow-black/40">
+          <Surface variant="solid" tone="gold" padding="md" className="space-y-3 border-l-2 border-l-[#c9a227]/40">
             <div className="flex items-start gap-3">
               <AvatarWithFrame
                 avatarUrl={post.author.avatarUrl}
@@ -408,7 +415,7 @@ export function ForumPostPage() {
                 </div>
               )}
             </div>
-          </div>
+          </Surface>
 
           {/* 回复列表 */}
           <div className="space-y-3">
@@ -442,7 +449,7 @@ export function ForumPostPage() {
 
           {/* 回复框 */}
           {!post.isLocked && (
-            <div className="p-4 backdrop-blur-md bg-black/80 border border-[#3a3a3a]/40 rounded-lg space-y-3 shadow-lg shadow-black/40">
+            <Surface variant="solid" padding="md" className="space-y-3">
               <RichTextEditor
                 value={replyContent}
                 onChange={setReplyContent}
@@ -458,7 +465,7 @@ export function ForumPostPage() {
                   {submitting ? '发送中...' : '发送回复'}
                 </button>
               </div>
-            </div>
+            </Surface>
           )}
 
           <UserProfileModal
@@ -468,7 +475,7 @@ export function ForumPostPage() {
           />
         </>
       )}
-    </div>
+    </PageShell>
   );
 }
 
@@ -511,12 +518,11 @@ function ReplyItem({
   const isLandlord = reply.author.id === post.author.id;
 
   return (
-    <div
-      className={`p-4 border rounded-lg shadow-lg shadow-black/40 ${
-        reply.isBestReply
-          ? 'backdrop-blur-md bg-black/80 border-amber-500/40 relative overflow-hidden'
-          : 'backdrop-blur-md bg-black/80 border-[#3a3a3a]/40'
-      }`}
+    <Surface
+      variant="solid"
+      tone={reply.isBestReply ? 'gold' : 'neutral'}
+      padding="md"
+      className={reply.isBestReply ? 'border-amber-500/40 relative overflow-hidden' : ''}
     >
       {reply.isBestReply && (
         <div className="absolute top-0 left-0 bg-amber-500 text-coc-abyss text-[10px] px-2 py-0.5 rounded-br flex items-center gap-1 font-bold">
@@ -599,6 +605,6 @@ function ReplyItem({
           )}
         </div>
       </div>
-    </div>
+    </Surface>
   );
 }

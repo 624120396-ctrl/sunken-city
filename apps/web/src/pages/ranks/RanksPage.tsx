@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Sparkles, Crown, Info, Loader2 } from 'lucide-react';
 import { ExpBar } from '@components/ui/ExpBar';
+import { PageShell, Surface } from '@components/system';
 import { 
   getRanks, 
   getMyRankTitle, 
@@ -90,36 +91,30 @@ export function RanksPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-screen backdrop-blur-md bg-black/40 pb-12"
+      className="pb-12"
     >
-      {/* 顶部导航 */}
-      <div className="sticky top-0 z-40 overlay-layer-3 border-b border-[#3a3a3a]/40">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
-            >
-              <ChevronLeft size={20} />
-              <span className="font-rune">返回</span>
-            </Link>
-            
-            <div className="flex items-center gap-3">
-              <Crown className="text-[#c9a227]" size={24} />
-              <h1 className="text-xl font-ritual font-bold text-[#c9a227]">
-                位阶体系
-              </h1>
-            </div>
-            
-            <div className="w-20" />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+      <PageShell
+        eyebrow="rank ladder"
+        title={
+          <span className="flex items-center gap-3">
+            <Crown className="text-[var(--coc-accent-gold)]" size={26} />
+            位阶体系
+          </span>
+        }
+        description="查看当前位阶、灵魂碎片进度和所有可达位阶。"
+        actions={
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
+          >
+            <ChevronLeft size={20} />
+            <span className="font-rune">返回</span>
+          </Link>
+        }
+        contentClassName="max-w-6xl"
+      >
         {/* 当前位阶展示 */}
-        <div className="card-layer-2 rounded-lg overflow-hidden">
-          <div className="bg-[#1a1a1a] p-6 md:p-8">
+        <Surface variant="solid" tone="gold" padding="lg">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* 位阶图标 */}
               <div className="relative">
@@ -185,8 +180,7 @@ export function RanksPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+        </Surface>
 
         {/* 位阶天梯 */}
         <div>
@@ -211,7 +205,7 @@ export function RanksPage() {
                   onClick={() => setSelectedRank(rank)}
                   className="text-left"
                 >
-                  <div className={`card-layer-2 rounded-lg p-4 h-full transition-all ${
+                  <Surface variant="panel" padding="md" interactive className={`h-full transition-all ${
                     isCurrent ? 'ring-1 ring-coc-gold/50' : ''
                   } ${isLocked ? 'opacity-50' : ''}`}>
                     <div className="flex items-center gap-3">
@@ -240,7 +234,7 @@ export function RanksPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Surface>
                 </motion.button>
               );
             })}
@@ -254,9 +248,9 @@ export function RanksPage() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="card-layer-2 rounded-lg overflow-hidden"
+            className="overflow-hidden"
           >
-            <div className="bg-[#1a1a1a] p-6">
+            <Surface variant="solid" tone="gold" padding="lg">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">{selectedRank.icon}</span>
@@ -300,7 +294,7 @@ export function RanksPage() {
                   </ul>
                 </div>
               )}
-            </div>
+            </Surface>
           </motion.div>
         )}
 
@@ -313,8 +307,7 @@ export function RanksPage() {
             </h2>
           </div>
 
-          <div className="card-layer-2 rounded-lg overflow-hidden">
-            <div className="bg-[#1a1a1a] p-6">
+          <Surface variant="solid" padding="lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {EXP_SOURCES.map((source, i) => (
                   <motion.div 
@@ -341,10 +334,9 @@ export function RanksPage() {
                   </motion.div>
                 ))}
               </div>
-            </div>
-          </div>
+          </Surface>
         </div>
-      </div>
+      </PageShell>
     </motion.div>
   );
 }

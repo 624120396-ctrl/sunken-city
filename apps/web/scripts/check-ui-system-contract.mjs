@@ -32,6 +32,14 @@ const characterListPage = readProjectFile('src/pages/characters/CharacterListPag
 const characterDetailPage = readProjectFile('src/pages/characters/CharacterDetailPage.tsx');
 const characterGrowthPage = readProjectFile('src/pages/characters/CharacterGrowthPage.tsx');
 const characterCreatePage = readProjectFile('src/pages/characters/CharacterCreateV2Page.tsx');
+const backgroundPicker = readProjectFile('src/components/background/BackgroundPicker.tsx');
+const profilePage = readProjectFile('src/pages/profile/ProfilePage.tsx');
+const forumListPage = readProjectFile('src/pages/forum/ForumListPage.tsx');
+const forumBoardPage = readProjectFile('src/pages/forum/ForumBoardPage.tsx');
+const forumPostPage = readProjectFile('src/pages/forum/ForumPostPage.tsx');
+const forumNewPostPage = readProjectFile('src/pages/forum/ForumNewPostPage.tsx');
+const ranksPage = readProjectFile('src/pages/ranks/RanksPage.tsx');
+const titlesPage = readProjectFile('src/pages/titles/TitlesPage.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -160,6 +168,38 @@ for (const [name, source] of Object.entries({
 })) {
   assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
   assertContract(source.includes('PageShell'), `${name} must use PageShell.`);
+}
+
+assertContract(
+  backgroundPicker.includes('readabilityProfile') &&
+    backgroundPicker.includes('profileLabels') &&
+    backgroundPicker.includes('明亮') &&
+    backgroundPicker.includes('平衡') &&
+    backgroundPicker.includes('暗色'),
+  'BackgroundPicker must label the readability profile for each background.'
+);
+
+for (const [name, source] of Object.entries({
+  ProfilePage: profilePage,
+  ForumListPage: forumListPage,
+  ForumBoardPage: forumBoardPage,
+  ForumPostPage: forumPostPage,
+  ForumNewPostPage: forumNewPostPage,
+  RanksPage: ranksPage,
+  TitlesPage: titlesPage,
+})) {
+  assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
+  assertContract(source.includes('PageShell'), `${name} must use PageShell.`);
+}
+
+for (const [name, source] of Object.entries({
+  ForumListPage: forumListPage,
+  ForumBoardPage: forumBoardPage,
+  ForumNewPostPage: forumNewPostPage,
+  RanksPage: ranksPage,
+  TitlesPage: titlesPage,
+})) {
+  assertContract(!source.includes('card-layer-2'), `${name} must not use card-layer-2.`);
 }
 
 console.log('UI system contract check passed.');

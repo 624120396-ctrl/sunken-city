@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { getForumBoards, createPost } from '../../services/forum.service';
 import { useAuthStore } from '../../stores/auth.store';
 import { RichTextEditor } from '../../components/RichTextEditor';
+import { PageShell, Surface } from '@components/system';
 
 export function ForumNewPostPage() {
   const navigate = useNavigate();
@@ -58,20 +59,21 @@ export function ForumNewPostPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 md:py-8 space-y-4">
-      <div className="flex items-center gap-3">
+    <PageShell
+      eyebrow="forum editor"
+      title="发布主题"
+      description="选择版块、标题和正文。编辑器内容流保持不变。"
+      contentClassName="max-w-3xl"
+    >
+      <Surface variant="panel" padding="sm" className="flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="coc-btn-secondary min-h-11 min-w-11 p-2">
           <ArrowLeft size={18} />
         </button>
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">发布主题</h1>
-            <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
-          </div>
-        </div>
-      </div>
+        <span className="text-sm text-[var(--coc-text-secondary)]">返回上一页</span>
+      </Surface>
 
-      <form onSubmit={handleSubmit} className="card-layer-2 space-y-4 rounded-lg p-4 md:p-5">
+      <Surface variant="solid" padding="lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm text-[#b0a898] mb-1">选择版块</label>
           <select
@@ -146,6 +148,7 @@ export function ForumNewPostPage() {
           </button>
         </div>
       </form>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

@@ -26,6 +26,7 @@ import { CompactPagination } from '../../components/forum/CompactPagination';
 import { useQuery } from '@tanstack/react-query';
 import { SkeletonCard } from '../../components/ui/Skeleton';
 import { Tooltip } from '../../components/ui/Tooltip';
+import { PageShell, Surface } from '@components/system';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -103,40 +104,45 @@ function PostRow({
     <Link
       key={post.id}
       to={`/forums/${post.id}`}
-      className={`group block p-4 rounded border border-[#3a3a3a]/40 hover:border-[#c9a227]/50 transition-colors relative overflow-hidden backdrop-blur-md bg-black/80 ${
-        post.isEssence ? 'bg-gradient-to-r from-[#c9a227]/5 to-transparent' : ''
-      }`}
+      className="group block"
     >
-      {/* hover 金色竖线 */}
-      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-coc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <PostBadges post={post} />
-            <h3 className="font-bold text-[#e8d4a0] truncate">{post.title}</h3>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-4 text-xs text-[#6b6558]">
-            <span className="flex items-center gap-1">
-              <Eye size={14} /> {post.viewCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <ThumbsUp size={14} /> {post.likeCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageSquare size={14} /> {post.replyCount}
-            </span>
-          </div>
-          {showLastReply && post.lastReplyBy && (
-            <div className="text-xs text-[#6b6558]">
-              最后回复：<span className="text-[#e8d4a0]">{post.lastReplyBy.nickname}</span> ·{' '}
-              {formatTimeAgo(post.lastReplyAt)}
+      <Surface
+        variant="solid"
+        padding="md"
+        interactive
+        className={`relative overflow-hidden ${post.isEssence ? 'bg-gradient-to-r from-[#c9a227]/5 to-transparent' : ''}`}
+      >
+        {/* hover 金色竖线 */}
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-coc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <PostBadges post={post} />
+              <h3 className="font-bold text-[#e8d4a0] truncate">{post.title}</h3>
             </div>
-          )}
+          </div>
+
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-4 text-xs text-[#6b6558]">
+              <span className="flex items-center gap-1">
+                <Eye size={14} /> {post.viewCount}
+              </span>
+              <span className="flex items-center gap-1">
+                <ThumbsUp size={14} /> {post.likeCount}
+              </span>
+              <span className="flex items-center gap-1">
+                <MessageSquare size={14} /> {post.replyCount}
+              </span>
+            </div>
+            {showLastReply && post.lastReplyBy && (
+              <div className="text-xs text-[#6b6558]">
+                最后回复：<span className="text-[#e8d4a0]">{post.lastReplyBy.nickname}</span> ·{' '}
+                {formatTimeAgo(post.lastReplyAt)}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Surface>
     </Link>
   );
 }
@@ -199,9 +205,28 @@ export function ForumBoardPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-      {/* Breadcrumb + Actions */}
-      <div className="flex items-center justify-between">
+    <PageShell
+      eyebrow="forum board"
+      title={
+        <span className="flex items-center gap-2">
+          <BoardIcon size={24} className="text-[var(--coc-accent-gold)]" />
+          {boardName}
+        </span>
+      }
+      description="版块主题、置顶、精华与最近回复。"
+      actions={
+        <Link
+          to={`/forums/new?board=${boardKey}`}
+          className="btn-v2 coc-btn-primary flex items-center gap-2"
+        >
+          <Plus size={16} />
+          发布主题
+        </Link>
+      }
+      contentClassName="max-w-5xl"
+    >
+      {/* Breadcrumb */}
+      <Surface variant="panel" padding="sm" className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm">
           <Link to="/forums" className="text-[#6b6558] hover:text-[#e8d4a0]">旧日低语</Link>
           <span className="text-[#6b6558]">/</span>
@@ -210,17 +235,10 @@ export function ForumBoardPage() {
             {boardName}
           </span>
         </div>
-        <Link
-          to={`/forums/new?board=${boardKey}`}
-          className="btn-v2 coc-btn-primary flex items-center gap-2"
-        >
-          <Plus size={16} />
-          发布主题
-        </Link>
-      </div>
+      </Surface>
 
       {/* 版主展示 */}
-      <div className="rounded-lg border border-[#c9a227]/30 backdrop-blur-md bg-black/80 px-4 py-3 shadow-lg shadow-black/40">
+      <Surface variant="panel" tone="gold" padding="sm">
         <div className="flex flex-wrap items-center gap-3">
           {moderators.length > 0 ? (
             moderators.map((mod: any) => (
@@ -245,9 +263,9 @@ export function ForumBoardPage() {
             </div>
           )}
         </div>
-      </div>
+      </Surface>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <Surface variant="panel" padding="sm" className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() => setSortValue('last_reply')}
@@ -270,7 +288,7 @@ export function ForumBoardPage() {
             最新发布
           </button>
         </div>
-      </div>
+      </Surface>
 
       {loading ? (
         <div className="space-y-3">
@@ -328,6 +346,6 @@ export function ForumBoardPage() {
           />
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

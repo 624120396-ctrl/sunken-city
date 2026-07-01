@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { LayoutGrid, School, Anchor, Moon, Flame, Landmark } from 'lucide-react';
 import { getForumBoards } from '../../services/forum.service';
 import { useQuery } from '@tanstack/react-query';
+import { ActionCard, DataCard, PageShell } from '@components/system';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -22,21 +23,21 @@ export function ForumListPage() {
   const boards = boardsData?.boards || [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <div>
-            <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">旧日低语</h1>
-            <p className="text-sm mt-1 text-[#b0a898]">选择版块，进入你的讨论领域</p>
-          </div>
-          <div className="hidden sm:block w-16 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
-        </div>
-        <div className="flex items-center gap-2 text-[#b0a898] text-sm">
-          <LayoutGrid size={16} />
-          <span>共 {boards.length} 个版块</span>
-        </div>
-      </div>
+    <PageShell
+      eyebrow="community archive"
+      title="旧日低语"
+      description="选择版块，进入你的讨论领域。长文、记录和回复会使用更稳的可读 Surface。"
+      actions={
+        <DataCard
+          label="开放版块"
+          value={boards.length}
+          detail="论坛索引"
+          icon={<LayoutGrid size={16} />}
+          tone="gold"
+        />
+      }
+      contentClassName="max-w-5xl"
+    >
 
       {/* Board Cards - 2x2 layout, longer cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -46,33 +47,20 @@ export function ForumListPage() {
             <Link
               key={b.key}
               to={`/forums/board/${b.key}`}
-              className="group card-layer-2 p-5 md:p-6 min-h-[190px] md:min-h-[220px] flex flex-col justify-between rounded-lg hover:border-[#c9a227]/50 transition-all"
+              className="group block"
             >
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-xl font-bold group-hover:text-[#c9a227] transition-colors truncate text-[#e8d4a0]">
-                      {b.name}
-                    </h2>
-                  </div>
-                  <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-2xl font-bold text-[#e8d4a0]">{b.postCount}</span>
-                    <span className="text-xs text-[#8b8375]">主题</span>
-                  </div>
-                </div>
-                {b.description && (
-                  <p className="text-sm text-[#b0a898] mt-3 leading-relaxed whitespace-pre-line line-clamp-4">
-                    {b.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 flex items-center justify-end">
-                <Icon
-                  size={32}
-                  className="text-[#8b8375] group-hover:text-[#c9a227] transition-colors"
-                />
-              </div>
+              <ActionCard
+                title={b.name}
+                description={b.description}
+                icon={<Icon size={24} />}
+                meta={
+                  <span className="inline-flex items-center gap-1">
+                    <LayoutGrid size={14} />
+                    {b.postCount} 主题
+                  </span>
+                }
+                className="min-h-[190px] md:min-h-[220px]"
+              />
             </Link>
           );
         })}
@@ -94,6 +82,6 @@ export function ForumListPage() {
           animate={false}
         />
       ) : null}
-    </div>
+    </PageShell>
   );
 }

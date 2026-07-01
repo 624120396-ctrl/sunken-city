@@ -3,7 +3,7 @@ import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package,
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
-import { RuneBorder } from '@components/ui/RuneBorder';
+import { DataCard, PageShell, Surface } from '@components/system';
 import { uploadFile } from '@services/upload.service';
 import { getInventory, equipItem, type InventoryItem } from '@services/shop.service';
 import { generateImage } from '@services/ai.service';
@@ -217,39 +217,45 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-      {/* 顶部导航 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="flex items-center gap-1 text-coc-parchment-dim hover:text-[#e8d4a0] transition-colors"
-          >
-            <ChevronLeft size={20} />
-            <span>返回控制台</span>
-          </Link>
+    <PageShell
+      eyebrow="profile settings"
+      title={
+        <span className="flex items-center gap-3">
+          <User className="h-7 w-7 text-[var(--coc-accent-gold)]" />
+          个人中心
+        </span>
+      }
+      description="管理头像、昵称、背景、背包、论坛足迹与账户安全。"
+      actions={
+        <div className="grid min-w-[220px] grid-cols-1 gap-2 sm:grid-cols-2">
+          <DataCard
+            label="锈蚀硬币"
+            value={user?.coins ?? 0}
+            icon={<Coins size={16} />}
+            tone="gold"
+          />
+          <DataCard
+            label="虚银"
+            value={user?.stardust ?? 0}
+            icon={<Sparkles size={16} />}
+            tone="madness"
+          />
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Coins size={16} className="text-[#c9a227]" />
-            <span>锈蚀硬币: {user?.coins ?? 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Sparkles size={16} className="text-purple-400" />
-            <span>虚银: {user?.stardust ?? 0}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 页面标题 */}
-      <div className="flex items-center gap-3">
-        <User className="w-7 h-7 text-[#c9a227]" />
-        <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">个人中心</h1>
-      </div>
+      }
+      contentClassName="max-w-4xl"
+    >
+      <Surface variant="panel" padding="sm" className="flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-sm text-[var(--coc-text-secondary)] transition-colors hover:text-[var(--coc-text-primary)]"
+        >
+          <ChevronLeft size={18} />
+          <span>返回控制台</span>
+        </Link>
+      </Surface>
 
       {/* 资料卡片 */}
-      <RuneBorder variant="gold" intensity="normal">
-        <div className="coc-bg-parchment p-6">
+      <Surface variant="solid" tone="gold" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Camera className="w-5 h-5 text-[#c9a227]" />
             基本资料
@@ -355,8 +361,7 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
-        </div>
-      </RuneBorder>
+      </Surface>
 
       {/* 全局背景选择 */}
       <BackgroundPicker
@@ -367,8 +372,7 @@ export function ProfilePage() {
       />
 
       {/* 背包卡片 */}
-      <RuneBorder variant="madness" intensity="normal">
-        <div className="coc-bg-parchment p-6">
+      <Surface variant="solid" tone="madness" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Package className="w-5 h-5 text-coc-madness-glow" />
             我的背包
@@ -444,13 +448,11 @@ export function ProfilePage() {
               })}
             </div>
           )}
-        </div>
-      </RuneBorder>
+      </Surface>
 
       {/* 修改密码卡片 */}
       {/* 论坛足迹卡片 */}
-      <RuneBorder variant="madness" intensity="normal">
-        <div className="coc-bg-parchment p-6">
+      <Surface variant="solid" tone="madness" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-coc-madness-glow" />
             论坛足迹
@@ -485,11 +487,9 @@ export function ProfilePage() {
               </div>
             </div>
           )}
-        </div>
-      </RuneBorder>
+      </Surface>
 
-      <RuneBorder variant="madness" intensity="normal">
-        <div className="coc-bg-parchment p-6">
+      <Surface variant="solid" tone="madness" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Lock className="w-5 h-5 text-coc-madness-glow" />
             修改密码
@@ -551,13 +551,12 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
-        </div>
-      </RuneBorder>
+      </Surface>
 
       {/* AI 生成头像弹窗 */}
       {showAiModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-md p-6 rounded-lg bg-black/20 border border-[#3a3a3a]/40 shadow-xl shadow-black/60 space-y-4">
+          <Surface variant="elevated" padding="lg" className="w-full max-w-md space-y-4">
             <h3 className="text-lg font-ritual font-bold text-[#e8d4a0]">AI 生成头像</h3>
             <textarea
               value={aiPrompt}
@@ -584,9 +583,9 @@ export function ProfilePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </Surface>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
