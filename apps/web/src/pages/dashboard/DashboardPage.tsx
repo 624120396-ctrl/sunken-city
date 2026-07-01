@@ -534,15 +534,15 @@ export function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,17rem))] justify-center gap-4 xl:justify-start">
             {[1, 2, 3].map((i) => (
               <div key={i}>
-                <SkeletonCard />
+                <SkeletonCard className="h-[280px]" />
               </div>
             ))}
           </div>
         ) : characters.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,17rem))] justify-center gap-4 xl:justify-start">
             {characters.map((char, i) => (
               <motion.div
                 key={char.id}

@@ -154,7 +154,7 @@ assertContract(
     dashboardPage.includes('GlassCard') &&
     dashboardPage.includes('[@media(min-width:2200px)]:max-w-[118rem]') &&
     dashboardPage.includes('[@media(min-width:2200px)]:grid-cols-3') &&
-    dashboardPage.includes('[@media(min-width:2200px)]:grid-cols-4') &&
+    dashboardPage.includes('grid-cols-[repeat(auto-fit,minmax(15rem,17rem))]') &&
     !dashboardPage.includes('PageShell') &&
     !dashboardPage.includes('ActionCard'),
   'DashboardPage must preserve immersive cards with adaptive widescreen layout.'
