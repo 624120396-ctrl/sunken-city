@@ -750,7 +750,7 @@ export function RoomPage() {
   }
 
   return (
-    <div className="h-[calc(100dvh-8rem)] flex flex-col">
+    <div className={cn("flex flex-col", isMobile ? "h-[calc(100dvh-5rem)]" : "h-[calc(100dvh-8rem)]")}>
       {/* 头部 */}
       <div
         data-testid={isMobile ? 'room-mobile-play-header' : 'room-desktop-header'}
