@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useLayoutStore } from '@stores/layout.store';
 import { cn } from '@lib/utils';
 import {
-  BookOpen, User, Home, ShoppingBag,
-  MessageSquare, Backpack, Store, Users, Fish, Moon,
+  BookOpen, User, Home,
+  MessageSquare, Store, Users, Fish, Moon,
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -40,9 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     { path: '/friends', label: '好友', icon: Users },
     { path: '/fishing', label: '黑水港', icon: Fish },
     { path: '/dream', label: '溺者之牌', icon: Moon },
-    { path: '/shop', label: '拉莱耶遗珍', icon: ShoppingBag },
-    { path: '/inventory', label: '背包', icon: Backpack },
-    { path: '/market', label: '市场', icon: Store },
+    { path: '/shop', label: '无名集市', icon: Store, activePaths: ['/shop', '/inventory', '/market'] },
     { path: '/forums', label: '旧日低语', icon: MessageSquare },
   ];
 
@@ -51,18 +49,16 @@ export function MainLayout({ children }: MainLayoutProps) {
     { path: '/', label: '首页', icon: Home },
     { path: '/characters', label: '调查员', icon: User },
     { path: '/rooms', label: '故事书', icon: BookOpen },
-    { path: '/inventory', label: '背包', icon: Backpack },
+    { path: '/shop', label: '集市', icon: Store },
     { path: '/profile', label: '我的', icon: User },
   ];
 
-  const isActive = (path: string) => {
-    if (path === '/profile') {
+  const isActive = (item: { path: string; activePaths?: string[] }) => {
+    const paths = item.activePaths ?? [item.path];
+    if (item.path === '/profile') {
       return location.pathname === '/profile';
     }
-    return (
-      location.pathname === path ||
-      (path !== '/' && location.pathname.startsWith(path))
-    );
+    return paths.some((path) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path)));
   };
 
   // ===== 移动端布局 =====
@@ -83,7 +79,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.path);
+              const active = isActive(item);
               return (
                 <Link
                   key={item.path}
@@ -121,7 +117,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <nav className="fixed bottom-0 left-0 right-0 h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] mobile-tab-v2 z-50 flex items-center justify-around px-2">
           {mobileTabItems.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item.path);
+            const active = isActive(item);
             return (
               <Link
                 key={item.path}
@@ -159,7 +155,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item.path);
+            const active = isActive(item);
 
             const linkContent = (
               <Link

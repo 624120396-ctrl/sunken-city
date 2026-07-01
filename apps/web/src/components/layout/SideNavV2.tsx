@@ -1,5 +1,4 @@
 import {
-  Backpack,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -7,7 +6,6 @@ import {
   Home,
   MessageSquare,
   Moon,
-  ShoppingBag,
   Store,
   User,
   Users,
@@ -16,16 +14,21 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@lib/utils';
 import { Tooltip } from '@components/ui/Tooltip';
 
-const navItems = [
+interface SideNavItem {
+  path: string;
+  label: string;
+  icon: React.ElementType;
+  activePaths?: string[];
+}
+
+const navItems: SideNavItem[] = [
   { path: '/', label: '首页', icon: Home },
   { path: '/characters', label: '调查员', icon: User },
   { path: '/rooms', label: '故事书', icon: BookOpen },
   { path: '/friends', label: '好友', icon: Users },
   { path: '/fishing', label: '黑水港', icon: Fish },
   { path: '/dream', label: '溺者之牌', icon: Moon },
-  { path: '/shop', label: '拉莱耶遗珍', icon: ShoppingBag },
-  { path: '/inventory', label: '背包', icon: Backpack },
-  { path: '/market', label: '市场', icon: Store },
+  { path: '/shop', label: '无名集市', icon: Store, activePaths: ['/shop', '/inventory', '/market'] },
   { path: '/forums', label: '旧日低语', icon: MessageSquare },
 ];
 
@@ -36,7 +39,10 @@ interface SideNavV2Props {
 
 export function SideNavV2({ collapsed, onToggle }: SideNavV2Props) {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+  const isActive = (item: SideNavItem) => {
+    const paths = item.activePaths ?? [item.path];
+    return paths.some((path) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path)));
+  };
 
   return (
     <aside
@@ -48,7 +54,7 @@ export function SideNavV2({ collapsed, onToggle }: SideNavV2Props) {
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const active = isActive(item.path);
+          const active = isActive(item);
           const link = (
             <Link
               key={item.path}

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, X, Home, Store, ShoppingBag,
-  Users, Fish, Sparkles, Backpack, Crown, Landmark,
+  Search, X, Home, Store,
+  Users, Fish, Sparkles, Crown, Landmark,
   Map, HelpCircle, LayoutGrid, Trophy, Scroll, BookOpen,
   Compass, Mail,
 } from 'lucide-react';
@@ -20,9 +20,7 @@ const COMMANDS: CommandItem[] = [
   { id: 'rooms', label: '房间大厅', path: '/rooms', icon: Landmark, keywords: ['房间', '大厅', '跑团', 'room'] },
   { id: 'solo', label: '幻影脚本', path: '/solo', icon: Scroll, keywords: ['单人', 'solo', '剧本', '故事'] },
   { id: 'scenarios', label: '剧本列表', path: '/scenarios', icon: BookOpen, keywords: ['剧本', 'scenario', '模组'] },
-  { id: 'market', label: '遗物市场', path: '/market', icon: Store, keywords: ['市场', '交易', '遗物', 'market'] },
-  { id: 'shop', label: '拉莱耶遗珍', path: '/shop', icon: ShoppingBag, keywords: ['商店', '购买', 'shop', '遗珍'] },
-  { id: 'inventory', label: '背包', path: '/inventory', icon: Backpack, keywords: ['背包', '物品', 'inventory', '道具'] },
+  { id: 'nameless-market', label: '无名集市', path: '/shop', icon: Store, keywords: ['无名集市', '商店', '背包', '市场', '购买', '交易', '遗物', '道具', 'inventory', 'market', 'shop'] },
   { id: 'fishing', label: '黑水港', path: '/fishing', icon: Fish, keywords: ['钓鱼', '卡牌', 'fishing', '黑水港'] },
   { id: 'dream', label: '溺者之牌', path: '/dream', icon: Sparkles, keywords: ['梦境', '占卜', 'dream', '每日', '溺者'] },
   { id: 'friends', label: '好友', path: '/friends', icon: Users, keywords: ['好友', '朋友', 'friend', '社交'] },

@@ -75,7 +75,6 @@ export function ShopPage() {
       active="shop"
       eyebrow="relic acquisition"
       title="拉莱耶遗珍"
-      description="并非每一件物品都应当留存于日光之下。这里陈列外观、补给与旧日藏品，购买逻辑仍沿用现有账户资产。"
       meta={
         <div className="flex min-h-11 items-center justify-center gap-3 rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 text-sm">
           <div className="flex items-center gap-1.5 text-[#e8d4a0]">

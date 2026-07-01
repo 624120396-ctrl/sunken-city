@@ -9,7 +9,7 @@ interface EconomyPageShellProps {
   active: EconomySection;
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   meta?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
@@ -66,9 +66,11 @@ export function EconomyPageShell({
             <h1 className="font-ritual text-2xl font-bold tracking-wide text-[#f3d77a] md:text-3xl">
               {title}
             </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#a69b85]">
-              {description}
-            </p>
+            {description && (
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#a69b85]">
+                {description}
+              </p>
+            )}
           </div>
           {(meta || action) && (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
