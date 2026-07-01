@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5 } from 'lucide-react';
+import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5, BookOpen } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -242,6 +242,7 @@ export function RoomPage() {
   const [showGMKit, setShowGMKit] = useState(false);
   const [showSubRooms, setShowSubRooms] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showMobileActionDrawer, setShowMobileActionDrawer] = useState(false);
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [roomStats, setRoomStats] = useState({
@@ -985,6 +986,19 @@ export function RoomPage() {
                 >
                   <ScrollText size={15} />
                   战斗记录
+                </button>
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  onClick={() => {
+                    setShowNotesPanel(true);
+                    setShowMobileActionDrawer(false);
+                    setShowMobileToolTray(false);
+                  }}
+                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
+                >
+                  <BookOpen size={15} />
+                  笔记
                 </button>
                 <Link
                   to={`/rooms/${roomId}/report`}
@@ -2188,7 +2202,15 @@ export function RoomPage() {
       </Modal>
 
       {/* 笔记栏和线索板 */}
-      {roomId && <NotesPanel roomId={roomId} />}
+      {roomId && (
+        <NotesPanel
+          roomId={roomId}
+          isOpen={isMobile ? showNotesPanel : undefined}
+          onOpenChange={isMobile ? setShowNotesPanel : undefined}
+          hideToggle={isMobile}
+          compact={isMobile}
+        />
+      )}
 
       {/* ===== 新增：私聊面板 ===== */}
       {roomId && (

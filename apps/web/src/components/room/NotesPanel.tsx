@@ -10,13 +10,24 @@ interface Note {
 
 interface NotesPanelProps {
   roomId: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideToggle?: boolean;
+  compact?: boolean;
 }
 
-export function NotesPanel({ roomId }: NotesPanelProps) {
+export function NotesPanel({ roomId, isOpen: controlledOpen, onOpenChange, hideToggle = false, compact = false }: NotesPanelProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState('');
   const [isPrivate, setIsPrivate] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen ?? internalOpen;
+  const setIsOpen = (open: boolean) => {
+    onOpenChange?.(open);
+    if (controlledOpen === undefined) {
+      setInternalOpen(open);
+    }
+  };
 
   // 从localStorage加载笔记
   useEffect(() => {
@@ -54,6 +65,8 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
   };
 
   if (!isOpen) {
+    if (hideToggle) return null;
+
     return (
       <button
         onClick={() => setIsOpen(true)}
@@ -71,7 +84,10 @@ export function NotesPanel({ roomId }: NotesPanelProps) {
   }
 
   return (
-    <div className="fixed right-4 top-20 z-30 w-72 bg-black/20 border border-[#3a3a3a]/40 rounded-lg shadow-xl shadow-black/60">
+    <div className={compact
+      ? "fixed inset-x-3 top-16 z-50 max-h-[70dvh] w-auto overflow-hidden bg-black/75 border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60 backdrop-blur-xl"
+      : "fixed right-4 top-20 z-30 w-72 bg-black/20 border border-[#3a3a3a]/40 rounded-lg shadow-xl shadow-black/60"
+    }>
       <div className="p-3 border-b border-[#3a3a3a]/40 flex items-center justify-between">
         <h3 className="font-bold flex items-center gap-2">
           <Book size={16} className="text-[#c9a227]" />
