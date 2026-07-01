@@ -1705,10 +1705,11 @@ export function RoomPage() {
               badge: privateUnreadCount,
             },
             { label: '战斗记录', icon: History, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
+            { label: '笔记', icon: BookOpen, active: showNotesPanel, onClick: () => setShowNotesPanel((v) => !v) },
             { label: 'AI', icon: Sparkles, active: showAI, onClick: () => setShowAI((v) => !v) },
             { label: '子房间', icon: GitBranch, active: showSubRooms, onClick: () => setShowSubRooms((v) => !v) },
             { label: '日志', icon: ScrollText, active: showLogPanel, onClick: () => setShowLogPanel((v) => !v) },
-            { label: '事件', icon: BookOpen, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
+            { label: '事件', icon: History, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
             { label: '统计', icon: BarChart3, active: showStats, onClick: () => { fetchRoomStats(); setShowStats((v) => !v); } },
           ].map((item) => (
             <Tooltip key={item.label} content={item.label}>
@@ -2174,9 +2175,9 @@ export function RoomPage() {
       {roomId && (
         <NotesPanel
           roomId={roomId}
-          isOpen={isMobile ? showNotesPanel : undefined}
-          onOpenChange={isMobile ? setShowNotesPanel : undefined}
-          hideToggle={isMobile}
+          isOpen={showNotesPanel}
+          onOpenChange={setShowNotesPanel}
+          hideToggle
           compact={isMobile}
         />
       )}
