@@ -33,7 +33,7 @@ export function AppShellV2({ children }: AppShellV2Props) {
         className={cn(
           'fixed bottom-0 right-0 z-0 overflow-auto transition-all',
           isMobileRoomFocus
-            ? 'left-0 top-0 px-3 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-2'
+            ? 'left-0 top-0 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2'
             : isMobile
             ? 'left-0 top-14 px-3 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-3'
             : sidebarCollapsed
@@ -43,7 +43,7 @@ export function AppShellV2({ children }: AppShellV2Props) {
       >
         {children}
       </main>
-      {isMobile && <MobileNavV2 />}
+      {isMobile && !isMobileRoomFocus && <MobileNavV2 />}
     </div>
   );
 }
