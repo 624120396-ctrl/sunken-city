@@ -2,11 +2,12 @@ import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { Tooltip } from '@components/ui/Tooltip';
 import { ParticleBurst } from '@components/ui/ParticleBurst';
 import { useState } from 'react';
-import { ShoppingBag, Coins, Sparkles, Filter } from 'lucide-react';
+import { Coins, Sparkles, Filter } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { getShopItems, purchaseItem, type ShopItem } from '@services/shop.service';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
+import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 
 const rarityBorder: Record<string, string> = {
   common: 'border-coc-parchment-dim',
@@ -70,16 +71,13 @@ export function ShopPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <ShoppingBag className="w-7 h-7" style={{ color: '#c9a227' }} />
-          <div>
-            <h1 className="text-2xl font-ritual font-bold text-[#e8d4a0]">拉莱耶遗珍</h1>
-            <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
-          </div>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
+    <EconomyPageShell
+      active="shop"
+      eyebrow="relic acquisition"
+      title="拉莱耶遗珍"
+      description="并非每一件物品都应当留存于日光之下。这里陈列外观、补给与旧日藏品，购买逻辑仍沿用现有账户资产。"
+      meta={
+        <div className="flex min-h-11 items-center justify-center gap-3 rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 text-sm">
           <div className="flex items-center gap-1.5 text-[#e8d4a0]">
             <Coins size={16} className="text-[#c9a227]" />
             <span>{user?.coins ?? 0}</span>
@@ -89,7 +87,9 @@ export function ShopPage() {
             <span>{user?.stardust ?? 0}</span>
           </div>
         </div>
-      </div>
+      }
+    >
+      <div className="space-y-5">
 
       <div className="card-layer-2 p-4 md:p-5 rounded-lg text-sm text-coc-parchment-dim space-y-2 leading-relaxed">
         <p>并非每一件物品都应当留存于日光之下。</p>
@@ -199,6 +199,7 @@ export function ShopPage() {
           ))
         )}
       </div>
-    </div>
+      </div>
+    </EconomyPageShell>
   );
 }

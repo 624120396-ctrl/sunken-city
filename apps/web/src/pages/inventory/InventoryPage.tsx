@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 import { ItemCard } from '@components/items/ItemCard';
-import { Backpack } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
+import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
@@ -194,14 +194,29 @@ export function InventoryPage() {
   };
 
   return (
-    <div className="space-y-4 px-4 py-6 md:px-0 md:py-0">
-      <div className="flex items-center gap-3">
-        <Backpack className="w-6 h-6" style={{ color: '#c9a227' }} />
-        <div>
-          <h1 className="text-xl font-ritual font-bold text-[#e8d4a0]">背包</h1>
-          <div className="w-12 h-px mt-1" style={{ background: 'linear-gradient(90deg, rgba(201,162,39,0.4) 0%, transparent 100%)' }} />
+    <EconomyPageShell
+      active="inventory"
+      eyebrow="sealed inventory"
+      title="背包"
+      description="集中管理道具、印记和遗物绑定。移动端保留清晰标签页，避免在物品管理时迷失。"
+      meta={
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
+            <div className="text-base font-bold text-[#f3d77a]">{generalItems.length}</div>
+            <div className="text-[#8b8375]">道具</div>
+          </div>
+          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
+            <div className="text-base font-bold text-[#f3d77a]">{titleItems.length}</div>
+            <div className="text-[#8b8375]">印记</div>
+          </div>
+          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
+            <div className="text-base font-bold text-[#f3d77a]">{(boundRelics?.length || 0) + (unboundRelics?.length || 0)}</div>
+            <div className="text-[#8b8375]">遗物</div>
+          </div>
         </div>
-      </div>
+      }
+    >
+      <div className="space-y-4">
 
       <div className="flex gap-2 overflow-x-auto">
         {[
@@ -449,6 +464,7 @@ export function InventoryPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </EconomyPageShell>
   );
 }

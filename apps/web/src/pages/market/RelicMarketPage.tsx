@@ -15,6 +15,7 @@ import { Store, X, Plus, Coins, Sparkles } from 'lucide-react';
 import { getRarityColorClass } from '@data/relics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
+import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 
 interface Listing {
   id: string;
@@ -250,19 +251,33 @@ export function RelicMarketPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 md:py-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Store size={24} className="text-[#c9a227]" />
-          <h1 className="text-2xl font-serif font-bold text-[#e8d4a0]">遗物市场</h1>
+    <EconomyPageShell
+      active="market"
+      eyebrow="relic exchange"
+      title="遗物市场"
+      description="调查员之间的遗物交易大厅。上架、购买和取消挂单仍使用原有交易接口。"
+      meta={
+        <div className="flex min-h-11 items-center justify-center gap-3 rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 text-sm">
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
+            <Coins size={16} className="text-[#c9a227]" />
+            <span>{user?.coins ?? 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
+            <Sparkles size={16} className="text-purple-400" />
+            <span>{user?.stardust ?? 0}</span>
+          </div>
         </div>
+      }
+      action={
         <button
           onClick={() => handleOpenListModal()}
           className="btn-v2 flex min-h-11 items-center justify-center gap-1 rounded bg-coc-gold px-4 py-2 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow sm:w-auto"
         >
           <Plus size={16} /> 上架遗物
         </button>
-      </div>
+      }
+    >
+      <div>
 
       <div className="mb-4 flex items-center gap-2 overflow-x-auto border-b border-[#3a3a3a]/40">
         <button
@@ -507,6 +522,7 @@ export function RelicMarketPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </EconomyPageShell>
   );
 }
