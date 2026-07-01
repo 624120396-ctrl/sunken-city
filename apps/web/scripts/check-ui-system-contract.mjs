@@ -40,6 +40,7 @@ const forumPostPage = readProjectFile('src/pages/forum/ForumPostPage.tsx');
 const forumNewPostPage = readProjectFile('src/pages/forum/ForumNewPostPage.tsx');
 const ranksPage = readProjectFile('src/pages/ranks/RanksPage.tsx');
 const titlesPage = readProjectFile('src/pages/titles/TitlesPage.tsx');
+const roomPage = readProjectFile('src/pages/rooms/RoomPage.tsx');
 
 const expectedBackgroundProfiles = {
   'bg-vellum': 'luminous',
@@ -201,5 +202,19 @@ for (const [name, source] of Object.entries({
 })) {
   assertContract(!source.includes('card-layer-2'), `${name} must not use card-layer-2.`);
 }
+
+assertContract(
+  roomPage.includes("from '@components/system'") &&
+    roomPage.includes('Surface') &&
+    roomPage.includes('room-gameplay-shell') &&
+    roomPage.includes('room-message-list') &&
+    roomPage.includes('room-mobile-action-drawer-toggle'),
+  'RoomPage must use the readable system shell while preserving mobile chat controls.'
+);
+
+assertContract(
+  !roomPage.includes('DoubleBezelCard'),
+  'RoomPage must not depend on DoubleBezelCard for the main gameplay shell.'
+);
 
 console.log('UI system contract check passed.');

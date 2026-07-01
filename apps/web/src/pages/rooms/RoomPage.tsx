@@ -15,7 +15,7 @@ import { MentionInput } from '@components/room/MentionInput';
 import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
 import { NotesPanel } from '@components/room/NotesPanel';
 import { ClueMarker } from '@components/room/ClueMarker';
-import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
+import { Surface } from '@components/system';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { MagneticButton } from '@components/ui/MagneticButton';
 import { PlayerHud } from '@components/room/PlayerHud';
@@ -753,15 +753,20 @@ export function RoomPage() {
   }
 
   return (
-    <div className={cn("flex flex-col", isMobile ? "h-[calc(100dvh-1rem)]" : "h-[calc(100dvh-2.5rem)]")}>
+    <div
+      data-testid="room-gameplay-shell"
+      className={cn("flex flex-col", isMobile ? "h-[calc(100dvh-1rem)]" : "h-[calc(100dvh-2.5rem)]")}
+    >
       {/* 头部 */}
-      <div
+      <Surface
+        variant="panel"
+        padding="sm"
         data-testid={isMobile ? 'room-mobile-play-header' : 'room-desktop-header'}
         className={cn(
-          'relative z-50 flex items-center backdrop-blur-md border border-[#3a3a3a]/40 shadow-md',
+          'relative z-50 flex items-center',
           isMobile
-            ? 'mb-2 w-full flex-col items-stretch gap-1.5 rounded-xl bg-black/45 px-2 py-1.5'
-            : 'mb-4 justify-between rounded-lg bg-black/40 px-3 py-2'
+            ? 'mb-2 w-full flex-col items-stretch gap-1.5'
+            : 'mb-4 justify-between'
         )}
       >
         <div className={cn("flex items-center", isMobile ? "w-full gap-2" : "gap-4")}>
@@ -1003,7 +1008,7 @@ export function RoomPage() {
             )}
           </>
         )}
-      </div>
+      </Surface>
 
       {/* ===== V2.1 新增：房间状态栏 ===== */}
       {!isMobile && (
@@ -1113,7 +1118,7 @@ export function RoomPage() {
             />
           )}
 
-          <div className="backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 rounded-lg p-3 shadow-md">
+          <Surface variant="panel" padding="sm">
             <h3 className="text-xs font-bold mb-2.5 flex items-center gap-1.5 uppercase tracking-wider" style={{ color: "#6b6558" }}>
               <Users size={12} />
               调查员 ({room?.members.length || 0})
@@ -1228,11 +1233,11 @@ export function RoomPage() {
                 </div>
               )})}
             </div>
-          </div>
+          </Surface>
 
           {/* 战斗控制 */}
           {activeTab === 'combat' && room?.isCreator && (
-            <div className="backdrop-blur-md bg-black/40 border border-[#3a3a3a]/40 rounded-lg p-3 shadow-md">
+            <Surface variant="panel" tone="blood" padding="sm">
               <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
                 <Swords size={12} />
                 战斗控制
@@ -1286,7 +1291,7 @@ export function RoomPage() {
                   </>
                 )}
               </div>
-            </div>
+            </Surface>
           )}
         </div>
         )}
@@ -1298,7 +1303,11 @@ export function RoomPage() {
           isMobile ? "pl-0" : "pl-3"
         )}>
           {activeTab === 'chat' ? (
-            <DoubleBezelCard variant="default" runeCorners innerClassName={cn("flex-1 flex flex-col min-h-0", isMobile ? "p-1" : "p-4")}>
+            <Surface
+              variant="solid"
+              padding="none"
+              className={cn("flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
+            >
               {/* ===== 新增：场景描述卡片 ===== */}
               {!isMobile && (sceneDesc || room?.isCreator) && (
                 <div className={cn("flex-shrink-0", isMobile ? "px-1 pt-1" : "px-4 pt-4")}>
@@ -1595,10 +1604,15 @@ export function RoomPage() {
                 />
                 </div>
               )}
-            </DoubleBezelCard>
+            </Surface>
           ) : (
             /* 战斗面板 */
-            <DoubleBezelCard variant="blood" runeCorners innerClassName={cn("flex-1 flex flex-col min-h-0", isMobile ? "p-1" : "p-4")}>
+            <Surface
+              variant="solid"
+              tone="blood"
+              padding="none"
+              className={cn("flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
+            >
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
@@ -1680,12 +1694,14 @@ export function RoomPage() {
                   </div>
                 </>
               )}
-            </DoubleBezelCard>
+            </Surface>
           )}
         </div>
-        <aside
+        <Surface
+          variant="panel"
+          padding="none"
           data-testid="room-desktop-command-rail"
-          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 overflow-y-auto rounded-xl border border-[#3a3a3a]/45 bg-black/40 p-2 shadow-lg shadow-black/40 backdrop-blur-md"
+          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 overflow-y-auto p-2"
         >
           {[
             { label: '成员', icon: Users, active: !roomLeftPanelCollapsed, onClick: toggleRoomLeftPanel },
@@ -1776,7 +1792,7 @@ export function RoomPage() {
               </Link>
             </Tooltip>
           </div>
-        </aside>
+        </Surface>
       </div>
       {/* ===== V2.1 新增：跑团 Log 面板 ===== */}
       {showLogPanel && (
