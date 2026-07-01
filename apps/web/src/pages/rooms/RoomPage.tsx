@@ -245,6 +245,7 @@ export function RoomPage() {
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showMobileActionDrawer, setShowMobileActionDrawer] = useState(false);
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
+  const [showMobileQuickRolls, setShowMobileQuickRolls] = useState(false);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -278,6 +279,7 @@ export function RoomPage() {
       setRoomLeftPanelCollapsed(true);
     }
     setShowChatTools(!isMobile);
+    if (!isMobile) setShowMobileQuickRolls(false);
   }, [isMobile]);
 
   const addClue = (clue: any) => {
@@ -1588,6 +1590,24 @@ export function RoomPage() {
                       {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                   )}
+                  {isMobile && selectedCharacter && (
+                    <button
+                      type="button"
+                      data-testid="room-mobile-quick-roll-toggle"
+                      onClick={() => setShowMobileQuickRolls((visible) => !visible)}
+                      className={cn(
+                        "btn-v2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        showMobileQuickRolls
+                          ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
+                          : "border-[#3a3a3a]/60 bg-[#0f1016]/75 text-[#8b8375] hover:text-[#c9a227]"
+                      )}
+                      title={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
+                      aria-label={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
+                      aria-expanded={showMobileQuickRolls}
+                    >
+                      <Dice5 size={16} />
+                    </button>
+                  )}
                   <MentionInput
                     value={inputMessage}
                     onChange={setInputMessage}
@@ -1608,7 +1628,7 @@ export function RoomPage() {
               </form>
 
               {/* ===== 新增：快捷掷骰栏 ===== */}
-              {selectedCharacter && (
+              {selectedCharacter && (!isMobile || showMobileQuickRolls) && (
                 <div className="flex-shrink-0">
                   <QuickRollBar
                   quickSkills={(() => {
@@ -1627,7 +1647,10 @@ export function RoomPage() {
                       : {};
                     return skills;
                   })()}
-                  onRoll={handleRollDice}
+                  onRoll={(skillName, skillValue) => {
+                    handleRollDice(skillName, skillValue);
+                    if (isMobile) setShowMobileQuickRolls(false);
+                  }}
                   onUpdateQuickSkills={async (skills) => {
                     try {
                       await apiFetch(`/characters/${selectedCharacter.id}/quick-skills`, {
