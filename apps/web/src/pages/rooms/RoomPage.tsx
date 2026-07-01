@@ -828,34 +828,6 @@ export function RoomPage() {
         </div>
 
         <div className="hidden md:flex items-center gap-1.5">
-          <button
-            onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-            className={cn(
-              "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center",
-              isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
-            )}
-            title={activeTab === 'chat' ? '战斗' : '聊天'}
-          >
-            {activeTab === 'chat' ? <Swords size={isMobile ? 18 : 14} /> : <Send size={isMobile ? 18 : 14} />}
-            {!isMobile && (activeTab === 'chat' ? '战斗' : '聊天')}
-          </button>
-          <button
-            onClick={() => setShowPrivateChat(true)}
-            className={cn(
-              "rounded flex items-center gap-1.5 text-[#e8d4a0] bg-[url('/btn-off.png')] bg-cover bg-center hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')] transition-all justify-center relative",
-              isMobile ? "w-11 h-11 px-0 py-0" : "px-4 py-1.5 text-sm min-w-[80px]"
-            )}
-            title="私聊"
-          >
-            <MessageSquare size={isMobile ? 18 : 14} />
-            {!isMobile && <span>私聊</span>}
-            {privateUnreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[#a63848] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-md">
-                {privateUnreadCount}
-              </span>
-            )}
-          </button>
-          <div className="w-px h-5 mx-1" style={{ background: 'rgba(58,58,58,0.5)' }} />
           <button onClick={handleLeaveRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
                        bg-[url('/btn-off.png')] bg-cover bg-center
                        hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
@@ -1713,17 +1685,30 @@ export function RoomPage() {
         </div>
         <aside
           data-testid="room-desktop-command-rail"
-          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 rounded-xl border border-[#3a3a3a]/45 bg-black/40 p-2 shadow-lg shadow-black/40 backdrop-blur-md"
+          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 overflow-y-auto rounded-xl border border-[#3a3a3a]/45 bg-black/40 p-2 shadow-lg shadow-black/40 backdrop-blur-md"
         >
           {[
             { label: '成员', icon: Users, active: !roomLeftPanelCollapsed, onClick: toggleRoomLeftPanel },
             { label: '线索', icon: Search, active: showCluePanel, onClick: () => setShowCluePanel((v) => !v) },
             { label: 'NPC', icon: User, active: showNpcPanel, onClick: () => setShowNpcPanel((v) => !v) },
-            { label: '战斗', icon: Swords, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
+            {
+              label: activeTab === 'chat' ? '战斗视图' : '聊天视图',
+              icon: activeTab === 'chat' ? Swords : Send,
+              active: activeTab === 'combat',
+              onClick: () => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat'),
+            },
+            {
+              label: '私聊',
+              icon: MessageSquare,
+              active: showPrivateChat,
+              onClick: () => setShowPrivateChat(true),
+              badge: privateUnreadCount,
+            },
+            { label: '战斗记录', icon: History, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
             { label: 'AI', icon: Sparkles, active: showAI, onClick: () => setShowAI((v) => !v) },
             { label: '子房间', icon: GitBranch, active: showSubRooms, onClick: () => setShowSubRooms((v) => !v) },
             { label: '日志', icon: ScrollText, active: showLogPanel, onClick: () => setShowLogPanel((v) => !v) },
-            { label: '事件', icon: History, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
+            { label: '事件', icon: BookOpen, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
             { label: '统计', icon: BarChart3, active: showStats, onClick: () => { fetchRoomStats(); setShowStats((v) => !v); } },
           ].map((item) => (
             <Tooltip key={item.label} content={item.label}>
@@ -1733,13 +1718,18 @@ export function RoomPage() {
                 aria-label={item.label}
                 onClick={item.onClick}
                 className={cn(
-                  'btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
+                  'btn-v2 relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
                   item.active
                     ? 'border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]'
                     : 'border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]'
                 )}
               >
                 <item.icon size={18} />
+                {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#a63848] px-1 text-[10px] leading-none text-white shadow-md">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             </Tooltip>
           ))}
