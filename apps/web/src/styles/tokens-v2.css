@@ -43,6 +43,7 @@
   --coc-text-gold: #e8d4a0;
   --coc-radius-control: 4px;
   --coc-radius-card: 8px;
+  --coc-radius-panel: var(--coc-radius-card);
   --coc-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.38);
   --coc-shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.48);
   --coc-shadow-glow-gold: 0 0 24px rgba(201, 162, 39, 0.12);
