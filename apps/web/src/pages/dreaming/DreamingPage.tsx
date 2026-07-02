@@ -44,6 +44,7 @@ export function DreamingPage() {
 
   // 抽牌流程
   const [candidates, setCandidates] = useState<DreamCardBrief[] | null>(null);
+  const [selectingKey, setSelectingKey] = useState<string | null>(null);
 
   // 图鉴和历史
   const [collection, setCollection] = useState<CollectionItem[]>([]);
@@ -110,6 +111,8 @@ export function DreamingPage() {
     if (loading) return;
     setLoading(true);
     try {
+      setSelectingKey(key);
+      await new Promise((resolve) => window.setTimeout(resolve, 260));
       const res = await apiFetch('/dream/select', {
         method: 'POST',
         body: JSON.stringify({ cardKey: key }),
@@ -123,6 +126,7 @@ export function DreamingPage() {
     } catch (e: any) {
       alert(e.message || '选择失败');
     } finally {
+      setSelectingKey(null);
       setLoading(false);
     }
   };
@@ -286,6 +290,7 @@ export function DreamingPage() {
                       <button
                         onClick={() => handleSelect(c.key)}
                         disabled={loading}
+                        data-selecting={selectingKey === c.key}
                         className="oracle-card-choice group relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-purple-200/20 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md"
                       >
                         <div className="absolute inset-3 rounded-lg border border-[var(--coc-accent-gold)]/20" />
@@ -373,7 +378,7 @@ export function DreamingPage() {
 
                   {(todayDraw.isRevealed || todayDraw.isDeepRevealed) && (
                     <div className="space-y-4">
-                      <Surface variant="glass" padding="md">
+                      <Surface variant="glass" padding="md" className="oracle-reveal-panel">
                         <p className="text-sm text-[#b0a898] mb-2 drop-shadow-sm">普通解牌结果</p>
                         <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.revealText}</p>
                       </Surface>
@@ -392,14 +397,14 @@ export function DreamingPage() {
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.deepRevealText && (
-                        <Surface variant="glass" tone="madness" padding="md" className="border-l-4 border-l-purple-500">
+                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel border-l-4 border-l-purple-500">
                           <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌结果</p>
                           <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.deepRevealText}</p>
                         </Surface>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.buff && (
-                        <Surface variant="glass" tone="madness" padding="md" className="border-l-4 border-l-purple-500">
+                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel border-l-4 border-l-purple-500">
                           <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌 · 触须效应</p>
                           <p className="text-[#f0e4cc] text-lg font-medium drop-shadow-md">{todayDraw.buff.name}</p>
                           <p className="text-sm text-[#b0a898] mt-2">{todayDraw.buff.description}</p>

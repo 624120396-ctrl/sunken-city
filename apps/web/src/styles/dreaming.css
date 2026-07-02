@@ -33,12 +33,39 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 28px rgba(168, 85, 247, 0.24);
 }
 
+.oracle-card-choice[data-selecting="true"] {
+  transform: translateY(-10px) rotateY(10deg) scale(1.04);
+  border-color: rgba(201, 162, 39, 0.75);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5), 0 0 44px rgba(201, 162, 39, 0.28);
+}
+
+.oracle-reveal-panel {
+  animation: oracle-reveal-in 420ms ease both;
+}
+
+@keyframes oracle-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .oracle-card-choice {
     transition: none;
   }
 
-  .oracle-card-choice:hover {
+  .oracle-card-choice:hover,
+  .oracle-card-choice[data-selecting="true"] {
     transform: none;
+  }
+
+  .oracle-reveal-panel {
+    animation: none;
   }
 }
