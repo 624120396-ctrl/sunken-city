@@ -343,9 +343,8 @@ export function FriendListPage() {
               animate={false}
             />
           ) : (
-            <div className="relative mt-3 overflow-hidden rounded-[var(--coc-radius-panel)] border border-[var(--coc-border-subtle)] bg-[#071016]/55 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
-              <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/35 to-transparent" />
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="coc-section-group">
+              <div className="coc-section-group__header">
                 <div>
                   <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">CONTACT ROSTER</div>
                   <div className="mt-1 text-sm text-[var(--coc-text-secondary)]">
@@ -356,73 +355,75 @@ export function FriendListPage() {
                   {filteredFriends.length} 条记录
                 </span>
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
-                {filteredFriends.map((friend) => {
-                  const isOnline = onlineFriends.has(friend.userId);
-                  const roomInfo = friendRooms[friend.userId];
-                  return (
-                    <Surface
-                      key={friend.userId}
-                      variant="panel"
-                      tone={isOnline ? 'gold' : 'neutral'}
-                      padding="md"
-                      interactive
-                      className="flex cursor-pointer flex-col gap-4 border-[var(--coc-border-subtle)]/80 bg-[#0b1218]/88"
-                      onClick={() => setSelectedFriend(friend)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12 shrink-0">
-                          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 text-lg font-bold text-[var(--coc-text-primary)]">
-                            {friend.avatarUrl ? (
-                              <img src={friend.avatarUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              friend.nickname[0]?.toUpperCase() || '?'
-                            )}
+              <div className="coc-section-group__body">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
+                  {filteredFriends.map((friend) => {
+                    const isOnline = onlineFriends.has(friend.userId);
+                    const roomInfo = friendRooms[friend.userId];
+                    return (
+                      <Surface
+                        key={friend.userId}
+                        variant="panel"
+                        tone={isOnline ? 'gold' : 'neutral'}
+                        padding="md"
+                        interactive
+                        className="flex cursor-pointer flex-col gap-4 border-[var(--coc-border-subtle)]/80 bg-[#0b1218]/88"
+                        onClick={() => setSelectedFriend(friend)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-12 h-12 shrink-0">
+                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 text-lg font-bold text-[var(--coc-text-primary)]">
+                              {friend.avatarUrl ? (
+                                <img src={friend.avatarUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                friend.nickname[0]?.toUpperCase() || '?'
+                              )}
+                            </div>
+                            <span
+                              className={cn(
+                                'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--coc-surface-panel)]',
+                                isOnline ? 'bg-emerald-400' : 'bg-[var(--coc-text-muted)]'
+                              )}
+                            />
                           </div>
-                          <span
-                            className={cn(
-                              'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--coc-surface-panel)]',
-                              isOnline ? 'bg-emerald-400' : 'bg-[var(--coc-text-muted)]'
-                            )}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate font-bold text-[var(--coc-text-primary)]">{friend.nickname}</div>
-                          <div className="font-mono text-[10px] text-[#c9a227]">#{String(friend.displayId).padStart(8, '0')}</div>
-                          <div className="truncate text-xs text-[var(--coc-text-secondary)]">
-                            {isOnline ? (roomInfo ? `房间 ${roomInfo.roomId}` : '在线') : '离线'}
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-bold text-[var(--coc-text-primary)]">{friend.nickname}</div>
+                            <div className="font-mono text-[10px] text-[#c9a227]">#{String(friend.displayId).padStart(8, '0')}</div>
+                            <div className="truncate text-xs text-[var(--coc-text-secondary)]">
+                              {isOnline ? (roomInfo ? `房间 ${roomInfo.roomId}` : '在线') : '离线'}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex gap-2">
-                        <Button
-                          variant="secondary"
-                          size="md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleInviteRoom(friend.userId);
-                          }}
-                          className="flex-1"
-                          icon={<BookOpen size={14} />}
-                        >
-                          邀进房
-                        </Button>
-                        <Button
-                          variant="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveFriend(friend.userId);
-                          }}
-                          className="text-[var(--coc-accent-blood)]"
-                          aria-label={`删除好友 ${friend.nickname}`}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                    </Surface>
-                  );
-                })}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="secondary"
+                            size="md"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInviteRoom(friend.userId);
+                            }}
+                            className="flex-1"
+                            icon={<BookOpen size={14} />}
+                          >
+                            邀进房
+                          </Button>
+                          <Button
+                            variant="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveFriend(friend.userId);
+                            }}
+                            className="text-[var(--coc-accent-blood)]"
+                            aria-label={`删除好友 ${friend.nickname}`}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </Surface>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
