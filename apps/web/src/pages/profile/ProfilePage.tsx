@@ -242,7 +242,6 @@ export function ProfilePage() {
           />
         </div>
       }
-      contentClassName="max-w-4xl"
     >
       <Surface variant="panel" padding="sm" className="flex items-center justify-between">
         <Link
@@ -254,8 +253,9 @@ export function ProfilePage() {
         </Link>
       </Surface>
 
-      {/* 资料卡片 */}
-      <Surface variant="solid" tone="gold" padding="lg">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] 2xl:gap-6">
+        {/* 资料卡片 */}
+        <Surface variant="solid" tone="gold" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Camera className="w-5 h-5 text-[#c9a227]" />
             基本资料
@@ -361,15 +361,16 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
-      </Surface>
+        </Surface>
 
-      {/* 全局背景选择 */}
-      <BackgroundPicker
-        value={selectedBackground}
-        saving={savingBackground}
-        onChange={setSelectedBackground}
-        onSave={handleSaveBackground}
-      />
+        {/* 全局背景选择 */}
+        <BackgroundPicker
+          value={selectedBackground}
+          saving={savingBackground}
+          onChange={setSelectedBackground}
+          onSave={handleSaveBackground}
+        />
+      </div>
 
       {/* 背包卡片 */}
       <Surface variant="solid" tone="madness" padding="lg">
@@ -379,7 +380,7 @@ export function ProfilePage() {
           </h2>
 
           {inventoryLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="h-32 bg-[#0a0a0f]/40 rounded animate-pulse" />
               ))}
@@ -389,7 +390,7 @@ export function ProfilePage() {
               背包空空如也，去<Link to="/shop" className="text-[#c9a227] hover:underline">拉莱耶遗珍</Link>看看吧。
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
               {inventory.map((inv) => {
                 const isTitle = inv.item?.category === 'title';
                 const isEquipped = !isTitle && user?.equippedFrame === inv.itemKey;
@@ -450,9 +451,9 @@ export function ProfilePage() {
           )}
       </Surface>
 
-      {/* 修改密码卡片 */}
-      {/* 论坛足迹卡片 */}
-      <Surface variant="solid" tone="madness" padding="lg">
+      <div className="grid gap-5 xl:grid-cols-2 2xl:gap-6">
+        {/* 论坛足迹卡片 */}
+        <Surface variant="solid" tone="madness" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-coc-madness-glow" />
             论坛足迹
@@ -487,9 +488,10 @@ export function ProfilePage() {
               </div>
             </div>
           )}
-      </Surface>
+        </Surface>
 
-      <Surface variant="solid" tone="madness" padding="lg">
+        {/* 修改密码卡片 */}
+        <Surface variant="solid" tone="madness" padding="lg">
           <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
             <Lock className="w-5 h-5 text-coc-madness-glow" />
             修改密码
@@ -551,7 +553,8 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
-      </Surface>
+        </Surface>
+      </div>
 
       {/* AI 生成头像弹窗 */}
       {showAiModal && (

@@ -36,11 +36,10 @@ export function ForumListPage() {
           tone="gold"
         />
       }
-      contentClassName="max-w-5xl"
     >
 
       {/* Board Cards - 2x2 layout, longer cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
         {boards.map((b: any) => {
           const Icon = boardIconMap[b.key] || LayoutGrid;
           return (
@@ -67,7 +66,7 @@ export function ForumListPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
           <SkeletonCard className="h-[220px]" />
           <SkeletonCard className="h-[220px]" />
           <SkeletonCard className="h-[220px]" />

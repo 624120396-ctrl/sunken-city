@@ -111,7 +111,6 @@ export function RanksPage() {
             <span className="font-rune">返回</span>
           </Link>
         }
-        contentClassName="max-w-6xl"
       >
         {/* 当前位阶展示 */}
         <Surface variant="solid" tone="gold" padding="lg">
@@ -191,7 +190,7 @@ export function RanksPage() {
             </h2>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-5 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
             {ranks.map((rank, i) => {
               const isCurrent = rank.level === currentRank?.level;
               const isLocked = rankInfo ? rank.expRequired > rankInfo.exp : rank.level > 1;
@@ -308,7 +307,7 @@ export function RanksPage() {
           </div>
 
           <Surface variant="solid" padding="lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
                 {EXP_SOURCES.map((source, i) => (
                   <motion.div 
                     key={i}

@@ -210,6 +210,28 @@ for (const [name, source] of Object.entries({
 }
 
 for (const [name, source] of Object.entries({
+  ProfilePage: profilePage,
+  ForumListPage: forumListPage,
+  ForumBoardPage: forumBoardPage,
+  RanksPage: ranksPage,
+  TitlesPage: titlesPage,
+})) {
+  assertContract(
+    !source.includes('contentClassName="max-w-'),
+    `${name} must not constrain PageShell content width on desktop.`
+  );
+}
+
+assertContract(
+  forumListPage.includes('[@media(min-width:2200px)]:grid-cols-4') &&
+    ranksPage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
+    titlesPage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
+    profilePage.includes('xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]') &&
+    profilePage.includes('[@media(min-width:2200px)]:grid-cols-8'),
+  'Index and settings pages must use expanded desktop grids.'
+);
+
+for (const [name, source] of Object.entries({
   ForumListPage: forumListPage,
   ForumBoardPage: forumBoardPage,
   ForumNewPostPage: forumNewPostPage,

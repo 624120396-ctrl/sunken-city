@@ -223,7 +223,6 @@ export function ForumBoardPage() {
           发布主题
         </Link>
       }
-      contentClassName="max-w-5xl"
     >
       {/* Breadcrumb */}
       <Surface variant="panel" padding="sm" className="flex items-center justify-between">

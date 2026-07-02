@@ -188,7 +188,6 @@ export function TitlesPage() {
             <span className="font-rune">返回</span>
           </Link>
         }
-        contentClassName="max-w-6xl"
       >
         {/* 收集进度 */}
         <Surface variant="solid" tone="gold" padding="lg">
@@ -293,7 +292,7 @@ export function TitlesPage() {
         </Surface>
 
         {/* 印记网格 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
           {filteredTitles.map((title, i) => {
             const isUnlocked = unlockedKeys.includes(title.key);
             const isDisplayed = displayedTitleKey === title.key;
