@@ -2070,6 +2070,86 @@
   color: var(--coc-on-surface-primary);
 }
 
+.forum-moderator-seat {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 4.25rem;
+  padding: 0.75rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--coc-accent-gold) 42%, transparent);
+  border-radius: var(--coc-radius-card);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--coc-accent-gold) 12%, transparent), transparent 58%),
+    color-mix(in srgb, var(--coc-surface-solid) 86%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 22px color-mix(in srgb, var(--coc-accent-gold) 10%, transparent);
+}
+
+.forum-moderator-seat::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0.75rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--coc-accent-gold), transparent);
+  opacity: 0.72;
+}
+
+.forum-moderator-seat::after {
+  content: "";
+  position: absolute;
+  right: -2rem;
+  bottom: -2.75rem;
+  width: 7rem;
+  height: 7rem;
+  border: 1px solid color-mix(in srgb, var(--coc-accent-gold) 22%, transparent);
+  border-radius: 999px;
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.forum-moderator-seat__sigil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid color-mix(in srgb, var(--coc-accent-gold) 56%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--coc-accent-gold) 28%, transparent), transparent 58%),
+    rgba(0, 0, 0, 0.24);
+  color: var(--coc-accent-gold-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--coc-accent-gold) 12%, transparent);
+}
+
+.forum-moderator-seat__role {
+  color: var(--coc-accent-gold-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.forum-moderator-seat__name {
+  margin-top: 0.2rem;
+  overflow: hidden;
+  color: var(--coc-on-surface-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forum-moderator-seat--empty {
+  border-style: dashed;
+  opacity: 0.82;
+}
+
 @media (min-width: 1600px) {
   .forum-board-page .coc-page-shell[data-layout="with-aside"] .coc-page-shell__body,
   .forum-post-page .coc-page-shell[data-layout="with-aside"] .coc-page-shell__body {

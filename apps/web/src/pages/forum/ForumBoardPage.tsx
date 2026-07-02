@@ -19,6 +19,8 @@ import {
   UserRound,
   ShieldCheck,
   ArrowRight,
+  Crown,
+  ScrollText,
 } from 'lucide-react';
 import {
   getForumBoards,
@@ -198,6 +200,28 @@ function ThreadSection({
   );
 }
 
+function ModeratorSeat({
+  nickname,
+  roleTitle,
+}: {
+  nickname: string;
+  roleTitle: string;
+}) {
+  return (
+    <Tooltip content={`${roleTitle} — 该版块的管理者`}>
+      <div className="forum-moderator-seat" role="listitem">
+        <div className="forum-moderator-seat__sigil" aria-hidden="true">
+          <Crown size={18} />
+        </div>
+        <div className="min-w-0">
+          <div className="forum-moderator-seat__role">{roleTitle}</div>
+          <div className="forum-moderator-seat__name">{nickname}</div>
+        </div>
+      </div>
+    </Tooltip>
+  );
+}
+
 export function ForumBoardPage() {
   const { boardKey } = useParams<{ boardKey: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -280,30 +304,48 @@ export function ForumBoardPage() {
       <Surface variant="panel" padding="md" className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
+          版务席位
+        </div>
+        <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
+          这里显示本版的执印者。置顶、精华与秩序维护由席位成员负责。
+        </p>
+        <div className="grid gap-3" role="list" aria-label="版主与管理员席位">
+          {moderators.length > 0 ? (
+            moderators.map((mod, index) => (
+              <ModeratorSeat
+                key={mod.id}
+                nickname={mod.nickname}
+                roleTitle={
+                  index === 0 && mod.nickname === '管理员'
+                    ? '首席管理员'
+                    : BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'
+                }
+              />
+            ))
+          ) : (
+            <div className="forum-moderator-seat forum-moderator-seat--empty" role="listitem">
+              <div className="forum-moderator-seat__sigil" aria-hidden="true">
+                <Crown size={18} />
+              </div>
+              <div>
+                <div className="forum-moderator-seat__role">
+                  {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
+                </div>
+                <div className="forum-moderator-seat__name">席位虚位以待</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Surface>
+
+      <Surface variant="panel" padding="md" className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+          <ScrollText size={16} className="text-[var(--coc-accent-gold)]" />
           版块守则
         </div>
         <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
-          置顶与精华优先显示；普通帖子按当前排序规则排列。版主信息集中在这里，避免占用主列表空间。
+          置顶与精华优先显示；普通帖子按当前排序规则排列。讨论秩序优先于装饰效果。
         </p>
-        <div className="flex flex-wrap gap-2">
-          {moderators.length > 0 ? (
-            moderators.map((mod) => (
-              <Tooltip
-                key={mod.id}
-                content={`${BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'} — 该版块的管理者`}
-              >
-                <span className="inline-flex cursor-help items-center gap-2 rounded-full border border-[var(--coc-border-strong)] px-3 py-1.5 text-sm text-[var(--coc-on-surface-primary)]">
-                  <ShieldCheck size={13} className="text-[var(--coc-accent-gold)]" />
-                  {mod.nickname}
-                </span>
-              </Tooltip>
-            ))
-          ) : (
-            <span className="text-sm text-[var(--coc-on-surface-muted)]">
-              {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}虚位以待
-            </span>
-          )}
-        </div>
       </Surface>
     </div>
   );
