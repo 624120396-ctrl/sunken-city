@@ -141,6 +141,42 @@
   gap: 1rem;
 }
 
+.coc-section-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.coc-section-group {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--coc-border-subtle);
+  border-radius: var(--coc-radius-panel);
+  background: color-mix(in srgb, var(--coc-surface-panel) 82%, transparent);
+  box-shadow: var(--coc-shadow-panel);
+}
+
+.coc-section-group::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1.5rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--coc-accent-gold) 45%, transparent), transparent);
+  pointer-events: none;
+}
+
+.coc-section-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+}
+
+.coc-section-group__body {
+  padding: 0 1rem 1rem;
+}
+
 .coc-page-shell[data-layout="with-aside"] .coc-page-shell__body {
   grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
   align-items: start;

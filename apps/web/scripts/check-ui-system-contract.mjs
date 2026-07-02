@@ -216,6 +216,17 @@ for (const [name, source] of Object.entries({
 }
 
 for (const [name, source] of Object.entries({
+  FriendListPage: friendListPage,
+  DreamingPage: dreamingPage,
+  FishingPage: fishingPage,
+})) {
+  assertContract(
+    source.includes('coc-section-group') || source.includes('coc-section-stack'),
+    `${name} must use section spacing primitives to prevent adjacent Surface collision.`
+  );
+}
+
+for (const [name, source] of Object.entries({
   ProfilePage: profilePage,
   ForumListPage: forumListPage,
   ForumBoardPage: forumBoardPage,
