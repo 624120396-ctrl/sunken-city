@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import type { ElementType, ReactNode } from 'react';
 import {
   MessageSquare,
   Eye,
@@ -14,6 +15,10 @@ import {
   Landmark,
   LayoutGrid,
   Award,
+  Clock3,
+  UserRound,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 import {
   getForumBoards,
@@ -28,7 +33,7 @@ import { SkeletonCard } from '../../components/ui/Skeleton';
 import { Tooltip } from '../../components/ui/Tooltip';
 import { PageShell, Surface } from '@components/system';
 
-const boardIconMap: Record<string, React.ElementType> = {
+const boardIconMap: Record<string, ElementType> = {
   lore: School,
   strategy: Anchor,
   creative: Moon,
@@ -48,20 +53,21 @@ function Badge({
   children,
   variant = 'default',
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   variant?: 'pin' | 'essence' | 'bounty' | 'lock' | 'best' | 'default';
 }) {
   const variants: Record<typeof variant, string> = {
-    pin: 'border-amber-400/60 text-amber-400',
-    essence: 'border-coc-accent-gold/60 text-coc-accent-gold',
-    bounty: 'border-amber-500/60 text-amber-500 bg-amber-500/10',
-    lock: 'border-coc-text-muted text-coc-text-muted',
-    best: 'border-amber-400/60 text-amber-400',
-    default: 'border-[#3a3a3a]/40 text-coc-text-muted',
+    pin: 'border-amber-400/60 text-amber-300 bg-amber-400/10',
+    essence: 'border-coc-accent-gold/60 text-coc-accent-gold bg-coc-accent-gold/10',
+    bounty: 'border-amber-500/60 text-amber-300 bg-amber-500/10',
+    lock: 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-muted)] bg-black/10',
+    best: 'border-amber-400/60 text-amber-300 bg-amber-400/10',
+    default: 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-muted)]',
   };
+
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${variants[variant]}`}
+      className={`inline-flex min-h-[1.5rem] items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${variants[variant]}`}
     >
       {children}
     </span>
@@ -86,10 +92,26 @@ function PostBadges({ post }: { post: ForumPostSummary }) {
           <Lock size={10} /> 锁定
         </Badge>
       )}
-      {post.bountyCoin > 0 && (
-        <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
-      )}
+      {post.bountyCoin > 0 && <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>}
     </>
+  );
+}
+
+function Metric({
+  icon,
+  value,
+  label,
+}: {
+  icon: ReactNode;
+  value: ReactNode;
+  label: string;
+}) {
+  return (
+    <span className="inline-flex min-h-[2rem] items-center gap-1.5 rounded border border-[var(--coc-border-subtle)] bg-black/15 px-2.5 text-xs text-[var(--coc-on-surface-secondary)]">
+      <span className="text-[var(--coc-accent-gold)]">{icon}</span>
+      <span className="font-semibold tabular-nums text-[var(--coc-on-surface-primary)]">{value}</span>
+      <span className="text-[var(--coc-on-surface-muted)]">{label}</span>
+    </span>
   );
 }
 
@@ -101,49 +123,78 @@ function PostRow({
   showLastReply?: boolean;
 }) {
   return (
-    <Link
-      key={post.id}
-      to={`/forums/${post.id}`}
-      className="group block"
-    >
+    <Link key={post.id} to={`/forums/${post.id}`} className="group block">
       <Surface
         variant="solid"
+        tone={post.isEssence || post.isPinned ? 'gold' : 'neutral'}
         padding="md"
         interactive
-        className={`relative overflow-hidden ${post.isEssence ? 'bg-gradient-to-r from-[#c9a227]/5 to-transparent' : ''}`}
+        className="forum-post-row"
       >
-        {/* hover 金色竖线 */}
-        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-coc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
               <PostBadges post={post} />
-              <h3 className="font-bold text-[#e8d4a0] truncate">{post.title}</h3>
+              <span className="inline-flex items-center gap-1 text-xs text-[var(--coc-on-surface-muted)]">
+                <Clock3 size={13} />
+                {formatTimeAgo(post.createdAt)}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-base font-bold leading-snug text-[var(--coc-on-surface-primary)] transition-colors group-hover:text-[var(--coc-accent-gold-strong)] md:text-lg">
+                {post.title || '无标题记录'}
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--coc-on-surface-secondary)]">
+                <span className="inline-flex items-center gap-1.5">
+                  <UserRound size={14} className="text-[var(--coc-accent-gold)]" />
+                  {post.author.nickname}
+                </span>
+                {showLastReply && post.lastReplyBy && (
+                  <span className="inline-flex items-center gap-1.5 text-[var(--coc-on-surface-muted)]">
+                    <MessageSquare size={14} />
+                    最后回复 {post.lastReplyBy.nickname} · {formatTimeAgo(post.lastReplyAt)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-4 text-xs text-[#6b6558]">
-              <span className="flex items-center gap-1">
-                <Eye size={14} /> {post.viewCount}
-              </span>
-              <span className="flex items-center gap-1">
-                <ThumbsUp size={14} /> {post.likeCount}
-              </span>
-              <span className="flex items-center gap-1">
-                <MessageSquare size={14} /> {post.replyCount}
-              </span>
-            </div>
-            {showLastReply && post.lastReplyBy && (
-              <div className="text-xs text-[#6b6558]">
-                最后回复：<span className="text-[#e8d4a0]">{post.lastReplyBy.nickname}</span> ·{' '}
-                {formatTimeAgo(post.lastReplyAt)}
-              </div>
-            )}
+          <div className="flex shrink-0 flex-wrap items-center gap-2 xl:justify-end">
+            <Metric icon={<Eye size={14} />} value={post.viewCount} label="阅览" />
+            <Metric icon={<ThumbsUp size={14} />} value={post.likeCount} label="赞同" />
+            <Metric icon={<MessageSquare size={14} />} value={post.replyCount} label="回复" />
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--coc-border-subtle)] text-[var(--coc-accent-gold)] transition-colors group-hover:border-[var(--coc-accent-gold)]">
+              <ArrowRight size={16} />
+            </span>
           </div>
         </div>
       </Surface>
     </Link>
+  );
+}
+
+function ThreadSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="coc-section-group">
+      <div className="coc-section-group__header">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+          <span className="text-[var(--coc-accent-gold)]">{icon}</span>
+          {title}
+        </h2>
+      </div>
+      <div className="coc-section-group__body">
+        <div className="grid gap-3">{children}</div>
+      </div>
+    </section>
   );
 }
 
@@ -163,10 +214,7 @@ export function ForumBoardPage() {
   });
   const boards = boardsData?.boards || [];
 
-  const {
-    data: boardData,
-    isLoading: loading,
-  } = useQuery({
+  const { data: boardData, isLoading: loading } = useQuery({
     queryKey: ['boardPosts', boardKey, page, sort],
     queryFn: () =>
       boardKey ? getBoardPosts(boardKey, page, 20, sort) : Promise.resolve(null),
@@ -177,7 +225,9 @@ export function ForumBoardPage() {
   const { data: modData } = useQuery({
     queryKey: ['boardModerators', boardKey],
     queryFn: () =>
-      boardKey ? getBoardModerators(boardKey).catch(() => ({ moderators: [] })) : Promise.resolve({ moderators: [] }),
+      boardKey
+        ? getBoardModerators(boardKey).catch(() => ({ moderators: [] }))
+        : Promise.resolve({ moderators: [] }),
     enabled: !!boardKey,
     staleTime: 60 * 1000,
   });
@@ -188,8 +238,10 @@ export function ForumBoardPage() {
   const pagination = boardData?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 };
   const moderators = modData?.moderators || [];
 
-  const boardName = boards.find((b: any) => b.key === boardKey)?.name || boardKey;
+  const boardName = boards.find((b) => b.key === boardKey)?.name || boardKey;
+  const boardDescription = boards.find((b) => b.key === boardKey)?.description || '版块主题、置顶、精华与最近回复。';
   const BoardIcon = boardIconMap[boardKey || ''] || LayoutGrid;
+  const visibleThreadCount = pinnedPosts.length + essencePosts.length + posts.length;
 
   const handlePageChange = (newPage: number) => {
     const sp = new URLSearchParams(searchParams);
@@ -204,6 +256,58 @@ export function ForumBoardPage() {
     setSearchParams(sp);
   };
 
+  const aside = (
+    <div className="coc-section-stack">
+      <Surface variant="solid" tone="gold" padding="md" className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded border border-[var(--coc-border-strong)] bg-black/20 text-[var(--coc-accent-gold)]">
+            <BoardIcon size={22} />
+          </span>
+          <div>
+            <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">board index</div>
+            <div className="text-lg font-bold text-[var(--coc-on-surface-primary)]">{boardName}</div>
+          </div>
+        </div>
+        <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">{boardDescription}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <Metric icon={<LayoutGrid size={14} />} value={pagination.total} label="主题" />
+          <Metric icon={<Pin size={14} />} value={pinnedPosts.length} label="置顶" />
+          <Metric icon={<Award size={14} />} value={essencePosts.length} label="精华" />
+          <Metric icon={<MessageSquare size={14} />} value={visibleThreadCount} label="本页" />
+        </div>
+      </Surface>
+
+      <Surface variant="panel" padding="md" className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+          <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
+          版块守则
+        </div>
+        <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
+          置顶与精华优先显示；普通帖子按当前排序规则排列。版主信息集中在这里，避免占用主列表空间。
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {moderators.length > 0 ? (
+            moderators.map((mod) => (
+              <Tooltip
+                key={mod.id}
+                content={`${BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'} — 该版块的管理者`}
+              >
+                <span className="inline-flex cursor-help items-center gap-2 rounded-full border border-[var(--coc-border-strong)] px-3 py-1.5 text-sm text-[var(--coc-on-surface-primary)]">
+                  <ShieldCheck size={13} className="text-[var(--coc-accent-gold)]" />
+                  {mod.nickname}
+                </span>
+              </Tooltip>
+            ))
+          ) : (
+            <span className="text-sm text-[var(--coc-on-surface-muted)]">
+              {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}虚位以待
+            </span>
+          )}
+        </div>
+      </Surface>
+    </div>
+  );
+
   return (
     <PageShell
       eyebrow="forum board"
@@ -213,138 +317,97 @@ export function ForumBoardPage() {
           {boardName}
         </span>
       }
-      description="版块主题、置顶、精华与最近回复。"
+      description={boardDescription}
       actions={
-        <Link
-          to={`/forums/new?board=${boardKey}`}
-          className="btn-v2 coc-btn-primary flex items-center gap-2"
-        >
+        <Link to={`/forums/new?board=${boardKey}`} className="btn-v2 coc-btn-primary flex items-center gap-2">
           <Plus size={16} />
           发布主题
         </Link>
       }
+      aside={aside}
+      className="forum-board-page"
     >
-      {/* Breadcrumb */}
-      <Surface variant="panel" padding="sm" className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/forums" className="text-[#6b6558] hover:text-[#e8d4a0]">旧日低语</Link>
-          <span className="text-[#6b6558]">/</span>
-          <span className="flex items-center gap-1.5 text-[#e8d4a0] font-bold">
-            <BoardIcon size={16} className="text-[#c9a227]" />
-            {boardName}
-          </span>
-        </div>
-      </Surface>
+      <div className="coc-section-stack">
+        <Surface variant="panel" padding="sm" className="forum-board-toolbar">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+            <Link to="/forums" className="text-[var(--coc-on-surface-muted)] hover:text-[var(--coc-accent-gold-strong)]">
+              旧日低语
+            </Link>
+            <span className="text-[var(--coc-on-surface-muted)]">/</span>
+            <span className="flex min-w-0 items-center gap-1.5 font-bold text-[var(--coc-on-surface-primary)]">
+              <BoardIcon size={16} className="shrink-0 text-[var(--coc-accent-gold)]" />
+              <span className="truncate">{boardName}</span>
+            </span>
+          </div>
 
-      {/* 版主展示 */}
-      <Surface variant="panel" tone="gold" padding="sm">
-        <div className="flex flex-wrap items-center gap-3">
-          {moderators.length > 0 ? (
-            moderators.map((mod: any) => (
-              <div
-                key={mod.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c9a227]/50 backdrop-blur-md bg-black/60 shadow-sm"
-              >
-                <span className="text-base text-[#c9a227] font-bold tracking-wide">
-                  {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
-                </span>
-                <Tooltip content={`${BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'} — 该版块的管理者`}>
-                  <span className="text-sm text-[#e8d4a0] font-medium cursor-help">{mod.nickname}</span>
-                </Tooltip>
-              </div>
-            ))
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c9a227]/30 backdrop-blur-md bg-black/40">
-              <span className="text-base text-[#c9a227]/70 font-bold tracking-wide">
-                {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
-              </span>
-              <span className="text-sm text-[#9b9080]">虚位以待</span>
-            </div>
-          )}
-        </div>
-      </Surface>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSortValue('last_reply')}
+              className={`btn-v2 min-h-[2.5rem] rounded border px-3 text-sm transition-colors ${
+                sort === 'last_reply'
+                  ? 'border-coc-gold bg-coc-gold text-coc-abyss'
+                  : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
+              }`}
+            >
+              最后回复
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortValue('newest')}
+              className={`btn-v2 min-h-[2.5rem] rounded border px-3 text-sm transition-colors ${
+                sort === 'newest'
+                  ? 'border-coc-gold bg-coc-gold text-coc-abyss'
+                  : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
+              }`}
+            >
+              最新发布
+            </button>
+          </div>
+        </Surface>
 
-      <Surface variant="panel" padding="sm" className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={() => setSortValue('last_reply')}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
-              sort === 'last_reply'
-                ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
-            }`}
-          >
-            最后回复
-          </button>
-          <button
-            onClick={() => setSortValue('newest')}
-            className={`px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
-              sort === 'newest'
-                ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
-            }`}
-          >
-            最新发布
-          </button>
-        </div>
-      </Surface>
-
-      {loading ? (
-        <div className="space-y-3">
-          <SkeletonCard className="h-20" />
-          <SkeletonCard className="h-20" />
-          <SkeletonCard className="h-20" />
-          <SkeletonCard className="h-20" />
-          <SkeletonCard className="h-20" />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* 置顶帖 */}
-          {pinnedPosts.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                <Pin size={12} /> 置顶
-              </div>
-              <div className="space-y-2">
+        {loading ? (
+          <div className="grid gap-3">
+            <SkeletonCard className="h-28" />
+            <SkeletonCard className="h-28" />
+            <SkeletonCard className="h-28" />
+            <SkeletonCard className="h-28" />
+          </div>
+        ) : (
+          <>
+            {pinnedPosts.length > 0 && (
+              <ThreadSection title="市政公告 / 置顶" icon={<Pin size={15} />}>
                 {pinnedPosts.map((post) => (
                   <PostRow key={post.id} post={post} />
                 ))}
-              </div>
-            </div>
-          )}
+              </ThreadSection>
+            )}
 
-          {/* 精华帖 */}
-          {essencePosts.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-xs font-bold text-[#c9a227] flex items-center gap-1">
-                <Award size={12} /> 精华
-              </div>
-              <div className="space-y-2">
+            {essencePosts.length > 0 && (
+              <ThreadSection title="典藏记录 / 精华" icon={<Award size={15} />}>
                 {essencePosts.map((post) => (
                   <PostRow key={post.id} post={post} />
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* 普通帖 */}
-          <div className="space-y-2">
-            {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
-              <div className="text-center py-12 text-[#6b6558]">该版块暂无帖子，来发布第一条吧</div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-8 text-[#6b6558] text-sm">没有更多帖子了</div>
-            ) : (
-              posts.map((post) => <PostRow key={post.id} post={post} />)
+              </ThreadSection>
             )}
-          </div>
 
-          <CompactPagination
-            page={page}
-            totalPages={pagination.totalPages}
-            onChange={handlePageChange}
-          />
-        </div>
-      )}
+            <ThreadSection title="所有低语" icon={<MessageSquare size={15} />}>
+              {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
+                <Surface variant="solid" padding="lg" className="text-center">
+                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">该版块暂无帖子</div>
+                  <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">来发布第一条记录吧。</p>
+                </Surface>
+              ) : posts.length === 0 ? (
+                <div className="py-5 text-center text-sm text-[var(--coc-on-surface-muted)]">没有更多帖子了</div>
+              ) : (
+                posts.map((post) => <PostRow key={post.id} post={post} />)
+              )}
+            </ThreadSection>
+
+            <CompactPagination page={page} totalPages={pagination.totalPages} onChange={handlePageChange} />
+          </>
+        )}
+      </div>
     </PageShell>
   );
 }

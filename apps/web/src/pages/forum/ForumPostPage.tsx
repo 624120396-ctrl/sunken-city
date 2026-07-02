@@ -10,6 +10,10 @@ import {
   Lock,
   Pin,
   Pencil,
+  Clock3,
+  UserRound,
+  ShieldCheck,
+  ScrollText,
 } from 'lucide-react';
 import { UserProfileModal } from '@components/UserProfileModal';
 import {
@@ -101,6 +105,127 @@ function AvatarWithFrame({
         />
       )}
     </button>
+  );
+}
+
+function ThreadMetric({
+  icon,
+  value,
+  label,
+}: {
+  icon: React.ReactNode;
+  value: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="rounded border border-[var(--coc-border-subtle)] bg-black/15 px-3 py-2">
+      <div className="flex items-center gap-2 text-[var(--coc-accent-gold)]">
+        {icon}
+        <span className="text-lg font-bold tabular-nums text-[var(--coc-on-surface-primary)]">{value}</span>
+      </div>
+      <div className="mt-1 text-xs text-[var(--coc-on-surface-muted)]">{label}</div>
+    </div>
+  );
+}
+
+function PostAside({
+  post,
+  canModeratePost,
+  onToggleEssence,
+  onTogglePin,
+}: {
+  post: ForumPostDetail;
+  canModeratePost: boolean;
+  onToggleEssence: () => void;
+  onTogglePin: () => void;
+}) {
+  return (
+    <div className="coc-section-stack">
+      <Surface variant="solid" tone="gold" padding="md" className="space-y-4">
+        <div className="flex items-center gap-3">
+          <AvatarWithFrame
+            avatarUrl={post.author.avatarUrl}
+            frameUrl={post.author.frameUrl}
+            nickname={post.author.nickname}
+            size={48}
+          />
+          <div className="min-w-0">
+            <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">thread author</div>
+            <div className="truncate text-base font-bold text-[var(--coc-on-surface-primary)]">{post.author.nickname}</div>
+            <div className="truncate text-xs text-[var(--coc-on-surface-muted)]">
+              {post.author.rankName || '未知位阶'}
+              {post.author.titleName ? ` · ${post.author.titleName}` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <ThreadMetric icon={<Eye size={15} />} value={post.viewCount} label="阅览" />
+          <ThreadMetric icon={<ThumbsUp size={15} />} value={post.likeCount} label="赞同" />
+          <ThreadMetric icon={<MessageSquare size={15} />} value={post.replyCount} label="回复" />
+          <ThreadMetric icon={<Clock3 size={15} />} value={formatTimeAgo(post.createdAt)} label="发布" />
+        </div>
+      </Surface>
+
+      <Surface variant="panel" padding="md" className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+          <ScrollText size={16} className="text-[var(--coc-accent-gold)]" />
+          线程状态
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {post.isPinned && (
+            <Badge variant="pin">
+              <Pin size={10} /> 置顶
+            </Badge>
+          )}
+          {post.isEssence && (
+            <Badge variant="essence">
+              <Award size={10} /> 精华
+            </Badge>
+          )}
+          {post.isLocked && (
+            <Badge variant="lock">
+              <Lock size={10} /> 锁定
+            </Badge>
+          )}
+          {post.bountyCoin > 0 && <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>}
+          {!post.isPinned && !post.isEssence && !post.isLocked && post.bountyCoin <= 0 && (
+            <span className="text-sm text-[var(--coc-on-surface-muted)]">普通讨论</span>
+          )}
+        </div>
+
+        {canModeratePost && (
+          <div className="grid gap-2 border-t border-[var(--coc-border-subtle)] pt-3">
+            <button
+              type="button"
+              onClick={onToggleEssence}
+              className="btn-v2 coc-btn-secondary flex min-h-[2.5rem] items-center justify-center gap-2 text-xs"
+            >
+              <Award size={14} />
+              {post.isEssence ? '取消精华' : '设为精华'}
+            </button>
+            <button
+              type="button"
+              onClick={onTogglePin}
+              className="btn-v2 coc-btn-secondary flex min-h-[2.5rem] items-center justify-center gap-2 text-xs"
+            >
+              <Pin size={14} />
+              {post.isPinned ? '取消置顶' : '设为置顶'}
+            </button>
+          </div>
+        )}
+      </Surface>
+
+      <Surface variant="panel" padding="md" className="space-y-2">
+        <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+          <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
+          版务提示
+        </div>
+        <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
+          回复与正文在稳定阅读层中显示；危险操作只在作者或版务权限下开放。
+        </p>
+      </Surface>
+    </div>
   );
 }
 
@@ -259,17 +384,34 @@ export function ForumPostPage() {
       description="正文、回复与版主操作。长文本区域使用稳定可读层。"
       actions={
         (isAuthor || canModeratePost) && (
-          <button onClick={handleDeletePost} className="text-red-400 hover:text-red-300 p-2">
+          <button
+            type="button"
+            onClick={handleDeletePost}
+            aria-label="删除帖子"
+            title="删除帖子"
+            className="btn-v2 inline-flex min-h-[2.5rem] items-center gap-2 rounded border border-[var(--coc-border-danger)] px-3 text-sm text-red-300 hover:text-red-200"
+          >
             <Trash2 size={18} />
+            删除
           </button>
         )
       }
-      contentClassName="max-w-4xl"
+      aside={
+        post ? (
+          <PostAside
+            post={post}
+            canModeratePost={!!canModeratePost}
+            onToggleEssence={handleToggleEssence}
+            onTogglePin={handleTogglePin}
+          />
+        ) : undefined
+      }
+      className="forum-post-page"
     >
-      <Surface variant="panel" padding="sm" className="flex items-center gap-3">
+      <Surface variant="panel" padding="sm" className="forum-thread-breadcrumb">
         <Link
           to={post?.board.key ? `/forums/board/${post.board.key}` : '/forums'}
-          className="coc-btn-secondary p-2"
+          className="coc-btn-secondary inline-flex min-h-[2.5rem] items-center justify-center p-2"
         >
           <ArrowLeft size={18} />
         </Link>
@@ -291,9 +433,9 @@ export function ForumPostPage() {
       {loading || !post ? (
         <div className="text-center py-12 text-[#6b6558]">加载中...</div>
       ) : (
-        <>
+        <div className="coc-section-stack">
           {/* 主贴 */}
-          <Surface variant="solid" tone="gold" padding="md" className="space-y-3 border-l-2 border-l-[#c9a227]/40">
+          <Surface variant="solid" tone="gold" padding="lg" className="forum-thread-card space-y-4">
             <div className="flex items-start gap-3">
               <AvatarWithFrame
                 avatarUrl={post.author.avatarUrl}
@@ -336,7 +478,10 @@ export function ForumPostPage() {
                   </div>
                 </div>
                 <div className="text-xs text-[#6b6558] mt-0.5">
-                  {post.author.rankName || '未知位阶'}
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserRound size={13} />
+                    {post.author.rankName || '未知位阶'}
+                  </span>
                   {post.author.titleName && (
                     <span style={{ color: post.author.titleColor || '#a69b85' }}> · {post.author.titleName}</span>
                   )}
@@ -363,7 +508,7 @@ export function ForumPostPage() {
                 </div>
               </div>
             ) : (
-              <HtmlContent html={post.content} />
+              <HtmlContent className="forum-thread-body" html={post.content} />
             )}
 
             <div className="flex items-center justify-between pt-2">
@@ -396,76 +541,88 @@ export function ForumPostPage() {
                       <Pencil size={12} /> 编辑
                     </button>
                   )}
-                  {(isAuthor || canModeratePost) && (
-                    <button
-                      onClick={handleToggleEssence}
-                      className="text-xs text-[#6b6558] hover:text-[#c9a227] flex items-center gap-1"
-                    >
-                      {post.isEssence ? '取消精华' : '设为精华'}
-                    </button>
-                  )}
-                  {canModeratePost && (
-                    <button
-                      onClick={handleTogglePin}
-                      className="text-xs text-[#6b6558] hover:text-[#a63848] flex items-center gap-1"
-                    >
-                      {post.isPinned ? '取消置顶' : '设为置顶'}
-                    </button>
-                  )}
                 </div>
               )}
             </div>
           </Surface>
 
           {/* 回复列表 */}
-          <div className="space-y-3">
-            {post.replies.map((reply) => (
-              <ReplyItem
-                key={reply.id}
-                reply={reply}
-                post={post}
-                currentUserId={user?.id}
-                isAdmin={!!isAdmin}
-                isAuthor={isAuthor}
-                isBoardModerator={isBoardModerator}
-                onBest={() => handleBestReply(reply.id)}
-                onDelete={() => handleDeleteReply(reply.id)}
-                onAuthorClick={() => setSelectedProfileUser(reply.author)}
-                editing={editReplyId === reply.id}
-                editContent={editReplyContent}
-                onStartEdit={(content) => {
-                  setEditReplyId(reply.id);
-                  setEditReplyContent(content);
-                }}
-                onChangeEdit={setEditReplyContent}
-                onSaveEdit={() => handleUpdateReply(reply.id)}
-                onCancelEdit={() => {
-                  setEditReplyId(null);
-                  setEditReplyContent('');
-                }}
-              />
-            ))}
-          </div>
+          <section className="coc-section-group">
+            <div className="coc-section-group__header">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+                <MessageSquare size={15} className="text-[var(--coc-accent-gold)]" />
+                回声记录
+              </h2>
+              <span className="text-xs text-[var(--coc-on-surface-muted)]">{post.replies.length} 条回复</span>
+            </div>
+            <div className="coc-section-group__body">
+              {post.replies.length === 0 ? (
+                <Surface variant="solid" padding="lg" className="text-center">
+                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">还没有回复</div>
+                  <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">写下第一段回声，或继续观察这条低语。</p>
+                </Surface>
+              ) : (
+                <div className="grid gap-3">
+                  {post.replies.map((reply) => (
+                    <ReplyItem
+                      key={reply.id}
+                      reply={reply}
+                      post={post}
+                      currentUserId={user?.id}
+                      isAdmin={!!isAdmin}
+                      isAuthor={isAuthor}
+                      isBoardModerator={isBoardModerator}
+                      onBest={() => handleBestReply(reply.id)}
+                      onDelete={() => handleDeleteReply(reply.id)}
+                      onAuthorClick={() => setSelectedProfileUser(reply.author)}
+                      editing={editReplyId === reply.id}
+                      editContent={editReplyContent}
+                      onStartEdit={(content) => {
+                        setEditReplyId(reply.id);
+                        setEditReplyContent(content);
+                      }}
+                      onChangeEdit={setEditReplyContent}
+                      onSaveEdit={() => handleUpdateReply(reply.id)}
+                      onCancelEdit={() => {
+                        setEditReplyId(null);
+                        setEditReplyContent('');
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
 
           {/* 回复框 */}
           {!post.isLocked && (
-            <Surface variant="solid" padding="md" className="space-y-3">
-              <RichTextEditor
-                value={replyContent}
-                onChange={setReplyContent}
-                placeholder="写下你的回复..."
-                minHeight="160px"
-              />
-              <div className="flex justify-end">
-                <button
-                  onClick={handleReply}
-                  disabled={submitting || !replyContent.trim()}
-                  className="coc-btn-primary disabled:opacity-50"
-                >
-                  {submitting ? '发送中...' : '发送回复'}
-                </button>
+            <section className="coc-section-group">
+              <div className="coc-section-group__header">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
+                  <Pencil size={15} className="text-[var(--coc-accent-gold)]" />
+                  追加回复
+                </h2>
               </div>
-            </Surface>
+              <div className="coc-section-group__body">
+                <Surface variant="solid" padding="md" className="forum-reply-editor space-y-3">
+                  <RichTextEditor
+                    value={replyContent}
+                    onChange={setReplyContent}
+                    placeholder="写下你的回复..."
+                    minHeight="160px"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleReply}
+                      disabled={submitting || !replyContent.trim()}
+                      className="coc-btn-primary disabled:opacity-50"
+                    >
+                      {submitting ? '发送中...' : '发送回复'}
+                    </button>
+                  </div>
+                </Surface>
+              </div>
+            </section>
           )}
 
           <UserProfileModal
@@ -473,7 +630,7 @@ export function ForumPostPage() {
             isOpen={!!selectedProfileUser}
             onClose={() => setSelectedProfileUser(null)}
           />
-        </>
+        </div>
       )}
     </PageShell>
   );
@@ -522,7 +679,7 @@ function ReplyItem({
       variant="solid"
       tone={reply.isBestReply ? 'gold' : 'neutral'}
       padding="md"
-      className={reply.isBestReply ? 'border-amber-500/40 relative overflow-hidden' : ''}
+      className={`forum-reply-card ${reply.isBestReply ? 'border-amber-500/40 relative overflow-hidden' : ''}`}
     >
       {reply.isBestReply && (
         <div className="absolute top-0 left-0 bg-amber-500 text-coc-abyss text-[10px] px-2 py-0.5 rounded-br flex items-center gap-1 font-bold">
@@ -578,7 +735,7 @@ function ReplyItem({
               </div>
             </div>
           ) : (
-            <HtmlContent className="mt-2" html={reply.content} />
+            <HtmlContent className="forum-thread-body mt-3" html={reply.content} />
           )}
 
           {!editing && (
