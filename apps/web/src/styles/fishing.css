@@ -184,10 +184,6 @@
   overflow: hidden;
 }
 
-.catch-reveal {
-  animation: catch-reveal-in 360ms ease both;
-}
-
 .catch-reveal[data-rarity="ELDRITCH"] {
   box-shadow: 0 0 42px rgba(159, 28, 43, 0.32), 0 20px 70px rgba(0, 0, 0, 0.5);
 }
@@ -201,20 +197,11 @@
   min-height: 2.5rem;
 }
 
-@keyframes catch-reveal-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
+@media (prefers-reduced-motion: reduce) {
+  .catch-reveal-card.catch-reveal {
+    animation: none;
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .catch-reveal {
-    animation: none;
   }
 }
 
