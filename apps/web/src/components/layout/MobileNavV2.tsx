@@ -25,11 +25,14 @@ export function MobileNavV2() {
             key={item.path}
             to={item.path}
             className={cn(
-              'coc-focus-ring flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 rounded-md px-2 text-[11px]',
-              active ? 'text-[var(--coc-text-gold)]' : 'text-[var(--coc-text-muted)]'
+              'coc-focus-ring mobile-tab-entry flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 px-2 text-[11px]',
+              active ? 'mobile-tab-item-active' : 'mobile-tab-item'
             )}
+            aria-current={active ? 'page' : undefined}
           >
-            <Icon size={20} />
+            <span className="mobile-tab-entry__icon" aria-hidden="true">
+              <Icon size={20} />
+            </span>
             <span>{item.label}</span>
           </Link>
         );

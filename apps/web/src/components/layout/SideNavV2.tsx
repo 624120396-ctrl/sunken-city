@@ -60,17 +60,21 @@ export function SideNavV2({ collapsed, onToggle }: SideNavV2Props) {
               key={item.path}
               to={item.path}
               className={cn(
-                'coc-focus-ring flex items-center rounded-md transition',
-                collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-2.5',
+                'coc-focus-ring nav-shell-item flex items-center transition',
+                collapsed ? 'nav-shell-item--collapsed justify-center' : 'gap-3',
                 active
-                  ? 'bg-[rgba(139,38,53,0.72)] text-[var(--coc-text-gold)] shadow-[0_0_18px_rgba(139,38,53,0.22)]'
-                  : 'text-[var(--coc-text-secondary)] hover:bg-white/[0.06] hover:text-[var(--coc-text-primary)]'
+                  ? cn('nav-plaque', collapsed && 'nav-plaque-lil')
+                  : 'nav-item-v2'
               )}
+              aria-current={active ? 'page' : undefined}
             >
-              <Icon size={20} className="shrink-0" />
-              <span className={cn('whitespace-nowrap transition', collapsed ? 'w-0 overflow-hidden opacity-0' : 'opacity-100')}>
+              <span className="nav-shell-item__icon" aria-hidden="true">
+                <Icon size={19} className="shrink-0" />
+              </span>
+              <span className={cn('nav-shell-item__label whitespace-nowrap transition', collapsed ? 'w-0 overflow-hidden opacity-0' : 'opacity-100')}>
                 {item.label}
               </span>
+              {active && !collapsed && <span className="nav-shell-item__marker" aria-hidden="true" />}
             </Link>
           );
 
@@ -88,8 +92,8 @@ export function SideNavV2({ collapsed, onToggle }: SideNavV2Props) {
           type="button"
           onClick={onToggle}
           className={cn(
-            'coc-focus-ring flex w-full items-center rounded-md text-[var(--coc-text-muted)] hover:bg-white/[0.06]',
-            collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-2.5'
+            'coc-focus-ring nav-collapse-trigger flex w-full items-center',
+            collapsed ? 'justify-center' : 'gap-3'
           )}
         >
           {collapsed ? <ChevronRight size={18} /> : <><ChevronLeft size={18} /><span className="text-sm">收起导航</span></>}

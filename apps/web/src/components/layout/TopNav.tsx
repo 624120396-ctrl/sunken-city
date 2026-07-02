@@ -30,17 +30,16 @@ export function TopNav() {
   return (
     <header className="fixed top-0 left-0 right-0 h-14 topnav-v2 z-50 flex items-center px-3 md:px-4 gap-2 md:gap-4">
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-3 shrink-0">
+      <Link to="/" className="topnav-brand shrink-0" aria-label="返回沉没之城首页">
         <img
           src="/images/logo-gold.png"
           alt="沉没之城"
-          className="h-9 w-auto hidden sm:block"
-          style={{ filter: 'drop-shadow(0 0 8px rgba(201,162,39,0.3))' }}
+          className="topnav-brand__logo hidden sm:block"
         />
-        <span className="sm:hidden text-xl font-ritual font-bold tracking-wide" style={{ color: '#c9a227' }}>
+        <span className="topnav-brand__mobile sm:hidden">
           沉没之城
         </span>
-        <span className="hidden md:block text-[10px]" style={{ color: '#6b6558' }}>
+        <span className="topnav-brand__motto hidden md:block">
           一座城市，万种疯狂
         </span>
       </Link>
@@ -49,14 +48,26 @@ export function TopNav() {
       <div className="hidden md:block flex-1 max-w-md mx-auto">
         <div
           className="coc-search-v2 cursor-text"
+          role="button"
+          tabIndex={0}
+          aria-label="打开全局搜索"
           onClick={() => {
             // 聚焦到隐藏的input或触发CommandPalette
             const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
             document.dispatchEvent(event);
           }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              const keyboardEvent = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+              document.dispatchEvent(keyboardEvent);
+            }
+          }}
         >
-          <Search size={16} style={{ color: '#6b6558' }} />
-          <span className="text-sm">搜索房间、调查员、遗物...</span>
+          <span className="coc-search-v2__sigil" aria-hidden="true">
+            <Search size={15} />
+          </span>
+          <span className="coc-search-v2__placeholder">搜索房间、调查员、遗物...</span>
         </div>
       </div>
 
@@ -69,12 +80,13 @@ export function TopNav() {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 p-1 rounded-full transition-colors hover:bg-[rgba(201,162,39,0.08)]"
+            className="topnav-user-trigger"
+            aria-haspopup="menu"
+            aria-expanded={dropdownOpen}
           >
-            <div className="relative w-8 h-8 shrink-0">
+            <div className={cn('topnav-avatar-shell', user?.isAdmin && 'topnav-avatar-shell--admin')}>
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center font-bold overflow-hidden"
-                style={{ background: 'rgba(139,38,53,0.2)', color: '#a63848' }}
+                className="topnav-avatar"
               >
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
@@ -92,17 +104,13 @@ export function TopNav() {
             </div>
             <ChevronDown
               size={14}
-              className={cn(
-                'transition-transform',
-                dropdownOpen && 'rotate-180'
-              )}
-              style={{ color: '#8b8375' }}
+              className={cn('topnav-user-trigger__chevron', dropdownOpen && 'rotate-180')}
             />
           </button>
 
           {/* 下拉菜单 */}
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 user-dropdown-v2 py-2 z-60">
+            <div className="absolute right-0 top-full mt-2 w-56 user-dropdown-v2 py-2 z-60" role="menu">
               {/* 用户信息头部 */}
               <div className="px-4 py-3 border-b border-[rgba(201,162,39,0.1)]">
                 <p className="font-medium truncate" style={{ color: '#d4c5a8' }}>
