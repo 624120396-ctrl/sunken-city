@@ -21,6 +21,7 @@ import {
   ArrowRight,
   Crown,
   ScrollText,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   getForumBoards,
@@ -284,15 +285,14 @@ export function ForumBoardPage() {
     <div className="coc-section-stack">
       <Surface variant="solid" tone="gold" padding="md" className="space-y-4">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded border border-[var(--coc-border-strong)] bg-black/20 text-[var(--coc-accent-gold)]">
-            <BoardIcon size={22} />
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded border border-[var(--coc-border-strong)] bg-black/20 text-[var(--coc-accent-gold)]">
+            <LayoutGrid size={20} />
           </span>
           <div>
-            <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">board index</div>
-            <div className="text-lg font-bold text-[var(--coc-on-surface-primary)]">{boardName}</div>
+            <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">board overview</div>
+            <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">版块概览</div>
           </div>
         </div>
-        <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">{boardDescription}</p>
         <div className="grid grid-cols-2 gap-3">
           <Metric icon={<LayoutGrid size={14} />} value={pagination.total} label="主题" />
           <Metric icon={<Pin size={14} />} value={pinnedPosts.length} label="置顶" />
@@ -372,13 +372,17 @@ export function ForumBoardPage() {
       <div className="coc-section-stack">
         <Surface variant="panel" padding="sm" className="forum-board-toolbar">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-            <Link to="/forums" className="text-[var(--coc-on-surface-muted)] hover:text-[var(--coc-accent-gold-strong)]">
+            <Link
+              to="/forums"
+              className="inline-flex min-h-[2.5rem] items-center gap-1.5 text-[var(--coc-on-surface-muted)] hover:text-[var(--coc-accent-gold-strong)]"
+            >
+              <ArrowLeft size={15} />
               旧日低语
             </Link>
             <span className="text-[var(--coc-on-surface-muted)]">/</span>
-            <span className="flex min-w-0 items-center gap-1.5 font-bold text-[var(--coc-on-surface-primary)]">
-              <BoardIcon size={16} className="shrink-0 text-[var(--coc-accent-gold)]" />
-              <span className="truncate">{boardName}</span>
+            <span className="flex min-w-0 items-center gap-1.5 text-[var(--coc-on-surface-muted)]">
+              <LayoutGrid size={15} className="shrink-0 text-[var(--coc-accent-gold)]" />
+              <span className="truncate">当前版块</span>
             </span>
           </div>
 
@@ -435,9 +439,16 @@ export function ForumBoardPage() {
 
             <ThreadSection title="所有低语" icon={<MessageSquare size={15} />}>
               {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
-                <Surface variant="solid" padding="lg" className="text-center">
+                <Surface variant="solid" padding="lg" className="forum-empty-state text-center">
                   <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">该版块暂无帖子</div>
                   <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">来发布第一条记录吧。</p>
+                  <Link
+                    to={`/forums/new?board=${boardKey}`}
+                    className="btn-v2 coc-btn-primary mt-4 inline-flex items-center justify-center gap-2"
+                  >
+                    <Plus size={15} />
+                    发布主题
+                  </Link>
                 </Surface>
               ) : posts.length === 0 ? (
                 <div className="py-5 text-center text-sm text-[var(--coc-on-surface-muted)]">没有更多帖子了</div>

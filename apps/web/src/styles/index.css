@@ -2016,6 +2016,11 @@
   z-index: 1;
 }
 
+.forum-empty-state {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+}
+
 .forum-thread-card {
   min-height: 18rem;
 }
