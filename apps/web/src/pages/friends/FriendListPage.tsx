@@ -296,36 +296,44 @@ export function FriendListPage() {
         </Button>
       }
     >
-      <Surface variant="panel" padding="sm" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <Tabs
-          ariaLabel="好友筛选"
-          value={activeTab}
-          onChange={(value) => setActiveTab(value as 'all' | 'online' | 'requests')}
-          items={[
-            { value: 'all', label: '全部好友', count: friends.length },
-            { value: 'online', label: '在线', count: friends.filter((f) => onlineFriends.has(f.userId)).length },
-            { value: 'requests', label: '请求', count: pendingReceived.length },
-          ]}
-        />
-        <div className="flex items-center gap-2 text-sm text-[var(--coc-text-secondary)]">
-          <Users size={16} className="text-[var(--coc-accent-gold)]" />
-          <span>{friends.length} 位联络人</span>
+      <Surface variant="panel" padding="md" className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
+        <div className="grid gap-3 lg:grid-cols-[auto_minmax(18rem,34rem)_auto] lg:items-center">
+          <Tabs
+            ariaLabel="好友筛选"
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as 'all' | 'online' | 'requests')}
+            items={[
+              { value: 'all', label: '全部好友', count: friends.length },
+              { value: 'online', label: '在线', count: friends.filter((f) => onlineFriends.has(f.userId)).length },
+              { value: 'requests', label: '请求', count: pendingReceived.length },
+            ]}
+          />
+
+          {(activeTab === 'all' || activeTab === 'online') ? (
+            <div className="relative min-w-0">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--coc-accent-gold)]/75" size={16} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="搜索好友昵称..."
+                className="coc-focus-ring h-12 w-full rounded-[var(--coc-radius-control)] border border-[var(--coc-border-subtle)] bg-[#071016]/85 pl-11 pr-4 text-sm text-[var(--coc-text-primary)] shadow-inner shadow-black/40 placeholder:text-[var(--coc-text-muted)] focus:border-[var(--coc-accent-gold)]/55"
+              />
+            </div>
+          ) : (
+            <div className="hidden lg:block" />
+          )}
+
+          <div className="flex items-center gap-2 justify-self-start rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2 text-sm text-[var(--coc-text-secondary)] lg:justify-self-end">
+            <Users size={16} className="text-[var(--coc-accent-gold)]" />
+            <span>{friends.length} 位联络人</span>
+          </div>
         </div>
       </Surface>
 
       {(activeTab === 'all' || activeTab === 'online') && (
         <>
-          <Surface variant="glass" padding="sm" className="relative">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--coc-text-muted)]" size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索好友昵称..."
-              className="coc-focus-ring h-11 w-full rounded-[var(--coc-radius-control)] border border-[var(--coc-border-subtle)] bg-black/35 pl-10 pr-4 text-[var(--coc-text-primary)] placeholder:text-[var(--coc-text-muted)]"
-            />
-          </Surface>
-
           {filteredFriends.length === 0 ? (
             <EmptyState
               icon={EmptyIcons.Friends}
@@ -377,7 +385,7 @@ export function FriendListPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="secondary"
-                        size="sm"
+                        size="md"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleInviteRoom(friend.userId);

@@ -509,7 +509,8 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowCurrent((v) => !v)}
-                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-[#e8d4a0]"
+                className="absolute right-1 top-[1.45rem] flex h-10 w-10 items-center justify-center rounded border border-transparent text-coc-parchment-dim transition-colors hover:border-coc-madness/30 hover:bg-white/[0.06] hover:text-[#e8d4a0]"
+                aria-label={showCurrent ? '隐藏当前密码' : '显示当前密码'}
               >
                 {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -526,7 +527,8 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                className="absolute right-3 top-[1.9rem] text-coc-parchment-dim hover:text-[#e8d4a0]"
+                className="absolute right-1 top-[1.45rem] flex h-10 w-10 items-center justify-center rounded border border-transparent text-coc-parchment-dim transition-colors hover:border-coc-madness/30 hover:bg-white/[0.06] hover:text-[#e8d4a0]"
+                aria-label={showNew ? '隐藏新密码' : '显示新密码'}
               >
                 {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>

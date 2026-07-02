@@ -329,12 +329,14 @@ export function FishingPage() {
                         )}
                       </div>
                       {!log.isSold && (
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={() => handleSellLogId(log.id)}
-                          className="rounded bg-[var(--coc-accent-gold)] px-2 py-0.5 text-[10px] font-medium text-[var(--coc-text-inverse)] transition-colors hover:bg-[var(--coc-accent-gold-strong)]"
+                          className="h-9 px-3 text-xs"
                         >
                           出售
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </li>
