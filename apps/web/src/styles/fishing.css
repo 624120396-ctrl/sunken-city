@@ -7,6 +7,31 @@
   isolation: isolate;
 }
 
+.fishing-bite-alert {
+  position: absolute;
+  inset: 1rem;
+  z-index: 15;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(159, 28, 43, 0.55);
+  background: radial-gradient(circle, rgba(159, 28, 43, 0.18), transparent 45%);
+  color: #f4d7d7;
+  font-weight: 800;
+  pointer-events: none;
+  animation: fishing-bite-pulse 520ms ease-in-out infinite alternate;
+}
+
+@keyframes fishing-bite-pulse {
+  from { opacity: 0.62; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishing-bite-alert {
+    animation: none;
+  }
+}
+
 /* Water surface */
 .fishing-water {
   background:

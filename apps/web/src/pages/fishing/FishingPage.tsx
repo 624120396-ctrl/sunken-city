@@ -209,6 +209,14 @@ export function FishingPage() {
     reeling: '回收钓线',
     result: '记录钓获',
   };
+  const stateTone: Record<FishingState, string> = {
+    idle: 'text-[var(--coc-text-primary)]',
+    casting: 'text-cyan-200',
+    waiting: 'text-[var(--coc-accent-gold)]',
+    biting: 'text-[var(--coc-accent-blood)]',
+    reeling: 'text-cyan-100',
+    result: 'text-[var(--coc-accent-gold)]',
+  };
 
   const canCast = state === 'idle' && !!status?.canFish;
 
@@ -228,35 +236,37 @@ export function FishingPage() {
     >
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Surface variant="panel" padding="md" className="relative overflow-hidden">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <Waves size={14} className="text-cyan-200" />
-                当前水况
-              </div>
-              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{stateLabel[state]}</div>
-            </Surface>
-            <Surface variant="panel" padding="md" className="relative overflow-hidden">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <Clock3 size={14} className="text-[var(--coc-accent-gold)]" />
-                今日作业
-              </div>
-              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{usedCasts}/{status?.dailyLimit ?? '-'}</div>
-            </Surface>
-            <Surface variant="panel" padding="md" className="relative overflow-hidden">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <PackageOpen size={14} className="text-[var(--coc-accent-gold)]" />
-                收集
-              </div>
-              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{collectionPct.toFixed(1)}%</div>
-            </Surface>
-            <Surface variant={status?.canFish ? 'panel' : 'danger'} padding="md" className="relative overflow-hidden">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <Anchor size={14} className="text-[var(--coc-accent-gold)]" />
-                船坞许可
-              </div>
-              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{status?.canFish ? '可作业' : '已封港'}</div>
-            </Surface>
+          <div className="coc-section-stack">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Surface variant="panel" padding="md" className="relative overflow-hidden">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <Waves size={14} className="text-cyan-200" />
+                  当前水况
+                </div>
+                <div className={`mt-2 font-bold ${stateTone[state]}`}>{stateLabel[state]}</div>
+              </Surface>
+              <Surface variant="panel" padding="md" className="relative overflow-hidden">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <Clock3 size={14} className="text-[var(--coc-accent-gold)]" />
+                  今日作业
+                </div>
+                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{usedCasts}/{status?.dailyLimit ?? '-'}</div>
+              </Surface>
+              <Surface variant="panel" padding="md" className="relative overflow-hidden">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <PackageOpen size={14} className="text-[var(--coc-accent-gold)]" />
+                  收集
+                </div>
+                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{collectionPct.toFixed(1)}%</div>
+              </Surface>
+              <Surface variant={status?.canFish ? 'panel' : 'danger'} padding="md" className="relative overflow-hidden">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <Anchor size={14} className="text-[var(--coc-accent-gold)]" />
+                  船坞许可
+                </div>
+                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{status?.canFish ? '可作业' : '已封港'}</div>
+              </Surface>
+            </div>
           </div>
 
           <Surface variant="elevated" tone="ocean" padding="sm" className="overflow-hidden">
@@ -285,6 +295,11 @@ export function FishingPage() {
                 containerRef={stageRef}
                 state={state}
               />
+              {state === 'biting' && (
+                <div className="fishing-bite-alert">
+                  <span>咬钩</span>
+                </div>
+              )}
               {state === 'result' && result && (
                 <>
                   {result.result === 'caught' && result.item ? (
