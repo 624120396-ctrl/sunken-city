@@ -25,7 +25,10 @@ export function CatchReveal({ item, onSell, onKeep }: CatchRevealProps) {
   return (
     <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-auto">
       {item.rarity === 'ELDRITCH' && <div className="eldritch-flash" />}
-      <div className={`catch-reveal-card ${rarityGlow[item.rarity] || ''}`}>
+      <div
+        data-rarity={item.rarity}
+        className={`catch-reveal catch-reveal-card ${rarityGlow[item.rarity] || ''}`}
+      >
         <div className="reveal-inner">
           <div className="item-icon">
             {item.iconUrl ? (
