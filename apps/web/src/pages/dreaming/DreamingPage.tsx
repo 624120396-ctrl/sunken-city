@@ -199,58 +199,60 @@ export function DreamingPage() {
         </div>
       }
     >
-      <Surface variant="panel" padding="md" className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-purple-300/45 to-transparent" />
-        <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
-          <Tabs
-            ariaLabel="溺者之牌视图"
-            value={tab}
-            onChange={(value) => setTab(value as 'today' | 'collection' | 'history')}
-            items={[
-              { value: 'today', label: '今日占卜' },
-              { value: 'collection', label: '图鉴', count: unlockedCount },
-              { value: 'history', label: '历史', count: history.length },
-            ]}
-          />
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <Moon size={14} className="text-purple-300" />
-                梦境状态
+      <div className="coc-section-stack">
+        <Surface variant="panel" padding="md" className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-purple-300/45 to-transparent" />
+          <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
+            <Tabs
+              ariaLabel="溺者之牌视图"
+              value={tab}
+              onChange={(value) => setTab(value as 'today' | 'collection' | 'history')}
+              items={[
+                { value: 'today', label: '今日占卜' },
+                { value: 'collection', label: '图鉴', count: unlockedCount },
+                { value: 'history', label: '历史', count: history.length },
+              ]}
+            />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <Moon size={14} className="text-purple-300" />
+                  梦境状态
+                </div>
+                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{oracleState}</div>
               </div>
-              <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{oracleState}</div>
-            </div>
-            <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <BookOpen size={14} className="text-[var(--coc-accent-gold)]" />
-                图鉴
+              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <BookOpen size={14} className="text-[var(--coc-accent-gold)]" />
+                  图鉴
+                </div>
+                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{unlockedCount}/{collection.length || '-'}</div>
               </div>
-              <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{unlockedCount}/{collection.length || '-'}</div>
-            </div>
-            <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                <History size={14} className="text-[var(--coc-accent-gold)]" />
-                记录
+              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                  <History size={14} className="text-[var(--coc-accent-gold)]" />
+                  记录
+                </div>
+                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{history.length} 次占卜</div>
               </div>
-              <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{history.length} 次占卜</div>
             </div>
           </div>
-        </div>
-      </Surface>
-
-      {error && (
-        <Surface variant="danger" tone="blood" padding="sm" className="text-sm">
-          {error}
         </Surface>
-      )}
 
-      {tab === 'today' && (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
-          <Surface variant="elevated" tone="madness" padding="lg" className="relative flex min-h-[28rem] flex-col items-center justify-center overflow-hidden">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(168,85,247,0.18),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(201,162,39,0.12),transparent_32%)]" />
-            <div className="pointer-events-none absolute inset-x-8 top-10 h-px bg-gradient-to-r from-transparent via-purple-200/40 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-8 bottom-10 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/35 to-transparent" />
-            <div className="relative z-10 w-full">
+        {error && (
+          <Surface variant="danger" tone="blood" padding="sm" className="text-sm">
+            {error}
+          </Surface>
+        )}
+
+        {tab === 'today' && (
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
+            <Surface variant="elevated" tone="madness" padding="lg" className="relative overflow-hidden">
+              <div className="oracle-stage flex flex-col items-center justify-center">
+                <div className="oracle-card-ring" />
+                <div className="pointer-events-none absolute inset-x-8 top-10 h-px bg-gradient-to-r from-transparent via-purple-200/40 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-8 bottom-10 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/35 to-transparent" />
+                <div className="relative z-10 w-full">
             {!todayDraw && canDraw && !candidates && (
               <div className="mx-auto max-w-xl text-center">
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-purple-300/30 bg-purple-950/30 text-purple-200 shadow-[0_0_32px_rgba(168,85,247,0.18)]">
@@ -272,7 +274,7 @@ export function DreamingPage() {
             {!todayDraw && canDraw && candidates && (
               <div className="w-full">
                 <p className="mb-6 text-center text-lg text-[var(--coc-text-secondary)]">三张暗牌悬于雾中。选择一张，决定你今晚的梦境。</p>
-                <div className="flex flex-wrap justify-center gap-5 lg:gap-8">
+                <div className="grid grid-cols-1 justify-items-center gap-5 sm:grid-cols-3 lg:gap-8">
                   {candidates.map((c) => (
                     <TiltCard
                       key={c.key}
@@ -284,7 +286,7 @@ export function DreamingPage() {
                       <button
                         onClick={() => handleSelect(c.key)}
                         disabled={loading}
-                        className="group relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-purple-200/20 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md"
+                        className="oracle-card-choice group relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-purple-200/20 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md"
                       >
                         <div className="absolute inset-3 rounded-lg border border-[var(--coc-accent-gold)]/20" />
                         <div className="absolute inset-0 flex items-center justify-center opacity-40 transition-opacity group-hover:opacity-70">
@@ -408,10 +410,11 @@ export function DreamingPage() {
                 </div>
               </div>
             )}
-            </div>
-          </Surface>
+                </div>
+              </div>
+            </Surface>
 
-          <div className="space-y-4">
+            <div className="space-y-4">
             <Surface variant="panel" padding="md" className="relative overflow-hidden">
               <div className="pointer-events-none absolute inset-y-4 left-0 w-px bg-purple-300/35" />
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-purple-200">
@@ -446,12 +449,12 @@ export function DreamingPage() {
                 </div>
               </div>
             </Surface>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {tab === 'collection' && (
-        <div className="space-y-4">
+        {tab === 'collection' && (
+          <div className="space-y-4">
           <Surface variant="panel" padding="md" className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
@@ -505,11 +508,11 @@ export function DreamingPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
-      {tab === 'history' && (
-        <div className="space-y-3">
+        {tab === 'history' && (
+          <div className="space-y-3">
           {history.length > 0 && (
             <Surface variant="panel" padding="md" className="flex items-center justify-between">
               <div>
@@ -557,8 +560,9 @@ export function DreamingPage() {
               </div>
             </Surface>
           ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </PageShell>
   );
 }

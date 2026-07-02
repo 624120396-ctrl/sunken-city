@@ -1,0 +1,44 @@
+.oracle-stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 32rem;
+}
+
+.oracle-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(168, 85, 247, 0.22), transparent 34%),
+    radial-gradient(circle at 20% 80%, rgba(201, 162, 39, 0.14), transparent 30%);
+  pointer-events: none;
+}
+
+.oracle-card-ring {
+  position: absolute;
+  inset: 2rem;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: 999px;
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+.oracle-card-choice {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.oracle-card-choice:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 28px rgba(168, 85, 247, 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oracle-card-choice {
+    transition: none;
+  }
+
+  .oracle-card-choice:hover {
+    transform: none;
+  }
+}
