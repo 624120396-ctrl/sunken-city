@@ -343,7 +343,7 @@ export function FriendListPage() {
               animate={false}
             />
           ) : (
-            <div className="coc-section-group">
+            <div className="coc-section-group mt-3">
               <div className="coc-section-group__header">
                 <div>
                   <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">CONTACT ROSTER</div>
