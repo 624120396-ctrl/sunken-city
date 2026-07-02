@@ -239,7 +239,7 @@ assertContract(
     profilePage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
     friendListPage.includes('[@media(min-width:2200px)]:grid-cols-4') &&
     dreamingPage.includes('[@media(min-width:2200px)]:grid-cols-6') &&
-    fishingPage.includes('xl:grid-cols-[minmax(0,1fr)_minmax(21rem,25rem)]'),
+    fishingPage.includes('xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]'),
   'Index and settings pages must use expanded desktop grids.'
 );
 

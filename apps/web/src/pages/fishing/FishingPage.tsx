@@ -1,6 +1,6 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useRef, useState } from 'react';
-import { Fish } from 'lucide-react';
+import { Anchor, Clock3, Fish, PackageOpen, Waves } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { WaterSurface } from '@components/fishing/WaterSurface';
 import { FishingRod } from '@components/fishing/FishingRod';
@@ -200,6 +200,15 @@ export function FishingPage() {
     typeof status?.dailyLimit === 'number'
       ? Math.max(0, status.dailyLimit - (status.freeUsed || 0))
       : '-';
+  const usedCasts = status ? (status.freeUsed || 0) + (status.extraUsed || 0) : 0;
+  const stateLabel: Record<FishingState, string> = {
+    idle: '等待抛竿',
+    casting: '钓线入水',
+    waiting: '监听暗潮',
+    biting: '目标咬钩',
+    reeling: '回收钓线',
+    result: '记录钓获',
+  };
 
   const canCast = state === 'idle' && !!status?.canFish;
 
@@ -217,13 +226,55 @@ export function FishingPage() {
         </Surface>
       }
     >
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(21rem,25rem)]">
-        {/* Main Stage */}
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Surface variant="panel" padding="md" className="relative overflow-hidden">
+              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                <Waves size={14} className="text-cyan-200" />
+                当前水况
+              </div>
+              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{stateLabel[state]}</div>
+            </Surface>
+            <Surface variant="panel" padding="md" className="relative overflow-hidden">
+              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                <Clock3 size={14} className="text-[var(--coc-accent-gold)]" />
+                今日作业
+              </div>
+              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{usedCasts}/{status?.dailyLimit ?? '-'}</div>
+            </Surface>
+            <Surface variant="panel" padding="md" className="relative overflow-hidden">
+              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                <PackageOpen size={14} className="text-[var(--coc-accent-gold)]" />
+                收集
+              </div>
+              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{collectionPct.toFixed(1)}%</div>
+            </Surface>
+            <Surface variant={status?.canFish ? 'panel' : 'danger'} padding="md" className="relative overflow-hidden">
+              <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                <Anchor size={14} className="text-[var(--coc-accent-gold)]" />
+                船坞许可
+              </div>
+              <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{status?.canFish ? '可作业' : '已封港'}</div>
+            </Surface>
+          </div>
+
           <Surface variant="elevated" tone="ocean" padding="sm" className="overflow-hidden">
+            <div className="flex flex-col gap-3 border-b border-[var(--coc-border-subtle)] px-3 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
+                  <Anchor size={14} />
+                  HARBOR OPERATION
+                </div>
+                <div className="mt-1 text-sm text-[var(--coc-text-secondary)]">观测浮标、等待咬钩窗口，并在红色警示时收竿。</div>
+              </div>
+              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/30 px-3 py-2 text-sm text-[var(--coc-text-secondary)]">
+                剩余 <span className="font-bold text-[var(--coc-accent-gold)]">{remaining}</span> 次
+              </div>
+            </div>
             <div
               ref={stageRef}
-              className="fishing-stage relative h-[22rem] w-full overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] md:h-[28rem] 2xl:h-[34rem]"
+              className="fishing-stage relative h-[23rem] w-full overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] md:h-[30rem] 2xl:h-[36rem]"
             >
               <WaterSurface />
               <FishingRod ref={rodTipRef} />
@@ -251,59 +302,80 @@ export function FishingPage() {
                 </>
               )}
             </div>
+            <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-[var(--coc-text-secondary)]">
+                状态：<span className="font-bold text-[var(--coc-text-primary)]">{stateLabel[state]}</span>
+              </div>
+              <div className="flex justify-start sm:justify-end">
+                {state === 'idle' && (
+                  <Button
+                    onClick={handleCast}
+                    disabled={!canCast}
+                    variant="primary"
+                    size="lg"
+                    className="min-w-40"
+                  >
+                    抛竿
+                  </Button>
+                )}
+                {state === 'waiting' && (
+                  <Button disabled variant="secondary" size="lg" className="min-w-40">
+                    等待中…
+                  </Button>
+                )}
+                {state === 'biting' && (
+                  <Button
+                    onClick={handleReel}
+                    variant="danger"
+                    size="lg"
+                    className="min-w-40 animate-pulse"
+                  >
+                    收竿！
+                  </Button>
+                )}
+                {(state === 'casting' || state === 'reeling') && (
+                  <Button disabled variant="secondary" size="lg" className="min-w-40">
+                    {state === 'casting' ? '抛竿中…' : '收竿中…'}
+                  </Button>
+                )}
+              </div>
+            </div>
           </Surface>
-
-          {/* Action Button */}
-          <div className="flex justify-center">
-            {state === 'idle' && (
-              <Button
-                onClick={handleCast}
-                disabled={!canCast}
-                variant="primary"
-                size="lg"
-                className="min-w-40"
-              >
-                抛竿
-              </Button>
-            )}
-            {state === 'waiting' && (
-              <Button disabled variant="secondary" size="lg" className="min-w-40">
-                等待中…
-              </Button>
-            )}
-            {state === 'biting' && (
-              <Button
-                onClick={handleReel}
-                variant="danger"
-                size="lg"
-                className="min-w-40 animate-pulse"
-              >
-                收竿！
-              </Button>
-            )}
-            {(state === 'casting' || state === 'reeling') && (
-              <Button disabled variant="secondary" size="lg" className="min-w-40">
-                {state === 'casting' ? '抛竿中…' : '收竿中…'}
-              </Button>
-            )}
-          </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-4">
-          <Surface variant="panel" tone="gold" padding="md">
-            <h3 className="mb-2 font-bold text-[var(--coc-text-primary)]">收集进度</h3>
-            <div className="mb-2 h-2 w-full rounded-full bg-[#0a0a0f]">
+          <Surface variant="panel" tone="gold" padding="md" className="relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
+                  <PackageOpen size={14} />
+                  SALVAGE INDEX
+                </div>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">收集进度</h3>
+              </div>
+              <div className="text-right text-2xl font-bold text-[var(--coc-accent-gold)]">{collectionPct.toFixed(0)}%</div>
+            </div>
+            <div className="mb-2 mt-4 h-2 w-full rounded-full bg-[#0a0a0f]">
               <div
                 className="h-2 rounded-full bg-[var(--coc-accent-gold)] transition-all"
                 style={{ width: `${collectionPct}%` }}
               />
             </div>
-            <p className="text-sm text-[var(--coc-text-secondary)]">{collectionPct.toFixed(1)}% 已解锁</p>
+            <p className="text-sm text-[var(--coc-text-secondary)]">港口账本已解锁 {collectionPct.toFixed(1)}%。</p>
           </Surface>
 
-          <Surface variant="panel" padding="md">
-            <h3 className="mb-2 font-bold text-[var(--coc-text-primary)]">最近钓获</h3>
+          <Surface variant="panel" padding="md" className="relative overflow-hidden">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
+                  <Fish size={14} />
+                  CATCH LEDGER
+                </div>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">最近钓获</h3>
+              </div>
+              <span className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-2 py-1 text-xs text-[var(--coc-text-secondary)]">{logs.length} 条</span>
+            </div>
             {logs.length === 0 ? (
               <EmptyState
                 icon={EmptyIcons.Fishing}
@@ -313,14 +385,14 @@ export function FishingPage() {
                 animate={false}
               />
             ) : (
-              <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <ul className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                 {logs.map((log) => (
-                  <li key={log.id} className="min-w-0 border-b border-[var(--coc-border-subtle)] pb-2 text-sm last:border-0">
-                    <div className="flex items-center justify-between min-w-0 gap-2">
+                  <li key={log.id} className="min-w-0 rounded border border-[var(--coc-border-subtle)] bg-black/20 p-3 text-sm">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
                       <span className="block max-w-[12rem] truncate font-medium text-[var(--coc-text-primary)]">{log.itemName}</span>
-                      <span className="text-[#c9a227] text-xs truncate">{log.rarity}</span>
+                      <span className="truncate rounded bg-[var(--coc-accent-gold)]/10 px-2 py-1 text-xs text-[#c9a227]">{log.rarity}</span>
                     </div>
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="mt-3 flex items-center justify-between gap-2">
                       <div className="text-xs text-[var(--coc-text-secondary)]">
                         {log.isSold ? (
                           <span className="text-[#8b8375]">已售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
