@@ -1,4 +1,3 @@
-import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useRef, useState } from 'react';
 import { Fish } from 'lucide-react';
@@ -8,6 +7,7 @@ import { FishingRod } from '@components/fishing/FishingRod';
 import { Bobber } from '@components/fishing/Bobber';
 import { FishingLine } from '@components/fishing/FishingLine';
 import { CatchReveal } from '@components/fishing/CatchReveal';
+import { Button, PageShell, Surface } from '@components/system';
 
 type FishingState = 'idle' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'result';
 
@@ -204,100 +204,106 @@ export function FishingPage() {
   const canCast = state === 'idle' && !!status?.canFish;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Fish className="text-[#a63848]" size={28} />
-          <h1 className="text-2xl font-serif font-bold">黑水港 · 深渊垂钓</h1>
-        </div>
-        <div className="px-3 py-1 rounded-full bg-black/20 text-sm border border-coc-void">
-          今日剩余 <span className="text-[#c9a227] font-bold">{remaining}</span> 次
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <PageShell
+      eyebrow="BLACKWATER HARBOR"
+      title="黑水港 · 深渊垂钓"
+      description="在港口暗潮中抛下钓线，收集异物、出售钓获并记录今日次数。"
+      actions={
+        <Surface variant="glass" padding="sm" className="flex items-center gap-2 text-sm">
+          <Fish size={16} className="text-[var(--coc-accent-gold)]" />
+          <span className="text-[var(--coc-text-secondary)]">今日剩余</span>
+          <span className="font-bold text-[var(--coc-accent-gold)]">{remaining}</span>
+          <span className="text-[var(--coc-text-secondary)]">次</span>
+        </Surface>
+      }
+    >
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(21rem,25rem)]">
         {/* Main Stage */}
-        <div className="lg:col-span-2 space-y-4">
-          <div
-            ref={stageRef}
-            className="relative w-full h-80 rounded-lg border border-coc-void overflow-hidden fishing-stage"
-          >
-            <WaterSurface />
-            <FishingRod ref={rodTipRef} />
-            <Bobber ref={bobberRef} state={state} />
-            <FishingLine
-              rodTipRef={rodTipRef}
-              bobberRef={bobberRef}
-              containerRef={stageRef}
-              state={state}
-            />
-            {state === 'result' && result && (
-              <>
-                {result.result === 'caught' && result.item ? (
-                  <CatchReveal item={result.item} onSell={handleSell} onKeep={handleKeep} />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-auto">
-                    <div className="catch-reveal-card">
-                      <div className="reveal-inner">
-                        <p className="text-[#6b6558]">脱钩了…什么都没有</p>
-                        <button onClick={reset} className="coc-btn-primary w-full mt-4">
+        <div className="space-y-4">
+          <Surface variant="elevated" tone="ocean" padding="sm" className="overflow-hidden">
+            <div
+              ref={stageRef}
+              className="fishing-stage relative h-[22rem] w-full overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] md:h-[28rem] 2xl:h-[34rem]"
+            >
+              <WaterSurface />
+              <FishingRod ref={rodTipRef} />
+              <Bobber ref={bobberRef} state={state} />
+              <FishingLine
+                rodTipRef={rodTipRef}
+                bobberRef={bobberRef}
+                containerRef={stageRef}
+                state={state}
+              />
+              {state === 'result' && result && (
+                <>
+                  {result.result === 'caught' && result.item ? (
+                    <CatchReveal item={result.item} onSell={handleSell} onKeep={handleKeep} />
+                  ) : (
+                    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center">
+                      <Surface variant="panel" tone="blood" padding="lg" className="w-72 text-center">
+                        <p className="text-[var(--coc-text-secondary)]">脱钩了...什么都没有</p>
+                        <Button onClick={reset} variant="primary" className="mt-4 w-full">
                           再来一次
-                        </button>
-                      </div>
+                        </Button>
+                      </Surface>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+                  )}
+                </>
+              )}
+            </div>
+          </Surface>
 
           {/* Action Button */}
           <div className="flex justify-center">
             {state === 'idle' && (
-              <button
+              <Button
                 onClick={handleCast}
                 disabled={!canCast}
-                className="coc-btn-primary text-lg px-10 py-4"
+                variant="primary"
+                size="lg"
+                className="min-w-40"
               >
                 抛竿
-              </button>
+              </Button>
             )}
             {state === 'waiting' && (
-              <button disabled className="coc-btn-secondary text-lg px-10 py-4">
+              <Button disabled variant="secondary" size="lg" className="min-w-40">
                 等待中…
-              </button>
+              </Button>
             )}
             {state === 'biting' && (
-              <button
+              <Button
                 onClick={handleReel}
-                className="coc-btn-blood text-lg px-10 py-4 animate-pulse"
+                variant="danger"
+                size="lg"
+                className="min-w-40 animate-pulse"
               >
                 收竿！
-              </button>
+              </Button>
             )}
             {(state === 'casting' || state === 'reeling') && (
-              <button disabled className="coc-btn-secondary text-lg px-10 py-4">
+              <Button disabled variant="secondary" size="lg" className="min-w-40">
                 {state === 'casting' ? '抛竿中…' : '收竿中…'}
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <DoubleBezelCard variant="gold" runeCorners innerClassName="p-4">
-            <h3 className="font-bold mb-2">收集进度</h3>
-            <div className="w-full bg-[#0a0a0f] rounded-full h-2 mb-2">
+          <Surface variant="panel" tone="gold" padding="md">
+            <h3 className="mb-2 font-bold text-[var(--coc-text-primary)]">收集进度</h3>
+            <div className="mb-2 h-2 w-full rounded-full bg-[#0a0a0f]">
               <div
-                className="bg-coc-gold h-2 rounded-full transition-all"
+                className="h-2 rounded-full bg-[var(--coc-accent-gold)] transition-all"
                 style={{ width: `${collectionPct}%` }}
               />
             </div>
-            <p className="text-sm text-[#8b8375]">{collectionPct.toFixed(1)}% 已解锁</p>
-          </DoubleBezelCard>
+            <p className="text-sm text-[var(--coc-text-secondary)]">{collectionPct.toFixed(1)}% 已解锁</p>
+          </Surface>
 
-          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
-            <h3 className="font-bold mb-2">最近钓获</h3>
+          <Surface variant="panel" padding="md">
+            <h3 className="mb-2 font-bold text-[var(--coc-text-primary)]">最近钓获</h3>
             {logs.length === 0 ? (
               <EmptyState
                 icon={EmptyIcons.Fishing}
@@ -309,13 +315,13 @@ export function FishingPage() {
             ) : (
               <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {logs.map((log) => (
-                  <li key={log.id} className="text-sm border-b border-coc-void pb-2 last:border-0 min-w-0">
+                  <li key={log.id} className="min-w-0 border-b border-[var(--coc-border-subtle)] pb-2 text-sm last:border-0">
                     <div className="flex items-center justify-between min-w-0 gap-2">
-                      <span className="font-medium truncate max-w-[8rem] block">{log.itemName}</span>
+                      <span className="block max-w-[12rem] truncate font-medium text-[var(--coc-text-primary)]">{log.itemName}</span>
                       <span className="text-[#c9a227] text-xs truncate">{log.rarity}</span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <div className="text-xs text-[#6b6558]">
+                      <div className="text-xs text-[var(--coc-text-secondary)]">
                         {log.isSold ? (
                           <span className="text-[#8b8375]">已售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
                         ) : (
@@ -325,7 +331,7 @@ export function FishingPage() {
                       {!log.isSold && (
                         <button
                           onClick={() => handleSellLogId(log.id)}
-                          className="text-[10px] px-2 py-0.5 rounded bg-coc-gold text-coc-abyss font-medium hover:bg-coc-gold-glow transition-colors"
+                          className="rounded bg-[var(--coc-accent-gold)] px-2 py-0.5 text-[10px] font-medium text-[var(--coc-text-inverse)] transition-colors hover:bg-[var(--coc-accent-gold-strong)]"
                         >
                           出售
                         </button>
@@ -335,13 +341,15 @@ export function FishingPage() {
                 ))}
               </ul>
             )}
-          </DoubleBezelCard>
+          </Surface>
         </div>
       </div>
 
       {message && (
-        <div className="text-center text-[#a63848] text-sm break-words px-2">{message}</div>
+        <Surface variant="danger" tone="blood" padding="sm" className="break-words px-2 text-center text-sm">
+          {message}
+        </Surface>
       )}
-    </div>
+    </PageShell>
   );
 }

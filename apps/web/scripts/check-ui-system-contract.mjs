@@ -40,6 +40,9 @@ const forumPostPage = readProjectFile('src/pages/forum/ForumPostPage.tsx');
 const forumNewPostPage = readProjectFile('src/pages/forum/ForumNewPostPage.tsx');
 const ranksPage = readProjectFile('src/pages/ranks/RanksPage.tsx');
 const titlesPage = readProjectFile('src/pages/titles/TitlesPage.tsx');
+const friendListPage = readProjectFile('src/pages/friends/FriendListPage.tsx');
+const dreamingPage = readProjectFile('src/pages/dreaming/DreamingPage.tsx');
+const fishingPage = readProjectFile('src/pages/fishing/FishingPage.tsx');
 const roomPage = readProjectFile('src/pages/rooms/RoomPage.tsx');
 const legacyCard = readProjectFile('src/components/system/Card.tsx');
 const skeleton = readProjectFile('src/components/ui/Skeleton.tsx');
@@ -204,6 +207,9 @@ for (const [name, source] of Object.entries({
   ForumNewPostPage: forumNewPostPage,
   RanksPage: ranksPage,
   TitlesPage: titlesPage,
+  FriendListPage: friendListPage,
+  DreamingPage: dreamingPage,
+  FishingPage: fishingPage,
 })) {
   assertContract(source.includes("from '@components/system'"), `${name} must import the readable system.`);
   assertContract(source.includes('PageShell'), `${name} must use PageShell.`);
@@ -215,6 +221,9 @@ for (const [name, source] of Object.entries({
   ForumBoardPage: forumBoardPage,
   RanksPage: ranksPage,
   TitlesPage: titlesPage,
+  FriendListPage: friendListPage,
+  DreamingPage: dreamingPage,
+  FishingPage: fishingPage,
 })) {
   assertContract(
     !source.includes('contentClassName="max-w-'),
@@ -227,7 +236,10 @@ assertContract(
     ranksPage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
     titlesPage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
     profilePage.includes('xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]') &&
-    profilePage.includes('[@media(min-width:2200px)]:grid-cols-8'),
+    profilePage.includes('[@media(min-width:2200px)]:grid-cols-8') &&
+    friendListPage.includes('[@media(min-width:2200px)]:grid-cols-4') &&
+    dreamingPage.includes('[@media(min-width:2200px)]:grid-cols-6') &&
+    fishingPage.includes('xl:grid-cols-[minmax(0,1fr)_minmax(21rem,25rem)]'),
   'Index and settings pages must use expanded desktop grids.'
 );
 
@@ -237,9 +249,26 @@ for (const [name, source] of Object.entries({
   ForumNewPostPage: forumNewPostPage,
   RanksPage: ranksPage,
   TitlesPage: titlesPage,
+  FriendListPage: friendListPage,
+  DreamingPage: dreamingPage,
+  FishingPage: fishingPage,
 })) {
   assertContract(!source.includes('card-layer-2'), `${name} must not use card-layer-2.`);
 }
+
+for (const [name, source] of Object.entries({
+  FriendListPage: friendListPage,
+  DreamingPage: dreamingPage,
+  FishingPage: fishingPage,
+})) {
+  assertContract(!source.includes('max-w-5xl mx-auto'), `${name} must not use the legacy narrow page wrapper.`);
+  assertContract(source.includes('Surface'), `${name} must use readable Surface layers.`);
+}
+
+assertContract(
+  !fishingPage.includes('DoubleBezelCard'),
+  'FishingPage must not depend on DoubleBezelCard for the Blackwater Harbor layout.'
+);
 
 assertContract(
   roomPage.includes("from '@components/system'") &&

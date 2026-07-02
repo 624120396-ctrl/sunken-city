@@ -7,6 +7,7 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
 import { cn, formatTimeAgo } from '@lib/utils';
 import { Modal } from '@components/ui/Modal';
+import { Button, PageShell, Surface, Tabs } from '@components/system';
 
 interface Friend {
   friendshipId: string;
@@ -272,59 +273,58 @@ export function FriendListPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
-      </div>
+      <PageShell
+        eyebrow="SOCIAL LEDGER"
+        title="我的好友"
+        description="同步跑团同伴、在线状态与房间入口。"
+      >
+        <Surface variant="panel" tone="ocean" padding="lg" className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--coc-accent-blood)] border-t-transparent" />
+        </Surface>
+      </PageShell>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Users className="text-[#a63848]" size={28} />
-          <h1 className="text-2xl font-serif font-bold">我的好友</h1>
-        </div>
-        <button onClick={() => setShowAddModal(true)} className="coc-btn-primary flex items-center gap-2">
-          <UserPlus size={18} />
+    <PageShell
+      eyebrow="SOCIAL LEDGER"
+      title="我的好友"
+      description="同步跑团同伴、在线状态与房间入口。"
+      actions={
+        <Button variant="primary" icon={<UserPlus size={18} />} onClick={() => setShowAddModal(true)}>
           添加好友
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4 border-b border-[#3a3a3a]/40 pb-2">
-        {[
-          { key: 'all', label: `全部好友 (${friends.length})` },
-          { key: 'online', label: `在线 (${friends.filter((f) => onlineFriends.has(f.userId)).length})` },
-          { key: 'requests', label: `请求 (${pendingReceived.length})` },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
-            className={cn(
-              'px-4 py-2 text-sm rounded-t transition-colors',
-              activeTab === tab.key
-                ? 'text-[#a63848] border-b-2 border-[#a63848]'
-                : 'text-[#8b8375] hover:text-[#d4c5a8]'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        </Button>
+      }
+    >
+      <Surface variant="panel" padding="sm" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <Tabs
+          ariaLabel="好友筛选"
+          value={activeTab}
+          onChange={(value) => setActiveTab(value as 'all' | 'online' | 'requests')}
+          items={[
+            { value: 'all', label: '全部好友', count: friends.length },
+            { value: 'online', label: '在线', count: friends.filter((f) => onlineFriends.has(f.userId)).length },
+            { value: 'requests', label: '请求', count: pendingReceived.length },
+          ]}
+        />
+        <div className="flex items-center gap-2 text-sm text-[var(--coc-text-secondary)]">
+          <Users size={16} className="text-[var(--coc-accent-gold)]" />
+          <span>{friends.length} 位联络人</span>
+        </div>
+      </Surface>
 
       {(activeTab === 'all' || activeTab === 'online') && (
         <>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6558]" size={16} />
+          <Surface variant="glass" padding="sm" className="relative">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--coc-text-muted)]" size={16} />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="搜索好友昵称..."
-              className="w-full coc-input pl-10"
+              className="coc-focus-ring h-11 w-full rounded-[var(--coc-radius-control)] border border-[var(--coc-border-subtle)] bg-black/35 pl-10 pr-4 text-[var(--coc-text-primary)] placeholder:text-[var(--coc-text-muted)]"
             />
-          </div>
+          </Surface>
 
           {filteredFriends.length === 0 ? (
             <EmptyState
@@ -335,19 +335,23 @@ export function FriendListPage() {
               animate={false}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [@media(min-width:2200px)]:grid-cols-4">
               {filteredFriends.map((friend) => {
                 const isOnline = onlineFriends.has(friend.userId);
                 const roomInfo = friendRooms[friend.userId];
                 return (
-                  <div
+                  <Surface
                     key={friend.userId}
-                    className="coc-card p-4 flex flex-col gap-3 cursor-pointer hover:border-[#a63848]/50 transition-colors"
+                    variant="panel"
+                    tone={isOnline ? 'gold' : 'neutral'}
+                    padding="md"
+                    interactive
+                    className="flex cursor-pointer flex-col gap-4"
                     onClick={() => setSelectedFriend(friend)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-black/20 flex items-center justify-center text-lg font-bold overflow-hidden">
+                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 text-lg font-bold text-[var(--coc-text-primary)]">
                           {friend.avatarUrl ? (
                             <img src={friend.avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -356,41 +360,46 @@ export function FriendListPage() {
                         </div>
                         <span
                           className={cn(
-                            'absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-coc-bg-secondary',
-                            isOnline ? 'bg-green-500' : 'bg-coc-text-muted'
+                            'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--coc-surface-panel)]',
+                            isOnline ? 'bg-emerald-400' : 'bg-[var(--coc-text-muted)]'
                           )}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate">{friend.nickname}</div>
+                        <div className="truncate font-bold text-[var(--coc-text-primary)]">{friend.nickname}</div>
                         <div className="font-mono text-[10px] text-[#c9a227]">#{String(friend.displayId).padStart(8, '0')}</div>
-                        <div className="text-xs text-[#8b8375] truncate">
+                        <div className="truncate text-xs text-[var(--coc-text-secondary)]">
                           {isOnline ? (roomInfo ? `房间 ${roomInfo.roomId}` : '在线') : '离线'}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleInviteRoom(friend.userId);
                         }}
-                        className="flex-1 coc-btn-secondary text-xs py-1.5 flex items-center justify-center gap-1"
+                        className="flex-1"
+                        icon={<BookOpen size={14} />}
                       >
-                        <BookOpen size={14} /> 邀进房
-                      </button>
-                      <button
+                        邀进房
+                      </Button>
+                      <Button
+                        variant="icon"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveFriend(friend.userId);
                         }}
-                        className="px-2 py-1.5 text-red-400 hover:bg-red-400/10 rounded border border-[#3a3a3a]/40 text-xs"
+                        className="text-[var(--coc-accent-blood)]"
+                        aria-label={`删除好友 ${friend.nickname}`}
                       >
                         <Trash2 size={14} />
-                      </button>
+                      </Button>
                     </div>
-                  </div>
+                  </Surface>
                 );
               })}
             </div>
@@ -402,42 +411,46 @@ export function FriendListPage() {
         <div className="space-y-4">
           {pendingReceived.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-[#8b8375] mb-2">收到的好友请求</h3>
+              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">收到的好友请求</h3>
               <div className="space-y-2">
                 {pendingReceived.map((req) => (
-                  <div key={req.id} className="coc-card p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center font-bold">
+                  <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 font-bold">
                         {req.sender.avatarUrl ? (
                           <img src={req.sender.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
                           req.sender.nickname[0]?.toUpperCase()
                         )}
                       </div>
-                      <div>
-                        <div className="font-bold">{req.sender.nickname}</div>
+                      <div className="min-w-0">
+                        <div className="truncate font-bold text-[var(--coc-text-primary)]">{req.sender.nickname}</div>
                         <div className="font-mono text-[10px] text-[#c9a227]">#{String(req.sender.displayId).padStart(8, '0')}</div>
-                        {req.message && <div className="text-xs text-[#6b6558]">附言：{req.message}</div>}
-                        <div className="text-[10px] text-[#6b6558]">{formatTimeAgo(req.createdAt)}</div>
+                        {req.message && <div className="text-xs text-[var(--coc-text-secondary)]">附言：{req.message}</div>}
+                        <div className="text-[10px] text-[var(--coc-text-muted)]">{formatTimeAgo(req.createdAt)}</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => handleAccept(req.id)}
                         disabled={processing}
-                        className="coc-btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                        icon={<Check size={14} />}
                       >
-                        <Check size={14} /> 接受
-                      </button>
-                      <button
+                        接受
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleReject(req.id)}
                         disabled={processing}
-                        className="coc-btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                        icon={<X size={14} />}
                       >
-                        <X size={14} /> 拒绝
-                      </button>
+                        拒绝
+                      </Button>
                     </div>
-                  </div>
+                  </Surface>
                 ))}
               </div>
             </div>
@@ -445,39 +458,42 @@ export function FriendListPage() {
 
           {pendingSent.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-[#8b8375] mb-2">已发送的请求</h3>
+              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">已发送的请求</h3>
               <div className="space-y-2">
                 {pendingSent.map((req) => (
-                  <div key={req.id} className="coc-card p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center font-bold">
+                  <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 font-bold">
                         {req.receiver.avatarUrl ? (
                           <img src={req.receiver.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
                           req.receiver.nickname[0]?.toUpperCase()
                         )}
                       </div>
-                      <div>
-                        <div className="font-bold">{req.receiver.nickname}</div>
+                      <div className="min-w-0">
+                        <div className="truncate font-bold text-[var(--coc-text-primary)]">{req.receiver.nickname}</div>
                         <div className="font-mono text-[10px] text-[#c9a227]">#{String(req.receiver.displayId).padStart(8, '0')}</div>
-                        <div className="text-[10px] text-[#6b6558]">{formatTimeAgo(req.createdAt)} · 等待回应</div>
+                        <div className="text-[10px] text-[var(--coc-text-muted)]">{formatTimeAgo(req.createdAt)} · 等待回应</div>
                       </div>
                     </div>
-                    <button
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={() => handleDeleteRequest(req.id)}
                       disabled={processing}
-                      className="text-xs text-red-400 hover:bg-red-400/10 px-3 py-1.5 rounded border border-[#3a3a3a]/40"
                     >
                       撤回
-                    </button>
-                  </div>
+                    </Button>
+                  </Surface>
                 ))}
               </div>
             </div>
           )}
 
           {pendingReceived.length === 0 && pendingSent.length === 0 && (
-            <div className="text-center py-12 text-[#6b6558]">暂无待处理的好友请求</div>
+            <Surface variant="panel" padding="lg" className="py-12 text-center text-[var(--coc-text-secondary)]">
+              暂无待处理的好友请求
+            </Surface>
           )}
         </div>
       )}
@@ -566,6 +582,6 @@ export function FriendListPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageShell>
   );
 }

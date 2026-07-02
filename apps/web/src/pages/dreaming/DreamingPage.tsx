@@ -1,9 +1,10 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { Sparkles, BookOpen, History, Loader2, Coins, Gem } from 'lucide-react';
+import { Sparkles, BookOpen, History, Coins, Gem } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { TiltCard } from '@components/ui/TiltCard';
+import { Button, PageShell, Surface, Tabs } from '@components/system';
 
 interface DreamCardBrief {
   key: string;
@@ -171,64 +172,71 @@ export function DreamingPage() {
     candidates?.find((c) => c.key === todayDraw?.cardKey);
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-ritual text-[#c9a227] mb-2">溺者之牌</h1>
-        <p className="text-[#6b6558] text-sm">每晚入睡后，调查员都会坠入一个共享的梦境层。抽一张牌，看看深渊想对你说什么。</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-[#3a3a3a]/40 pb-2">
-        {[
-          { key: 'today', label: '今日占卜', icon: Sparkles },
-          { key: 'collection', label: '图鉴', icon: BookOpen },
-          { key: 'history', label: '历史', icon: History },
-        ].map((t) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key as any)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm rounded transition-colors ${
-                tab === t.key ? 'bg-[#a63848]/20 text-coc-accent-red' : 'text-[#8b8375] hover:text-[#d4c5a8]'
-              }`}
-            >
-              <Icon size={16} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+    <PageShell
+      eyebrow="DREAM ORACLE"
+      title="溺者之牌"
+      description="每晚入睡后，调查员都会坠入共享梦境层。抽一张牌，看看深渊想对你说什么。"
+      actions={
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--coc-text-secondary)]">
+          <span className="inline-flex items-center gap-1 rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+            <Coins size={14} className="text-[var(--coc-accent-gold)]" />
+            {user?.coins ?? 0}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+            <Gem size={14} className="text-purple-300" />
+            {user?.stardust ?? 0}
+          </span>
+        </div>
+      }
+    >
+      <Surface variant="panel" padding="sm" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <Tabs
+          ariaLabel="溺者之牌视图"
+          value={tab}
+          onChange={(value) => setTab(value as 'today' | 'collection' | 'history')}
+          items={[
+            { value: 'today', label: '今日占卜' },
+            { value: 'collection', label: '图鉴', count: collection.filter((c) => c.unlocked).length },
+            { value: 'history', label: '历史', count: history.length },
+          ]}
+        />
+        <div className="flex items-center gap-2 text-sm text-[var(--coc-text-secondary)]">
+          {tab === 'today' && <Sparkles size={16} className="text-[var(--coc-accent-gold)]" />}
+          {tab === 'collection' && <BookOpen size={16} className="text-[var(--coc-accent-gold)]" />}
+          {tab === 'history' && <History size={16} className="text-[var(--coc-accent-gold)]" />}
+          <span>{tab === 'today' ? '梦境通道' : tab === 'collection' ? '牌面索引' : '占卜记录'}</span>
+        </div>
+      </Surface>
 
       {error && (
-        <div className="mb-4 p-3 rounded border border-coc-blood/30 bg-coc-blood/10 text-[#e8d4a0] text-sm"
-        >
+        <Surface variant="danger" tone="blood" padding="sm" className="text-sm">
           {error}
-        </div>
+        </Surface>
       )}
 
       {tab === 'today' && (
         <div className="space-y-6">
           {/* 主交互区 */}
-          <div className="relative min-h-[16rem] bg-black/20 border border-[#3a3a3a]/40 rounded-xl p-8 flex flex-col items-center justify-center">
+          <Surface variant="elevated" tone="madness" padding="lg" className="relative flex min-h-[22rem] flex-col items-center justify-center overflow-hidden">
             {!todayDraw && canDraw && !candidates && (
               <div className="text-center">
-                <p className="text-[#8b8375] mb-6">今夜尚未入梦。深渊之牌正在等待你的手指。</p>
-                <button
+                <p className="mb-6 text-[var(--coc-text-secondary)]">今夜尚未入梦。深渊之牌正在等待你的手指。</p>
+                <Button
+                  variant="primary"
+                  size="lg"
                   onClick={handleStartDraw}
                   disabled={loading}
-                  className="coc-btn-primary px-8 py-3 text-lg disabled:opacity-50"
+                  loading={loading}
                 >
-                  {loading ? <Loader2 className="inline animate-spin mr-2" size={18} /> : null}
                   开始抽牌
-                </button>
+                </Button>
               </div>
             )}
 
             {!todayDraw && canDraw && candidates && (
               <div className="w-full">
-                <p className="text-center text-[#6b6558] mb-6">三张暗牌悬于雾中。选择一张，决定你今晚的梦境。</p>
-                <div className="flex justify-center gap-6">
+                <p className="mb-6 text-center text-[var(--coc-text-secondary)]">三张暗牌悬于雾中。选择一张，决定你今晚的梦境。</p>
+                <div className="flex flex-wrap justify-center gap-6">
                   {candidates.map((c) => (
                     <TiltCard
                       key={c.key}
@@ -240,7 +248,7 @@ export function DreamingPage() {
                       <button
                         onClick={() => handleSelect(c.key)}
                         disabled={loading}
-                        className="w-full h-full backdrop-blur-md bg-black/30 border border-[#3a3a3a]/40 rounded-lg flex flex-col items-center justify-center relative overflow-hidden group shadow-lg shadow-black/40"
+                        className="group relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] bg-black/30 shadow-lg shadow-black/40 backdrop-blur-md"
                       >
                         <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity">
                           <Sparkles size={36} className="text-[#c9a227]" />
@@ -264,7 +272,7 @@ export function DreamingPage() {
                   tiltIntensity={12}
                   className="shrink-0"
                 >
-                  <div className={`w-full h-full rounded-xl overflow-hidden backdrop-blur-md bg-black/30 border border-[#3a3a3a]/40 relative shadow-lg shadow-black/40`}>
+                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-[var(--coc-border-subtle)] bg-black/30 shadow-lg shadow-black/40 backdrop-blur-md">
                     {currentCardMeta?.imageUrl ? (
                       <>
                         <img 
@@ -278,14 +286,14 @@ export function DreamingPage() {
                           }}
                         />
                         <div className="absolute inset-0 hidden flex-col items-center justify-center bg-[#1a1a1a]">
-                          <Sparkles size={32} className="text-[#6b6558] mb-2" />
-                          <span className="text-sm text-[#6b6558]">图鉴素材暂缺</span>
+                          <Sparkles size={32} className="mb-2 text-[var(--coc-text-muted)]" />
+                          <span className="text-sm text-[var(--coc-text-muted)]">图鉴素材暂缺</span>
                         </div>
                       </>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center">
-                        <Sparkles size={32} className="text-[#6b6558] mb-2" />
-                        <span className="text-sm text-[#6b6558]">暂无图鉴素材</span>
+                        <Sparkles size={32} className="mb-2 text-[var(--coc-text-muted)]" />
+                        <span className="text-sm text-[var(--coc-text-muted)]">暂无图鉴素材</span>
                       </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
@@ -301,22 +309,22 @@ export function DreamingPage() {
                     <div className="space-y-4">
                       <p className="text-[#d4c5a8] text-lg mb-2 drop-shadow-sm">你抽中了一张牌，但梦境的呓语尚未被解读。</p>
                       <div className="flex flex-wrap gap-3">
-                        <button
+                        <Button
+                          variant="primary"
                           onClick={() => handleReveal(false)}
                           disabled={loading || (user?.coins || 0) < 50}
-                          className="coc-btn-primary flex items-center gap-2 disabled:opacity-50"
+                          icon={<Coins size={16} />}
                         >
-                          <Coins size={16} />
                           普通解牌（50 锈蚀硬币）
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => handleReveal(true)}
                           disabled={loading || (user?.stardust || 0) < 10}
-                          className="coc-btn-secondary flex items-center gap-2 disabled:opacity-50"
+                          icon={<Gem size={16} />}
                         >
-                          <Gem size={16} />
                           深度解牌（10 虚银）
-                        </button>
+                        </Button>
                       </div>
                       {(user?.coins || 0) < 50 && (
                         <p className="text-xs text-red-400">锈蚀硬币不足</p>
@@ -326,49 +334,49 @@ export function DreamingPage() {
 
                   {(todayDraw.isRevealed || todayDraw.isDeepRevealed) && (
                     <div className="space-y-4">
-                      <div className="bg-black/30 backdrop-blur-sm border border-[#3a3a3a]/40 rounded-lg p-5">
+                      <Surface variant="glass" padding="md">
                         <p className="text-sm text-[#b0a898] mb-2 drop-shadow-sm">普通解牌结果</p>
                         <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.revealText}</p>
-                      </div>
+                      </Surface>
 
                       {!todayDraw.isDeepRevealed && (
                         <div className="flex gap-3">
-                          <button
+                          <Button
+                            variant="secondary"
                             onClick={() => handleReveal(true)}
                             disabled={loading || (user?.stardust || 0) < 10}
-                            className="coc-btn-secondary flex items-center gap-2 disabled:opacity-50"
+                            icon={<Gem size={16} />}
                           >
-                            <Gem size={16} />
                             深度解牌（10 虚银）
-                          </button>
+                          </Button>
                         </div>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.deepRevealText && (
-                        <div className="bg-black/30 backdrop-blur-sm border-l-4 border-purple-500 rounded-lg p-5">
+                        <Surface variant="glass" tone="madness" padding="md" className="border-l-4 border-l-purple-500">
                           <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌结果</p>
                           <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.deepRevealText}</p>
-                        </div>
+                        </Surface>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.buff && (
-                        <div className="bg-black/30 backdrop-blur-sm border-l-4 border-purple-500 rounded-lg p-5">
+                        <Surface variant="glass" tone="madness" padding="md" className="border-l-4 border-l-purple-500">
                           <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌 · 触须效应</p>
                           <p className="text-[#f0e4cc] text-lg font-medium drop-shadow-md">{todayDraw.buff.name}</p>
                           <p className="text-sm text-[#b0a898] mt-2">{todayDraw.buff.description}</p>
-                        </div>
+                        </Surface>
                       )}
                     </div>
                   )}
                 </div>
               </div>
             )}
-          </div>
+          </Surface>
         </div>
       )}
 
       {tab === 'collection' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 [@media(min-width:2200px)]:grid-cols-6">
           {collection.map((c) => (
             <div
               key={c.key}
@@ -421,7 +429,7 @@ export function DreamingPage() {
             />
           ) : null}
           {history.map((h) => (
-            <div key={h.id} className="bg-black/30 backdrop-blur-sm border border-[#3a3a3a]/40 rounded-lg p-4 flex items-center justify-between shadow-sm">
+            <Surface key={h.id} variant="panel" padding="md" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <span className={`font-ritual text-lg ${rarityColor[collection.find((c) => c.key === h.cardKey)?.rarity || 'common']}`}>
@@ -440,10 +448,10 @@ export function DreamingPage() {
                   <span className="text-[#9b9080] drop-shadow-sm">未解牌</span>
                 )}
               </div>
-            </div>
+            </Surface>
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
