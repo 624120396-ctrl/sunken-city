@@ -1,11 +1,12 @@
 import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Check, X } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS } from '@lib/coc7-data';
 import { rollSkillGrowth } from '@lib/combat-data';
 import { Button, DataCard, PageShell, ReadablePanel } from '@components/system';
+import { getCharacterGrowthSummary } from '@components/characters/characterArchiveMeta';
 
 interface SkillGrowth {
   skillKey: string;
@@ -25,16 +26,19 @@ export function CharacterGrowthPage() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // 模拟从API获取角色数据
-  const loadCharacter = async () => {
-    try {
-      const response = await apiFetch(`/characters/${id}`);
-      const data = await handleApiResponse<{ character: any }>(response);
-      setCharacter(data.character);
-    } catch (error) {
-      console.error('获取角色失败:', error);
-    }
-  };
+  useEffect(() => {
+    const loadCharacter = async () => {
+      try {
+        const response = await apiFetch(`/characters/${id}`);
+        const data = await handleApiResponse<{ character: any }>(response);
+        setCharacter(data.character);
+      } catch (error) {
+        console.error('获取角色失败:', error);
+      }
+    };
+
+    void loadCharacter();
+  }, [id]);
 
   const toggleSkill = (skillKey: string) => {
     const newSet = new Set(selectedSkills);
@@ -86,8 +90,9 @@ export function CharacterGrowthPage() {
     }
   };
 
+  const growthSummary = getCharacterGrowthSummary(growthResults);
+
   if (!character) {
-    loadCharacter();
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a63848] border-t-transparent" />
@@ -97,6 +102,7 @@ export function CharacterGrowthPage() {
 
   return (
     <PageShell
+      className="character-growth-page"
       title={`战后技能成长 - ${character.name}`}
       eyebrow="skill growth"
       description="选择本局成功使用过的技能，执行 COC7 成长检定并保存结果。"
@@ -107,7 +113,7 @@ export function CharacterGrowthPage() {
       }
     >
 
-      <ReadablePanel title="使用说明" eyebrow="growth rules" className="mb-6">
+      <ReadablePanel title="使用说明" eyebrow="growth rules" className="character-growth-rules mb-6">
         <div className="space-y-2">
           <p>1. 选择本局游戏中<strong>成功使用过</strong>的技能</p>
           <p>2. 每个选中技能可以进行一次成长检定</p>
@@ -116,9 +122,9 @@ export function CharacterGrowthPage() {
         </div>
       </ReadablePanel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="character-growth-grid">
         {/* 技能选择 */}
-        <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
+        <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
           <h3 className="font-bold mb-4">选择成长技能 ({selectedSkills.size})</h3>
           <div className="space-y-4 max-h-[500px] overflow-y-auto">
             {(() => {
@@ -178,7 +184,7 @@ export function CharacterGrowthPage() {
 
         {/* 成长结果 */}
         <div className="space-y-4">
-          <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
+          <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
             <h3 className="font-bold mb-4">操作</h3>
             <div className="space-y-3">
               <Button
@@ -208,9 +214,15 @@ export function CharacterGrowthPage() {
               <div className="mt-6">
                 <h4 className="font-bold mb-3">成长统计</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <DataCard label="成长成功" value={growthResults.filter(r => r.success).length} tone="ocean" />
-                  <DataCard label="成长失败" value={growthResults.filter(r => !r.success).length} tone="blood" />
-                  <DataCard className="col-span-2" label="总成长点数" value={growthResults.filter(r => r.success).reduce((sum, r) => sum + (r.newValue - r.oldValue), 0)} tone="gold" />
+                  {growthSummary.map((item) => (
+                    <DataCard
+                      key={item.key}
+                      className={item.key === 'gained' ? 'col-span-2' : undefined}
+                      label={item.label}
+                      value={item.value}
+                      tone={item.tone}
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -218,7 +230,7 @@ export function CharacterGrowthPage() {
 
           {/* 详细结果 */}
           {growthResults.length > 0 && (
-            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
+            <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
               <h4 className="font-bold mb-3">详细结果</h4>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {growthResults.map((result, idx) => (

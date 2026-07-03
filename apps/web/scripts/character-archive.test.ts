@@ -5,6 +5,7 @@ import {
   getCharacterCondition,
   getCharacterCreationSteps,
   getCharacterDossierTabs,
+  getCharacterGrowthSummary,
   getCharacterVitals,
 } from '../src/components/characters/characterArchiveMeta.ts';
 
@@ -69,4 +70,19 @@ test('creation steps expose seven intake seals with current step marked', () => 
     [6, '背景', false, false],
     [7, '确认', false, false],
   ]);
+});
+
+test('growth summary reports successful checks and gained points', () => {
+  assert.deepEqual(
+    getCharacterGrowthSummary([
+      { success: true, oldValue: 45, newValue: 51 },
+      { success: false, oldValue: 60, newValue: 60 },
+      { success: true, oldValue: 20, newValue: 27 },
+    ]),
+    [
+      { key: 'success', label: '成长成功', value: 2, tone: 'ocean' },
+      { key: 'failed', label: '成长失败', value: 1, tone: 'blood' },
+      { key: 'gained', label: '总成长点数', value: 13, tone: 'gold' },
+    ],
+  );
 });

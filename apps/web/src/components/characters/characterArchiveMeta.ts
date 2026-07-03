@@ -53,6 +53,19 @@ export interface CharacterCreationStep {
   complete: boolean;
 }
 
+export interface CharacterGrowthResultLike {
+  success: boolean;
+  oldValue: number;
+  newValue: number;
+}
+
+export interface CharacterGrowthSummaryItem {
+  key: 'success' | 'failed' | 'gained';
+  label: string;
+  value: number;
+  tone: CharacterArchiveTone;
+}
+
 const dossierTabs: Array<Omit<CharacterDossierTab, 'active'>> = [
   { key: 'attributes', label: '属性' },
   { key: 'skills', label: '技能' },
@@ -118,4 +131,18 @@ export function getCharacterCreationSteps(currentStep: number): CharacterCreatio
       complete: step < currentStep,
     };
   });
+}
+
+export function getCharacterGrowthSummary(results: CharacterGrowthResultLike[]): CharacterGrowthSummaryItem[] {
+  const success = results.filter((result) => result.success).length;
+  const failed = results.length - success;
+  const gained = results
+    .filter((result) => result.success)
+    .reduce((sum, result) => sum + Math.max(0, result.newValue - result.oldValue), 0);
+
+  return [
+    { key: 'success', label: '成长成功', value: success, tone: 'ocean' },
+    { key: 'failed', label: '成长失败', value: failed, tone: 'blood' },
+    { key: 'gained', label: '总成长点数', value: gained, tone: 'gold' },
+  ];
 }
