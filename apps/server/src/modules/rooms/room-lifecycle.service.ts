@@ -8,6 +8,14 @@ import { requireRoomCapability } from './room-auth';
 const ACTIVE_LOCK_STATUS = 'ACTIVE';
 const APPLICABLE_SETTLEMENT_STATUSES = ['CONFIRMED', 'APPROVED'];
 
+async function loadRoomRunOrThrow(roomId: string) {
+  const roomRun = await prisma.roomRun.findUnique({ where: { roomId } });
+  if (!roomRun) {
+    throw new AppError('ROOM_RUN_NOT_FOUND', '房间进程不存在', 404);
+  }
+  return roomRun;
+}
+
 function toJsonString(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value === undefined || value === null) return '{}';
@@ -192,10 +200,16 @@ export async function pauseRoom(req: AuthRequest, res: Response, next: NextFunct
       throw new AppError('INVALID_ROOM_LIFECYCLE', '只有进行中的房间可以暂停', 400);
     }
 
-    const roomRun = await prisma.roomRun.update({
-      where: { roomId: room.id },
+    const updated = await prisma.roomRun.updateMany({
+      where: { roomId: room.id, lifecycle: 'IN_PROGRESS' },
       data: { lifecycle: 'PAUSED', pausedAt: new Date() },
     });
+
+    if (updated.count !== 1) {
+      throw new AppError('INVALID_ROOM_LIFECYCLE', '只有进行中的房间可以暂停', 400);
+    }
+
+    const roomRun = await loadRoomRunOrThrow(room.id);
 
     res.json({ success: true, data: { roomRun } });
   } catch (error) {
@@ -213,10 +227,16 @@ export async function resumeRoom(req: AuthRequest, res: Response, next: NextFunc
       throw new AppError('INVALID_ROOM_LIFECYCLE', '只有已暂停的房间可以继续', 400);
     }
 
-    const roomRun = await prisma.roomRun.update({
-      where: { roomId: room.id },
+    const updated = await prisma.roomRun.updateMany({
+      where: { roomId: room.id, lifecycle: 'PAUSED' },
       data: { lifecycle: 'IN_PROGRESS', pausedAt: null },
     });
+
+    if (updated.count !== 1) {
+      throw new AppError('INVALID_ROOM_LIFECYCLE', '只有已暂停的房间可以继续', 400);
+    }
+
+    const roomRun = await loadRoomRunOrThrow(room.id);
 
     res.json({ success: true, data: { roomRun } });
   } catch (error) {
@@ -234,10 +254,16 @@ export async function enterFinishing(req: AuthRequest, res: Response, next: Next
       throw new AppError('INVALID_ROOM_LIFECYCLE', '只有进行中或暂停的房间可以进入结算', 400);
     }
 
-    const roomRun = await prisma.roomRun.update({
-      where: { roomId: room.id },
+    const updated = await prisma.roomRun.updateMany({
+      where: { roomId: room.id, lifecycle: { in: ['IN_PROGRESS', 'PAUSED'] } },
       data: { lifecycle: 'FINISHING', finishingAt: new Date() },
     });
+
+    if (updated.count !== 1) {
+      throw new AppError('INVALID_ROOM_LIFECYCLE', '只有进行中或暂停的房间可以进入结算', 400);
+    }
+
+    const roomRun = await loadRoomRunOrThrow(room.id);
 
     res.json({ success: true, data: { roomRun } });
   } catch (error) {
