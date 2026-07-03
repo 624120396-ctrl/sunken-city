@@ -1,28 +1,15 @@
 import { Router } from 'express';
-import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 // 创建GM笔记
 router.post('/:roomId/gm-notes', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
     const { title, content, tags } = req.body;
 
     const note = await prisma.gmNote.create({
@@ -45,7 +32,7 @@ router.post('/:roomId/gm-notes', authMiddleware, async (req: AuthRequest, res, n
 router.get('/:roomId/gm-notes', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
 
     const notes = await prisma.gmNote.findMany({
       where: { roomId: room.id },
@@ -70,7 +57,7 @@ router.get('/:roomId/gm-notes', authMiddleware, async (req: AuthRequest, res, ne
 router.patch('/:roomId/gm-notes/:noteId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, noteId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
 
     const { title, content, tags } = req.body;
     const note = await prisma.gmNote.update({
@@ -92,7 +79,7 @@ router.patch('/:roomId/gm-notes/:noteId', authMiddleware, async (req: AuthReques
 router.delete('/:roomId/gm-notes/:noteId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, noteId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
 
     await prisma.gmNote.delete({ where: { id: noteId } });
     res.json({ success: true, message: '笔记已删除' });

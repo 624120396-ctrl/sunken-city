@@ -2,27 +2,15 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 // 创建线索
 router.post('/:roomId/clues', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageClues');
     const { title, content, imageUrl, isHidden, requiresSkill, requiresValue,
             discoverySkill, discoveryThreshold, autoReveal } = req.body;
 
@@ -109,6 +97,9 @@ router.post('/:roomId/clues/:clueId/reveal', authMiddleware, async (req: AuthReq
     }
 
     const isKP = member.role === 'KP';
+    if (isKP) {
+      await requireRoomCapability(roomId, req.userId, 'canManageClues');
+    }
     if (!isKP && !clue.autoReveal) {
       throw new AppError('FORBIDDEN', '此线索需要KP揭示', 403);
     }
@@ -147,7 +138,7 @@ router.post('/:roomId/clues/:clueId/reveal', authMiddleware, async (req: AuthReq
 router.patch('/:roomId/clues/:clueId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, clueId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageClues');
 
     const { title, content, imageUrl, isHidden, requiresSkill, requiresValue,
             discoverySkill, discoveryThreshold, autoReveal } = req.body;
@@ -177,7 +168,7 @@ router.patch('/:roomId/clues/:clueId', authMiddleware, async (req: AuthRequest, 
 router.delete('/:roomId/clues/:clueId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, clueId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageClues');
 
     await prisma.roomClue.delete({ where: { id: clueId } });
     res.json({ success: true, message: '线索已删除' });

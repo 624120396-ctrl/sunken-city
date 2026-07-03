@@ -2,23 +2,9 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-// ===== KP 权限检查中间件 =====
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 // ===== 阶段管理 =====
 
@@ -27,10 +13,7 @@ router.post('/:roomId/phases', authMiddleware, async (req: AuthRequest, res, nex
   try {
     const { roomId } = req.params;
     const { title, description, sortOrder } = req.body;
-    await requireKP(req, roomId);
-
-    const room = await prisma.room.findUnique({ where: { roomId } });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const phase = await prisma.roomPhase.create({
       data: {
@@ -70,7 +53,7 @@ router.get('/:roomId/phases', authMiddleware, async (req: AuthRequest, res, next
 router.patch('/:roomId/phases/:phaseId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, phaseId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const { title, description, sortOrder, status } = req.body;
     const phase = await prisma.roomPhase.update({
@@ -94,7 +77,7 @@ router.patch('/:roomId/phases/:phaseId', authMiddleware, async (req: AuthRequest
 router.post('/:roomId/phases/:phaseId/complete', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, phaseId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const phase = await prisma.roomPhase.update({
       where: { id: phaseId },
@@ -114,10 +97,7 @@ router.post('/:roomId/phases/:phaseId/scenes', authMiddleware, async (req: AuthR
   try {
     const { roomId, phaseId } = req.params;
     const { title, description, atmosphere, imageUrl, musicUrl, sortOrder } = req.body;
-    await requireKP(req, roomId);
-
-    const room = await prisma.room.findUnique({ where: { roomId } });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const scene = await prisma.roomScene.create({
       data: {
@@ -156,7 +136,7 @@ router.get('/:roomId/phases/:phaseId/scenes', authMiddleware, async (req: AuthRe
 router.patch('/:roomId/scenes/:sceneId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, sceneId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const { title, description, atmosphere, imageUrl, musicUrl, sortOrder, status } = req.body;
     const scene = await prisma.roomScene.update({
@@ -182,7 +162,7 @@ router.patch('/:roomId/scenes/:sceneId', authMiddleware, async (req: AuthRequest
 router.post('/:roomId/scenes/:sceneId/activate', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, sceneId } = req.params;
-    const roomRecord = await requireKP(req, roomId);
+    const { room: roomRecord } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const scene = await prisma.roomScene.findUnique({
       where: { id: sceneId },

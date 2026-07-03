@@ -2,21 +2,9 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: { include: { user: { select: { nickname: true } } } } },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId && !m.leftAt);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 async function requireMember(req: AuthRequest, roomId: string) {
   const room = await prisma.room.findUnique({
@@ -33,7 +21,7 @@ async function requireMember(req: AuthRequest, roomId: string) {
 router.post('/:roomId/sub-rooms', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
     const { name, description, atmosphere, sceneImageUrl, timeMode, sceneDesc, participantUserIds } = req.body;
 
     const subRoom = await prisma.subRoom.create({
@@ -182,6 +170,9 @@ router.post('/:roomId/sub-rooms/:subRoomId/join', authMiddleware, async (req: Au
     if (member.role !== 'KP' && !wasInvited) {
       throw new AppError('FORBIDDEN', '你未被邀请加入此子房间', 403);
     }
+    if (member.role === 'KP' && !wasInvited) {
+      await requireRoomCapability(roomId, req.userId, 'canManageScene');
+    }
 
     if (wasInvited) {
       // 恢复已离开的成员
@@ -240,7 +231,7 @@ router.post('/:roomId/sub-rooms/:subRoomId/dissolve', authMiddleware, async (req
   try {
     const { roomId, subRoomId } = req.params;
     const { syncEvents = [] } = req.body;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const subRoom = await prisma.subRoom.findUnique({
       where: { id: subRoomId },

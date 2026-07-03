@@ -2,27 +2,15 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 // 创建场景预设
 router.post('/:roomId/presets', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
     const { name, atmosphere, sceneDesc, sceneImageUrl, sceneMusicUrl, npcSnapshots, clueSnapshots } = req.body;
 
     const preset = await prisma.scenePreset.create({
@@ -48,7 +36,7 @@ router.post('/:roomId/presets', authMiddleware, async (req: AuthRequest, res, ne
 router.get('/:roomId/presets', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const presets = await prisma.scenePreset.findMany({
       where: { roomId: room.id },
@@ -74,7 +62,7 @@ router.get('/:roomId/presets', authMiddleware, async (req: AuthRequest, res, nex
 router.post('/:roomId/presets/:presetId/apply', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, presetId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     const preset = await prisma.scenePreset.findUnique({ where: { id: presetId } });
     if (!preset || preset.roomId !== room.id) {
@@ -124,7 +112,7 @@ router.post('/:roomId/presets/:presetId/apply', authMiddleware, async (req: Auth
 router.delete('/:roomId/presets/:presetId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, presetId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageScene');
 
     await prisma.scenePreset.delete({ where: { id: presetId } });
     res.json({ success: true, message: '预设已删除' });
