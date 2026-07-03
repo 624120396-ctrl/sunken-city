@@ -220,6 +220,18 @@
   - 验证通过：KP 不绑定角色卡、PL 绑定角色加入、观察者只读、PL 不能访问结算工作台、开场到结团链路、结团写回 HP / MP / SAN、相关 PL 可见已结团房间、成员报告可见结算备注、非成员读取报告返回 403、角色锁释放
   - 部署后复查：`/health` 返回 `ok`，`coc-server` 在线，新表计数 `RoomRun=1`、`RoomCharacterLock=1`、`RoomSettlement=1`
 
+新增可复用轻量检查脚本：
+
+- `cd apps/server; npm run check:room-migration`
+  - 只读检查当前 `DATABASE_URL` 指向的数据库是否存在 `RoomRun`、`RoomRunParticipant`、`RoomCharacterLock`、`RoomSettlement` 和迁移记录。
+  - 本地 PowerShell 示例：`$env:DATABASE_URL="file:./dev.db"; npm run check:room-migration`
+  - 如果表存在但 `_prisma_migrations` 未记录本轮迁移，脚本会提示先备份，再执行 `npx prisma migrate resolve --applied 20260703080000_add_room_lifecycle_and_settlement`。
+- `cd apps/server; npm run test:room-system`
+  - 房间系统专项写入型冒烟脚本，覆盖 KP / PL / OBS 身份、角色绑定、生命周期、结算、报告权限和角色锁释放。
+  - 默认拒绝写入；必须显式设置 `ROOM_SYSTEM_SMOKE_WRITE=1`。
+  - 本地 PowerShell 示例：`$env:DATABASE_URL="file:./dev.db"; $env:ROOM_SYSTEM_SMOKE_WRITE="1"; $env:ROOM_SYSTEM_SMOKE_BASE_URL="http://127.0.0.1:3001"; npm run test:room-system`
+  - 不建议随手对生产库运行；只有在明确接受生成 `CodexSmoke*` 测试用户、房间和角色数据时才执行。
+
 实现过程中发现并修复过的关键问题：
 
 - 前端 fallback 曾覆盖后端 capability `false`，已改为只在 capability 缺失时 fallback。

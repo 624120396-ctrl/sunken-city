@@ -12,6 +12,8 @@
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
+    "check:room-migration": "node scripts/check-room-migration.js",
+    "test:room-system": "node scripts/room-system-smoke.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
