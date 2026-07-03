@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 import { Surface } from '@components/system';
+import { getInventoryVaultSummary, getInventoryVaultTabs, type InventoryVaultTabKey } from '@components/economy/inventoryVaultMeta';
 
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
 
@@ -104,7 +105,7 @@ async function fetchUnboundRelics() {
 export function InventoryPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const [tab, setTab] = useState<'general' | 'titles' | 'relics'>('general');
+  const [tab, setTab] = useState<InventoryVaultTabKey>('general');
   const [lootboxResult, setLootboxResult] = useState<LootboxResult | null>(null);
   const [visibleRelics, setVisibleRelics] = useState<number>(0);
   const [flash, setFlash] = useState(false);
@@ -139,6 +140,13 @@ export function InventoryPage() {
   });
 
   const loading = inventoryLoading || boundRelicsLoading || unboundRelicsLoading;
+  const relicCount = (boundRelics?.length || 0) + (unboundRelics?.length || 0);
+  const vaultSummary = getInventoryVaultSummary({
+    general: generalItems.length,
+    titles: titleItems.length,
+    relics: relicCount,
+  });
+  const vaultTabs = getInventoryVaultTabs(tab);
 
   // Mutations
   const bindMutation = useMutation({
@@ -201,45 +209,35 @@ export function InventoryPage() {
       title="背包"
       description="集中管理道具、印记和遗物绑定。移动端保留清晰标签页，避免在物品管理时迷失。"
       meta={
-        <div className="grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
-            <div className="text-base font-bold text-[#f3d77a]">{generalItems.length}</div>
-            <div className="text-[#8b8375]">道具</div>
-          </div>
-          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
-            <div className="text-base font-bold text-[#f3d77a]">{titleItems.length}</div>
-            <div className="text-[#8b8375]">印记</div>
-          </div>
-          <div className="rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 py-2">
-            <div className="text-base font-bold text-[#f3d77a]">{(boundRelics?.length || 0) + (unboundRelics?.length || 0)}</div>
-            <div className="text-[#8b8375]">遗物</div>
-          </div>
+        <div className="inventory-vault-summary">
+          {vaultSummary.map((item) => (
+            <div key={item.label} className="inventory-vault-summary__item">
+              <span>{item.seal}</span>
+              <strong>{item.value}</strong>
+              <small>{item.label}</small>
+            </div>
+          ))}
         </div>
       }
     >
-      <div className="space-y-4">
-      <Surface variant="panel" padding="sm" className="flex gap-2 overflow-x-auto">
-        {[
-          { key: 'general', label: '道具' },
-          { key: 'titles', label: '印记' },
-          { key: 'relics', label: '遗物' },
-        ].map((t) => (
+      <div className="inventory-vault space-y-4">
+      <Surface variant="panel" padding="sm" className="inventory-vault-tabs">
+        {vaultTabs.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key as any)}
-            className={`min-h-11 shrink-0 rounded px-4 py-2 text-sm font-medium transition-colors ${
-              tab === t.key
-                ? 'bg-coc-gold text-coc-abyss'
-                : 'bg-black/20 text-[#8b8375] hover:text-[#e8d4a0]'
-            }`}
+            onClick={() => setTab(t.key)}
+            className="inventory-vault-tab"
+            data-active={t.active}
+            data-tone={t.tone}
           >
-            {t.label}
+            <span>{t.seal}</span>
+            <strong>{t.label}</strong>
           </button>
         ))}
       </Surface>
 
       {tab === 'general' && (
-        <Surface variant="solid" padding="md">
+        <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="gold">
           <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
@@ -252,7 +250,7 @@ export function InventoryPage() {
                 animate={false}
               />
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="inventory-vault-list">
                 {generalItems.map((i) => (
                   <ItemCard
                     key={i.id}
@@ -283,7 +281,7 @@ export function InventoryPage() {
       )}
 
       {tab === 'titles' && (
-        <Surface variant="solid" padding="md">
+        <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="ocean">
           <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
@@ -296,7 +294,7 @@ export function InventoryPage() {
                 animate={false}
               />
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="inventory-vault-list">
                 {titleItems.map((i) => (
                   <ItemCard
                     key={i.id}
@@ -317,15 +315,15 @@ export function InventoryPage() {
 
       {tab === 'relics' && (
         <div className="space-y-4">
-          <Surface variant="solid" padding="md">
+          <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
             <div>
-              <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">已绑定遗物（角色保险箱）</h2>
+              <h2 className="inventory-vault-heading">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !boundRelics || boundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-[#6b6558]">还没有遗物绑定到角色卡上</div>
               ) : (
-                <div className="grid grid-cols-1 gap-3">
+                <div className="inventory-vault-list">
                   {boundRelics.map((r) => (
                     <ItemCard
                       key={r.id}
@@ -342,15 +340,15 @@ export function InventoryPage() {
             </div>
           </Surface>
 
-          <Surface variant="solid" padding="md">
+          <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
             <div>
-              <h2 className="mb-3 text-sm font-bold text-[#e8d4a0]">未绑定遗物</h2>
+              <h2 className="inventory-vault-heading">未绑定遗物</h2>
               {unboundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !unboundRelics || unboundRelics.length === 0 ? (
                 <div className="py-6 text-center text-sm text-[#6b6558]">暂无有可绑定的遗物</div>
               ) : (
-                <div className="grid grid-cols-1 gap-3">
+                <div className="inventory-vault-list">
                   {unboundRelics.map((r) => (
                     <ItemCard
                       key={r.id}

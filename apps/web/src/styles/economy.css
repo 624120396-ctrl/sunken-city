@@ -407,6 +407,161 @@
   opacity: 0.52;
 }
 
+.inventory-vault-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.inventory-vault-summary__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "seal value"
+    "seal label";
+  align-items: center;
+  min-width: 5.5rem;
+  border: 1px solid rgba(212, 197, 168, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(10, 13, 18, 0.78), rgba(4, 7, 12, 0.88)),
+    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.12), transparent 38%);
+  gap: 0 0.45rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.inventory-vault-summary__item span {
+  grid-area: seal;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(201, 162, 39, 0.24);
+  border-radius: 999px;
+  color: var(--economy-gold);
+  font-family: var(--font-ritual, serif);
+  font-size: 0.78rem;
+}
+
+.inventory-vault-summary__item strong {
+  grid-area: value;
+  color: #f3d77a;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.inventory-vault-summary__item small {
+  grid-area: label;
+  color: var(--coc-text-secondary);
+  font-size: 0.72rem;
+}
+
+.inventory-vault-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.inventory-vault-tab {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(212, 197, 168, 0.13);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--coc-text-secondary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.inventory-vault-tab span {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  border-radius: 999px;
+  color: var(--economy-gold);
+  font-family: var(--font-ritual, serif);
+  font-size: 0.8rem;
+}
+
+.inventory-vault-tab strong {
+  font-weight: 900;
+}
+
+.inventory-vault-tab:hover,
+.inventory-vault-tab:focus-visible {
+  border-color: rgba(201, 162, 39, 0.36);
+  color: var(--coc-text-primary);
+}
+
+.inventory-vault-tab[data-active="true"] {
+  border-color: rgba(201, 162, 39, 0.55);
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.19), rgba(0, 0, 0, 0.16));
+  color: var(--coc-text-primary);
+  box-shadow: 0 0 24px rgba(201, 162, 39, 0.11);
+}
+
+.inventory-vault-tab[data-tone="ocean"][data-active="true"] {
+  border-color: rgba(95, 168, 183, 0.48);
+  box-shadow: 0 0 24px rgba(95, 168, 183, 0.11);
+}
+
+.inventory-vault-tab[data-tone="blood"][data-active="true"] {
+  border-color: rgba(166, 56, 72, 0.52);
+  box-shadow: 0 0 24px rgba(166, 56, 72, 0.14);
+}
+
+.inventory-vault-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.inventory-vault-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(201, 162, 39, 0.06), transparent 34%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 14px);
+  pointer-events: none;
+}
+
+.inventory-vault-panel[data-vault-tone="ocean"]::before {
+  background:
+    linear-gradient(90deg, rgba(95, 168, 183, 0.08), transparent 34%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 14px);
+}
+
+.inventory-vault-panel[data-vault-tone="blood"]::before {
+  background:
+    linear-gradient(90deg, rgba(166, 56, 72, 0.08), transparent 34%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 14px);
+}
+
+.inventory-vault-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.inventory-vault-heading {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.85rem;
+  color: #e8d4a0;
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
 @media (min-width: 1600px) {
   .economy-page-shell[data-layout="with-aside"] .coc-page-shell__body {
     grid-template-columns: minmax(0, 1fr) minmax(23rem, 28rem);
@@ -449,6 +604,11 @@
 
   .economy-shop-card__buy {
     width: 100%;
+  }
+
+  .inventory-vault-summary,
+  .inventory-vault-tabs {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
