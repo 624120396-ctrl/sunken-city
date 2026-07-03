@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   getCharacterArchiveSummary,
@@ -8,6 +9,8 @@ import {
   getCharacterGrowthSummary,
   getCharacterVitals,
 } from '../src/components/characters/characterArchiveMeta.ts';
+
+const charactersCss = readFileSync(new URL('../src/styles/characters.css', import.meta.url), 'utf8');
 
 const character = {
   id: 'c1',
@@ -85,4 +88,14 @@ test('growth summary reports successful checks and gained points', () => {
       { key: 'gained', label: '总成长点数', value: 13, tone: 'gold' },
     ],
   );
+});
+
+test('archive layout keeps generous ultra-wide spacing', () => {
+  assert.match(charactersCss, /\.character-archive-page\s*{[^}]*width:\s*min\(100%,\s*132rem\)/s);
+  assert.match(
+    charactersCss,
+    /\.character-archive-summary\s*{[^}]*margin-bottom:\s*clamp\(1\.25rem,\s*1\.5vw,\s*2rem\)/s,
+  );
+  assert.match(charactersCss, /@media\s*\(min-width:\s*2200px\)\s*{[^}]*\.character-archive-grid\s*{/s);
+  assert.match(charactersCss, /minmax\(17\.5rem,\s*1fr\)/);
 });

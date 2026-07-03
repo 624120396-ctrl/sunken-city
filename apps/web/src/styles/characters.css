@@ -1,11 +1,12 @@
 .character-archive-page {
-  width: min(100%, 104rem);
+  width: min(100%, 132rem);
 }
 
 .character-archive-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: clamp(0.9rem, 1vw, 1.35rem);
+  margin-bottom: clamp(1.25rem, 1.5vw, 2rem);
 }
 
 .character-archive-summary__item {
@@ -820,15 +821,15 @@
 
 @media (min-width: 1600px) {
   .character-archive-grid {
-    grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1.35rem;
   }
 }
 
 @media (min-width: 2200px) {
   .character-archive-grid {
-    grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
-    gap: 1.35rem;
+    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+    gap: 1.6rem;
   }
 }
 
