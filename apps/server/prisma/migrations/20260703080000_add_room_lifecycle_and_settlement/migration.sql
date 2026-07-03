@@ -13,7 +13,8 @@ CREATE TABLE "RoomRun" (
     "finishSummary" TEXT NOT NULL DEFAULT '{}',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "RoomRun_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "Room" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "RoomRun_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "Room" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RoomRun_finalizedById_fkey" FOREIGN KEY ("finalizedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -30,7 +31,10 @@ CREATE TABLE "RoomRunParticipant" (
     "participationStatus" TEXT NOT NULL DEFAULT 'ACTIVE',
     "joinedRunAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "leftRunAt" DATETIME,
-    CONSTRAINT "RoomRunParticipant_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "RoomRunParticipant_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RoomRunParticipant_roomMemberId_fkey" FOREIGN KEY ("roomMemberId") REFERENCES "RoomMember" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "RoomRunParticipant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "RoomRunParticipant_characterId_fkey" FOREIGN KEY ("characterId") REFERENCES "Character" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -40,10 +44,14 @@ CREATE TABLE "RoomCharacterLock" (
     "roomId" TEXT NOT NULL,
     "roomRunId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "activeKey" TEXT,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "lockedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "releasedAt" DATETIME,
-    CONSTRAINT "RoomCharacterLock_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "RoomCharacterLock_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RoomCharacterLock_characterId_fkey" FOREIGN KEY ("characterId") REFERENCES "Character" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "RoomCharacterLock_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "Room" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RoomCharacterLock_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -64,7 +72,9 @@ CREATE TABLE "RoomSettlement" (
     "appliedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "RoomSettlement_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "RoomSettlement_roomRunId_fkey" FOREIGN KEY ("roomRunId") REFERENCES "RoomRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RoomSettlement_characterId_fkey" FOREIGN KEY ("characterId") REFERENCES "Character" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "RoomSettlement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex
@@ -93,6 +103,9 @@ CREATE INDEX "RoomCharacterLock_roomId_idx" ON "RoomCharacterLock"("roomId");
 
 -- CreateIndex
 CREATE INDEX "RoomCharacterLock_roomRunId_idx" ON "RoomCharacterLock"("roomRunId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RoomCharacterLock_activeKey_key" ON "RoomCharacterLock"("activeKey");
 
 -- CreateIndex
 CREATE INDEX "RoomSettlement_roomRunId_idx" ON "RoomSettlement"("roomRunId");

@@ -52,6 +52,10 @@ model User {
   sentMessages    UserMessage[] @relation("SentUserMessages")
   receivedMessages UserMessage[] @relation("ReceivedUserMessages")
   boardModerators ForumBoardModerator[]
+  finalizedRoomRuns RoomRun[] @relation("RoomRunFinalizedBy")
+  roomRunParticipants RoomRunParticipant[]
+  roomCharacterLocks RoomCharacterLock[]
+  roomSettlements RoomSettlement[]
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -136,6 +140,9 @@ model Character {
   user        User     @relation(fields: [userId], references: [id])
   displayedByUsers User[] @relation("UserDisplayedCharacter")
   roomMembers RoomMember[]
+  roomRunParticipants RoomRunParticipant[]
+  roomCharacterLocks RoomCharacterLock[]
+  roomSettlements RoomSettlement[]
   privateMessagesSent   PrivateMessage[] @relation("SentMessages")
   privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
   relics                  CharacterRelic[]
@@ -214,6 +221,7 @@ model Room {
   roomLogs         RoomLog[]
   subRooms         SubRoom[]
   roomRun          RoomRun?
+  characterLocks   RoomCharacterLock[]
 }
 
 model RoomRun {
@@ -232,6 +240,7 @@ model RoomRun {
   updatedAt       DateTime @updatedAt
 
   room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  finalizedBy     User?    @relation("RoomRunFinalizedBy", fields: [finalizedById], references: [id], onDelete: SetNull)
   participants    RoomRunParticipant[]
   characterLocks  RoomCharacterLock[]
   settlements     RoomSettlement[]
@@ -254,6 +263,9 @@ model RoomRunParticipant {
   leftRunAt           DateTime?
 
   roomRun             RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  roomMember          RoomMember @relation(fields: [roomMemberId], references: [id])
+  user                User     @relation(fields: [userId], references: [id])
+  character           Character? @relation(fields: [characterId], references: [id])
 
   @@index([roomRunId])
   @@index([userId])
@@ -267,11 +279,15 @@ model RoomCharacterLock {
   roomId      String
   roomRunId   String
   userId      String
+  activeKey   String?  @unique
   status      String   @default("ACTIVE")
   lockedAt    DateTime @default(now())
   releasedAt  DateTime?
 
   roomRun     RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+  character   Character @relation(fields: [characterId], references: [id])
 
   @@index([characterId, status])
   @@index([roomId])
@@ -297,6 +313,8 @@ model RoomSettlement {
   updatedAt      DateTime @updatedAt
 
   roomRun        RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id])
+  character      Character @relation(fields: [characterId], references: [id])
 
   @@index([roomRunId])
   @@index([characterId])
@@ -322,6 +340,7 @@ model RoomMember {
   room        Room      @relation(fields: [roomId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
   character   Character? @relation(fields: [characterId], references: [id])
+  runParticipants RoomRunParticipant[]
 
   @@unique([roomId, userId])
 }

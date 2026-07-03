@@ -38,6 +38,11 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
             characterId: true,
           },
         },
+        roomRun: {
+          select: {
+            lifecycle: true,
+          },
+        },
         _count: {
           select: { members: true },
         },
@@ -48,7 +53,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
       success: true,
       data: {
         rooms: rooms.map(r => {
-          const lifecycle = deriveLifecycle(r.status);
+          const lifecycle = deriveLifecycle(r.status, r.roomRun?.lifecycle);
           const member = r.members.find(m => m.userId === req.userId && !m.leftAt) || null;
           const myRole = deriveRoomRole({ creatorId: r.creatorId, userId: req.userId, member });
 
@@ -151,6 +156,11 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
             scenes: { orderBy: { sortOrder: 'asc' } },
           },
         },
+        roomRun: {
+          select: {
+            lifecycle: true,
+          },
+        },
       },
     });
 
@@ -166,6 +176,7 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
       room,
       userId: req.userId,
       member,
+      lifecycle: room.roomRun?.lifecycle,
     });
 
     // 批量获取头像框图片URL

@@ -1,4 +1,5 @@
 import { NextFunction, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { AuthRequest } from '../../middleware/auth';
@@ -11,6 +12,10 @@ function toJsonString(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value === undefined || value === null) return '{}';
   return JSON.stringify(value);
+}
+
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
 }
 
 function buildCharacterSnapshot(character: {
@@ -84,6 +89,15 @@ export async function startRoom(req: AuthRequest, res: Response, next: NextFunct
     const now = new Date();
 
     const roomRun = await prisma.$transaction(async tx => {
+      const currentRun = await tx.roomRun.findUnique({
+        where: { roomId: room.id },
+        select: { lifecycle: true },
+      });
+
+      if (currentRun && currentRun.lifecycle !== 'PREPARING' && currentRun.lifecycle !== 'READY') {
+        throw new AppError('INVALID_ROOM_LIFECYCLE', '只有开团前的房间可以开始', 400);
+      }
+
       const activeLocks = await tx.roomCharacterLock.findMany({
         where: {
           characterId: { in: characterIds },
@@ -149,6 +163,7 @@ export async function startRoom(req: AuthRequest, res: Response, next: NextFunct
           roomId: room.id,
           roomRunId: run.id,
           userId: member.userId,
+          activeKey: member.characterId!,
           status: ACTIVE_LOCK_STATUS,
           lockedAt: now,
         })),
@@ -159,6 +174,10 @@ export async function startRoom(req: AuthRequest, res: Response, next: NextFunct
 
     res.json({ success: true, data: { roomRun } });
   } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      next(new AppError('CHARACTER_ALREADY_LOCKED', '存在角色正在其他跑团中使用', 409));
+      return;
+    }
     next(error);
   }
 }
@@ -244,7 +263,10 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
         where: { roomId: room.id },
         include: {
           settlements: {
-            where: { status: { in: APPLICABLE_SETTLEMENT_STATUSES } },
+            where: {
+              status: { in: APPLICABLE_SETTLEMENT_STATUSES },
+              appliedAt: null,
+            },
           },
           participants: {
             where: {
@@ -263,11 +285,10 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
         throw new AppError('ROOM_RUN_NOT_FOUND', '房间进程不存在', 404);
       }
 
-      const playerParticipantCharacterIds = new Set(
-        run.participants
-          .map(participant => participant.characterId)
-          .filter((characterId): characterId is string => Boolean(characterId))
-      );
+      if (run.lifecycle !== 'FINISHING') {
+        throw new AppError('INVALID_ROOM_LIFECYCLE', '只有结算中的房间可以完成结团', 400);
+      }
+
       const playerParticipantCharacterUserPairs = new Set(
         run.participants
           .filter((participant): participant is { characterId: string; userId: string } => Boolean(participant.characterId))
@@ -276,11 +297,23 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
       let appliedSettlementCount = 0;
 
       for (const settlement of run.settlements) {
-        const matchesPlayerParticipant = settlement.userId
-          ? playerParticipantCharacterUserPairs.has(`${settlement.characterId}:${settlement.userId}`)
-          : playerParticipantCharacterIds.has(settlement.characterId);
+        const matchesPlayerParticipant = playerParticipantCharacterUserPairs.has(
+          `${settlement.characterId}:${settlement.userId}`
+        );
 
         if (!matchesPlayerParticipant) {
+          continue;
+        }
+
+        const claimedSettlement = await tx.roomSettlement.updateMany({
+          where: {
+            id: settlement.id,
+            appliedAt: null,
+          },
+          data: { appliedAt: now },
+        });
+
+        if (claimedSettlement.count !== 1) {
           continue;
         }
 
@@ -303,10 +336,6 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
           });
         }
 
-        await tx.roomSettlement.update({
-          where: { id: settlement.id },
-          data: { appliedAt: now },
-        });
         appliedSettlementCount += 1;
       }
 
@@ -317,6 +346,7 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
         },
         data: {
           status: 'RELEASED',
+          activeKey: null,
           releasedAt: now,
         },
       });
