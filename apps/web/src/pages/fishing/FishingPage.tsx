@@ -4,6 +4,7 @@ import { Anchor, Clock3, Fish, PackageOpen, Waves } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { CatchReveal } from '@components/fishing/CatchReveal';
 import { FishingCanvas } from '@components/fishing/FishingCanvas';
+import { getFishingLedgerMeta } from '@components/fishing/fishingLedgerMeta';
 import { createTensionSnapshot, isTensionCatchReady, shouldTensionBreak, type TensionZone } from '@components/fishing/tensionGame';
 import { Button, PageShell, Surface } from '@components/system';
 
@@ -314,6 +315,8 @@ export function FishingPage() {
 
   const canCast = state === 'idle' && !!status?.canFish;
   const tensionProgress = Math.min(100, Math.round((tensionSafeMs / 1800) * 100));
+  const unsoldCount = logs.filter((log) => !log.isSold).length;
+  const rareCount = logs.filter((log) => ['RARE', 'ELDRITCH'].includes(String(log.rarity).toUpperCase())).length;
   const tensionLabel: Record<TensionZone, string> = {
     slack: '松线',
     safe: tension >= 38 && tension <= 72 ? '稳定' : '警戒',
@@ -491,38 +494,44 @@ export function FishingPage() {
           </Surface>
         </div>
 
-        <div className="space-y-4">
-          <Surface variant="panel" tone="gold" padding="md" className="relative overflow-hidden">
-            <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
-            <div className="flex items-center justify-between gap-3">
+        <div className="fishing-ledger-column space-y-4">
+          <Surface variant="panel" tone="gold" padding="md" className="fishing-index-panel relative overflow-hidden">
+            <div className="fishing-ledger-ornament" />
+            <div className="relative z-[1] flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <PackageOpen size={14} />
                   SALVAGE INDEX
                 </div>
-                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">收集进度</h3>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">港务图鉴</h3>
               </div>
-              <div className="text-right text-2xl font-bold text-[var(--coc-accent-gold)]">{collectionPct.toFixed(0)}%</div>
+              <div className="fishing-index-panel__rank">{collectionPct.toFixed(0)}%</div>
             </div>
-            <div className="mb-2 mt-4 h-2 w-full rounded-full bg-[#0a0a0f]">
+            <div className="fishing-index-panel__rail mb-2 mt-4">
               <div
-                className="h-2 rounded-full bg-[var(--coc-accent-gold)] transition-all"
+                className="h-full rounded-full bg-[var(--coc-accent-gold)] transition-all"
                 style={{ width: `${collectionPct}%` }}
               />
             </div>
-            <p className="text-sm text-[var(--coc-text-secondary)]">港口账本已解锁 {collectionPct.toFixed(1)}%。</p>
+            <div className="fishing-index-panel__stats">
+              <span>未售 {unsoldCount}</span>
+              <span>稀有 {rareCount}</span>
+              <span>记录 {logs.length}</span>
+            </div>
+            <p className="relative z-[1] mt-3 text-sm text-[var(--coc-text-secondary)]">港口账本已解锁 {collectionPct.toFixed(1)}%，可疑异物会进入封存序列。</p>
           </Surface>
 
-          <Surface variant="panel" padding="md" className="relative overflow-hidden">
-            <div className="mb-4 flex items-center justify-between gap-3">
+          <Surface variant="panel" padding="md" className="fishing-ledger-panel relative overflow-hidden">
+            <div className="fishing-ledger-ornament" />
+            <div className="relative z-[1] mb-4 flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <Fish size={14} />
                   CATCH LEDGER
                 </div>
-                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">最近钓获</h3>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">港务账本</h3>
               </div>
-              <span className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-2 py-1 text-xs text-[var(--coc-text-secondary)]">{logs.length} 条</span>
+              <span className="fishing-ledger-panel__counter">{logs.length} 条</span>
             </div>
             {logs.length === 0 ? (
               <EmptyState
@@ -533,34 +542,43 @@ export function FishingPage() {
                 animate={false}
               />
             ) : (
-              <ul className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
-                {logs.map((log) => (
-                  <li key={log.id} className="min-w-0 rounded border border-[var(--coc-border-subtle)] bg-black/20 p-3 text-sm">
-                    <div className="flex min-w-0 items-center justify-between gap-2">
-                      <span className="block max-w-[12rem] truncate font-medium text-[var(--coc-text-primary)]">{log.itemName}</span>
-                      <span className="truncate rounded bg-[var(--coc-accent-gold)]/10 px-2 py-1 text-xs text-[#c9a227]">{log.rarity}</span>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <div className="text-xs text-[var(--coc-text-secondary)]">
-                        {log.isSold ? (
-                          <span className="text-[#8b8375]">已售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
-                        ) : (
-                          <span>可售 {log.sellPrice} {log.sellCurrency === 'coin' ? '锈蚀硬币' : '虚银'}</span>
-                        )}
+              <ul className="fishing-ledger-list">
+                {logs.map((log) => {
+                  const ledger = getFishingLedgerMeta({
+                    rarity: log.rarity,
+                    isSold: log.isSold,
+                    sellPrice: log.sellPrice,
+                    sellCurrency: log.sellCurrency,
+                  });
+                  return (
+                    <li key={log.id} className="fishing-ledger-entry" data-tone={ledger.tone} data-sold={log.isSold ? 'true' : 'false'}>
+                      <div className="fishing-ledger-entry__seal">{ledger.sealLabel}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center justify-between gap-2">
+                          <span className="fishing-ledger-entry__name">{log.itemName}</span>
+                          <span className="fishing-ledger-entry__rarity">{ledger.rarityLabel}</span>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          <div className="min-w-0 text-xs">
+                            <span className="fishing-ledger-entry__status">{ledger.statusLabel}</span>
+                            <span className="mx-2 text-[var(--coc-text-muted)]">/</span>
+                            <span className="text-[var(--coc-text-secondary)]">{ledger.priceLabel}</span>
+                          </div>
+                          {!log.isSold && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleSellLogId(log.id)}
+                              className="h-9 px-3 text-xs"
+                            >
+                              出售
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      {!log.isSold && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleSellLogId(log.id)}
-                          className="h-9 px-3 text-xs"
-                        >
-                          出售
-                        </Button>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Surface>
