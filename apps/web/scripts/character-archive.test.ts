@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   getCharacterArchiveSummary,
   getCharacterCondition,
+  getCharacterDossierTabs,
   getCharacterVitals,
 } from '../src/components/characters/characterArchiveMeta.ts';
 
@@ -46,4 +47,13 @@ test('archive summary counts displayed and endangered investigators', () => {
       { key: 'endangered', label: '危险状态', value: 1, tone: 'blood' },
     ],
   );
+});
+
+test('dossier tabs keep archive reading order and active state', () => {
+  assert.deepEqual(getCharacterDossierTabs('combat').map((tab) => [tab.key, tab.label, tab.active]), [
+    ['attributes', '属性', false],
+    ['skills', '技能', false],
+    ['combat', '战斗', true],
+    ['background', '背景', false],
+  ]);
 });

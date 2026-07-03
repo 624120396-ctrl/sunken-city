@@ -38,6 +38,21 @@ export interface CharacterArchiveSummaryItem {
   tone: CharacterArchiveTone;
 }
 
+export type CharacterDossierTabKey = 'attributes' | 'skills' | 'combat' | 'background';
+
+export interface CharacterDossierTab {
+  key: CharacterDossierTabKey;
+  label: string;
+  active: boolean;
+}
+
+const dossierTabs: Array<Omit<CharacterDossierTab, 'active'>> = [
+  { key: 'attributes', label: '属性' },
+  { key: 'skills', label: '技能' },
+  { key: 'combat', label: '战斗' },
+  { key: 'background', label: '背景' },
+];
+
 function ratio(value: number, max: number): number {
   if (max <= 0) return 0;
   return value / max;
@@ -75,4 +90,11 @@ export function getCharacterArchiveSummary(input: CharacterArchiveSummaryInput):
     { key: 'displayed', label: '展示档案', value: input.displayedId ? 1 : 0, tone: 'ocean' },
     { key: 'endangered', label: '危险状态', value: endangered, tone: 'blood' },
   ];
+}
+
+export function getCharacterDossierTabs(active: CharacterDossierTabKey): CharacterDossierTab[] {
+  return dossierTabs.map((tab) => ({
+    ...tab,
+    active: tab.key === active,
+  }));
 }

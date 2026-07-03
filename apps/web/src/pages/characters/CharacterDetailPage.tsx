@@ -2,12 +2,17 @@ import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X, User } from 'lucide-react';
 import { COC7E_SKILLS, SKILL_CATEGORIES } from '@lib/coc7-data';
 import { apiFetch } from '@lib/api';
-import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
 import { PageShell, Surface } from '@components/system';
+import {
+  getCharacterCondition,
+  getCharacterDossierTabs,
+  getCharacterVitals,
+  type CharacterDossierTabKey,
+} from '@components/characters/characterArchiveMeta';
 
 interface Character {
   id: string;
@@ -29,6 +34,9 @@ interface Character {
   hp: number;
   mp: number;
   san: number;
+  maxHp: number;
+  maxMp: number;
+  maxSan: number;
   mov: number;
   build: number;
   portraitUrl?: string;
@@ -62,7 +70,7 @@ export function CharacterDetailPage() {
   const user = useAuthStore((s) => s.user);
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('attributes');
+  const [activeTab, setActiveTab] = useState<CharacterDossierTabKey>('attributes');
 
   // 形象生成
   const [showPortraitModal, setShowPortraitModal] = useState(false);
@@ -266,142 +274,107 @@ export function CharacterDetailPage() {
     );
   }
 
-  const tabs = [
-    { id: 'attributes', label: '属性', icon: Zap },
-    { id: 'skills', label: '技能', icon: Shield },
-    { id: 'combat', label: '战斗', icon: Shield },
-    { id: 'background', label: '背景', icon: Sparkles },
-  ];
+  const tabIcons = {
+    attributes: Zap,
+    skills: Shield,
+    combat: Shield,
+    background: Sparkles,
+  };
+  const tabs = getCharacterDossierTabs(activeTab);
+  const vitals = getCharacterVitals(character);
+  const condition = getCharacterCondition(character);
 
   const cooldownText = portraitQuota?.inCooldown && portraitQuota.nextAvailableAt
     ? new Date(portraitQuota.nextAvailableAt).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     : null;
 
-  const statItems = [
-    { key: 'hp', maxKey: 'maxHp', label: 'HP', icon: Heart, color: 'text-coc-accent-red' },
-    { key: 'mp', maxKey: 'maxMp', label: 'MP', icon: Sparkles, color: 'text-coc-accent-cyan' },
-    { key: 'san', maxKey: 'maxSan', label: 'SAN', icon: Brain, color: 'text-coc-accent-gold' },
-    { key: 'mov', label: 'MOV', icon: Zap, color: 'text-coc-text-secondary' },
-    { key: 'build', label: '体格', icon: Shield, color: 'text-coc-text-secondary' },
-  ];
-
   return (
     <PageShell
+      className="character-detail-page"
       title="调查员档案"
       eyebrow="investigator dossier"
       description="查看属性、技能、战斗配置和背景档案。保留原有角色数据解析、导出、删除和形象生成流程。"
     >
       {/* ===== 焦点图顶部：角色卡 Hero ===== */}
-      <Surface variant="page" tone="gold" padding="md">
-        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-          {/* 左侧：形象立绘 */}
-          <div className="w-full md:w-40 lg:w-44 flex-shrink-0">
-            <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border border-coc-void bg-[#0a0a0f]">
-              {character.portraitUrl ? (
-                <img
-                  src={character.portraitUrl}
-                  alt={character.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-[#6b6558]">
-                  <svg className="w-14 h-14 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span className="text-xs tracking-widest">暂无形象</span>
-                </div>
-              )}
+      <Surface variant="page" tone="gold" padding="lg" className="character-detail-hero">
+        <div className="character-detail-portrait">
+          {character.portraitUrl ? (
+            <img src={character.portraitUrl} alt={character.name} />
+          ) : (
+            <div className="character-detail-portrait__placeholder">
+              <User size={54} />
+              <span>暂无形象</span>
+            </div>
+          )}
+        </div>
+
+        <div className="character-detail-hero__body">
+          <Link to="/characters" className="character-detail-backlink">
+            <ArrowLeft size={16} />
+            返回名册
+          </Link>
+
+          <div className="character-detail-titleblock">
+            <span className="character-condition-badge" data-tone={condition.tone}>{condition.label}</span>
+            <h1>{character.name}</h1>
+            <p>{character.occupation} · {character.age}岁 · {character.gender}</p>
+            <strong>#{String(character.displayId).padStart(8, '0')}</strong>
+          </div>
+
+          {character.appearance && (
+            <p className="character-detail-appearance">{character.appearance}</p>
+          )}
+
+          <div className="character-detail-vitals">
+            {vitals.map((vital) => (
+              <div key={vital.key} className="character-detail-vital" data-tone={vital.tone}>
+                {vital.key === 'hp' ? <Heart size={16} /> : vital.key === 'mp' ? <Sparkles size={16} /> : <Brain size={16} />}
+                <span>{vital.label}</span>
+                <strong>{vital.value}</strong>
+                <small>/{vital.max}</small>
+              </div>
+            ))}
+            <div className="character-detail-vital" data-tone="ocean">
+              <Zap size={16} />
+              <span>MOV</span>
+              <strong>{character.mov}</strong>
+            </div>
+            <div className="character-detail-vital" data-tone="gold">
+              <Shield size={16} />
+              <span>体格</span>
+              <strong>{character.build}</strong>
             </div>
           </div>
 
-          {/* 右侧：信息与属性 */}
-          <div className="flex-1 min-w-0 flex flex-col justify-between">
-            <div>
-                  <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Link to="/characters" className="rounded border border-[#3a3a3a] transition-colors p-1 rounded-md">
-                      <ArrowLeft size={16} />
-                    </Link>
-                    <h1 className="text-xl md:text-2xl font-ritual font-bold text-[#e8d4a0]">{character.name}</h1>
-                  </div>
-                  <p className="text-sm text-[#8b8375]">
-                    {character.occupation} · {character.age}岁 · {character.gender}
-                  </p>
-                  <div className="mt-1.5 font-mono text-xs text-[#c9a227]">#{String(character.displayId).padStart(8, '0')}</div>
-                </div>
-              </div>
-
-              {character.appearance && (
-                <p className="mt-3 text-sm text-coc-parchment-dim line-clamp-3">{character.appearance}</p>
-              )}
-            </div>
-
-            {/* 中部：派生属性 */}
-            <div className="mt-4">
-              <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                {statItems.map((s) => {
-                  const Icon = s.icon;
-                  const val = (character as any)[s.key];
-                  const maxVal = s.maxKey ? (character as any)[s.maxKey] : null;
-                  return (
-                    <div key={s.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[#0a0a0f] border border-coc-void transition-colors hover:border-coc-rift">
-                      <Icon size={14} className={cn(s.color)} />
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-[#e8d4a0]">{val}</span>
-                        <span className="text-[10px] text-[#6b6558]">{s.label}{maxVal ? `/${maxVal}` : ''}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 下部：操作按钮 */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {canManagePortrait && (
-                <button
-                  onClick={() => { setShowPortraitModal(true); setPortraitPreviewUrl(null); setPortraitCustomDesc(''); }}
-                  className="coc-btn-gold flex items-center gap-1.5 px-3 py-1.5 text-xs"
-                >
-                  <Wand2 size={14} />
-                  塑造形象
-                </button>
-              )}
-              <button
-                onClick={handleExport}
-                className="coc-btn-void flex items-center gap-1.5 px-3 py-1.5 text-xs"
-              >
-                <Download size={14} />
-                导出
+          <div className="character-detail-actions">
+            {canManagePortrait && (
+              <button onClick={() => { setShowPortraitModal(true); setPortraitPreviewUrl(null); setPortraitCustomDesc(''); }}>
+                <Wand2 size={14} />
+                塑造形象
               </button>
-              <button
-                onClick={handleDelete}
-                className="coc-btn-void text-red-400 hover:text-red-300 flex items-center gap-1.5 px-3 py-1.5 text-xs"
-              >
-                <Trash2 size={14} />
-                删除
-              </button>
-            </div>
+            )}
+            <button onClick={handleExport}>
+              <Download size={14} />
+              导出
+            </button>
+            <button onClick={handleDelete} data-tone="blood">
+              <Trash2 size={14} />
+              删除
+            </button>
           </div>
         </div>
       </Surface>
 
       {/* ===== 标签页 ===== */}
-      <Surface variant="panel" padding="none" className="overflow-x-auto">
-        <div className="flex gap-1">
+      <Surface variant="panel" padding="none" className="character-detail-tabs">
+        <div>
           {tabs.map((tab) => {
-            const Icon = tab.icon;
+            const Icon = tabIcons[tab.key];
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'px-4 py-3 flex items-center gap-2 border-b-2 transition-colors text-sm md:text-base',
-                  activeTab === tab.id
-                    ? 'border-[#a63848] text-coc-accent-red'
-                    : 'border-transparent text-[#8b8375] hover:text-[#d4c5a8]'
-                )}
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                data-active={tab.active ? 'true' : 'false'}
               >
                 <Icon size={16} />
                 {tab.label}
@@ -412,7 +385,7 @@ export function CharacterDetailPage() {
       </Surface>
 
       {/* ===== 内容区域 ===== */}
-      <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
+      <DoubleBezelCard variant="gold" runeCorners className="character-detail-content" innerClassName="character-detail-content__inner p-4">
         {activeTab === 'attributes' && (
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
             {[
