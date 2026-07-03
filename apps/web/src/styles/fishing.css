@@ -688,6 +688,64 @@
 }
 
 @media (max-width: 520px) {
+  .fishing-stage {
+    min-height: 26rem;
+  }
+
+  .fishing-canvas-label {
+    left: 0.75rem;
+    top: 0.75rem;
+    min-width: 9rem;
+    padding: 0.52rem 0.62rem;
+  }
+
+  .fishing-canvas-label strong {
+    font-size: 0.82rem;
+  }
+
+  .fishing-tension-hud {
+    left: 0.7rem;
+    right: 0.7rem;
+    bottom: 0.7rem;
+    padding: 0.75rem;
+  }
+
+  .fishing-tension-hud .text-xl {
+    font-size: 1rem;
+  }
+
+  .fishing-index-panel__rank {
+    font-size: 1.55rem;
+  }
+
+  .fishing-index-panel__stats {
+    gap: 0.35rem;
+  }
+
+  .fishing-index-panel__stats span {
+    font-size: 0.68rem;
+    padding-inline: 0.2rem;
+  }
+
+  .fishing-ledger-list {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .fishing-ledger-entry {
+    gap: 0.58rem;
+    padding: 0.65rem;
+  }
+
+  .fishing-ledger-entry__seal {
+    width: 1.95rem;
+    min-height: 2.55rem;
+  }
+
+  .fishing-ledger-entry__name {
+    max-width: 9.5rem;
+  }
+
   .catch-reveal-card {
     padding: 1.1rem;
   }

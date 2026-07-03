@@ -1,6 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { getFishingRenderProfile, type FishingRenderProfile } from './fishingRenderProfile';
 
 type FishingSceneState = 'idle' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'result';
 
@@ -213,32 +214,33 @@ function BiteRings({ state }: FishingCanvasProps) {
   );
 }
 
-function HarborParticles({ state }: FishingCanvasProps) {
+function HarborParticles({ state, profile }: FishingCanvasProps & { profile: FishingRenderProfile }) {
   const particles = useMemo(
     () =>
-      Array.from({ length: 28 }, (_, index) => ({
+      Array.from({ length: profile.particleCount }, (_, index) => ({
         x: -3.8 + ((index * 37) % 76) / 10,
         y: 0.18 + ((index * 19) % 24) / 18,
         z: -2.5 + ((index * 23) % 44) / 12,
         speed: 0.45 + (index % 5) * 0.08,
       })),
-    []
+    [profile.particleCount]
   );
 
   return (
     <group>
       {particles.map((particle, index) => (
-        <FloatingParticle key={index} particle={particle} danger={state === 'biting'} />
+        <FloatingParticle key={index} particle={particle} danger={state === 'biting'} animate={profile.animateParticles} />
       ))}
     </group>
   );
 }
 
-function FloatingParticle({ particle, danger }: { particle: { x: number; y: number; z: number; speed: number }; danger: boolean }) {
+function FloatingParticle({ particle, danger, animate }: { particle: { x: number; y: number; z: number; speed: number }; danger: boolean; animate: boolean }) {
   const ref = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
+    if (!animate) return;
     const t = clock.getElapsedTime() * particle.speed;
     ref.current.position.set(particle.x + Math.sin(t * 0.37) * 0.12, particle.y + Math.sin(t) * 0.04, particle.z + Math.cos(t * 0.29) * 0.1);
   });
@@ -251,7 +253,7 @@ function FloatingParticle({ particle, danger }: { particle: { x: number; y: numb
   );
 }
 
-function HarborScene({ state }: FishingCanvasProps) {
+function HarborScene({ state, profile }: FishingCanvasProps & { profile: FishingRenderProfile }) {
   return (
     <>
       <color attach="background" args={['#06101a']} />
@@ -266,20 +268,56 @@ function HarborScene({ state }: FishingCanvasProps) {
       <FishingLine state={state} />
       <Bobber state={state} />
       <BiteRings state={state} />
-      <HarborParticles state={state} />
+      <HarborParticles state={state} profile={profile} />
     </>
   );
 }
 
+function useFishingRenderProfile() {
+  const [profile, setProfile] = useState(() =>
+    getFishingRenderProfile({
+      isMobile: typeof window !== 'undefined' ? window.innerWidth < 768 : false,
+      prefersReducedMotion: false,
+      lowPower: false,
+    })
+  );
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => {
+      setProfile(
+        getFishingRenderProfile({
+          isMobile: mobileQuery.matches,
+          prefersReducedMotion: reduceQuery.matches,
+          lowPower: false,
+        })
+      );
+    };
+
+    update();
+    mobileQuery.addEventListener('change', update);
+    reduceQuery.addEventListener('change', update);
+    return () => {
+      mobileQuery.removeEventListener('change', update);
+      reduceQuery.removeEventListener('change', update);
+    };
+  }, []);
+
+  return profile;
+}
+
 export function FishingCanvas({ state }: FishingCanvasProps) {
+  const profile = useFishingRenderProfile();
+
   return (
     <div className="fishing-canvas-shell" role="img" aria-label="黑水港深海钓鱼游戏场景">
       <Canvas
-        dpr={[1, 1.75]}
+        dpr={[1, profile.dprMax]}
         camera={{ position: [-0.24, 3.08, 5.45], fov: 40, near: 0.1, far: 32 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
-        <HarborScene state={state} />
+        <HarborScene state={state} profile={profile} />
       </Canvas>
       <div className="fishing-canvas-vignette" />
       <div className="fishing-canvas-label">
