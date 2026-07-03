@@ -3,7 +3,7 @@ import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package,
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
-import { DataCard, PageShell, Surface } from '@components/system';
+import { PageShell, Surface } from '@components/system';
 import { uploadFile } from '@services/upload.service';
 import { getInventory, equipItem, type InventoryItem } from '@services/shop.service';
 import { generateImage } from '@services/ai.service';
@@ -12,6 +12,11 @@ import { setDisplayedTitle } from '@services/rank-title.service';
 import { MessageSquare, ThumbsUp, Award, FileText } from 'lucide-react';
 import { BackgroundPicker } from '@components/background/BackgroundPicker';
 import { DEFAULT_BACKGROUND_ID } from '@components/background/backgroundOptions';
+import {
+  getProfileDossierStats,
+  getProfileInventoryGroups,
+  getProfileRoleBadge,
+} from '@components/profile/profileDossierMeta';
 
 const rarityColor: Record<string, string> = {
   common: 'border-coc-parchment-dim',
@@ -216,34 +221,47 @@ export function ProfilePage() {
     }
   };
 
+  const roleBadge = getProfileRoleBadge(user?.isAdmin);
+  const dossierStats = getProfileDossierStats({
+    coins: user?.coins,
+    stardust: user?.stardust,
+    forumStats,
+  });
+  const inventoryGroups = getProfileInventoryGroups(inventory);
+  const displayId = user?.displayId != null ? `#${String(user.displayId).padStart(8, '0')}` : '未登记';
+  const dossierStatIcons = {
+    coins: <Coins size={16} />,
+    stardust: <Sparkles size={16} />,
+    posts: <FileText size={16} />,
+    replies: <MessageSquare size={16} />,
+    likes: <ThumbsUp size={16} />,
+    bestReplies: <Award size={16} />,
+  };
+
   return (
     <PageShell
+      className="profile-page"
       eyebrow="profile settings"
       title={
         <span className="flex items-center gap-3">
           <User className="h-7 w-7 text-[var(--coc-accent-gold)]" />
-          个人中心
+          个人档案
         </span>
       }
-      description="管理头像、昵称、背景、背包、论坛足迹与账户安全。"
+      description="整理你的调查员身份、档案形象、论坛足迹、藏品展示与账户安全。"
       actions={
-        <div className="grid min-w-[220px] grid-cols-1 gap-2 sm:grid-cols-2">
-          <DataCard
-            label="锈蚀硬币"
-            value={user?.coins ?? 0}
-            icon={<Coins size={16} />}
-            tone="gold"
-          />
-          <DataCard
-            label="虚银"
-            value={user?.stardust ?? 0}
-            icon={<Sparkles size={16} />}
-            tone="madness"
-          />
+        <div className="profile-page__header-actions">
+          {dossierStats.slice(0, 2).map((stat) => (
+            <div key={stat.key} className="profile-currency-chip" data-tone={stat.tone}>
+              {dossierStatIcons[stat.key]}
+              <span>{stat.label}</span>
+              <strong>{stat.value}</strong>
+            </div>
+          ))}
         </div>
       }
     >
-      <Surface variant="panel" padding="sm" className="flex items-center justify-between">
+      <Surface variant="panel" padding="sm" className="profile-backlink">
         <Link
           to="/"
           className="inline-flex items-center gap-1 text-sm text-[var(--coc-text-secondary)] transition-colors hover:text-[var(--coc-text-primary)]"
@@ -253,263 +271,113 @@ export function ProfilePage() {
         </Link>
       </Surface>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] 2xl:gap-6">
-        {/* 资料卡片 */}
-        <Surface variant="solid" tone="gold" padding="lg">
-          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
-            <Camera className="w-5 h-5 text-[#c9a227]" />
-            基本资料
-          </h2>
+      <Surface variant="solid" tone={roleBadge.tone} padding="lg" className="profile-identity-card">
+        <div className="profile-identity-card__avatar">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+          ) : (
+            <User className="h-14 w-14 text-[var(--coc-on-surface-muted)]" />
+          )}
+          {user?.frameUrl && (
+            <img src={user.frameUrl} alt="frame" className="absolute inset-0 h-full w-full pointer-events-none" />
+          )}
+          {uploading && <div className="profile-identity-card__uploading">上传中...</div>}
+        </div>
+        <div className="profile-identity-card__body">
+          <div className="profile-role-badge" data-tone={roleBadge.tone}>
+            <span>{roleBadge.label}</span>
+            <strong>{roleBadge.title}</strong>
+          </div>
+          <h2>{user?.nickname || nickname || '未命名调查员'}</h2>
+          <p>登记编号 {displayId} · 当前展示印记 {user?.displayedTitleKey || '未选择'}</p>
+        </div>
+        <div className="profile-identity-card__stats">
+          {dossierStats.map((stat) => (
+            <div key={stat.key} className="profile-stat-card" data-tone={stat.tone}>
+              <div className="profile-stat-card__icon">{dossierStatIcons[stat.key]}</div>
+              <span>{stat.label}</span>
+              <strong>{forumStats || stat.key === 'coins' || stat.key === 'stardust' ? stat.value : '...'}</strong>
+            </div>
+          ))}
+        </div>
+      </Surface>
 
-          <form onSubmit={handleSaveProfile} className="space-y-5">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative w-20 h-20 rounded-full bg-coc-void border-2 border-coc-gold/30 overflow-hidden flex items-center justify-center shrink-0">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-10 h-10 text-coc-parchment-dim" />
-                )}
-                {user?.frameUrl && (
-                  <img
-                    src={user.frameUrl}
-                    alt="frame"
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                  />
-                )}
-                {uploading && (
-                  <div className="absolute inset-0 bg-[#0a0a0f]/70 flex items-center justify-center">
-                    <span className="text-xs text-[#e8d4a0]">上传中...</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0f] border border-coc-void text-[#e8d4a0] rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
-                  >
-                    <Upload className="w-4 h-4" />
-                    上传头像
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAiModal(true)}
-                    disabled={aiGenerating}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0f] border border-coc-void text-[#c9a227] rounded hover:border-coc-gold transition-colors text-sm disabled:opacity-50"
-                  >
-                    <Wand2 className="w-4 h-4" />
-                    AI 生成
-                  </button>
-                  {avatarUrl && (
-                    <button
-                      type="button"
-                      onClick={clearAvatar}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-coc-parchment-dim hover:text-[#a63848] transition-colors text-sm"
-                    >
-                      <X className="w-4 h-4" />
-                      清除
-                    </button>
-                  )}
-                </div>
-                <p className="text-xs text-coc-parchment-faded">支持 JPG、PNG、GIF、WebP，最大 5MB</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
-              </div>
+      <div className="profile-layout-grid">
+        <Surface variant="solid" tone="gold" padding="lg" className="profile-form-card">
+          <div className="profile-section-heading">
+            <Camera className="h-5 w-5" />
+            <div>
+              <h2>档案形象</h2>
+              <p>头像、昵称与公开展示信息。</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveProfile} className="profile-form">
+            <div className="profile-avatar-tools">
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="profile-tool-button">
+                <Upload className="h-4 w-4" />
+                上传头像
+              </button>
+              <button type="button" onClick={() => setShowAiModal(true)} disabled={aiGenerating} className="profile-tool-button" data-tone="gold">
+                <Wand2 className="h-4 w-4" />
+                AI 生成
+              </button>
+              {avatarUrl && (
+                <button type="button" onClick={clearAvatar} className="profile-tool-button" data-tone="blood">
+                  <X className="h-4 w-4" />
+                  清除
+                </button>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </div>
 
-            {user?.displayId != null && (
-              <div className="font-mono text-xs text-[#c9a227] mb-2">用户编号：#{String(user.displayId).padStart(8, '0')}</div>
-            )}
-
-            <div>
-              <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">头像 URL（可选）</label>
+            <label className="profile-field">
+              <span>头像 URL（可选）</span>
               <input
                 type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
                 placeholder="https://example.com/avatar.png"
-                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">昵称</label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                maxLength={20}
-                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
-              />
-            </div>
+            <label className="profile-field">
+              <span>昵称</span>
+              <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={20} />
+            </label>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={savingProfile}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-coc-gold text-coc-abyss rounded hover:bg-coc-gold-glow transition-colors font-medium disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {savingProfile ? '保存中...' : '保存资料'}
-              </button>
-            </div>
+            <button type="submit" disabled={savingProfile} className="profile-primary-button">
+              <Save className="h-4 w-4" />
+              {savingProfile ? '保存中...' : '保存档案'}
+            </button>
           </form>
         </Surface>
 
-        {/* 全局背景选择 */}
-        <BackgroundPicker
-          value={selectedBackground}
-          saving={savingBackground}
-          onChange={setSelectedBackground}
-          onSave={handleSaveBackground}
-        />
-      </div>
+        <div className="profile-side-stack">
+          <BackgroundPicker value={selectedBackground} saving={savingBackground} onChange={setSelectedBackground} onSave={handleSaveBackground} />
 
-      {/* 背包卡片 */}
-      <Surface variant="solid" tone="madness" padding="lg">
-          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
-            <Package className="w-5 h-5 text-coc-madness-glow" />
-            我的背包
-          </h2>
-
-          {inventoryLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-[#0a0a0f]/40 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : inventory.length === 0 ? (
-            <div className="text-center py-10 text-coc-parchment-dim">
-              背包空空如也，去<Link to="/shop" className="text-[#c9a227] hover:underline">拉莱耶遗珍</Link>看看吧。
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
-              {inventory.map((inv) => {
-                const isTitle = inv.item?.category === 'title';
-                const isEquipped = !isTitle && user?.equippedFrame === inv.itemKey;
-                const isDisplayed = isTitle && user?.displayedTitleKey === inv.itemKey;
-                const active = isEquipped || isDisplayed;
-
-                return (
-                  <div
-                    key={inv.id}
-                    className={`p-3 rounded border ${rarityColor[inv.item?.rarity || 'common'] || 'border-coc-void'} bg-[#0a0a0f]/30 flex flex-col gap-2`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[#e8d4a0] truncate">{inv.item?.name || inv.itemKey}</span>
-                      {inv.quantity > 1 && (
-                        <span className="text-xs text-coc-parchment-dim">x{inv.quantity}</span>
-                      )}
-                    </div>
-                    {inv.item?.iconUrl ? (
-                      isTitle ? (
-                        <div className="w-12 h-12 flex items-center justify-center text-3xl mx-auto">
-                          {inv.item.iconUrl}
-                        </div>
-                      ) : (
-                        <img src={inv.item.iconUrl} alt="" className="w-12 h-12 object-contain mx-auto" />
-                      )
-                    ) : (
-                      <div className="w-12 h-12 rounded bg-coc-void flex items-center justify-center text-coc-parchment-dim text-xs mx-auto">
-                        {isTitle ? '印记' : '无图'}
-                      </div>
-                    )}
-                    <button
-                      onClick={() =>
-                        isTitle
-                          ? handleDisplayTitle(isDisplayed ? null : inv.itemKey)
-                          : handleEquip(isEquipped ? null : inv.itemKey)
-                      }
-                      disabled={equippingKey === inv.itemKey || equippingKey === 'unset'}
-                      className={`mt-1 w-full py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50 ${
-                        active
-                          ? 'bg-coc-madness/20 text-coc-madness-glow border border-coc-madness/40'
-                          : 'bg-coc-gold text-coc-abyss hover:bg-coc-gold-glow'
-                      }`}
-                    >
-                      {equippingKey === inv.itemKey || (active && equippingKey === 'unset')
-                        ? '处理中...'
-                        : isTitle
-                        ? isDisplayed
-                          ? '已展示'
-                          : '展示'
-                        : isEquipped
-                        ? '已装备'
-                        : '装备'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-      </Surface>
-
-      <div className="grid gap-5 xl:grid-cols-2 2xl:gap-6">
-        {/* 论坛足迹卡片 */}
-        <Surface variant="solid" tone="madness" padding="lg">
-          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-coc-madness-glow" />
-            论坛足迹
-          </h2>
-          {!forumStats ? (
-            <div className="text-center py-6 text-coc-parchment-dim">加载中...</div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.postCount}</div>
-                <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
-                  <FileText size={12} /> 主题帖
-                </div>
-              </div>
-              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.replyCount}</div>
-                <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
-                  <MessageSquare size={12} /> 回复
-                </div>
-              </div>
-              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.likeCountReceived}</div>
-                <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
-                  <ThumbsUp size={12} /> 获赞
-                </div>
-              </div>
-              <div className="p-4 rounded bg-[#0a0a0f]/30 border border-coc-void text-center">
-                <div className="text-2xl font-bold text-[#e8d4a0]">{forumStats.bestReplyCount}</div>
-                <div className="text-xs text-coc-parchment-dim mt-1 flex items-center justify-center gap-1">
-                  <Award size={12} /> 最佳回复
-                </div>
+          <Surface variant="solid" tone="madness" padding="lg" className="profile-security-card">
+            <div className="profile-section-heading">
+              <Lock className="h-5 w-5" />
+              <div>
+                <h2>账户封印</h2>
+                <p>更新登录密码，不影响角色资料。</p>
               </div>
             </div>
-          )}
-        </Surface>
 
-        {/* 修改密码卡片 */}
-        <Surface variant="solid" tone="madness" padding="lg">
-          <h2 className="text-lg font-ritual font-bold text-[#e8d4a0] mb-6 flex items-center gap-2">
-            <Lock className="w-5 h-5 text-coc-madness-glow" />
-            修改密码
-          </h2>
-
-          <form onSubmit={handleChangePassword} className="space-y-5">
+            <form onSubmit={handleChangePassword} className="profile-form">
             <div className="relative">
-              <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">当前密码</label>
+              <label className="profile-password-label">当前密码</label>
               <input
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none pr-10"
+                className="profile-password-input"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrent((v) => !v)}
-                className="absolute right-1 top-[1.45rem] flex h-10 w-10 items-center justify-center rounded border border-transparent text-coc-parchment-dim transition-colors hover:border-coc-madness/30 hover:bg-white/[0.06] hover:text-[#e8d4a0]"
+                className="profile-eye-button"
                 aria-label={showCurrent ? '隐藏当前密码' : '显示当前密码'}
               >
                 {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -517,17 +385,17 @@ export function ProfilePage() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">新密码</label>
+              <label className="profile-password-label">新密码</label>
               <input
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none pr-10"
+                className="profile-password-input"
               />
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                className="absolute right-1 top-[1.45rem] flex h-10 w-10 items-center justify-center rounded border border-transparent text-coc-parchment-dim transition-colors hover:border-coc-madness/30 hover:bg-white/[0.06] hover:text-[#e8d4a0]"
+                className="profile-eye-button"
                 aria-label={showNew ? '隐藏新密码' : '显示新密码'}
               >
                 {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -535,28 +403,102 @@ export function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-coc-parchment-dim mb-1 font-rune">确认新密码</label>
+              <label className="profile-password-label">确认新密码</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-madness focus:outline-none"
+                className="profile-password-input"
               />
             </div>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={changingPassword}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-coc-madness text-[#e8d4a0] rounded hover:bg-coc-madness-glow transition-colors font-medium disabled:opacity-50"
-              >
-                <Lock className="w-4 h-4" />
-                {changingPassword ? '修改中...' : '修改密码'}
+              <button type="submit" disabled={changingPassword} className="profile-secondary-button">
+                <Lock className="h-4 w-4" />
+                {changingPassword ? '修改中...' : '更新封印'}
               </button>
-            </div>
           </form>
-        </Surface>
+          </Surface>
+        </div>
       </div>
+
+      <Surface variant="solid" tone="ocean" padding="lg" className="profile-inventory-card">
+        <div className="profile-section-heading">
+          <Package className="h-5 w-5" />
+          <div>
+            <h2>随身藏品</h2>
+            <p>将可展示物、遗物与头像框按用途分组，避免背包变成平铺清单。</p>
+          </div>
+        </div>
+
+        <div className="profile-inventory-groups">
+          {inventoryGroups.map((group) => (
+            <div key={group.key} className="profile-inventory-group" data-group={group.key}>
+              <span>{group.label}</span>
+              <strong>{inventoryLoading ? '...' : group.count}</strong>
+              <p>{group.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {inventoryLoading ? (
+          <div className="profile-item-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="profile-item-skeleton" />
+            ))}
+          </div>
+        ) : inventory.length === 0 ? (
+          <div className="profile-empty-state">
+            背包空空如也，去 <Link to="/shop">无名集市</Link> 看看吧。
+          </div>
+        ) : (
+          <div className="profile-item-grid">
+            {inventory.map((inv) => {
+              const isTitle = inv.item?.category === 'title';
+              const isEquipped = !isTitle && user?.equippedFrame === inv.itemKey;
+              const isDisplayed = isTitle && user?.displayedTitleKey === inv.itemKey;
+              const active = isEquipped || isDisplayed;
+
+              return (
+                <div key={inv.id} className="profile-item-card" data-active={active ? 'true' : 'false'}>
+                  <div className={`profile-item-card__icon ${rarityColor[inv.item?.rarity || 'common'] || 'border-coc-void'}`}>
+                    {inv.item?.iconUrl ? (
+                      isTitle ? (
+                        <span>{inv.item.iconUrl}</span>
+                      ) : (
+                        <img src={inv.item.iconUrl} alt="" />
+                      )
+                    ) : (
+                      <span>{isTitle ? '印记' : '无图'}</span>
+                    )}
+                  </div>
+                  <div className="profile-item-card__body">
+                    <strong>{inv.item?.name || inv.itemKey}</strong>
+                    <span>{inv.quantity > 1 ? `x${inv.quantity}` : isTitle ? '身份展示' : '个人藏品'}</span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      isTitle
+                        ? handleDisplayTitle(isDisplayed ? null : inv.itemKey)
+                        : handleEquip(isEquipped ? null : inv.itemKey)
+                    }
+                    disabled={equippingKey === inv.itemKey || equippingKey === 'unset'}
+                  >
+                    {equippingKey === inv.itemKey || (active && equippingKey === 'unset')
+                      ? '处理中...'
+                      : isTitle
+                      ? isDisplayed
+                        ? '已展示'
+                        : '展示'
+                      : isEquipped
+                      ? '已装备'
+                      : '装备'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Surface>
 
       {/* AI 生成头像弹窗 */}
       {showAiModal && (
