@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Loader2 } from 'lucide-react';
+import { BookOpen, Loader2, Play, UserRound } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
+import { PageShell, Surface } from '@components/system';
+import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import { getScenarioCardMeta, getSoloLaunchState } from '@components/story/storyEntryMeta';
 
 interface CharacterSummary {
   id: string;
@@ -56,88 +59,124 @@ export function SoloStartPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-2xl font-bold text-amber-500">Phantom Scripts · 单人剧本</h1>
-          <p className="text-slate-400 mt-1">选择一个调查员，进入只属于你一个人的故事。</p>
-        </header>
+  const launchState = getSoloLaunchState({
+    hasScenario: Boolean(selectedScenarioId),
+    hasCharacter: Boolean(selectedCharacterId),
+    starting,
+  });
+  const selectedScenario = scenarios.find((scenario) => scenario.id === selectedScenarioId);
+  const selectedCharacter = characters.find((character) => character.id === selectedCharacterId);
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">选择剧本</h2>
-          <div className="grid gap-3">
-            {scenarios.length === 0 && (
-              <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 text-slate-400">
-                暂无可用剧本
-              </div>
-            )}
-            {scenarios.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedScenarioId(s.id)}
-                className={`w-full text-left p-4 rounded-lg border transition ${
-                  selectedScenarioId === s.id
-                    ? 'border-amber-500 bg-amber-500/10'
-                    : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                }`}
-              >
-                <div className="font-medium">{s.title}</div>
-                {s.description && (
-                  <div className="text-sm text-slate-400 mt-1">{s.description}</div>
-                )}
-              </button>
-            ))}
+  return (
+    <PageShell
+      className="story-entry-page solo-entry-page"
+      eyebrow="phantom scripts"
+      title="单人剧本"
+      description="选择剧本与调查员，进入只属于你的离线叙事分支。"
+    >
+      <div className="story-entry-layout">
+        <section className="story-entry-section">
+          <div className="story-entry-section__heading">
+            <BookOpen size={18} />
+            <h2>选择剧本</h2>
           </div>
+
+          {scenarios.length === 0 ? (
+            <Surface variant="panel" padding="md" className="story-entry-empty">
+              <EmptyState
+                icon={EmptyIcons.Void}
+                title="暂无可用剧本"
+                description="等待新的故事被封存入档。"
+                size="sm"
+                animate={false}
+              />
+            </Surface>
+          ) : (
+            <div className="story-entry-list">
+              {scenarios.map((scenario) => {
+                const meta = getScenarioCardMeta({});
+                return (
+                  <button
+                    key={scenario.id}
+                    onClick={() => setSelectedScenarioId(scenario.id)}
+                    className="story-entry-scenario"
+                    data-selected={selectedScenarioId === scenario.id ? 'true' : 'false'}
+                    data-tone={meta.tone}
+                  >
+                    <span>{meta.durationLabel}</span>
+                    <strong>{scenario.title}</strong>
+                    {scenario.description && <p>{scenario.description}</p>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">选择角色卡</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {characters.length === 0 && (
-              <div className="col-span-full p-4 rounded-lg border border-slate-700 bg-slate-800/50 text-slate-400">
-                还没有调查员，请先创建角色卡
-              </div>
-            )}
-            {characters.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedCharacterId(c.id)}
-                className={`text-left p-4 rounded-lg border transition ${
-                  selectedCharacterId === c.id
-                    ? 'border-amber-500 bg-amber-500/10'
-                    : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {c.portraitUrl ? (
-                    <img src={c.portraitUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-slate-700" />
+        <section className="story-entry-section">
+          <div className="story-entry-section__heading">
+            <UserRound size={18} />
+            <h2>选择调查员</h2>
+          </div>
+
+          {characters.length === 0 ? (
+            <Surface variant="panel" padding="md" className="story-entry-empty">
+              <EmptyState
+                icon={EmptyIcons.Investigator}
+                title="还没有调查员"
+                description="请先创建角色卡，再进入单人剧本。"
+                size="sm"
+                animate={false}
+              />
+            </Surface>
+          ) : (
+            <div className="story-character-grid">
+              {characters.map((character) => (
+                <button
+                  key={character.id}
+                  onClick={() => setSelectedCharacterId(character.id)}
+                  className="story-character-card"
+                  data-selected={selectedCharacterId === character.id ? 'true' : 'false'}
+                >
+                  {character.portraitUrl ? (
+                    <img src={character.portraitUrl} alt="" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-slate-700" />
+                    <span>{character.name.slice(0, 1)}</span>
                   )}
                   <div>
-                    <div className="font-medium">{c.name}</div>
-                    <div className="text-xs text-slate-400">
-                      {c.occupation} · HP {c.hp}/{c.maxHp} · SAN {c.san}/{c.maxSan}
-                    </div>
+                    <strong>{character.name}</strong>
+                    <small>{character.occupation || '调查员'}</small>
+                    <em>HP {character.hp}/{character.maxHp} · SAN {character.san}/{character.maxSan}</em>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
-        <div className="pt-4">
+        <Surface variant="solid" tone="gold" padding="lg" className="story-launch-panel">
+          <span className="story-launch-panel__eyebrow">dispatch dossier</span>
+          <h2>调查准备</h2>
+          <dl>
+            <div>
+              <dt>剧本</dt>
+              <dd>{selectedScenario?.title || '未选择'}</dd>
+            </div>
+            <div>
+              <dt>调查员</dt>
+              <dd>{selectedCharacter?.name || '未选择'}</dd>
+            </div>
+          </dl>
           <button
-            disabled={!selectedCharacterId || !selectedScenarioId || starting}
+            disabled={launchState.disabled}
             onClick={handleStart}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+            className="story-launch-button"
           >
             {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            开始调查
+            {launchState.label}
           </button>
-        </div>
+        </Surface>
       </div>
-    </div>
+    </PageShell>
   );
 }
