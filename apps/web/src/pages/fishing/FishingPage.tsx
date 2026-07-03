@@ -4,6 +4,7 @@ import { Anchor, Clock3, Fish, PackageOpen, Waves } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { CatchReveal } from '@components/fishing/CatchReveal';
 import { FishingCanvas } from '@components/fishing/FishingCanvas';
+import { createTensionSnapshot, isTensionCatchReady, type TensionZone } from '@components/fishing/tensionGame';
 import { Button, PageShell, Surface } from '@components/system';
 
 type FishingState = 'idle' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'result';
@@ -59,13 +60,28 @@ export function FishingPage() {
   const [logs, setLogs] = useState<FishingLogItem[]>([]);
   const [collectionPct, setCollectionPct] = useState(0);
   const [message, setMessage] = useState('');
+  const [tension, setTension] = useState(42);
+  const [tensionZone, setTensionZone] = useState<TensionZone>('safe');
+  const [tensionSafeMs, setTensionSafeMs] = useState(0);
+  const [reelElapsedMs, setReelElapsedMs] = useState(0);
+  const [isReelingInput, setIsReelingInput] = useState(false);
 
   const timers = useRef<{ wait?: number; bite?: number }>({});
   const stateRef = useRef<FishingState>(state);
+  const tensionRef = useRef(42);
+  const tensionSafeMsRef = useRef(0);
+  const tensionDangerMsRef = useRef(0);
+  const reelStartedAtRef = useRef(0);
+  const isReelingInputRef = useRef(false);
+  const reelCompletingRef = useRef(false);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    isReelingInputRef.current = isReelingInput;
+  }, [isReelingInput]);
 
   const fetchStatus = async () => {
     try {
@@ -134,11 +150,14 @@ export function FishingPage() {
     }
   };
 
-  const handleReel = async () => {
+  const completeReel = async () => {
     if (!castData) return;
+    if (reelCompletingRef.current) return;
+    reelCompletingRef.current = true;
     if (timers.current.wait) clearTimeout(timers.current.wait);
     if (timers.current.bite) clearTimeout(timers.current.bite);
     setState('reeling');
+    setIsReelingInput(false);
     try {
       const res = await apiFetch('/fishing/reel', {
         method: 'POST',
@@ -153,7 +172,28 @@ export function FishingPage() {
     } catch (e: any) {
       setMessage(e.message || '收竿失败');
       setState('idle');
+    } finally {
+      reelCompletingRef.current = false;
     }
+  };
+
+  const handleStartReelChallenge = () => {
+    if (!castData) return;
+    if (timers.current.wait) clearTimeout(timers.current.wait);
+    if (timers.current.bite) clearTimeout(timers.current.bite);
+    const initialTension = 42;
+    tensionRef.current = initialTension;
+    tensionSafeMsRef.current = 0;
+    tensionDangerMsRef.current = 0;
+    reelStartedAtRef.current = performance.now();
+    reelCompletingRef.current = false;
+    isReelingInputRef.current = false;
+    setIsReelingInput(false);
+    setTension(initialTension);
+    setTensionZone('safe');
+    setTensionSafeMs(0);
+    setReelElapsedMs(0);
+    setState('reeling');
   };
 
   const handleSell = async () => {
@@ -187,7 +227,62 @@ export function FishingPage() {
     setResult(null);
     setCastData(null);
     setMessage('');
+    setIsReelingInput(false);
+    setTension(42);
+    setTensionZone('safe');
+    setTensionSafeMs(0);
+    setReelElapsedMs(0);
+    tensionRef.current = 42;
+    tensionSafeMsRef.current = 0;
+    tensionDangerMsRef.current = 0;
+    reelCompletingRef.current = false;
   };
+
+  useEffect(() => {
+    if (state !== 'reeling' || !castData) return;
+
+    let frame = 0;
+    let lastFrameAt = performance.now();
+
+    const tick = (now: number) => {
+      const deltaMs = Math.min(80, Math.max(0, now - lastFrameAt));
+      lastFrameAt = now;
+      const elapsedMs = now - reelStartedAtRef.current;
+      const snapshot = createTensionSnapshot({
+        previous: tensionRef.current,
+        elapsedMs: deltaMs,
+        isReeling: isReelingInputRef.current,
+        phaseMs: elapsedMs,
+      });
+      const isSafeBand = snapshot.value >= snapshot.safeStart && snapshot.value <= snapshot.safeEnd;
+
+      tensionRef.current = snapshot.value;
+      tensionSafeMsRef.current = isSafeBand ? tensionSafeMsRef.current + deltaMs : Math.max(0, tensionSafeMsRef.current - deltaMs * 0.65);
+      tensionDangerMsRef.current = snapshot.zone === 'slack' || snapshot.zone === 'snap' ? tensionDangerMsRef.current + deltaMs : Math.max(0, tensionDangerMsRef.current - deltaMs);
+
+      setTension(snapshot.value);
+      setTensionZone(snapshot.zone);
+      setTensionSafeMs(tensionSafeMsRef.current);
+      setReelElapsedMs(elapsedMs);
+
+      if (tensionDangerMsRef.current > 1450 && !reelCompletingRef.current) {
+        setResult({ result: snapshot.zone === 'snap' ? 'escaped' : 'missed' });
+        setState('result');
+        setIsReelingInput(false);
+        return;
+      }
+
+      if (isTensionCatchReady({ safeMs: tensionSafeMsRef.current, elapsedMs }) && !reelCompletingRef.current) {
+        completeReel();
+        return;
+      }
+
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [castData, state]);
 
   const remaining =
     typeof status?.dailyLimit === 'number'
@@ -212,6 +307,12 @@ export function FishingPage() {
   };
 
   const canCast = state === 'idle' && !!status?.canFish;
+  const tensionProgress = Math.min(100, Math.round((tensionSafeMs / 1800) * 100));
+  const tensionLabel: Record<TensionZone, string> = {
+    slack: '松线',
+    safe: tension >= 38 && tension <= 72 ? '稳定' : '警戒',
+    snap: '绷断',
+  };
 
   return (
     <PageShell
@@ -284,6 +385,26 @@ export function FishingPage() {
                   <span>咬钩</span>
                 </div>
               )}
+              {state === 'reeling' && (
+                <div className="fishing-tension-hud">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[var(--coc-accent-gold-strong)]">LINE TENSION</div>
+                      <div className="mt-1 text-sm font-bold text-[var(--coc-text-primary)]">控线回收 · {tensionLabel[tensionZone]}</div>
+                    </div>
+                    <div className="text-right text-xl font-bold text-[var(--coc-accent-gold)]">{Math.round(tension)}</div>
+                  </div>
+                  <div className="fishing-tension-rail mt-3" data-zone={tensionZone}>
+                    <div className="fishing-tension-safe-zone" />
+                    <div className="fishing-tension-fill" style={{ width: `${tension}%` }} />
+                    <div className="fishing-tension-marker" style={{ left: `${tension}%` }} />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[var(--coc-text-secondary)]">
+                    <span>{isReelingInput ? '正在收线，张力上升' : '松开冷却，张力回落'}</span>
+                    <span>{(reelElapsedMs / 1000).toFixed(1)}s · 稳定 {tensionProgress}%</span>
+                  </div>
+                </div>
+              )}
               {state === 'result' && result && (
                 <>
                   {result.result === 'caught' && result.item ? (
@@ -324,17 +445,34 @@ export function FishingPage() {
                 )}
                 {state === 'biting' && (
                   <Button
-                    onClick={handleReel}
+                    onClick={handleStartReelChallenge}
                     variant="danger"
                     size="lg"
                     className="min-w-40 animate-pulse"
                   >
-                    收竿！
+                    控线！
                   </Button>
                 )}
-                {(state === 'casting' || state === 'reeling') && (
+                {state === 'reeling' && (
+                  <Button
+                    variant="danger"
+                    size="lg"
+                    className="min-w-44"
+                    onPointerDown={() => setIsReelingInput(true)}
+                    onPointerUp={() => setIsReelingInput(false)}
+                    onPointerLeave={() => setIsReelingInput(false)}
+                    onPointerCancel={() => setIsReelingInput(false)}
+                    onKeyDown={(event) => {
+                      if (event.key === ' ' || event.key === 'Enter') setIsReelingInput(true);
+                    }}
+                    onKeyUp={() => setIsReelingInput(false)}
+                  >
+                    {isReelingInput ? '保持张力' : '按住收线'}
+                  </Button>
+                )}
+                {state === 'casting' && (
                   <Button disabled variant="secondary" size="lg" className="min-w-40">
-                    {state === 'casting' ? '抛竿中…' : '收竿中…'}
+                    抛竿中…
                   </Button>
                 )}
               </div>
