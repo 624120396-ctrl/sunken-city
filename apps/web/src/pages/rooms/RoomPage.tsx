@@ -41,6 +41,7 @@ import type {
   RoomBindingView,
   RoomCapabilities,
   RoomLifecycle,
+  RoomMemberView,
   RoomRoleView,
 } from '@/types/room-contract';
 import { KpLifecycleControls } from './components/KpLifecycleControls';
@@ -101,7 +102,7 @@ interface RoomMember {
   nickname: string;
   avatarUrl?: string;
   frameUrl?: string;
-  role: 'KP' | 'PLAYER';
+  role: RoomMemberView['role'];
   exp?: number;
   coins?: number;
   stardust?: number;
@@ -267,7 +268,7 @@ export function RoomPage() {
     mostUsedSkill: null as string | null,
   });
   const caps = room?.myCapabilities;
-  const canUseKPTools = !!caps?.canUseKPTools || !!room?.isCreator;
+  const canUseKPTools = caps?.canUseKPTools ?? !!room?.isCreator;
 
   // ===== SAN 扣除弹窗状态 =====
   const [showSanityModal, setShowSanityModal] = useState(false);
@@ -842,7 +843,7 @@ export function RoomPage() {
             <DoorOpen size={14} />
             离开
           </button>
-          {(caps?.canCloseRoom || room?.isCreator) && (
+          {(caps?.canCloseRoom ?? !!room?.isCreator) && (
             <button onClick={handleCloseRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
                        bg-[url('/btn-off.png')] bg-cover bg-center
                        hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
