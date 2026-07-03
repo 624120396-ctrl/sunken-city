@@ -7,6 +7,7 @@ import { useAuthStore } from '@stores/auth.store';
 import { TiltCard } from '@components/ui/TiltCard';
 import { Button, PageShell, Surface, Tabs } from '@components/system';
 import { getDreamingOraclePhase, getOracleCandidateSlots, getOracleRarityMeta } from '@components/dreaming/dreamingOracleMeta';
+import { getDreamArchiveCardMeta, getDreamArchiveSummary, getDreamHistoryMeta } from '@components/dreaming/dreamingArchiveMeta';
 
 interface DreamCardBrief {
   key: string;
@@ -165,18 +166,12 @@ export function DreamingPage() {
     legendary: 'text-amber-400',
   };
 
-  const rarityBorder: Record<string, string> = {
-    common: 'border-coc-text-secondary/30',
-    rare: 'border-blue-400/40',
-    epic: 'border-purple-400/40',
-    legendary: 'border-amber-400/50',
-  };
-
   const positionLabel = (p?: string) => (p === 'upright' ? '正位' : p === 'reversed' ? '逆位' : '');
 
   const currentCardMeta = collection.find((c) => c.key === todayDraw?.cardKey) ||
     candidates?.find((c) => c.key === todayDraw?.cardKey);
   const unlockedCount = collection.filter((c) => c.unlocked).length;
+  const archiveSummary = getDreamArchiveSummary(collection);
   const oraclePhase = getDreamingOraclePhase({
     canDraw,
     hasTodayDraw: Boolean(todayDraw),
@@ -493,67 +488,78 @@ export function DreamingPage() {
         )}
 
         {tab === 'collection' && (
-          <div className="space-y-4">
-          <Surface variant="panel" padding="md" className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
-                <BookOpen size={14} />
-                CARD ARCHIVE
-              </div>
-              <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">已解锁的牌会显示完整图像，未解锁牌保持封存状态。</p>
-            </div>
-            <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2 text-sm text-[var(--coc-text-secondary)]">
-              {unlockedCount}/{collection.length || '-'} 已记录
-            </div>
-          </Surface>
-
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 [@media(min-width:2200px)]:grid-cols-6">
-            {collection.map((c) => (
-              <div
-                key={c.key}
-                className={`group relative aspect-[3/4] overflow-hidden rounded-xl border ${
-                  c.unlocked ? rarityBorder[c.rarity] : 'border-[#3a3a3a]/40'
-                } bg-[#080b13]/75 shadow-md shadow-black/30 backdrop-blur-md transition hover:-translate-y-1 hover:border-[var(--coc-accent-gold)]/45`}
-              >
-                <div className="pointer-events-none absolute inset-2 z-10 rounded-lg border border-white/5" />
-                {c.unlocked && c.imageUrl ? (
-                  <>
-                    <img
-                      src={c.imageUrl}
-                      alt={c.name}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                    />
-                    <div className="absolute inset-0 hidden flex-col items-center justify-center bg-[#1a1a1a]">
-                      <Sparkles size={24} className="mb-2 text-[#6b6558]" />
-                      <span className="text-xs text-[#6b6558]">素材暂缺</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(201,162,39,0.14),transparent_38%),rgba(0,0,0,0.2)]">
-                    <Sparkles size={24} className={c.unlocked ? 'text-coc-accent-gold' : 'text-coc-text-muted/30'} />
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/65 to-transparent p-3">
-                  <div className={`truncate text-base font-ritual drop-shadow-md ${c.unlocked ? rarityColor[c.rarity] : 'text-[#9b9080]'}`}>
-                    {c.unlocked ? c.name : '???'}
-                  </div>
-                  <div className="mt-1 text-xs text-[#b0a898]">{c.drawCount > 0 ? `已抽中 ${c.drawCount} 次` : '未解锁'}</div>
+          <div className="dream-archive space-y-4">
+            <Surface variant="panel" padding="md" className="dream-archive-toolbar">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
+                  <BookOpen size={14} />
+                  CARD ARCHIVE
                 </div>
+                <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">牌库以封印层级归档，未解锁牌面保持盐雾遮蔽。</p>
               </div>
-            ))}
-          </div>
+              <div className="dream-archive-stats">
+                <span><strong>{archiveSummary.unlocked}</strong> 已归档</span>
+                <span><strong>{archiveSummary.sealed}</strong> 封存</span>
+                <span>{archiveSummary.progressLabel}</span>
+              </div>
+            </Surface>
+
+            <div className="dream-archive-grid">
+              {collection.map((c) => {
+                const meta = getDreamArchiveCardMeta(c);
+                return (
+                  <div
+                    key={c.key}
+                    className="dream-archive-card group"
+                    data-dream-tone={meta.tone}
+                    data-unlocked={c.unlocked}
+                  >
+                    <div className="dream-archive-card__ribbon">
+                      <span>{meta.lockLabel}</span>
+                      <span>{meta.rarityLabel}</span>
+                    </div>
+                    <div className="dream-archive-card__seal">{meta.seal}</div>
+                    <div className="dream-archive-card__frame" />
+                    {c.unlocked && c.imageUrl ? (
+                      <>
+                        <img
+                          src={c.imageUrl}
+                          alt={c.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="absolute inset-0 hidden flex-col items-center justify-center bg-[#1a1a1a]">
+                          <Sparkles size={24} className="mb-2 text-[#6b6558]" />
+                          <span className="text-xs text-[#6b6558]">素材暂缺</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="dream-archive-card__sealed">
+                        <Sparkles size={26} />
+                        <span>{c.unlocked ? '素材暂缺' : 'SEALED'}</span>
+                      </div>
+                    )}
+                    <div className="dream-archive-card__footer">
+                      <div className={`truncate font-ritual text-base drop-shadow-md ${c.unlocked ? rarityColor[c.rarity] : 'text-[#9b9080]'}`}>
+                        {meta.title}
+                      </div>
+                      <div className="mt-1 text-xs text-[#b0a898]">{meta.subtitle}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {tab === 'history' && (
-          <div className="space-y-3">
+          <div className="dream-history space-y-3">
           {history.length > 0 && (
-            <Surface variant="panel" padding="md" className="flex items-center justify-between">
+            <Surface variant="panel" padding="md" className="dream-history-toolbar">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <ScrollText size={14} />
@@ -575,30 +581,25 @@ export function DreamingPage() {
               animate={false}
             />
           ) : null}
-          {history.map((h) => (
-            <Surface key={h.id} variant="panel" padding="md" className="relative overflow-hidden border-l-2 border-l-[var(--coc-accent-gold)]/35">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`truncate font-ritual text-lg ${rarityColor[collection.find((c) => c.key === h.cardKey)?.rarity || 'common']}`}>
-                    {h.cardName || h.cardKey}
-                  </span>
-                  <span className="text-sm text-[#8b8375]">{positionLabel(h.position)}</span>
+          {history.map((h) => {
+            const meta = getDreamHistoryMeta(h);
+            const cardRarity = collection.find((c) => c.key === h.cardKey)?.rarity || 'common';
+            return (
+              <Surface key={h.id} variant="panel" padding="md" className="dream-history-entry" data-history-status={meta.statusTone}>
+                <div className="dream-history-entry__seal">{meta.seal}</div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`truncate font-ritual text-lg ${rarityColor[cardRarity]}`}>
+                      {h.cardName || h.cardKey}
+                    </span>
+                    <span className="dream-history-entry__position">{meta.positionLabel}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-[#b0a898] drop-shadow-sm">{new Date(h.drawnAt).toLocaleString()}</div>
                 </div>
-                <div className="text-sm text-[#b0a898] mt-1 drop-shadow-sm">{new Date(h.drawnAt).toLocaleString()}</div>
-              </div>
-              <div className="text-right text-base">
-                {h.isDeepRevealed ? (
-                  <span className="text-purple-300 drop-shadow-sm">已深度解牌</span>
-                ) : h.isRevealed ? (
-                  <span className="text-[#b0a898] drop-shadow-sm">已解牌</span>
-                ) : (
-                  <span className="text-[#9b9080] drop-shadow-sm">未解牌</span>
-                )}
-              </div>
-              </div>
-            </Surface>
-          ))}
+                <div className="dream-history-entry__status">{meta.statusLabel}</div>
+              </Surface>
+            );
+          })}
           </div>
         )}
       </div>
