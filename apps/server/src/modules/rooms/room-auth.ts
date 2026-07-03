@@ -46,7 +46,8 @@ export function deriveRoomRole(input: {
   if (!input.member || input.member.leftAt) return 'NON_MEMBER';
   if (input.member.role === 'KP') return 'ASSISTANT_KP';
   if (input.member.role === 'OBSERVER') return 'OBSERVER';
-  return 'PLAYER';
+  if (input.member.role === 'PLAYER') return 'PLAYER';
+  return 'NON_MEMBER';
 }
 
 export function capabilitiesFor(role: RoomRoleView, lifecycle: string): RoomCapabilities {
@@ -58,6 +59,7 @@ export function capabilitiesFor(role: RoomRoleView, lifecycle: string): RoomCapa
   const active = lifecycle === 'IN_PROGRESS' || lifecycle === 'PAUSED';
   const finishing = lifecycle === 'FINISHING';
   const closed = lifecycle === 'FINISHED' || lifecycle === 'CANCELLED';
+  const canMutate = !closed;
 
   return {
     canEnterRoom: isMember,
@@ -71,17 +73,17 @@ export function capabilitiesFor(role: RoomRoleView, lifecycle: string): RoomCapa
     canEnterFinishing: isKp && active,
     canFinalizeRoom: isKp && finishing,
     canCancelRoom: isKp && beforeStart,
-    canCloseRoom: role === 'OWNER_KP',
-    canUseKPTools: isKp,
-    canManageMembers: isKp,
-    canManageScene: isKp,
-    canManageClues: isKp,
-    canManageNpcs: isKp,
-    canManageCombat: isKp,
+    canCloseRoom: role === 'OWNER_KP' && canMutate,
+    canUseKPTools: isKp && canMutate,
+    canManageMembers: isKp && canMutate,
+    canManageScene: isKp && canMutate,
+    canManageClues: isKp && canMutate,
+    canManageNpcs: isKp && canMutate,
+    canManageCombat: isKp && canMutate,
     canSendPublicMessage: isMember && !closed,
     canSendPrivateMessage: isPlayer && !closed,
     canRollPublicDice: (isKp || isPlayer) && !closed,
-    canRollSecretDice: isKp,
+    canRollSecretDice: isKp && canMutate,
     canViewSecretEvents: isKp,
     canViewPublicContent: isMember,
   };
