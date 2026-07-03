@@ -4,6 +4,7 @@
 @import './dreaming.css';
 @import './economy.css';
 @import './profile.css';
+@import './characters.css';
 
 @tailwind base;
 @tailwind components;

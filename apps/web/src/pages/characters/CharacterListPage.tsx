@@ -5,6 +5,11 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { FlipCard } from '@components/ui/FlipCard';
 import { Button, PageShell, Surface } from '@components/system';
+import {
+  getCharacterArchiveSummary,
+  getCharacterCondition,
+  getCharacterVitals,
+} from '@components/characters/characterArchiveMeta';
 
 interface Character {
   id: string;
@@ -73,6 +78,8 @@ export function CharacterListPage() {
     }
   };
 
+  const archiveSummary = getCharacterArchiveSummary({ characters, displayedId });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -83,21 +90,30 @@ export function CharacterListPage() {
 
   return (
     <PageShell
+      className="character-archive-page"
       title="调查员名册"
       eyebrow="investigator archive"
-      description="每一张卡都是一段不可删除的命运。保留翻转卡片展示，同时让页面壳和空状态在明亮背景下可读。"
+      description="每一张卡都是一段不可删除的命运。名册优先展示状态、展示位与可行动入口。"
       actions={
         <Button variant="primary" onClick={() => navigate('/characters/new')} icon={<Plus size={18} />}>
           记录命运
         </Button>
       }
     >
+      <div className="character-archive-summary">
+        {archiveSummary.map((item) => (
+          <Surface key={item.key} variant="panel" tone={item.tone} padding="sm" className="character-archive-summary__item">
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </Surface>
+        ))}
+      </div>
 
       {characters.length === 0 ? (
-        <Surface variant="solid" padding="lg" className="text-center py-16 relative corner-ornament">
-          <div className="text-4xl mb-4">🎭</div>
-          <p className="font-ritual text-[var(--coc-on-surface-primary)]">暂无调查员</p>
-          <p className="text-sm mt-2 text-[var(--coc-on-surface-secondary)]">创建你的第一个调查员开始冒险</p>
+        <Surface variant="solid" tone="gold" padding="lg" className="character-archive-empty">
+          <User size={44} />
+          <p>暂无调查员</p>
+          <span>创建你的第一个调查员，登记进入雾港档案馆。</span>
           <Button
             onClick={() => navigate('/characters/new')}
             variant="primary"
@@ -107,135 +123,106 @@ export function CharacterListPage() {
           </Button>
         </Surface>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-          {characters.map((char) => (
-            <FlipCard
-              key={char.id}
-              width="100%"
-              height="100%"
-              className="aspect-[3/4]"
-              front={
-                <div className="relative w-full h-full">
-                  {/* 形象大图 */}
-                  {char.portraitUrl ? (
-                    <img
-                      src={char.portraitUrl}
-                      alt={char.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-[#0a0a0f] flex flex-col items-center justify-center text-[#6b6558]">
-                      <User size={56} className="mb-3 opacity-30" />
-                      <span className="text-xs tracking-widest opacity-60">暂无形象</span>
-                    </div>
-                  )}
+        <div className="character-archive-grid">
+          {characters.map((char) => {
+            const vitals = getCharacterVitals(char);
+            const condition = getCharacterCondition(char);
+            const isDisplayed = displayedId === char.id;
 
-                  {/* 顶部徽章 */}
-                  {displayedId === char.id && (
-                    <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-coc-gold/90 text-coc-abyss text-[10px] font-bold tracking-wide z-10">
-                      <Eye size={10} /> 展示中
-                    </div>
-                  )}
-
-                  {/* 右上角编号 */}
-                  <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-[#0a0a0f]/80 border border-coc-void text-[#c9a227] text-[10px] font-mono truncate max-w-[45%] z-10">
-                    #{String(char.displayId).padStart(8, '0')}
-                  </div>
-
-                  {/* 底部信息浮层 */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-coc-abyss via-coc-abyss/80 to-transparent pt-8 pb-2 px-2 z-10">
-                    <div className="space-y-1">
-                      <h3 className="font-ritual font-bold text-base text-[#e8d4a0] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">{char.name}</h3>
-                      <p className="text-xs text-coc-parchment-dim truncate">{char.occupation} · {char.age}岁</p>
-                    </div>
-
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-[10px]">
-                        <Heart size={10} className="text-[#a63848]" />
-                        <span className="text-[#e8d4a0]">{char.hp}</span>
-                        <span className="text-[#6b6558]">/{char.maxHp}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px]">
-                        <Zap size={10} className="text-[#4db8b8]" />
-                        <span className="text-[#e8d4a0]">{char.mp}</span>
-                        <span className="text-[#6b6558]">/{char.maxMp}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px]">
-                        <Brain size={10} className="text-[#c9a227]" />
-                        <span className="text-[#e8d4a0]">{char.san}</span>
-                        <span className="text-[#6b6558]">/{char.maxSan}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-              back={
-                <div className="flex flex-col items-center gap-3 w-full px-3">
-                  {/* 背面标题 */}
-                  <h3 className="font-ritual font-bold text-[#c9a227] text-sm truncate w-full text-center">{char.name}</h3>
-                  
-                  {/* 属性网格 */}
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Heart size={14} className="text-[#a63848]" />
-                      <span className="text-xs text-[#e8d4a0] font-bold">{char.hp}</span>
-                      <span className="text-[9px] text-[#6b6558]">HP</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Zap size={14} className="text-[#4db8b8]" />
-                      <span className="text-xs text-[#e8d4a0] font-bold">{char.mp}</span>
-                      <span className="text-[9px] text-[#6b6558]">MP</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 p-2 rounded bg-coc-surface/60 border border-coc-void">
-                      <Brain size={14} className="text-[#c9a227]" />
-                      <span className="text-xs text-[#e8d4a0] font-bold">{char.san}</span>
-                      <span className="text-[9px] text-[#6b6558]">SAN</span>
-                    </div>
-                  </div>
-
-                  {/* 操作按钮 */}
-                  <div className="flex flex-col gap-1.5 w-full mt-1">
-                    <Link
-                      to={`/characters/${char.id}`}
-                      className="w-full text-center py-1.5 bg-coc-gold text-coc-abyss rounded text-xs font-medium hover:opacity-90 transition-opacity"
-                    >
-                      查看详情
-                    </Link>
-                    <Link
-                      to={`/characters/${char.id}/growth`}
-                      className="w-full text-center py-1.5 bg-coc-surface border border-coc-void text-[#e8d4a0] rounded text-xs hover:border-coc-rift transition-colors flex items-center justify-center gap-1"
-                    >
-                      <TrendingUp size={12} />
-                      战后成长
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleSetDisplayed(displayedId === char.id ? null : char.id);
-                      }}
-                      disabled={settingId === char.id || settingId === 'null'}
-                      className={cn(
-                        'w-full text-center py-1.5 rounded text-xs flex items-center justify-center gap-1 transition-colors border',
-                        displayedId === char.id
-                          ? 'bg-coc-gold/20 text-[#c9a227] border-coc-gold/50'
-                          : 'bg-coc-surface text-coc-parchment-dim border-coc-void hover:border-coc-rift hover:text-[#e8d4a0]'
+            return (
+              <FlipCard
+                key={char.id}
+                width="100%"
+                height="100%"
+                className="character-archive-card"
+                front={
+                  <div className="character-archive-card__face">
+                    <div className="character-archive-card__portrait">
+                      {char.portraitUrl ? (
+                        <img src={char.portraitUrl} alt={char.name} />
+                      ) : (
+                        <div className="character-archive-card__placeholder">
+                          <User size={48} />
+                          <span>暂无形象</span>
+                        </div>
                       )}
-                    >
-                      <Eye size={12} />
-                      {displayedId === char.id
-                        ? settingId === char.id
-                          ? '取消中...'
-                          : '取消展示'
-                        : settingId === char.id
-                        ? '设置中...'
-                        : '设为展示'}
-                    </button>
+                    </div>
+
+                    <div className="character-archive-card__topline">
+                      <span className="character-archive-card__id">#{String(char.displayId).padStart(8, '0')}</span>
+                      <span className="character-condition-badge" data-tone={condition.tone}>{condition.label}</span>
+                    </div>
+
+                    {isDisplayed && (
+                      <div className="character-display-ribbon">
+                        <Eye size={12} /> 展示中
+                      </div>
+                    )}
+
+                    <div className="character-archive-card__footer">
+                      <h3>{char.name}</h3>
+                      <p>{char.occupation} · {char.age}岁</p>
+                      <div className="character-vital-strip">
+                        {vitals.map((vital) => (
+                          <div key={vital.key} className="character-vital-chip" data-tone={vital.tone}>
+                            {vital.key === 'hp' ? <Heart size={11} /> : vital.key === 'mp' ? <Zap size={11} /> : <Brain size={11} />}
+                            <span>{vital.label}</span>
+                            <strong>{vital.value}</strong>
+                            <small>/{vital.max}</small>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              }
-            />
-          ))}
+                }
+                back={
+                  <div className="character-archive-card__back">
+                    <div>
+                      <span className="character-archive-card__seal">INVESTIGATOR DOSSIER</span>
+                      <h3>{char.name}</h3>
+                      <p>{char.occupation} · {char.age}岁</p>
+                    </div>
+
+                    <div className="character-back-vitals">
+                      {vitals.map((vital) => (
+                        <div key={vital.key} data-tone={vital.tone}>
+                          <span>{vital.label}</span>
+                          <strong>{vital.value}</strong>
+                          <small>{vital.max}</small>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="character-card-actions">
+                      <Link to={`/characters/${char.id}`}>查看详情</Link>
+                      <Link to={`/characters/${char.id}/growth`}>
+                        <TrendingUp size={12} />
+                        战后成长
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSetDisplayed(isDisplayed ? null : char.id);
+                        }}
+                        disabled={settingId === char.id || settingId === 'null'}
+                        className={cn(isDisplayed && 'is-active')}
+                      >
+                        <Eye size={12} />
+                        {isDisplayed
+                          ? settingId === char.id
+                            ? '取消中...'
+                            : '取消展示'
+                          : settingId === char.id
+                          ? '设置中...'
+                          : '设为展示'}
+                      </button>
+                    </div>
+                  </div>
+                }
+              />
+            );
+          })}
         </div>
       )}
     </PageShell>
