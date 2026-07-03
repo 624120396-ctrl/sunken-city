@@ -6,6 +6,7 @@
 @import './profile.css';
 @import './characters.css';
 @import './rank-title.css';
+@import './story-entry.css';
 
 @tailwind base;
 @tailwind components;

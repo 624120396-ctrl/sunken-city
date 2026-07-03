@@ -1,0 +1,160 @@
+.story-entry-page {
+  width: min(100%, 104rem);
+}
+
+.story-entry-loading {
+  display: grid;
+  min-height: 60vh;
+  place-items: center;
+  gap: 0.8rem;
+  color: var(--coc-on-surface-primary);
+}
+
+.story-entry-empty {
+  min-height: 10rem;
+}
+
+.scenario-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: clamp(1rem, 1.5vw, 1.35rem);
+}
+
+.scenario-library-card {
+  --story-tone: var(--coc-accent-gold);
+
+  position: relative;
+  display: grid;
+  min-height: 28rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--story-tone) 26%, var(--coc-border-subtle));
+  border-radius: var(--coc-radius-card);
+  background:
+    radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--story-tone) 14%, transparent), transparent 14rem),
+    color-mix(in srgb, var(--coc-surface-solid) 86%, transparent);
+  color: var(--coc-on-surface-primary);
+  text-align: left;
+  box-shadow: var(--coc-shadow-panel);
+  transition:
+    border-color var(--coc-motion-base) var(--coc-ease-out),
+    box-shadow var(--coc-motion-base) var(--coc-ease-out),
+    transform var(--coc-motion-base) var(--coc-ease-out);
+}
+
+.scenario-library-card[data-tone="ocean"] {
+  --story-tone: var(--coc-accent-ocean);
+}
+
+.scenario-library-card[data-tone="blood"] {
+  --story-tone: var(--coc-accent-blood);
+}
+
+.scenario-library-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--story-tone) 76%, transparent), transparent);
+  pointer-events: none;
+}
+
+.scenario-library-card__cover {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--story-tone) 20%, transparent);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--story-tone) 13%, transparent), transparent 55%),
+    rgba(0, 0, 0, 0.28);
+  color: color-mix(in srgb, var(--story-tone) 78%, var(--coc-on-surface-muted));
+}
+
+.scenario-library-card__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scenario-library-card__body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.scenario-library-card__body > span {
+  align-self: flex-start;
+  border: 1px solid color-mix(in srgb, var(--story-tone) 42%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--story-tone) 11%, transparent);
+  color: color-mix(in srgb, var(--story-tone) 82%, var(--coc-on-surface-primary));
+  padding: 0.16rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.scenario-library-card h2 {
+  margin: 0;
+  color: var(--coc-on-surface-primary);
+  font-size: 1.22rem;
+  line-height: 1.2;
+}
+
+.scenario-library-card p {
+  display: -webkit-box;
+  min-height: 4.2rem;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--coc-on-surface-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.scenario-library-card__meta,
+.scenario-library-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.scenario-library-card__meta {
+  margin-top: auto;
+}
+
+.scenario-library-card__meta span,
+.scenario-library-card__tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--coc-border-subtle);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--coc-on-surface-muted);
+  padding: 0.22rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.scenario-library-card:hover,
+.scenario-library-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--story-tone) 58%, transparent);
+  box-shadow: var(--coc-shadow-elevated), 0 0 24px color-mix(in srgb, var(--story-tone) 12%, transparent);
+}
+
+@media (min-width: 1800px) {
+  .scenario-library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .scenario-library-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
