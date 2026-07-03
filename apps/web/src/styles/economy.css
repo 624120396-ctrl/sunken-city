@@ -1,0 +1,204 @@
+.economy-page-shell {
+  --economy-gold: #d7b45a;
+  --economy-red: #a63848;
+  --economy-blue: #5fa8b7;
+}
+
+.economy-page-shell .coc-page-shell__header {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(201, 162, 39, 0.26);
+  background:
+    linear-gradient(90deg, rgba(8, 10, 14, 0.92), rgba(20, 19, 17, 0.82)),
+    radial-gradient(circle at 88% 28%, rgba(201, 162, 39, 0.14), transparent 30%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 13px);
+}
+
+.economy-page-shell .coc-page-shell__header::after {
+  content: "";
+  position: absolute;
+  inset: auto 1.25rem 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.6), transparent);
+  pointer-events: none;
+}
+
+.economy-district-sidebar {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.economy-district-sidebar__header {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(11, 13, 17, 0.88), rgba(5, 8, 12, 0.92)),
+    radial-gradient(circle at 20% 0%, rgba(201, 162, 39, 0.18), transparent 32%);
+  padding: 1rem;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.economy-district-sidebar__header span {
+  display: block;
+  color: var(--economy-gold);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.economy-district-sidebar__header strong {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--coc-text-primary);
+  font-family: var(--font-ritual, serif);
+  font-size: 1.15rem;
+}
+
+.economy-district-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.economy-district-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.15rem;
+  overflow: hidden;
+  border: 1px solid rgba(212, 197, 168, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(8, 11, 15, 0.78), rgba(4, 7, 11, 0.9)),
+    radial-gradient(circle at 100% 0%, rgba(201, 162, 39, 0.1), transparent 34%);
+  color: var(--coc-text-secondary);
+  outline: none;
+  padding: 0.85rem;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.economy-district-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(201, 162, 39, 0.08), transparent 35%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.economy-district-link:hover,
+.economy-district-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, 0.36);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28), 0 0 24px rgba(201, 162, 39, 0.08);
+}
+
+.economy-district-link:hover::before,
+.economy-district-link:focus-visible::before,
+.economy-district-link[data-active="true"]::before {
+  opacity: 1;
+}
+
+.economy-district-link[data-active="true"] {
+  border-color: rgba(201, 162, 39, 0.52);
+  color: var(--coc-text-primary);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 26px rgba(201, 162, 39, 0.14);
+}
+
+.economy-district-link[data-tone="blood"][data-active="true"] {
+  border-color: rgba(166, 56, 72, 0.58);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 24px rgba(166, 56, 72, 0.16);
+}
+
+.economy-district-link[data-tone="ocean"][data-active="true"] {
+  border-color: rgba(95, 168, 183, 0.5);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 24px rgba(95, 168, 183, 0.12);
+}
+
+.economy-district-link__seal {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--economy-gold);
+  font-family: var(--font-ritual, serif);
+}
+
+.economy-district-link__body,
+.economy-district-link__arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.economy-district-link__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--coc-text-primary);
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.economy-district-link__body p {
+  margin-top: 0.35rem;
+  color: var(--coc-text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.economy-district-link__arrow {
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.economy-district-sidebar__notice {
+  border: 1px solid rgba(212, 197, 168, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.85rem;
+}
+
+.economy-district-sidebar__notice span {
+  color: var(--economy-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.economy-district-sidebar__notice p {
+  margin-top: 0.35rem;
+  color: var(--coc-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 1600px) {
+  .economy-page-shell[data-layout="with-aside"] .coc-page-shell__body {
+    grid-template-columns: minmax(0, 1fr) minmax(23rem, 28rem);
+  }
+}
+
+@media (min-width: 1280px) {
+  .economy-district-nav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .economy-district-sidebar__header,
+  .economy-district-sidebar__notice {
+    display: none;
+  }
+
+  .economy-district-nav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

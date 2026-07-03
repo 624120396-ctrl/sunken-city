@@ -2,6 +2,7 @@
 @import './background-v2.css';
 @import './system-v2.css';
 @import './dreaming.css';
+@import './economy.css';
 
 @tailwind base;
 @tailwind components;

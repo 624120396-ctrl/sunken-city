@@ -2,9 +2,8 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Backpack, ShoppingBag, Store } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { ActionCard, PageShell } from '@components/system';
-
-type EconomySection = 'shop' | 'inventory' | 'market';
+import { PageShell } from '@components/system';
+import { getEconomyDistrictNav, type EconomySection } from './economyDistrictMeta';
 
 interface EconomyPageShellProps {
   active: EconomySection;
@@ -16,35 +15,11 @@ interface EconomyPageShellProps {
   children: ReactNode;
 }
 
-const economyNav: Array<{
-  key: EconomySection;
-  label: string;
-  description: string;
-  to: string;
-  icon: typeof ShoppingBag;
-}> = [
-  {
-    key: 'shop',
-    label: '拉莱耶遗珍',
-    description: '购买藏品、外观与旧日补给',
-    to: '/shop',
-    icon: ShoppingBag,
-  },
-  {
-    key: 'inventory',
-    label: '背包',
-    description: '管理道具、印记与遗物绑定',
-    to: '/inventory',
-    icon: Backpack,
-  },
-  {
-    key: 'market',
-    label: '市场',
-    description: '交易遗物并查看自己的挂单',
-    to: '/market',
-    icon: Store,
-  },
-];
+const economyIcons: Record<EconomySection, typeof ShoppingBag> = {
+  shop: ShoppingBag,
+  inventory: Backpack,
+  market: Store,
+};
 
 export function EconomyPageShell({
   active,
@@ -55,8 +30,11 @@ export function EconomyPageShell({
   action,
   children,
 }: EconomyPageShellProps) {
+  const economyNav = getEconomyDistrictNav(active);
+
   return (
     <PageShell
+      className={cn('economy-page-shell', `economy-page-shell--${active}`)}
       data-testid={`economy-${active}-page`}
       title={title}
       eyebrow={eyebrow}
@@ -71,42 +49,50 @@ export function EconomyPageShell({
       }
       layout="with-aside"
       aside={
-        <div className="xl:sticky xl:top-20 xl:self-start">
-          <nav className="grid grid-cols-3 gap-2 xl:grid-cols-1" aria-label="经济区导航">
+        <div className="economy-district-sidebar xl:sticky xl:top-20 xl:self-start">
+          <div className="economy-district-sidebar__header">
+            <span>NAMELESS MARKET</span>
+            <strong>无名集市</strong>
+          </div>
+          <nav className="economy-district-nav" aria-label="经济区导航">
             {economyNav.map((item) => {
-              const Icon = item.icon;
-              const isActive = active === item.key;
+              const Icon = economyIcons[item.key];
               return (
                 <Link
                   key={item.key}
                   to={item.to}
-                  className="group block h-full outline-none"
-                  aria-current={isActive ? 'page' : undefined}
+                  className="economy-district-link group"
+                  data-active={item.active}
+                  data-tone={item.tone}
+                  aria-current={item.active ? 'page' : undefined}
                 >
-                  <ActionCard
-                    title={item.label}
-                    description={item.description}
-                    icon={<Icon size={18} />}
-                    tone={isActive ? 'gold' : item.key === 'market' ? 'blood' : 'neutral'}
-                    actions={
-                      <ArrowRight
-                        size={14}
-                        className={cn(
-                          'hidden transition-transform sm:block',
-                          isActive ? 'translate-x-0 opacity-100' : 'opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100'
-                        )}
-                      />
-                    }
-                    className={cn('h-full min-h-[72px] md:min-h-[84px]', isActive && 'ring-1 ring-[var(--coc-accent-gold)]')}
+                  <div className="economy-district-link__seal">{item.district}</div>
+                  <div className="economy-district-link__body">
+                    <div className="economy-district-link__title">
+                      <Icon size={17} />
+                      <span>{item.label}</span>
+                    </div>
+                    <p>{item.description}</p>
+                  </div>
+                  <ArrowRight
+                    size={14}
+                    className={cn(
+                      'economy-district-link__arrow',
+                      item.active ? 'translate-x-0 opacity-100' : 'opacity-45 group-hover:translate-x-0.5 group-hover:opacity-100'
+                    )}
                   />
                 </Link>
               );
             })}
           </nav>
+          <div className="economy-district-sidebar__notice">
+            <span>交易契约</span>
+            <p>所有藏品均以档案编号流转，来源不可追问。</p>
+          </div>
         </div>
       }
     >
-      <main className="min-w-0">{children}</main>
+      <main className="economy-page-shell__content min-w-0">{children}</main>
     </PageShell>
   );
 }

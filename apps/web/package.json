@@ -16,6 +16,7 @@
     "test:dreaming-oracle": "node --test --experimental-strip-types scripts/dreaming-oracle.test.ts",
     "test:dreaming-archive": "node --test --experimental-strip-types scripts/dreaming-archive.test.ts",
     "test:dreaming-reading": "node --test --experimental-strip-types scripts/dreaming-reading.test.ts",
+    "test:economy-district": "node --test --experimental-strip-types scripts/economy-district.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
   "dependencies": {
