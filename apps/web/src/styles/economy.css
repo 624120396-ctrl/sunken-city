@@ -562,6 +562,230 @@
   letter-spacing: 0.02em;
 }
 
+.lootbox-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(201, 162, 39, 0.14), transparent 18rem),
+    rgba(2, 4, 8, 0.74);
+  padding: 1rem;
+}
+
+.lootbox-reveal-card {
+  position: relative;
+  width: min(100%, 33rem);
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.42);
+  padding: 1.25rem;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.46),
+    0 0 34px rgba(201, 162, 39, 0.16);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.lootbox-reveal-card[data-tone="blood"] {
+  border-color: rgba(166, 56, 72, 0.58);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    0 0 38px rgba(166, 56, 72, 0.2);
+}
+
+.lootbox-reveal-card[data-flash="true"] {
+  border-color: rgba(243, 215, 122, 0.84);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    0 0 60px rgba(251, 191, 36, 0.42);
+}
+
+.lootbox-reveal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 13px);
+  pointer-events: none;
+}
+
+.lootbox-reveal-card__header,
+.lootbox-reveal-card__coins,
+.lootbox-reveal-list,
+.lootbox-reveal-card__accept {
+  position: relative;
+  z-index: 1;
+}
+
+.lootbox-reveal-card__header {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.lootbox-reveal-card__header > span {
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.13);
+  color: #f3d77a;
+  padding: 0.18rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.lootbox-reveal-card__header h3 {
+  margin: 0.6rem 0 0;
+  color: #e8d4a0;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.lootbox-reveal-card__header p {
+  max-width: 45ch;
+  margin: 0.6rem 0 0;
+  color: var(--coc-text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.lootbox-reveal-card__coins {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 1rem 0;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(201, 162, 39, 0.13), rgba(0, 0, 0, 0.2)),
+    rgba(0, 0, 0, 0.18);
+  padding: 0.65rem;
+}
+
+.lootbox-reveal-card__coins span,
+.lootbox-reveal-card__coins small {
+  color: var(--coc-text-secondary);
+  font-size: 0.8rem;
+}
+
+.lootbox-reveal-card__coins strong {
+  color: #f3d77a;
+  font-size: 1.08rem;
+}
+
+.lootbox-reveal-list {
+  display: grid;
+  gap: 0.75rem;
+  max-height: min(46vh, 26rem);
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.lootbox-reveal-relic {
+  border: 1px solid rgba(212, 197, 168, 0.16);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.12), transparent 44%),
+    rgba(0, 0, 0, 0.24);
+  padding: 0.8rem;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 500ms ease,
+    transform 500ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.lootbox-reveal-relic[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lootbox-reveal-relic[data-rarity="rare"] {
+  border-color: rgba(201, 162, 39, 0.36);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.14);
+}
+
+.lootbox-reveal-relic[data-rarity="epic"],
+.lootbox-reveal-relic[data-rarity="legendary"],
+.lootbox-reveal-relic[data-rarity="mythical"] {
+  border-color: rgba(166, 56, 72, 0.42);
+  box-shadow: 0 0 18px rgba(166, 56, 72, 0.18);
+}
+
+.lootbox-reveal-relic__main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.lootbox-reveal-relic__main img,
+.lootbox-reveal-relic__empty {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: none;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  object-fit: cover;
+}
+
+.lootbox-reveal-relic__empty {
+  display: grid;
+  place-items: center;
+  color: var(--coc-text-muted);
+  font-size: 0.72rem;
+}
+
+.lootbox-reveal-relic__main strong {
+  display: block;
+  color: #e8d4a0;
+  font-size: 0.95rem;
+}
+
+.lootbox-reveal-relic__main span {
+  display: inline-flex;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.14);
+  color: #f3d77a;
+  padding: 0.12rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.lootbox-reveal-relic p {
+  margin: 0.65rem 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--coc-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.lootbox-reveal-card__accept {
+  width: 100%;
+  margin-top: 1rem;
+  border: 1px solid rgba(243, 215, 122, 0.5);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #d6b241, #9a7622);
+  color: #10130f;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 900;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.lootbox-reveal-card__accept:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
 .market-contracts {
   display: grid;
   gap: 1rem;
@@ -847,6 +1071,17 @@
   .inventory-vault-summary,
   .inventory-vault-tabs {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lootbox-reveal-card {
+    padding: 1rem;
+  }
+
+  .lootbox-reveal-card__coins {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
   }
 
   .market-contract-card {

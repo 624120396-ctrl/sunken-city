@@ -3,22 +3,16 @@ import { useState } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 import { ItemCard } from '@components/items/ItemCard';
-import { cn } from '@lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 import { Surface } from '@components/system';
-import { getInventoryVaultSummary, getInventoryVaultTabs, type InventoryVaultTabKey } from '@components/economy/inventoryVaultMeta';
-
-const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythical'];
-
-const rarityGlowClass: Record<string, string> = {
-  common: 'border-coc-text-muted shadow-none',
-  rare: 'border-coc-gold shadow-[0_0_12px_rgba(201,162,39,0.25)]',
-  epic: 'border-coc-blood shadow-[0_0_14px_rgba(139,38,53,0.30)]',
-  legendary: 'border-coc-gold shadow-[0_0_18px_rgba(201,162,39,0.45)]',
-  mythical: 'border-coc-blood shadow-[0_0_22px_rgba(139,38,53,0.40)]',
-};
+import {
+  getInventoryVaultSummary,
+  getInventoryVaultTabs,
+  getLootboxRevealPresentation,
+  type InventoryVaultTabKey,
+} from '@components/economy/inventoryVaultMeta';
 
 const rarityLabel: Record<string, string> = {
   common: '普通',
@@ -27,19 +21,6 @@ const rarityLabel: Record<string, string> = {
   legendary: '传说',
   mythical: '神话',
 };
-
-function getLootboxFlavor(maxRarity: string) {
-  switch (maxRarity) {
-    case 'mythical':
-      return '时间凝滞了一瞬。你感觉有千只眼睛同时睁开，又同时闭上。——祂记住了你。';
-    case 'legendary':
-      return '雾气翻涌，某种古老的存在向你瞥了一眼。珍贵的回响落入掌心。';
-    case 'epic':
-      return '深渊的褶皱里滑出几道流光，它们选择在此刻为你停留。';
-    default:
-      return '盒中传出微弱的呢喃。你得到了一些来自过去的碎片。';
-  }
-}
 
 interface InventoryItem {
   id: string;
@@ -174,10 +155,8 @@ export function InventoryPage() {
       setLootboxResult(result);
       showToast(`开箱成功！获得 ${result.relics.length} 件遗物`, 'success');
       // 开箱动画
-      const maxRarity = result.relics.reduce((max: string, r) => {
-        return RARITY_ORDER.indexOf(r.rarity) > RARITY_ORDER.indexOf(max) ? r.rarity : max;
-      }, 'common');
-      if (['legendary', 'mythical'].includes(maxRarity)) {
+      const reveal = getLootboxRevealPresentation(result.relics.map((relic) => relic.rarity));
+      if (reveal.flash) {
         setFlash(true);
         setTimeout(() => setFlash(false), 600);
       }
@@ -201,6 +180,9 @@ export function InventoryPage() {
   const bindRelic = (inventoryId: string, characterId: string) => {
     bindMutation.mutate({ inventoryId, characterId });
   };
+  const lootboxReveal = lootboxResult
+    ? getLootboxRevealPresentation(lootboxResult.relics.map((relic) => relic.rarity))
+    : null;
 
   return (
     <EconomyPageShell
@@ -373,81 +355,56 @@ export function InventoryPage() {
       )}
 
       {/* 开箱结果弹窗 */}
-      {lootboxResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overlay-layer-3 p-4">
+      {lootboxResult && lootboxReveal && (
+        <div className="lootbox-reveal-overlay">
           <Surface
             variant="elevated"
-            className={cn(
-              'relative w-full max-w-sm border-2 p-5 transition-shadow duration-300',
-              flash
-                ? 'border-coc-gold shadow-[0_0_40px_rgba(251,191,36,0.6)]'
-                : 'border-coc-blood'
-            )}
+            className="lootbox-reveal-card"
+            data-tone={lootboxReveal.tone}
+            data-flash={flash ? 'true' : 'false'}
           >
-            <div className="mb-2 text-center">
-              <h3 className="text-lg font-ritual font-bold text-[#c9a227]">旧日低语已兑现</h3>
-              <p className="mt-2 text-sm italic leading-relaxed text-[#8b8375]">
-                {getLootboxFlavor(
-                  lootboxResult.relics.reduce(
-                    (max, r) =>
-                      RARITY_ORDER.indexOf(r.rarity) > RARITY_ORDER.indexOf(max) ? r.rarity : max,
-                    'common' as string
-                  )
-                )}
+            <div className="lootbox-reveal-card__header">
+              <span>{lootboxReveal.rarityLabel}</span>
+              <h3>旧日低语已兑现</h3>
+              <p>
+                {lootboxReveal.flavor}
               </p>
             </div>
 
-            <div className="my-4 flex items-center justify-center gap-2 rounded-lg border border-coc-gold/30 bg-coc-gold/10 py-2">
-              <span className="text-sm text-[#8b8375]">锈蚀硬币</span>
-              <span className="text-base font-bold text-[#c9a227]">+{lootboxResult.gainedCoins}</span>
-              <span className="text-xs text-[#6b6558]">（当前 {lootboxResult.coins}）</span>
+            <div className="lootbox-reveal-card__coins">
+              <span>锈蚀硬币</span>
+              <strong>+{lootboxResult.gainedCoins}</strong>
+              <small>当前 {lootboxResult.coins}</small>
             </div>
 
-            <div className="space-y-3">
+            <div className="lootbox-reveal-list">
               {lootboxResult.relics.map((r, idx) => (
                 <div
                   key={r.id}
-                  className={cn(
-                    'rounded-lg border bg-black/20 p-3 transition-all duration-500',
-                    rarityGlowClass[r.rarity] || rarityGlowClass.common,
-                    idx < visibleRelics ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
-                  )}
+                  className="lootbox-reveal-relic"
+                  data-rarity={r.rarity}
+                  data-visible={idx < visibleRelics ? 'true' : 'false'}
                   style={{ transitionDelay: `${idx * 80}ms` }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="lootbox-reveal-relic__main">
                     {r.iconUrl ? (
                       <img
                         src={r.iconUrl}
                         alt={r.name}
-                        className="h-12 w-12 rounded-md object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-black/20 text-xs text-[#6b6558]">
+                      <div className="lootbox-reveal-relic__empty">
                         无图
                       </div>
                     )}
-                    <div className="flex-1">
-                      <div className="text-sm font-bold text-[#e8d4a0]">{r.name}</div>
-                      <div
-                        className="mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-coc-abyss"
-                        style={{
-                          backgroundColor:
-                            r.rarity === 'mythical'
-                              ? '#f43f5e'
-                              : r.rarity === 'legendary'
-                                ? '#fb923c'
-                                : r.rarity === 'epic'
-                                  ? '#a855f7'
-                                  : r.rarity === 'rare'
-                                    ? '#3b82f6'
-                                    : '#78716c',
-                        }}
-                      >
+                    <div>
+                      <strong>{r.name}</strong>
+                      <span>
                         {rarityLabel[r.rarity] || r.rarity}
-                      </div>
+                      </span>
                     </div>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-[#8b8375] line-clamp-3">
+                  <p>
                     {r.description}
                   </p>
                 </div>
@@ -456,7 +413,7 @@ export function InventoryPage() {
 
             <button
               onClick={() => setLootboxResult(null)}
-              className="mt-5 w-full rounded bg-coc-gold px-4 py-2.5 text-sm font-bold text-coc-abyss hover:bg-coc-gold-glow"
+              className="lootbox-reveal-card__accept"
             >
               收下它们
             </button>
