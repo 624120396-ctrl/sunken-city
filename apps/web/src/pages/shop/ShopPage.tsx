@@ -9,22 +9,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 import { ReadablePanel, Surface } from '@components/system';
-
-const rarityBorder: Record<string, string> = {
-  common: 'border-coc-parchment-dim',
-  rare: 'border-coc-gold',
-  epic: 'border-coc-madness',
-  legendary: 'border-purple-400',
-  mythical: 'border-rose-300',
-};
-
-const rarityText: Record<string, string> = {
-  common: 'text-coc-parchment-dim',
-  rare: 'text-coc-gold',
-  epic: 'text-coc-madness',
-  legendary: 'text-purple-400',
-  mythical: 'text-rose-300',
-};
+import { getShopItemPresentation } from '@components/economy/shopItemMeta';
 
 const CATEGORIES = [
   { value: '', label: '全部' },
@@ -89,7 +74,7 @@ export function ShopPage() {
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="economy-shop space-y-5">
       <ReadablePanel title="馆藏说明" eyebrow="archive notice" tone="gold">
         <p>并非每一件物品都应当留存于日光之下。</p>
         <p>
@@ -101,17 +86,17 @@ export function ShopPage() {
       </ReadablePanel>
 
       {/* 分类过滤 */}
-      <Surface variant="panel" padding="md" className="flex items-center gap-2 flex-wrap">
-        <Filter size={16} className="text-coc-parchment-dim shrink-0" />
+      <Surface variant="panel" padding="md" className="economy-shop-filter">
+        <div className="economy-shop-filter__label">
+          <Filter size={16} />
+          <span>摊位分类</span>
+        </div>
         {CATEGORIES.map((c) => (
           <button
             key={c.value}
             onClick={() => setCategory(c.value)}
-            className={`min-h-10 px-3 py-1.5 rounded border text-sm transition-colors btn-v2 ${
-              category === c.value
-                ? 'bg-coc-gold text-coc-abyss border-coc-gold'
-                : 'border-coc-void text-[#e8d4a0] hover:border-coc-gold'
-            }`}
+            className="economy-shop-filter__chip"
+            data-active={category === c.value}
           >
             {c.label}
           </button>
@@ -119,10 +104,10 @@ export function ShopPage() {
       </Surface>
 
       {/* 商品网格 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+      <div className="economy-shop-grid">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <Surface key={i} variant="panel" padding="md" className="h-64 animate-pulse" />
+            <Surface key={i} variant="panel" padding="md" className="h-72 animate-pulse" />
           ))
         ) : error ? (
           <div className="col-span-full text-center py-16 text-red-300">
@@ -139,66 +124,71 @@ export function ShopPage() {
             />
           </div>
         ) : (
-          items?.map((item) => (
-            <Surface
-              key={item.key}
-              variant="panel"
-              tone={item.rarity === 'mythical' || item.rarity === 'legendary' ? 'blood' : item.rarity === 'rare' ? 'gold' : 'neutral'}
-              padding="none"
-              className="h-full"
-            >
-              <div className="h-full p-4 flex flex-col gap-3">
-                <div className={`h-32 rounded border ${rarityBorder[item.rarity] || 'border-coc-void'} bg-[#0a0a0f]/45 flex items-center justify-center`}>
-                  {item.iconUrl ? (
-                    <img src={item.iconUrl} alt={item.name} className="max-h-28 object-contain" />
-                  ) : (
-                    <span className="text-coc-parchment-dim text-sm">无预览</span>
-                  )}
-                </div>
+          items?.map((item) => {
+            const itemMeta = getShopItemPresentation({
+              rarity: item.rarity,
+              currency: item.currency,
+              price: item.price,
+              category: item.category,
+              balance: {
+                coins: user?.coins ?? 0,
+                stardust: user?.stardust ?? 0,
+              },
+            });
+            const isPurchasing = purchaseMutation.isPending && purchaseMutation.variables?.key === item.key;
 
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-ritual font-bold text-[#e8d4a0]">{item.name}</p>
-                    <Tooltip content={{
+            return (
+            <article
+              key={item.key}
+              className="economy-shop-card"
+              data-shop-tone={itemMeta.tone}
+              data-affordable={itemMeta.canAfford}
+            >
+              <div className="economy-shop-card__ribbon">
+                <span>{itemMeta.categoryLabel}</span>
+                <Tooltip content={{
                     common: '普通藏品 — 基础装饰',
                     rare: '稀有藏品 — 限定外观',
                     epic: '史诗藏品 — 传奇之物',
                     legendary: '传说藏品 — 深渊馈赠',
                     mythical: '神话藏品 — 不可名状'
                   }[item.rarity] || item.rarity}>
-                    <p className={`text-xs ${rarityText[item.rarity] || 'text-coc-parchment-dim'} cursor-help`}>{item.rarity}</p>
-                  </Tooltip>
-                  </div>
-                </div>
-
-                <p className="text-sm text-coc-parchment-dim line-clamp-2">{item.description}</p>
-
-                  <div className="mt-auto pt-2 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1 text-sm">
-                      {item.currency === 'coin' ? (
-                        <>
-                          <Coins size={14} className="text-[#c9a227]" />
-                          <span className="text-[#e8d4a0]">{item.price}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={14} className="text-purple-400" />
-                          <span className="text-[#e8d4a0]">{item.price}</span>
-                        </>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handlePurchase(item)}
-                      disabled={purchaseMutation.isPending && purchaseMutation.variables?.key === item.key}
-                      className="relative btn-v2 min-h-10 px-4 py-1.5 bg-coc-gold text-coc-abyss rounded text-sm font-medium hover:bg-coc-gold-glow transition-colors disabled:opacity-50"
-                    >
-                      <ParticleBurst trigger={burstItem === item.key} onComplete={() => setBurstItem(null)} />
-                      {purchaseMutation.isPending && purchaseMutation.variables?.key === item.key ? '购买中...' : '购买'}
-                    </button>
-                  </div>
+                    <span>{itemMeta.rarityLabel}</span>
+                </Tooltip>
               </div>
-            </Surface>
-          ))
+              <div className="economy-shop-card__seal">{itemMeta.seal}</div>
+              <div className="economy-shop-card__preview">
+                {item.iconUrl ? (
+                  <img src={item.iconUrl} alt={item.name} />
+                ) : (
+                  <span>无预览</span>
+                )}
+              </div>
+              <div className="economy-shop-card__body">
+                <h2>{item.name}</h2>
+                <p>{item.description}</p>
+              </div>
+              <div className="economy-shop-card__footer">
+                <div className="economy-shop-card__price">
+                  {item.currency === 'coin' ? (
+                    <Coins size={15} />
+                  ) : (
+                    <Sparkles size={15} />
+                  )}
+                  <span>{itemMeta.priceLabel}</span>
+                </div>
+                <button
+                  onClick={() => handlePurchase(item)}
+                  disabled={isPurchasing || !itemMeta.canAfford}
+                  className="economy-shop-card__buy"
+                >
+                  <ParticleBurst trigger={burstItem === item.key} onComplete={() => setBurstItem(null)} />
+                  {isPurchasing ? '签订中...' : itemMeta.canAfford ? itemMeta.affordLabel : itemMeta.affordLabel}
+                </button>
+              </div>
+            </article>
+            );
+          })
         )}
       </div>
       </div>
