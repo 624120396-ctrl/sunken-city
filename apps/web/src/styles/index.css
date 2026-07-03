@@ -1361,14 +1361,14 @@
   border-radius: 8px;
   border: 1px solid rgba(232, 212, 160, 0.34);
   background:
-    radial-gradient(circle at 18% 50%, rgba(232, 212, 160, 0.13), transparent 2.8rem),
-    linear-gradient(90deg, rgba(151, 23, 35, 0.92), rgba(75, 13, 22, 0.88) 48%, rgba(40, 7, 13, 0.92)),
-    linear-gradient(135deg, rgba(84, 14, 24, 0.88), rgba(24, 7, 12, 0.9) 56%, rgba(123, 28, 38, 0.74)),
-    url('/nav-active-long.png');
+    linear-gradient(90deg, rgba(151, 23, 35, 0.38), rgba(75, 13, 22, 0.2) 48%, rgba(40, 7, 13, 0.34)),
+    radial-gradient(circle at 18% 50%, rgba(232, 212, 160, 0.16), transparent 2.8rem),
+    url('/nav-active-long.png'),
+    linear-gradient(135deg, rgba(84, 14, 24, 0.58), rgba(24, 7, 12, 0.72) 56%, rgba(123, 28, 38, 0.5));
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
-  background-blend-mode: screen, normal, normal, normal;
+  background-blend-mode: normal, screen, normal, normal;
   color: #e8d4a0;
   font-weight: 700;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
@@ -1386,9 +1386,9 @@
 
 .nav-plaque-lil {
   background:
-    radial-gradient(circle at 50% 50%, rgba(232, 212, 160, 0.15), transparent 1.35rem),
-    linear-gradient(135deg, rgba(84, 14, 24, 0.9), rgba(24, 7, 12, 0.92)),
-    url('/nav-active-lil.png') !important;
+    radial-gradient(circle at 50% 50%, rgba(232, 212, 160, 0.16), transparent 1.35rem),
+    url('/nav-active-lil.png'),
+    linear-gradient(135deg, rgba(84, 14, 24, 0.58), rgba(24, 7, 12, 0.72)) !important;
   background-size: 100% 100%, 100% 100%, 100% 100% !important;
 }
 
