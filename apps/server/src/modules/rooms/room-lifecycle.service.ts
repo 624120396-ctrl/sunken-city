@@ -246,6 +246,16 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
           settlements: {
             where: { status: { in: APPLICABLE_SETTLEMENT_STATUSES } },
           },
+          participants: {
+            where: {
+              role: 'PLAYER',
+              characterId: { not: null },
+            },
+            select: {
+              characterId: true,
+              userId: true,
+            },
+          },
         },
       });
 
@@ -253,7 +263,27 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
         throw new AppError('ROOM_RUN_NOT_FOUND', '房间进程不存在', 404);
       }
 
+      const playerParticipantCharacterIds = new Set(
+        run.participants
+          .map(participant => participant.characterId)
+          .filter((characterId): characterId is string => Boolean(characterId))
+      );
+      const playerParticipantCharacterUserPairs = new Set(
+        run.participants
+          .filter((participant): participant is { characterId: string; userId: string } => Boolean(participant.characterId))
+          .map(participant => `${participant.characterId}:${participant.userId}`)
+      );
+      let appliedSettlementCount = 0;
+
       for (const settlement of run.settlements) {
+        const matchesPlayerParticipant = settlement.userId
+          ? playerParticipantCharacterUserPairs.has(`${settlement.characterId}:${settlement.userId}`)
+          : playerParticipantCharacterIds.has(settlement.characterId);
+
+        if (!matchesPlayerParticipant) {
+          continue;
+        }
+
         const characterData: { hp?: number; mp?: number; san?: number } = {};
         if (settlement.hpFinal !== null) characterData.hp = settlement.hpFinal;
         if (settlement.mpFinal !== null) characterData.mp = settlement.mpFinal;
@@ -277,6 +307,7 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
           where: { id: settlement.id },
           data: { appliedAt: now },
         });
+        appliedSettlementCount += 1;
       }
 
       await tx.roomCharacterLock.updateMany({
@@ -305,7 +336,7 @@ export async function finalizeRoom(req: AuthRequest, res: Response, next: NextFu
         data: { status: 'CLOSED' },
       });
 
-      return { roomRun, appliedSettlementCount: run.settlements.length };
+      return { roomRun, appliedSettlementCount };
     });
 
     res.json({ success: true, data: result });
