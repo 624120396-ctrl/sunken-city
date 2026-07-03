@@ -63,6 +63,7 @@ temp/
 migration/
 
 # Misc
+.worktrees/
 *.bak
 *.bak.*dist.tar.gz
 # Server generated / user-uploaded files
