@@ -53,6 +53,64 @@ export interface RoomAuthView {
   binding: RoomBindingView;
 }
 
+export interface RoomListItem {
+  id: string;
+  roomId: string;
+  name: string;
+  description?: string | null;
+  memberCount: number;
+  activeMemberCount?: number;
+  playerCount?: number;
+  observerCount?: number;
+  isCreator?: boolean;
+  lifecycle: RoomLifecycle;
+  myRole: RoomRoleView;
+  myCapabilities: RoomCapabilities;
+  myBinding: RoomBindingView;
+}
+
+export const roomLifecycleLabels: Record<RoomLifecycle, string> = {
+  PREPARING: '准备中',
+  READY: '待开场',
+  IN_PROGRESS: '进行中',
+  PAUSED: '暂停中',
+  FINISHING: '结算中',
+  FINISHED: '已结团',
+  CANCELLED: '已取消',
+};
+
+export const roomRoleLabels: Record<RoomRoleView, string> = {
+  OWNER_KP: 'KP',
+  ASSISTANT_KP: '助理 KP',
+  PLAYER: 'PL',
+  OBSERVER: '观察者',
+  NON_MEMBER: '未加入',
+};
+
+export function isRoomHost(role: RoomRoleView) {
+  return role === 'OWNER_KP' || role === 'ASSISTANT_KP';
+}
+
+export function isRoomParticipant(role: RoomRoleView) {
+  return role === 'PLAYER';
+}
+
+export function isRoomObserver(role: RoomRoleView) {
+  return role === 'OBSERVER';
+}
+
+export function isPreparingLifecycle(lifecycle: RoomLifecycle) {
+  return lifecycle === 'PREPARING' || lifecycle === 'READY';
+}
+
+export function isActiveLifecycle(lifecycle: RoomLifecycle) {
+  return lifecycle === 'IN_PROGRESS' || lifecycle === 'PAUSED' || lifecycle === 'FINISHING';
+}
+
+export function isClosedLifecycle(lifecycle: RoomLifecycle) {
+  return lifecycle === 'FINISHED' || lifecycle === 'CANCELLED';
+}
+
 export interface RoomLifecycleResponse {
   lifecycle: RoomLifecycle;
   auth?: RoomAuthView;

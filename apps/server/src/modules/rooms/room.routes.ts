@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
-import { capabilitiesFor, deriveLifecycle, deriveRoomRole } from './room-auth';
+import { deriveLifecycle } from './room-auth';
 import { buildRoomAuthView } from './room-view';
 import {
   assertCharacterAvailableForRoom,
@@ -38,6 +38,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
         status: true,
         members: {
           select: {
+            id: true,
             userId: true,
             role: true,
             leftAt: true,
@@ -59,9 +60,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
       success: true,
       data: {
         rooms: rooms.map(r => {
-          const lifecycle = deriveLifecycle(r.status, r.roomRun?.lifecycle);
           const member = r.members.find(m => m.userId === req.userId && !m.leftAt) || null;
-          const myRole = deriveRoomRole({ creatorId: r.creatorId, userId: req.userId, member });
+          const roomAuthView = buildRoomAuthView({
+            room: r,
+            userId: req.userId,
+            member,
+            lifecycle: r.roomRun?.lifecycle,
+          });
+          const activeMembers = r.members.filter(m => !m.leftAt);
 
           return {
             id: r.id,
@@ -69,10 +75,11 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
             name: r.name,
             description: r.description,
             memberCount: r._count.members,
+            activeMemberCount: activeMembers.length,
+            playerCount: activeMembers.filter(m => m.role === 'PLAYER').length,
+            observerCount: activeMembers.filter(m => m.role === 'OBSERVER').length,
             isCreator: r.creatorId === req.userId,
-            lifecycle,
-            myRole,
-            myCapabilities: capabilitiesFor(myRole, lifecycle),
+            ...roomAuthView,
           };
         }),
       },

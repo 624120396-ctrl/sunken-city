@@ -6,44 +6,93 @@ import {
   Compass,
   Crown,
   DoorOpen,
+  Eye,
+  Flag,
   Hash,
+  Hourglass,
+  PlayCircle,
   Plus,
   Search,
   Shield,
   Sparkles,
   UserRound,
   Users,
+  type LucideIcon,
 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { Modal } from '@components/ui/Modal';
 import { EmptyIcons, EmptyState } from '@components/ui/EmptyState';
 import { ActionCard, Button, DataCard, PageShell, ReadablePanel, Surface } from '@components/system';
+import {
+  isActiveLifecycle,
+  isClosedLifecycle,
+  isPreparingLifecycle,
+  isRoomHost,
+  isRoomObserver,
+  isRoomParticipant,
+  roomLifecycleLabels,
+  roomRoleLabels,
+  type RoomListItem,
+} from '@/types/room-contract';
 
-interface Room {
-  id: string;
-  roomId: string;
-  name: string;
-  description?: string;
-  memberCount: number;
-  isCreator: boolean;
-}
+type RoomFilter = 'all' | 'hosting' | 'playing' | 'observing' | 'preparing' | 'inProgress' | 'finished';
 
-type RoomFilter = 'all' | 'hosting' | 'playing';
-
-const filterLabels: Array<{ value: RoomFilter; label: string; icon: typeof BookOpen }> = [
-  { value: 'all', label: '全部故事', icon: BookOpen },
-  { value: 'hosting', label: '我主持', icon: Crown },
-  { value: 'playing', label: '我参与', icon: UserRound },
+const filterLabels: Array<{ value: RoomFilter; label: string; shortLabel: string; icon: LucideIcon }> = [
+  { value: 'all', label: '全部故事', shortLabel: '全部', icon: BookOpen },
+  { value: 'hosting', label: '我主持', shortLabel: '主持', icon: Crown },
+  { value: 'playing', label: '我参与', shortLabel: '参与', icon: UserRound },
+  { value: 'observing', label: '观察中', shortLabel: '观察', icon: Eye },
+  { value: 'preparing', label: '准备中', shortLabel: '准备', icon: Hourglass },
+  { value: 'inProgress', label: '进行中', shortLabel: '进行', icon: PlayCircle },
+  { value: 'finished', label: '已结团', shortLabel: '结团', icon: Flag },
 ];
 
 function normalizeRoomId(value: string) {
   return value.trim().toUpperCase();
 }
 
+function roomMatchesFilter(room: RoomListItem, filter: RoomFilter) {
+  switch (filter) {
+    case 'hosting':
+      return isRoomHost(room.myRole);
+    case 'playing':
+      return isRoomParticipant(room.myRole);
+    case 'observing':
+      return isRoomObserver(room.myRole);
+    case 'preparing':
+      return isPreparingLifecycle(room.lifecycle);
+    case 'inProgress':
+      return isActiveLifecycle(room.lifecycle);
+    case 'finished':
+      return isClosedLifecycle(room.lifecycle);
+    case 'all':
+    default:
+      return true;
+  }
+}
+
+function getRoomCardTone(room: RoomListItem) {
+  if (isRoomHost(room.myRole)) return 'gold';
+  if (isRoomParticipant(room.myRole)) return 'ocean';
+  if (isClosedLifecycle(room.lifecycle)) return 'blood';
+  return 'neutral';
+}
+
+function getRoomCardIcon(room: RoomListItem) {
+  if (isRoomHost(room.myRole)) return <Crown size={16} />;
+  if (isRoomParticipant(room.myRole)) return <UserRound size={16} />;
+  if (isRoomObserver(room.myRole)) return <Eye size={16} />;
+  return <BookOpen size={16} />;
+}
+
+function getVisibleMemberCount(room: RoomListItem) {
+  return room.activeMemberCount ?? room.memberCount;
+}
+
 export function RoomListPage() {
   const navigate = useNavigate();
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<RoomListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -62,7 +111,7 @@ export function RoomListPage() {
   const fetchRooms = async () => {
     try {
       const response = await apiFetch('/rooms');
-      const data = await handleApiResponse<{ rooms: Room[] }>(response);
+      const data = await handleApiResponse<{ rooms: RoomListItem[] }>(response);
       setRooms(Array.isArray(data.rooms) ? data.rooms : []);
     } catch (error) {
       console.error('获取房间列表失败:', error);
@@ -94,20 +143,20 @@ export function RoomListPage() {
   };
 
   const roomStats = useMemo(() => {
-    const hosting = rooms.filter((room) => room.isCreator).length;
+    const hosting = rooms.filter((room) => isRoomHost(room.myRole)).length;
+    const playing = rooms.filter((room) => isRoomParticipant(room.myRole)).length;
     return {
       total: rooms.length,
       hosting,
-      playing: Math.max(rooms.length - hosting, 0),
-      members: rooms.reduce((sum, room) => sum + room.memberCount, 0),
+      playing,
+      members: rooms.reduce((sum, room) => sum + getVisibleMemberCount(room), 0),
     };
   }, [rooms]);
 
   const filteredRooms = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return rooms.filter((room) => {
-      if (activeFilter === 'hosting' && !room.isCreator) return false;
-      if (activeFilter === 'playing' && room.isCreator) return false;
+      if (!roomMatchesFilter(room, activeFilter)) return false;
       if (!query) return true;
 
       return [room.name, room.roomId, room.description || '']
@@ -203,7 +252,7 @@ export function RoomListPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5 rounded-[var(--coc-radius-card)] border border-[var(--coc-border-subtle)] bg-black/15 p-1">
+              <div className="grid grid-cols-2 gap-1.5 rounded-[var(--coc-radius-card)] border border-[var(--coc-border-subtle)] bg-black/15 p-1 sm:grid-cols-4 xl:grid-cols-7">
                 {filterLabels.map((filter) => {
                   const Icon = filter.icon;
                   const active = activeFilter === filter.value;
@@ -221,7 +270,7 @@ export function RoomListPage() {
                     >
                       <Icon size={14} />
                       <span className="hidden sm:inline">{filter.label}</span>
-                      <span className="sm:hidden">{filter.label.replace('故事', '')}</span>
+                      <span className="sm:hidden">{filter.shortLabel}</span>
                     </button>
                   );
                 })}
@@ -244,7 +293,7 @@ export function RoomListPage() {
             </Surface>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              {filteredRooms.map((room, index) => (
+              {filteredRooms.map((room) => (
                 <ActionCard
                   key={room.id}
                   data-testid="room-card"
@@ -257,13 +306,26 @@ export function RoomListPage() {
                       {room.roomId}
                     </span>
                   }
-                  icon={room.isCreator ? <Crown size={16} /> : <BookOpen size={16} />}
+                  icon={getRoomCardIcon(room)}
                   description={room.description || '尚未留下公开简介。故事的门已经开启，等待调查员踏入。'}
-                  tone={room.isCreator ? 'gold' : index % 2 === 0 ? 'ocean' : 'blood'}
+                  tone={getRoomCardTone(room)}
                   meta={
-                    <span className="inline-flex items-center gap-1">
-                      {room.isCreator ? <Shield size={13} /> : <Sparkles size={13} />}
-                      {room.isCreator ? 'KP 主持' : '调查员席位'} · <Users size={13} /> {room.memberCount}
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="inline-flex items-center gap-1">
+                        <Sparkles size={13} />
+                        {roomLifecycleLabels[room.lifecycle]}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Shield size={13} />
+                        {roomRoleLabels[room.myRole]}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Users size={13} />
+                        {getVisibleMemberCount(room)}
+                        {typeof room.observerCount === 'number' && room.observerCount > 0
+                          ? ` · 观察 ${room.observerCount}`
+                          : ''}
+                      </span>
                     </span>
                   }
                   actions={
