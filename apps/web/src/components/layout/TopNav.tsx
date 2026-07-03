@@ -110,7 +110,7 @@ export function TopNav() {
 
           {/* 下拉菜单 */}
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 user-dropdown-v2 py-2 z-60" role="menu">
+            <div className="absolute right-0 top-full z-[80] mt-2 w-56 user-dropdown-v2 py-2" role="menu">
               {/* 用户信息头部 */}
               <div className="px-4 py-3 border-b border-[rgba(201,162,39,0.1)]">
                 <p className="font-medium truncate" style={{ color: '#d4c5a8' }}>
@@ -128,10 +128,9 @@ export function TopNav() {
                     navigate('/profile');
                     setDropdownOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-[rgba(201,162,39,0.08)]"
-                  style={{ color: '#a69b85' }}
+                  className="user-dropdown-v2__item"
                 >
-                  <User size={16} />
+                  <User size={16} className="user-dropdown-v2__icon" />
                   个人资料
                 </button>
 
@@ -141,10 +140,9 @@ export function TopNav() {
                       navigate('/admin');
                       setDropdownOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-[rgba(201,162,39,0.08)]"
-                    style={{ color: '#c9a227' }}
+                    className="user-dropdown-v2__item user-dropdown-v2__item--admin"
                   >
-                    <Shield size={16} />
+                    <Shield size={16} className="user-dropdown-v2__icon" />
                     管理后台
                   </button>
                 )}
@@ -153,10 +151,9 @@ export function TopNav() {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-[rgba(139,38,53,0.1)]"
-                  style={{ color: '#a63848' }}
+                  className="user-dropdown-v2__item user-dropdown-v2__item--danger"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={16} className="user-dropdown-v2__icon" />
                   退出登录
                 </button>
               </div>

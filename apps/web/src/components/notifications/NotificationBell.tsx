@@ -121,14 +121,14 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-96 bg-coc-bg-tertiary border border-coc-border rounded-lg shadow-2xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-coc-border">
-            <span className="font-bold text-coc-parchment">通知</span>
+        <div className="notification-dropdown-v2 absolute right-0 z-[80] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden">
+          <div className="notification-dropdown-v2__header">
+            <span className="font-bold text-[var(--coc-on-surface-primary)]">通知</span>
             <div className="flex items-center gap-3">
               {unreadCount > 0 && (
                 <button
                   onClick={handleReadAll}
-                  className="text-xs text-coc-text-muted hover:text-coc-parchment flex items-center gap-1"
+                  className="notification-dropdown-v2__utility"
                 >
                   <Check size={12} />
                   全部已读
@@ -136,7 +136,7 @@ export function NotificationBell() {
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="text-coc-text-muted hover:text-coc-parchment"
+                className="notification-dropdown-v2__close"
               >
                 <X size={14} />
               </button>
@@ -145,36 +145,34 @@ export function NotificationBell() {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-coc-text-muted">
+              <div className="px-4 py-8 text-center text-sm text-[var(--coc-on-surface-muted)]">
                 暂无通知
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`px-4 py-3 border-b border-coc-border last:border-0 hover:bg-coc-bg-secondary transition-colors ${
-                    n.isRead ? 'opacity-80' : 'bg-coc-bg-secondary/30'
-                  }`}
+                  className={`notification-dropdown-v2__item ${n.isRead ? 'notification-dropdown-v2__item--read' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openDetail(n)}>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="px-1.5 py-0.5 rounded border border-coc-border text-coc-text-muted">
+                        <span className="notification-dropdown-v2__type">
                           {typeLabel(n.type)}
                         </span>
                         {!n.isRead && (
                           <span className="w-1.5 h-1.5 rounded-full bg-coc-accent-red" />
                         )}
                       </div>
-                      <div className="mt-1 text-sm text-coc-parchment leading-snug">
+                      <div className="mt-1 text-sm font-semibold leading-snug text-[var(--coc-on-surface-primary)]">
                         {n.title}
                       </div>
                       {n.content && (
-                        <div className="text-xs text-coc-text-muted line-clamp-2 mt-1">
+                        <div className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--coc-on-surface-secondary)]">
                           {n.content}
                         </div>
                       )}
-                      <div className="mt-1 text-[10px] text-coc-text-muted">
+                      <div className="mt-1 text-[10px] text-[var(--coc-on-surface-muted)]">
                         {formatTimeAgo(n.createdAt)}
                       </div>
                     </div>
@@ -186,7 +184,7 @@ export function NotificationBell() {
                             e.stopPropagation();
                             goLink(n);
                           }}
-                          className="text-coc-text-muted hover:text-coc-parchment p-1"
+                          className="notification-dropdown-v2__icon-button"
                           title="前往"
                         >
                           <ExternalLink size={12} />
@@ -197,7 +195,7 @@ export function NotificationBell() {
                           e.stopPropagation();
                           handleDelete(n.id);
                         }}
-                        className="text-coc-text-muted hover:text-red-400 p-1"
+                        className="notification-dropdown-v2__icon-button notification-dropdown-v2__icon-button--danger"
                         title="删除"
                       >
                         <Trash2 size={12} />
