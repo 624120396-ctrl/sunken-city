@@ -31,9 +31,11 @@ import {
   isRoomHost,
   isRoomObserver,
   isRoomParticipant,
+  normalizeRoomListItem,
   roomLifecycleLabels,
-  roomRoleLabels,
+  roomRoleCompactLabels,
   type RoomListItem,
+  type RoomListItemResponse,
 } from '@/types/room-contract';
 
 type RoomFilter = 'all' | 'hosting' | 'playing' | 'observing' | 'preparing' | 'inProgress' | 'finished';
@@ -111,8 +113,8 @@ export function RoomListPage() {
   const fetchRooms = async () => {
     try {
       const response = await apiFetch('/rooms');
-      const data = await handleApiResponse<{ rooms: RoomListItem[] }>(response);
-      setRooms(Array.isArray(data.rooms) ? data.rooms : []);
+      const data = await handleApiResponse<{ rooms: RoomListItemResponse[] }>(response);
+      setRooms(Array.isArray(data.rooms) ? data.rooms.map(normalizeRoomListItem) : []);
     } catch (error) {
       console.error('获取房间列表失败:', error);
     } finally {
@@ -317,7 +319,7 @@ export function RoomListPage() {
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Shield size={13} />
-                        {roomRoleLabels[room.myRole]}
+                        {roomRoleCompactLabels[room.myRole]}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Users size={13} />

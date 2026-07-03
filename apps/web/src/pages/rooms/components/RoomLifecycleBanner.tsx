@@ -1,7 +1,7 @@
 import { cn } from '@lib/utils';
 import {
   roomLifecycleLabels,
-  roomRoleLabels,
+  roomRoleFullLabels,
   type RoomLifecycle,
   type RoomRoleView,
 } from '@/types/room-contract';
@@ -28,9 +28,9 @@ export function RoomLifecycleBanner({ lifecycle, myRole, className }: RoomLifecy
           <span className="text-[#e8d4a0]">{roomLifecycleLabels[lifecycle]}</span>
         </span>
       )}
-      {myRole && roomRoleLabels[myRole] && (
+      {myRole && roomRoleFullLabels[myRole] && (
         <span className="border-l border-[#3a3a3a]/60 pl-2">
-          {roomRoleLabels[myRole]}
+          {roomRoleFullLabels[myRole]}
         </span>
       )}
     </div>

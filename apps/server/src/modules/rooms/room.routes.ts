@@ -26,8 +26,20 @@ function generateRoomId(): string {
 // 获取房间列表
 router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
+    const userId = req.userId!;
     const rooms = await prisma.room.findMany({
-      where: { status: 'ACTIVE' },
+      where: {
+        OR: [
+          { status: 'ACTIVE' },
+          {
+            status: 'CLOSED',
+            OR: [
+              { creatorId: userId },
+              { members: { some: { userId } } },
+            ],
+          },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -60,10 +72,10 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
       success: true,
       data: {
         rooms: rooms.map(r => {
-          const member = r.members.find(m => m.userId === req.userId && !m.leftAt) || null;
+          const member = r.members.find(m => m.userId === userId && !m.leftAt) || null;
           const roomAuthView = buildRoomAuthView({
             room: r,
-            userId: req.userId,
+            userId,
             member,
             lifecycle: r.roomRun?.lifecycle,
           });
@@ -78,7 +90,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
             activeMemberCount: activeMembers.length,
             playerCount: activeMembers.filter(m => m.role === 'PLAYER').length,
             observerCount: activeMembers.filter(m => m.role === 'OBSERVER').length,
-            isCreator: r.creatorId === req.userId,
+            isCreator: r.creatorId === userId,
             ...roomAuthView,
           };
         }),

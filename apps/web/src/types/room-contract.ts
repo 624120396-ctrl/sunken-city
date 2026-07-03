@@ -69,6 +69,9 @@ export interface RoomListItem {
   myBinding: RoomBindingView;
 }
 
+export type RoomListItemResponse = Omit<RoomListItem, 'lifecycle' | 'myRole' | 'myCapabilities' | 'myBinding'> &
+  Partial<Pick<RoomListItem, 'lifecycle' | 'myRole' | 'myCapabilities' | 'myBinding'>>;
+
 export const roomLifecycleLabels: Record<RoomLifecycle, string> = {
   PREPARING: '准备中',
   READY: '待开场',
@@ -79,13 +82,23 @@ export const roomLifecycleLabels: Record<RoomLifecycle, string> = {
   CANCELLED: '已取消',
 };
 
-export const roomRoleLabels: Record<RoomRoleView, string> = {
+export const roomRoleCompactLabels: Record<RoomRoleView, string> = {
   OWNER_KP: 'KP',
   ASSISTANT_KP: '助理 KP',
   PLAYER: 'PL',
   OBSERVER: '观察者',
   NON_MEMBER: '未加入',
 };
+
+export const roomRoleFullLabels: Record<RoomRoleView, string> = {
+  OWNER_KP: '主持人',
+  ASSISTANT_KP: '助理 KP',
+  PLAYER: '调查员',
+  OBSERVER: '观察者',
+  NON_MEMBER: '未加入',
+};
+
+export const roomRoleLabels = roomRoleFullLabels;
 
 export function isRoomHost(role: RoomRoleView) {
   return role === 'OWNER_KP' || role === 'ASSISTANT_KP';
@@ -109,6 +122,72 @@ export function isActiveLifecycle(lifecycle: RoomLifecycle) {
 
 export function isClosedLifecycle(lifecycle: RoomLifecycle) {
   return lifecycle === 'FINISHED' || lifecycle === 'CANCELLED';
+}
+
+function fallbackRoomCapabilities(role: RoomRoleView, lifecycle: RoomLifecycle): RoomCapabilities {
+  const isKp = isRoomHost(role);
+  const isPlayer = isRoomParticipant(role);
+  const isObserver = isRoomObserver(role);
+  const isMember = isKp || isPlayer || isObserver;
+  const beforeStart = isPreparingLifecycle(lifecycle);
+  const active = lifecycle === 'IN_PROGRESS' || lifecycle === 'PAUSED';
+  const finishing = lifecycle === 'FINISHING';
+  const closed = isClosedLifecycle(lifecycle);
+  const canMutate = !closed;
+
+  return {
+    canEnterRoom: isMember,
+    canJoinAsPlayer: role === 'NON_MEMBER' && beforeStart,
+    canJoinAsObserver: role === 'NON_MEMBER' && !closed,
+    canChangeCharacter: isPlayer && beforeStart,
+    canRequestCharacterChange: isPlayer && active,
+    canStartRoom: isKp && beforeStart,
+    canPauseRoom: isKp && lifecycle === 'IN_PROGRESS',
+    canResumeRoom: isKp && lifecycle === 'PAUSED',
+    canEnterFinishing: isKp && active,
+    canFinalizeRoom: isKp && finishing,
+    canCancelRoom: isKp && beforeStart,
+    canCloseRoom: role === 'OWNER_KP' && canMutate,
+    canUseKPTools: isKp && canMutate,
+    canManageMembers: isKp && canMutate,
+    canManageScene: isKp && canMutate,
+    canManageClues: isKp && canMutate,
+    canManageNpcs: isKp && canMutate,
+    canManageCombat: isKp && canMutate,
+    canSendPublicMessage: isMember && !closed,
+    canSendPrivateMessage: isPlayer && !closed,
+    canRollPublicDice: (isKp || isPlayer) && !closed,
+    canRollSecretDice: isKp && canMutate,
+    canViewSecretEvents: isKp,
+    canViewPublicContent: isMember,
+  };
+}
+
+function fallbackRoomBinding(role: RoomRoleView): RoomBindingView {
+  return {
+    roomMemberId: null,
+    characterId: null,
+    joinMode: isRoomHost(role)
+      ? 'KP'
+      : isRoomParticipant(role)
+        ? 'PLAYER'
+        : isRoomObserver(role)
+          ? 'OBSERVER'
+          : 'NONE',
+  };
+}
+
+export function normalizeRoomListItem(room: RoomListItemResponse): RoomListItem {
+  const lifecycle = room.lifecycle ?? 'PREPARING';
+  const myRole = room.myRole ?? (room.isCreator ? 'OWNER_KP' : 'NON_MEMBER');
+
+  return {
+    ...room,
+    lifecycle,
+    myRole,
+    myCapabilities: room.myCapabilities ?? fallbackRoomCapabilities(myRole, lifecycle),
+    myBinding: room.myBinding ?? fallbackRoomBinding(myRole),
+  };
 }
 
 export interface RoomLifecycleResponse {
