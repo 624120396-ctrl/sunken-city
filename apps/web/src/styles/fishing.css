@@ -302,6 +302,12 @@
 }
 
 /* Catch reveal card */
+.catch-reveal-overlay {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(232, 212, 160, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(2, 7, 10, 0.16), rgba(2, 7, 10, 0.48));
+}
+
 .catch-reveal-card {
   background:
     radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.12), transparent 34%),
@@ -320,6 +326,18 @@
   color: #f3e4bd;
 }
 
+.catch-reveal-card[data-tone="eldritch"] {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(159, 28, 43, 0.22), transparent 36%),
+    linear-gradient(180deg, rgba(24, 13, 18, 0.98), rgba(8, 6, 10, 0.98));
+}
+
+.catch-reveal-card[data-tone="uncommon"] {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(123, 92, 206, 0.16), transparent 35%),
+    linear-gradient(180deg, rgba(18, 18, 28, 0.98), rgba(7, 8, 14, 0.98));
+}
+
 .catch-reveal-card::before {
   content: "";
   position: absolute;
@@ -330,15 +348,56 @@
 }
 
 .catch-reveal-card::after {
-  content: "SALVAGE";
+  content: "";
   position: absolute;
-  inset-inline: 0;
-  top: 0.78rem;
-  color: rgba(232, 212, 160, 0.18);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.32em;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(232, 212, 160, 0.05) 8% 8.4%, transparent 8.4% 91.6%, rgba(232, 212, 160, 0.05) 91.6% 92%, transparent 92%),
+    repeating-linear-gradient(0deg, transparent 0 18px, rgba(232, 212, 160, 0.025) 18px 19px);
   pointer-events: none;
+}
+
+.catch-reveal__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+  text-align: left;
+}
+
+.catch-reveal__eyebrow {
+  color: rgba(232, 212, 160, 0.72);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.catch-reveal__headline {
+  color: #f3e4bd;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0.24rem 0 0;
+}
+
+.catch-reveal__seal {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(232, 212, 160, 0.35);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(232, 212, 160, 0.14), rgba(0, 0, 0, 0.28));
+  box-shadow: inset 0 0 18px rgba(201, 162, 39, 0.1), 0 0 18px rgba(201, 162, 39, 0.12);
+  color: #e8d4a0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 800;
 }
 
 .catch-reveal[data-rarity="ELDRITCH"] {
@@ -395,6 +454,15 @@
   overflow: hidden;
 }
 
+.catch-reveal__sigil {
+  color: #e8d4a0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(201, 162, 39, 0.34);
+}
+
 .item-name {
   font-family: 'Cinzel', 'Noto Serif SC', Georgia, serif;
   font-size: 1.125rem;
@@ -420,6 +488,66 @@
   margin-bottom: 1rem;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+.catch-reveal__ledger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  border: 1px solid rgba(232, 212, 160, 0.13);
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+}
+
+.catch-reveal__ledger span {
+  color: rgba(232, 212, 160, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.catch-reveal__ledger strong {
+  color: #f3e4bd;
+  font-size: 0.92rem;
+  text-align: right;
+}
+
+.catch-reveal__collection {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.1);
+  color: #e8d4a0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  padding: 0.38rem 0.65rem;
+}
+
+.catch-reveal__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.catch-reveal__button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .catch-reveal-card {
+    padding: 1.1rem;
+  }
+
+  .catch-reveal__actions {
+    flex-direction: column;
+  }
 }
 
 /* Rarity glows */

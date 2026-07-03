@@ -4,7 +4,7 @@ import { Anchor, Clock3, Fish, PackageOpen, Waves } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { CatchReveal } from '@components/fishing/CatchReveal';
 import { FishingCanvas } from '@components/fishing/FishingCanvas';
-import { createTensionSnapshot, isTensionCatchReady, type TensionZone } from '@components/fishing/tensionGame';
+import { createTensionSnapshot, isTensionCatchReady, shouldTensionBreak, type TensionZone } from '@components/fishing/tensionGame';
 import { Button, PageShell, Surface } from '@components/system';
 
 type FishingState = 'idle' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'result';
@@ -60,15 +60,16 @@ export function FishingPage() {
   const [logs, setLogs] = useState<FishingLogItem[]>([]);
   const [collectionPct, setCollectionPct] = useState(0);
   const [message, setMessage] = useState('');
-  const [tension, setTension] = useState(42);
+  const [tension, setTension] = useState(58);
   const [tensionZone, setTensionZone] = useState<TensionZone>('safe');
   const [tensionSafeMs, setTensionSafeMs] = useState(0);
   const [reelElapsedMs, setReelElapsedMs] = useState(0);
   const [isReelingInput, setIsReelingInput] = useState(false);
+  const [isTensionActive, setIsTensionActive] = useState(false);
 
   const timers = useRef<{ wait?: number; bite?: number }>({});
   const stateRef = useRef<FishingState>(state);
-  const tensionRef = useRef(42);
+  const tensionRef = useRef(58);
   const tensionSafeMsRef = useRef(0);
   const tensionDangerMsRef = useRef(0);
   const reelStartedAtRef = useRef(0);
@@ -154,6 +155,7 @@ export function FishingPage() {
     if (!castData) return;
     if (reelCompletingRef.current) return;
     reelCompletingRef.current = true;
+    setIsTensionActive(false);
     if (timers.current.wait) clearTimeout(timers.current.wait);
     if (timers.current.bite) clearTimeout(timers.current.bite);
     setState('reeling');
@@ -181,7 +183,7 @@ export function FishingPage() {
     if (!castData) return;
     if (timers.current.wait) clearTimeout(timers.current.wait);
     if (timers.current.bite) clearTimeout(timers.current.bite);
-    const initialTension = 42;
+    const initialTension = 58;
     tensionRef.current = initialTension;
     tensionSafeMsRef.current = 0;
     tensionDangerMsRef.current = 0;
@@ -189,6 +191,7 @@ export function FishingPage() {
     reelCompletingRef.current = false;
     isReelingInputRef.current = false;
     setIsReelingInput(false);
+    setIsTensionActive(true);
     setTension(initialTension);
     setTensionZone('safe');
     setTensionSafeMs(0);
@@ -228,21 +231,23 @@ export function FishingPage() {
     setCastData(null);
     setMessage('');
     setIsReelingInput(false);
-    setTension(42);
+    setIsTensionActive(false);
+    setTension(58);
     setTensionZone('safe');
     setTensionSafeMs(0);
     setReelElapsedMs(0);
-    tensionRef.current = 42;
+    tensionRef.current = 58;
     tensionSafeMsRef.current = 0;
     tensionDangerMsRef.current = 0;
     reelCompletingRef.current = false;
   };
 
   useEffect(() => {
-    if (state !== 'reeling' || !castData) return;
+    if (state !== 'reeling' || !castData || !isTensionActive) return;
 
     let frame = 0;
     let lastFrameAt = performance.now();
+    if (reelStartedAtRef.current <= 0) reelStartedAtRef.current = lastFrameAt;
 
     const tick = (now: number) => {
       const deltaMs = Math.min(80, Math.max(0, now - lastFrameAt));
@@ -265,10 +270,11 @@ export function FishingPage() {
       setTensionSafeMs(tensionSafeMsRef.current);
       setReelElapsedMs(elapsedMs);
 
-      if (tensionDangerMsRef.current > 1450 && !reelCompletingRef.current) {
+      if (shouldTensionBreak({ dangerMs: tensionDangerMsRef.current, elapsedMs }) && !reelCompletingRef.current) {
         setResult({ result: snapshot.zone === 'snap' ? 'escaped' : 'missed' });
         setState('result');
         setIsReelingInput(false);
+        setIsTensionActive(false);
         return;
       }
 
@@ -282,7 +288,7 @@ export function FishingPage() {
 
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [castData, state]);
+  }, [castData, isTensionActive, state]);
 
   const remaining =
     typeof status?.dailyLimit === 'number'
@@ -385,7 +391,7 @@ export function FishingPage() {
                   <span>咬钩</span>
                 </div>
               )}
-              {state === 'reeling' && (
+              {state === 'reeling' && isTensionActive && (
                 <div className="fishing-tension-hud">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -453,7 +459,7 @@ export function FishingPage() {
                     控线！
                   </Button>
                 )}
-                {state === 'reeling' && (
+                {state === 'reeling' && isTensionActive && (
                   <Button
                     variant="danger"
                     size="lg"
@@ -468,6 +474,11 @@ export function FishingPage() {
                     onKeyUp={() => setIsReelingInput(false)}
                   >
                     {isReelingInput ? '保持张力' : '按住收线'}
+                  </Button>
+                )}
+                {state === 'reeling' && !isTensionActive && (
+                  <Button disabled variant="secondary" size="lg" className="min-w-40">
+                    收竿中…
                   </Button>
                 )}
                 {state === 'casting' && (

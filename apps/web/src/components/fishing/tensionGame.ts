@@ -22,6 +22,7 @@ const RISE_PER_SECOND = 40;
 const FALL_PER_SECOND = 30;
 const MIN_SAFE_MS = 1800;
 const MIN_REEL_MS = 2500;
+const INPUT_GRACE_MS = 1800;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -47,4 +48,8 @@ export function createTensionSnapshot({ previous, elapsedMs, isReeling }: Tensio
 
 export function isTensionCatchReady({ safeMs, elapsedMs }: { safeMs: number; elapsedMs: number }) {
   return safeMs >= MIN_SAFE_MS && elapsedMs >= MIN_REEL_MS;
+}
+
+export function shouldTensionBreak({ dangerMs, elapsedMs }: { dangerMs: number; elapsedMs: number }) {
+  return elapsedMs >= INPUT_GRACE_MS && dangerMs > 1450;
 }

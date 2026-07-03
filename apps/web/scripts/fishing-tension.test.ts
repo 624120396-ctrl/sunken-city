@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTensionSnapshot, isTensionCatchReady } from '../src/components/fishing/tensionGame.ts';
+import { createTensionSnapshot, isTensionCatchReady, shouldTensionBreak } from '../src/components/fishing/tensionGame.ts';
 
 test('tension rises while reeling and drifts down while released', () => {
   const charged = createTensionSnapshot({ previous: 42, elapsedMs: 400, isReeling: true, phaseMs: 0 });
@@ -31,4 +31,9 @@ test('catch is ready only after enough stable safe tension', () => {
   assert.equal(isTensionCatchReady({ safeMs: 1799, elapsedMs: 4200 }), false);
   assert.equal(isTensionCatchReady({ safeMs: 1800, elapsedMs: 4200 }), true);
   assert.equal(isTensionCatchReady({ safeMs: 2000, elapsedMs: 1500 }), false);
+});
+
+test('line break checks allow a short input grace period', () => {
+  assert.equal(shouldTensionBreak({ dangerMs: 1600, elapsedMs: 1700 }), false);
+  assert.equal(shouldTensionBreak({ dangerMs: 1600, elapsedMs: 2200 }), true);
 });

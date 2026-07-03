@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "test:fishing-reveal": "node --test --experimental-strip-types scripts/fishing-reveal.test.ts",
     "test:fishing-tension": "node --test --experimental-strip-types scripts/fishing-tension.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
