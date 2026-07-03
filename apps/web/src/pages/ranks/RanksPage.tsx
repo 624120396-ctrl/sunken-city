@@ -176,7 +176,7 @@ export function RanksPage() {
             <h2>位阶天梯</h2>
           </div>
           
-          <div className="rank-ladder-grid">
+          <div className="rank-ladder-grid [@media(min-width:2200px)]:grid-cols-8">
             {ladderItems.map((rank, i) => (
               <motion.button
                 key={rank.id}

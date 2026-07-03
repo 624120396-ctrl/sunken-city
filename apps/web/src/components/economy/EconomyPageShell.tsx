@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Backpack, ShoppingBag, Store } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { PageShell } from '@components/system';
+import { ActionCard, PageShell } from '@components/system';
 import { getEconomyDistrictNav, type EconomySection } from './economyDistrictMeta';
 
 interface EconomyPageShellProps {
@@ -85,10 +85,13 @@ export function EconomyPageShell({
               );
             })}
           </nav>
-          <div className="economy-district-sidebar__notice">
-            <span>交易契约</span>
-            <p>所有藏品均以档案编号流转，来源不可追问。</p>
-          </div>
+          <ActionCard
+            className="economy-district-sidebar__notice"
+            eyebrow="交易契约"
+            title="流转守则"
+            description="所有藏品均以档案编号流转，来源不可追问。"
+            tone="gold"
+          />
         </div>
       }
     >

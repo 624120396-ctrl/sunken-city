@@ -1,5 +1,5 @@
 .profile-page {
-  width: min(100%, 94rem);
+  width: min(100%, 132rem);
 }
 
 .profile-page__header-actions {
@@ -508,6 +508,17 @@
 
   .profile-item-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 2200px) {
+  .profile-layout-grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+
+  .profile-identity-card__stats,
+  .profile-item-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 }
 

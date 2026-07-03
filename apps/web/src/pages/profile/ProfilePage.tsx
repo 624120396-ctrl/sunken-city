@@ -291,7 +291,7 @@ export function ProfilePage() {
           <h2>{user?.nickname || nickname || '未命名调查员'}</h2>
           <p>登记编号 {displayId} · 当前展示印记 {user?.displayedTitleKey || '未选择'}</p>
         </div>
-        <div className="profile-identity-card__stats">
+        <div className="profile-identity-card__stats [@media(min-width:2200px)]:grid-cols-8">
           {dossierStats.map((stat) => (
             <div key={stat.key} className="profile-stat-card" data-tone={stat.tone}>
               <div className="profile-stat-card__icon">{dossierStatIcons[stat.key]}</div>
@@ -302,7 +302,7 @@ export function ProfilePage() {
         </div>
       </Surface>
 
-      <div className="profile-layout-grid">
+      <div className="profile-layout-grid xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <Surface variant="solid" tone="gold" padding="lg" className="profile-form-card">
           <div className="profile-section-heading">
             <Camera className="h-5 w-5" />

@@ -533,7 +533,7 @@ export function DreamingPage() {
               </div>
             </Surface>
 
-            <div className="dream-archive-grid">
+            <div className="dream-archive-grid [@media(min-width:2200px)]:grid-cols-6">
               {collection.map((c) => {
                 const meta = getDreamArchiveCardMeta(c);
                 return (

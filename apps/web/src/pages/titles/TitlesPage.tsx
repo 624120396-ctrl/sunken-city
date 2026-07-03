@@ -302,7 +302,7 @@ export function TitlesPage() {
         </Surface>
 
         {/* 印记网格 */}
-        <div className="title-grid">
+        <div className="title-grid [@media(min-width:2200px)]:grid-cols-8">
           {filteredTitles.map((title, i) => {
             const isUnlocked = unlockedKeys.includes(title.key);
             const isDisplayed = displayedTitleKey === title.key;

@@ -20,6 +20,9 @@ const appBackground = readProjectFile('src/components/background/AppBackground.t
 const tokens = readProjectFile('src/styles/tokens-v2.css');
 const backgroundCss = readProjectFile('src/styles/background-v2.css');
 const systemCss = readProjectFile('src/styles/system-v2.css');
+const storyEntryCss = readProjectFile('src/styles/story-entry.css');
+const rankTitleCss = readProjectFile('src/styles/rank-title.css');
+const profileCss = readProjectFile('src/styles/profile.css');
 const surface = readProjectFile('src/components/system/Surface.tsx');
 const systemIndex = readProjectFile('src/components/system/index.ts');
 const roomListPage = readProjectFile('src/pages/rooms/RoomListPage.tsx');
@@ -252,6 +255,16 @@ assertContract(
     dreamingPage.includes('[@media(min-width:2200px)]:grid-cols-6') &&
     fishingPage.includes('xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]'),
   'Index and settings pages must use expanded desktop grids.'
+);
+
+assertContract(
+  storyEntryCss.includes('.story-entry-page') &&
+    storyEntryCss.includes('width: min(100%, 132rem)') &&
+    rankTitleCss.includes('.rank-title-page') &&
+    rankTitleCss.includes('width: min(100%, 132rem)') &&
+    profileCss.includes('.profile-page') &&
+    profileCss.includes('width: min(100%, 132rem)'),
+  'Story, rank-title, and profile shells must not override ultrawide PageShell with narrow widths.'
 );
 
 for (const [name, source] of Object.entries({
