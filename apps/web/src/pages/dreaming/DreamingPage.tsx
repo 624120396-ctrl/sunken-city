@@ -1,10 +1,12 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
+import type { CSSProperties } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { Sparkles, BookOpen, History, Coins, Gem, Eye, Moon, ScrollText, Wand2 } from 'lucide-react';
+import { Sparkles, BookOpen, History, Coins, Gem, Eye, Moon, ScrollText, Wand2, Waves } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { TiltCard } from '@components/ui/TiltCard';
 import { Button, PageShell, Surface, Tabs } from '@components/system';
+import { getDreamingOraclePhase, getOracleCandidateSlots, getOracleRarityMeta } from '@components/dreaming/dreamingOracleMeta';
 
 interface DreamCardBrief {
   key: string;
@@ -175,18 +177,19 @@ export function DreamingPage() {
   const currentCardMeta = collection.find((c) => c.key === todayDraw?.cardKey) ||
     candidates?.find((c) => c.key === todayDraw?.cardKey);
   const unlockedCount = collection.filter((c) => c.unlocked).length;
-  const oracleState = todayDraw
-    ? todayDraw.isDeepRevealed
-      ? '深层已解读'
-      : todayDraw.isRevealed
-        ? '基础已解读'
-        : '等待解牌'
-    : canDraw
-      ? '今晚可入梦'
-      : '今日已完成';
+  const oraclePhase = getDreamingOraclePhase({
+    canDraw,
+    hasTodayDraw: Boolean(todayDraw),
+    candidateCount: candidates?.length ?? 0,
+    isRevealed: Boolean(todayDraw?.isRevealed),
+    isDeepRevealed: Boolean(todayDraw?.isDeepRevealed),
+  });
+  const candidateSlots = candidates ? getOracleCandidateSlots(candidates, selectingKey) : [];
+  const currentRarityMeta = getOracleRarityMeta(currentCardMeta?.rarity || 'common');
 
   return (
     <PageShell
+      className="dreaming-page-shell"
       eyebrow="DREAM ORACLE"
       title="溺者之牌"
       description="每晚入睡后，调查员都会坠入共享梦境层。抽一张牌，看看深渊想对你说什么。"
@@ -223,7 +226,7 @@ export function DreamingPage() {
                   <Moon size={14} className="text-purple-300" />
                   梦境状态
                 </div>
-                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{oracleState}</div>
+                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{oraclePhase.title}</div>
               </div>
               <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
                 <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
@@ -252,17 +255,30 @@ export function DreamingPage() {
         {tab === 'today' && (
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
             <Surface variant="elevated" tone="madness" padding="lg" className="relative overflow-hidden">
-              <div className="oracle-stage flex flex-col items-center justify-center">
+              <div className={`oracle-stage oracle-stage--${oraclePhase.key} flex flex-col items-center justify-center`}>
                 <div className="oracle-card-ring" />
+                <div className="oracle-card-ring oracle-card-ring--inner" />
                 <div className="pointer-events-none absolute inset-x-8 top-10 h-px bg-gradient-to-r from-transparent via-purple-200/40 to-transparent" />
                 <div className="pointer-events-none absolute inset-x-8 bottom-10 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/35 to-transparent" />
+                <div className="oracle-ritual-hud">
+                  <div className="oracle-phase-chip">
+                    <Moon size={14} />
+                    <span>{oraclePhase.title}</span>
+                  </div>
+                  <div className="oracle-phase-copy">{oraclePhase.prompt}</div>
+                </div>
                 <div className="relative z-10 w-full">
             {!todayDraw && canDraw && !candidates && (
-              <div className="mx-auto max-w-xl text-center">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-purple-300/30 bg-purple-950/30 text-purple-200 shadow-[0_0_32px_rgba(168,85,247,0.18)]">
+              <div className="oracle-ready mx-auto max-w-xl text-center">
+                <div className="oracle-seal-row" aria-hidden="true">
+                  <span className="oracle-seal">I</span>
+                  <span className="oracle-seal oracle-seal--active">II</span>
+                  <span className="oracle-seal">III</span>
+                </div>
+                <div className="oracle-ready-icon mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-purple-300/30 bg-purple-950/30 text-purple-200 shadow-[0_0_32px_rgba(168,85,247,0.18)]">
                   <Wand2 size={28} />
                 </div>
-                <p className="mb-6 text-lg leading-relaxed text-[var(--coc-text-secondary)]">今夜尚未入梦。深渊之牌正在等待你的手指。</p>
+                <p className="mb-6 text-lg leading-relaxed text-[var(--coc-text-secondary)]">{oraclePhase.prompt}</p>
                 <Button
                   variant="primary"
                   size="lg"
@@ -270,16 +286,18 @@ export function DreamingPage() {
                   disabled={loading}
                   loading={loading}
                 >
-                  开始抽牌
+                  {oraclePhase.actionLabel}
                 </Button>
               </div>
             )}
 
             {!todayDraw && canDraw && candidates && (
               <div className="w-full">
-                <p className="mb-6 text-center text-lg text-[var(--coc-text-secondary)]">三张暗牌悬于雾中。选择一张，决定你今晚的梦境。</p>
-                <div className="grid grid-cols-1 justify-items-center gap-5 sm:grid-cols-3 lg:gap-8">
-                  {candidates.map((c) => (
+                <p className="oracle-selection-prompt mb-6 text-center text-lg text-[var(--coc-text-secondary)]">{oraclePhase.prompt}</p>
+                <div className="oracle-card-spread grid grid-cols-1 justify-items-center gap-5 sm:grid-cols-3 lg:gap-8">
+                  {candidateSlots.map((c) => {
+                    const slotRarityMeta = getOracleRarityMeta(c.rarity);
+                    return (
                     <TiltCard
                       key={c.key}
                       width="172px"
@@ -290,18 +308,26 @@ export function DreamingPage() {
                       <button
                         onClick={() => handleSelect(c.key)}
                         disabled={loading}
-                        data-selecting={selectingKey === c.key}
+                        data-selecting={c.selected}
+                        data-oracle-rarity={slotRarityMeta.tone}
+                        style={{
+                          '--oracle-card-y': `${c.translateY}px`,
+                          '--oracle-card-rotate': `${c.rotate}deg`,
+                        } as CSSProperties}
                         className="oracle-card-choice group relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-purple-200/20 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md"
                       >
-                        <div className="absolute inset-3 rounded-lg border border-[var(--coc-accent-gold)]/20" />
+                        <div className="oracle-card-choice__frame absolute inset-3 rounded-lg border border-[var(--coc-accent-gold)]/20" />
+                        <div className="oracle-card-choice__label">{c.label}</div>
                         <div className="absolute inset-0 flex items-center justify-center opacity-40 transition-opacity group-hover:opacity-70">
                           <Sparkles size={36} className="text-[#c9a227]" />
                         </div>
+                        <div className="oracle-card-choice__seal">{slotRarityMeta.seal}</div>
                         <div className="absolute bottom-3 left-0 right-0 text-center text-sm font-medium text-[#d4c5a8] drop-shadow-md">溺者之牌</div>
-                        <div className="absolute top-3 left-0 right-0 text-center text-xs text-[#b0a898] drop-shadow-sm">{c.rarity === 'legendary' ? '传说' : c.rarity === 'epic' ? '史诗' : c.rarity === 'rare' ? '稀有' : '普通'}</div>
+                        <div className="absolute top-3 left-0 right-0 text-center text-xs text-[#b0a898] drop-shadow-sm">{slotRarityMeta.label} · {slotRarityMeta.accent}</div>
                       </button>
                     </TiltCard>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -316,7 +342,8 @@ export function DreamingPage() {
                   tiltIntensity={12}
                   className="shrink-0"
                 >
-                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-purple-200/25 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md">
+                  <div className="oracle-current-card relative h-full w-full overflow-hidden rounded-xl border border-purple-200/25 bg-[#080b13]/80 shadow-lg shadow-black/40 backdrop-blur-md" data-oracle-rarity={currentRarityMeta.tone}>
+                    <div className="oracle-current-card__seal">{currentRarityMeta.seal}</div>
                     {currentCardMeta?.imageUrl ? (
                       <>
                         <img 
@@ -342,7 +369,11 @@ export function DreamingPage() {
                     )}
                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
                       <div className={`font-ritual text-xl drop-shadow-lg ${rarityColor[currentCardMeta?.rarity || 'common']}`}>{currentCardMeta?.name || '未知'}</div>
-                      <div className="text-sm text-[#d4c5a8] mt-1 drop-shadow-sm">{positionLabel(todayDraw.position)}</div>
+                      <div className="mt-1 flex items-center gap-2 text-sm text-[#d4c5a8] drop-shadow-sm">
+                        <span>{positionLabel(todayDraw.position)}</span>
+                        <span className="text-[#8b8375]">·</span>
+                        <span>{currentRarityMeta.accent}</span>
+                      </div>
                     </div>
                   </div>
                 </TiltCard>
@@ -351,7 +382,10 @@ export function DreamingPage() {
                 <div className="w-full flex-1">
                   {!todayDraw.isRevealed && !todayDraw.isDeepRevealed && (
                     <div className="space-y-4">
-                      <p className="mb-2 text-lg leading-relaxed text-[#d4c5a8] drop-shadow-sm">你抽中了一张牌，但梦境的呓语尚未被解读。</p>
+                      <div className="oracle-reading-heading">
+                        <Waves size={18} />
+                        <span>{oraclePhase.prompt}</span>
+                      </div>
                       <div className="flex flex-wrap gap-3">
                         <Button
                           variant="primary"

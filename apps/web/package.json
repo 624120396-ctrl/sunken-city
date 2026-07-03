@@ -13,6 +13,7 @@
     "test:fishing-render": "node --test --experimental-strip-types scripts/fishing-render-profile.test.ts",
     "test:fishing-reveal": "node --test --experimental-strip-types scripts/fishing-reveal.test.ts",
     "test:fishing-tension": "node --test --experimental-strip-types scripts/fishing-tension.test.ts",
+    "test:dreaming-oracle": "node --test --experimental-strip-types scripts/dreaming-oracle.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
   "dependencies": {
