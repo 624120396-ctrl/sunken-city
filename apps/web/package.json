@@ -19,6 +19,7 @@
     "test:economy-district": "node --test --experimental-strip-types scripts/economy-district.test.ts",
     "test:shop-item-presentation": "node --test --experimental-strip-types scripts/shop-item-presentation.test.ts",
     "test:inventory-vault": "node --test --experimental-strip-types scripts/inventory-vault.test.ts",
+    "test:market-listing-presentation": "node --test --experimental-strip-types scripts/market-listing-presentation.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
   "dependencies": {

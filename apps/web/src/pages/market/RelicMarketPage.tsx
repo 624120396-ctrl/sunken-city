@@ -12,11 +12,11 @@ import {
 } from '@services/relics.service';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Store, X, Plus, Coins, Sparkles } from 'lucide-react';
-import { getRarityColorClass } from '@data/relics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@components/ui/Toast';
 import { EconomyPageShell } from '@components/economy/EconomyPageShell';
 import { Surface } from '@components/system';
+import { getMarketListingPresentation } from '@components/economy/marketListingMeta';
 
 interface Listing {
   id: string;
@@ -179,20 +179,25 @@ export function RelicMarketPage() {
     const dur =
       l.relicSnapshot?.durability ?? l.relicSnapshot?.maxDurability ?? null;
     const rarity = meta?.rarity || 'common';
+    const listingMeta = getMarketListingPresentation({
+      rarity,
+      currency: l.currency,
+      price: l.price,
+      durability: dur,
+      sellerName: l.sellerName,
+      isMine,
+    });
     return (
-      <Surface
+      <article
         key={l.id}
-        variant="panel"
-        tone={rarity === 'legendary' || rarity === 'epic' ? 'blood' : rarity === 'rare' ? 'gold' : 'neutral'}
-        padding="md"
-        className={getRarityColorClass(rarity).split(' ')[1]}
+        className="market-contract-card"
+        data-contract-tone={listingMeta.tone}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="market-contract-card__seal">{listingMeta.seal}</div>
+        <div className="market-contract-card__header">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="text-base font-bold text-[#e8d4a0] break-words">
-                {meta?.name || l.relicKey}
-              </div>
+            <div className="market-contract-card__title-row">
+              <h2>{meta?.name || l.relicKey}</h2>
               <Tooltip content={({
                 common: '普通 — 随处可见的遗物',
                 uncommon: '罕见 — 不易获得，略有价值',
@@ -200,43 +205,34 @@ export function RelicMarketPage() {
                 epic: '史诗 — 传说级存在',
                 legendary: '传说 — 深渊之主的馈赠'
               } as Record<string, string>)[rarity] || rarity}>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide border ${getRarityColorClass(rarity)} cursor-help`}
-                >
-                  {rarity}
-                </span>
+                <span>{listingMeta.rarityLabel}</span>
               </Tooltip>
             </div>
-            <div className="mt-1 text-xs text-[#b0a898] line-clamp-2">
-              {meta?.description}
-            </div>
-            {dur !== null && (
-              <div className="mt-1 text-xs text-[#8b8375]">
-                耐久: {dur}
-              </div>
-            )}
+            <p>{meta?.description}</p>
           </div>
-          <div className="shrink-0 sm:text-right">
-            <div className="flex items-center gap-1 text-lg font-bold text-[#c9a227] sm:justify-end">
+          <div className="market-contract-card__price">
+            <div>
               {l.currency === 'coin' ? <Coins size={16} /> : <Sparkles size={16} />}
-              {l.price}
+              <strong>{listingMeta.priceLabel}</strong>
             </div>
-            <div className="text-xs text-[#b0a898]">
-              {l.currency === 'coin' ? '锈蚀硬币' : '虚银'} · {l.sellerName}
-            </div>
+            <span>{listingMeta.sellerLabel}</span>
           </div>
         </div>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-xs text-[#8b8375]">
+        <div className="market-contract-card__footer">
+          <div className="market-contract-card__meta">
+            {listingMeta.durabilityLabel && <span>{listingMeta.durabilityLabel}</span>}
+            <span>{listingMeta.currencyLabel}</span>
+            <span>
             {new Date(l.createdAt).toLocaleString()}
-          </span>
+            </span>
+          </div>
           {isMine ? (
             <button
               onClick={() => handleCancel(l.id)}
               disabled={cancelMutation.isPending}
-              className="btn-v2 flex min-h-10 items-center justify-center gap-1 rounded bg-red-900/40 px-3 py-1.5 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
+              className="market-contract-card__action market-contract-card__action--danger"
             >
-              <X size={12} /> 下架
+              <X size={12} /> {listingMeta.actionLabel}
             </button>
           ) : (
             <button
@@ -244,13 +240,13 @@ export function RelicMarketPage() {
                 setBuyTradeId(l.id);
                 setBuyCharId('');
               }}
-              className="btn-v2 min-h-10 rounded bg-coc-gold px-4 py-1.5 text-xs font-bold text-coc-abyss hover:bg-coc-gold-glow"
+              className="market-contract-card__action"
             >
-              购买
+              {listingMeta.actionLabel}
             </button>
           )}
         </div>
-      </Surface>
+      </article>
     );
   };
 
@@ -281,26 +277,18 @@ export function RelicMarketPage() {
         </button>
       }
     >
-      <div>
+      <div className="market-contracts">
 
-      <Surface variant="panel" padding="sm" className="mb-4 flex items-center gap-2 overflow-x-auto">
+      <Surface variant="panel" padding="sm" className="market-contract-tabs">
         <button
           onClick={() => setActiveTab('market')}
-          className={`min-h-11 shrink-0 px-4 py-2 text-sm ${
-            activeTab === 'market'
-              ? 'border-b-2 border-[#a63848] text-coc-accent-red'
-              : 'text-[#8b8375] hover:text-[#d4c5a8]'
-          }`}
+          data-active={activeTab === 'market'}
         >
           交易大厅
         </button>
         <button
           onClick={() => setActiveTab('mine')}
-          className={`min-h-11 shrink-0 px-4 py-2 text-sm ${
-            activeTab === 'mine'
-              ? 'border-b-2 border-[#a63848] text-coc-accent-red'
-              : 'text-[#8b8375] hover:text-[#d4c5a8]'
-          }`}
+          data-active={activeTab === 'mine'}
         >
           我的挂单
         </button>
@@ -308,11 +296,11 @@ export function RelicMarketPage() {
 
       {activeTab === 'market' && (
         <>
-          <Surface variant="panel" padding="md" className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Surface variant="panel" padding="md" className="market-contract-filter">
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
-              className="min-h-11 rounded border border-coc-void bg-black/45 px-3 py-1.5 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+              className="market-contract-filter__select"
             >
               <option value="">全部遗物</option>
               {Object.values(registryMap).map((r: any) => (
@@ -325,7 +313,7 @@ export function RelicMarketPage() {
               onClick={() =>
                 queryClient.invalidateQueries({ queryKey: ['marketListings'] })
               }
-              className="btn-v2 coc-btn-secondary min-h-11 text-sm"
+              className="market-contract-filter__refresh"
             >
               刷新
             </button>
@@ -353,7 +341,7 @@ export function RelicMarketPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="market-contract-grid">
               {listings.map((l) => renderListingCard(l))}
             </div>
           )}
@@ -367,7 +355,7 @@ export function RelicMarketPage() {
               你没有正在出售的遗物
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="market-contract-grid">
               {myListings.map((l) => renderListingCard(l, true))}
             </div>
           )}
