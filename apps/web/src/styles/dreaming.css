@@ -238,6 +238,157 @@
   line-height: 1.7;
 }
 
+.oracle-reading-stack {
+  position: relative;
+}
+
+.oracle-reading-stack::before {
+  content: "";
+  position: absolute;
+  left: 1.25rem;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(201, 162, 39, 0.55), rgba(139, 92, 246, 0.35), transparent);
+  pointer-events: none;
+}
+
+.oracle-reading-card,
+.oracle-buff-card {
+  position: relative;
+  overflow: hidden;
+  padding-left: 4.25rem;
+}
+
+.oracle-reading-card::before,
+.oracle-buff-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(201, 162, 39, 0.08), transparent 38%),
+    radial-gradient(circle at 94% 22%, rgba(139, 92, 246, 0.12), transparent 28%);
+  pointer-events: none;
+}
+
+.oracle-reading-card[data-reading-tone="deep"],
+.oracle-reading-card--deep {
+  border-color: rgba(168, 85, 247, 0.32);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34), 0 0 26px rgba(139, 92, 246, 0.1);
+}
+
+.oracle-reading-card__seal {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 999px;
+  background: rgba(5, 7, 11, 0.54);
+  color: #f3d589;
+  font-family: var(--font-ritual, serif);
+  box-shadow: inset 0 0 18px rgba(201, 162, 39, 0.08);
+}
+
+.oracle-reading-card__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.oracle-reading-card__header > span {
+  border: 1px solid rgba(212, 197, 168, 0.14);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.24);
+  color: #b0a898;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.3rem 0.55rem;
+  white-space: nowrap;
+}
+
+.oracle-reading-card__eyebrow {
+  color: var(--coc-accent-gold-strong);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.oracle-reading-card__title {
+  margin-top: 0.35rem;
+  color: var(--coc-text-primary);
+  font-family: var(--font-ritual, serif);
+  font-size: 1.28rem;
+  line-height: 1.25;
+}
+
+.oracle-reading-card__body {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  color: #f0e4cc;
+  font-size: 1.04rem;
+  line-height: 1.85;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.28);
+}
+
+.oracle-reading-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid rgba(201, 162, 39, 0.14);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0.85rem;
+}
+
+.oracle-buff-card {
+  border-color: rgba(168, 85, 247, 0.34);
+  background:
+    radial-gradient(circle at 12% 20%, rgba(139, 92, 246, 0.16), transparent 30%),
+    rgba(4, 7, 13, 0.58);
+}
+
+.oracle-buff-card__mark {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #d8b4fe;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.oracle-buff-card__name {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.55rem;
+  color: #f0e4cc;
+  font-size: 1.08rem;
+  font-weight: 800;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.28);
+}
+
+.oracle-buff-card__desc {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.45rem;
+  color: #b0a898;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
 .oracle-reveal-panel {
   animation: oracle-reveal-in 420ms ease both;
 }
@@ -539,6 +690,26 @@
   .dream-history-entry__status {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .oracle-reading-card,
+  .oracle-buff-card {
+    padding-left: 1rem;
+    padding-top: 4rem;
+  }
+
+  .oracle-reading-stack::before {
+    display: none;
+  }
+
+  .oracle-reading-action,
+  .oracle-reading-card__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .oracle-reading-card__header > span {
+    align-self: flex-start;
   }
 }
 

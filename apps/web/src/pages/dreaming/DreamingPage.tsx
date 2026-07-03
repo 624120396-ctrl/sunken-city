@@ -8,6 +8,7 @@ import { TiltCard } from '@components/ui/TiltCard';
 import { Button, PageShell, Surface, Tabs } from '@components/system';
 import { getDreamingOraclePhase, getOracleCandidateSlots, getOracleRarityMeta } from '@components/dreaming/dreamingOracleMeta';
 import { getDreamArchiveCardMeta, getDreamArchiveSummary, getDreamHistoryMeta } from '@components/dreaming/dreamingArchiveMeta';
+import { getDreamReadingMeta } from '@components/dreaming/dreamingReadingMeta';
 
 interface DreamCardBrief {
   key: string;
@@ -181,6 +182,13 @@ export function DreamingPage() {
   });
   const candidateSlots = candidates ? getOracleCandidateSlots(candidates, selectingKey) : [];
   const currentRarityMeta = getOracleRarityMeta(currentCardMeta?.rarity || 'common');
+  const readingMeta = todayDraw
+    ? getDreamReadingMeta({
+      isDeepRevealed: todayDraw.isDeepRevealed,
+      hasDeepText: Boolean(todayDraw.deepRevealText),
+      hasBuff: Boolean(todayDraw.buff),
+    })
+    : null;
 
   return (
     <PageShell
@@ -406,37 +414,58 @@ export function DreamingPage() {
                   )}
 
                   {(todayDraw.isRevealed || todayDraw.isDeepRevealed) && (
-                    <div className="space-y-4">
-                      <Surface variant="glass" padding="md" className="oracle-reveal-panel">
-                        <p className="text-sm text-[#b0a898] mb-2 drop-shadow-sm">普通解牌结果</p>
-                        <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.revealText}</p>
+                    <div className="oracle-reading-stack space-y-4">
+                      <Surface variant="glass" padding="md" className="oracle-reveal-panel oracle-reading-card" data-reading-tone={readingMeta?.tone || 'basic'}>
+                        <div className="oracle-reading-card__seal">{readingMeta?.seal}</div>
+                        <div className="oracle-reading-card__header">
+                          <div>
+                            <p className="oracle-reading-card__eyebrow">{readingMeta?.tierLabel}</p>
+                            <h2 className="oracle-reading-card__title">{readingMeta?.headline}</h2>
+                          </div>
+                          <span>{positionLabel(todayDraw.position)}</span>
+                        </div>
+                        <p className="oracle-reading-card__body">{todayDraw.revealText}</p>
                       </Surface>
 
                       {!todayDraw.isDeepRevealed && (
-                        <div className="flex gap-3">
+                        <div className="oracle-reading-action">
+                          <div>
+                            <div className="text-sm font-bold text-[var(--coc-text-primary)]">深层门槛尚未开启</div>
+                            <div className="mt-1 text-xs text-[var(--coc-text-secondary)]">消耗虚银后，牌面会追加深层梦兆与可能的触须效应。</div>
+                          </div>
                           <Button
                             variant="secondary"
                             onClick={() => handleReveal(true)}
                             disabled={loading || (user?.stardust || 0) < 10}
                             icon={<Gem size={16} />}
                           >
-                            深度解牌（10 虚银）
+                            {readingMeta?.deepActionLabel}（10 虚银）
                           </Button>
                         </div>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.deepRevealText && (
-                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel border-l-4 border-l-purple-500">
-                          <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌结果</p>
-                          <p className="text-[#f0e4cc] text-lg leading-relaxed drop-shadow-md">{todayDraw.deepRevealText}</p>
+                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel oracle-reading-card oracle-reading-card--deep">
+                          <div className="oracle-reading-card__seal">III</div>
+                          <div className="oracle-reading-card__header">
+                            <div>
+                              <p className="oracle-reading-card__eyebrow">深层解牌结果</p>
+                              <h2 className="oracle-reading-card__title">深海回声已转写</h2>
+                            </div>
+                            <span>DEEP</span>
+                          </div>
+                          <p className="oracle-reading-card__body">{todayDraw.deepRevealText}</p>
                         </Surface>
                       )}
 
                       {todayDraw.isDeepRevealed && todayDraw.buff && (
-                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel border-l-4 border-l-purple-500">
-                          <p className="text-sm text-purple-300 mb-2 drop-shadow-sm">深度解牌 · 触须效应</p>
-                          <p className="text-[#f0e4cc] text-lg font-medium drop-shadow-md">{todayDraw.buff.name}</p>
-                          <p className="text-sm text-[#b0a898] mt-2">{todayDraw.buff.description}</p>
+                        <Surface variant="glass" tone="madness" padding="md" className="oracle-reveal-panel oracle-buff-card">
+                          <div className="oracle-buff-card__mark">
+                            <Sparkles size={16} />
+                            {readingMeta?.buffLabel}
+                          </div>
+                          <p className="oracle-buff-card__name">{todayDraw.buff.name}</p>
+                          <p className="oracle-buff-card__desc">{todayDraw.buff.description}</p>
                         </Surface>
                       )}
                     </div>
