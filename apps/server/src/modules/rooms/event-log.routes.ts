@@ -11,7 +11,7 @@ router.post('/:roomId/events', authMiddleware, async (req: AuthRequest, res, nex
     const { roomId } = req.params;
     const { eventType, payload, isSecret, phaseId, sceneId } = req.body;
 
-    const { room } = await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canSendPublicMessage');
     if (isSecret) {
       await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
     }

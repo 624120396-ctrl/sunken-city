@@ -103,6 +103,9 @@ router.post('/:roomId/clues/:clueId/reveal', authMiddleware, async (req: AuthReq
     if (!isKP && !clue.autoReveal) {
       throw new AppError('FORBIDDEN', '此线索需要KP揭示', 403);
     }
+    if (!isKP) {
+      await requireRoomCapability(roomId, req.userId, 'canSendPublicMessage');
+    }
 
     const updated = await prisma.roomClue.update({
       where: { id: clueId },

@@ -173,6 +173,8 @@ router.post('/:roomId/combat/:combatId/next-turn', authMiddleware, async (req: A
     const isActor = currentActor?.userId === req.userId;
     if (!isActor) {
       await requireRoomCapability(roomId, req.userId, 'canManageCombat');
+    } else {
+      await requireRoomCapability(roomId, req.userId, 'canRollPublicDice');
     }
 
     // 如果行动者没有提交行动，自动添加 "end" 行动
@@ -270,6 +272,8 @@ router.post('/:roomId/combat/:combatId/action', authMiddleware, async (req: Auth
     // 只有当前行动者或具备战斗管理权限者可以提交行动
     if (currentActor?.userId !== req.userId) {
       await requireRoomCapability(roomId, req.userId, 'canManageCombat');
+    } else {
+      await requireRoomCapability(roomId, req.userId, 'canRollPublicDice');
     }
 
     const actorId = currentActor?.actorId || req.userId;
