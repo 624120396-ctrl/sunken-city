@@ -202,6 +202,16 @@
 - 多轮静态代码质量审查
 - `git diff --check` 类空白检查
 - `npx prisma validate --schema prisma/schema.prisma`
+- 临时 SQLite 当前 schema API 冒烟：
+  - KP 创建房间且不绑定角色卡
+  - PL 绑定角色加入
+  - 观察者无角色加入
+  - 开场、进入结算、保存确认结算、结团
+  - 结团写回角色 HP / MP / SAN
+  - PL 房间列表可见相关已结团房间
+  - 成员报告可见结算数据
+  - 非成员读取报告返回 403
+  - 角色占用锁释放
 
 实现过程中发现并修复过的关键问题：
 
@@ -220,6 +230,7 @@
 - 没有实现进行中换卡申请 / KP 审批完整流程。
 - 没有对 HP / MP / SAN 上限做严格规则校验，目前只做非负整数校验。
 - `skillGrowth` 和 `itemChanges` 仍是数组草案，后续需要和正式角色成长机制打通。
+- 当前 Prisma 迁移历史不能作为全新环境建库的可靠依据：`prisma migrate deploy` / `prisma db push` 在临时库上触发 schema engine error；手动诊断显示历史迁移与当前 schema 存在漂移，例如当前 schema 需要的 `User.displayId`、`FishingItem` 等结构不完全来自迁移历史。上述 API 冒烟使用 `prisma migrate diff --from-empty --to-schema-datamodel` 生成当前 schema 建库 SQL 后执行。上线或全新环境部署前，应单独整理迁移历史或做一次迁移基线化。
 
 下一阶段建议：
 
