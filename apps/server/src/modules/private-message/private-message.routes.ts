@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
+import { capabilitiesFor, deriveLifecycle, deriveRoomRole } from '../rooms/room-auth';
 
 const router = Router();
 
@@ -15,8 +16,11 @@ router.get('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthRe
       where: { roomId },
       include: {
         members: {
-          where: { userId },
+          where: { userId, leftAt: null },
           include: { character: true },
+        },
+        roomRun: {
+          select: { lifecycle: true },
         },
       },
     });
@@ -26,7 +30,7 @@ router.get('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthRe
     }
 
     const myMember = room.members[0];
-    if (!myMember?.character) {
+    if (myMember?.role !== 'PLAYER' || !myMember.characterId || !myMember.character) {
       throw new AppError('NO_CHARACTER', '请先选择角色', 400);
     }
 
@@ -83,8 +87,11 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
       where: { roomId },
       include: {
         members: {
-          where: { userId },
+          where: { userId, leftAt: null },
           include: { character: true },
+        },
+        roomRun: {
+          select: { lifecycle: true },
         },
       },
     });
@@ -94,7 +101,15 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
     }
 
     const myMember = room.members[0];
-    if (!myMember?.character) {
+    const lifecycle = deriveLifecycle(room.status, room.roomRun?.lifecycle);
+    const role = deriveRoomRole({ creatorId: room.creatorId, userId, member: myMember || null });
+    const capabilities = capabilitiesFor(role, lifecycle);
+
+    if (!capabilities.canSendPrivateMessage) {
+      throw new AppError('FORBIDDEN', '你没有发送私聊消息的权限', 403);
+    }
+
+    if (myMember?.role !== 'PLAYER' || !myMember.characterId || !myMember.character) {
       throw new AppError('NO_CHARACTER', '请先选择角色', 400);
     }
 
@@ -105,6 +120,8 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
       where: {
         roomId: room.id,
         characterId: receiverCharacterId,
+        role: 'PLAYER',
+        leftAt: null,
       },
     });
 
@@ -148,20 +165,21 @@ router.get('/rooms/:roomId/private-messages/unread', authMiddleware, async (req:
       where: { roomId },
       include: {
         members: {
-          where: { userId },
+          where: { userId, leftAt: null },
           include: { character: true },
         },
       },
     });
 
-    if (!room || !room.members[0]?.character) {
+    const myMember = room?.members[0];
+    if (!room || myMember?.role !== 'PLAYER' || !myMember.characterId || !myMember.character) {
       return res.json({ success: true, data: { count: 0 } });
     }
 
     const count = await prisma.privateMessage.count({
       where: {
         roomId: room.id,
-        receiverId: room.members[0].character.id,
+        receiverId: myMember.character.id,
         isRead: false,
       },
     });
