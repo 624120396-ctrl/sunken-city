@@ -2,27 +2,15 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 // 创建NPC
 router.post('/:roomId/npcs', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageNpcs');
     const { name, avatarUrl, description, sceneId, statsJson, dynamicStats } = req.body;
 
     const npc = await prisma.roomNpc.create({
@@ -81,7 +69,7 @@ router.get('/:roomId/npcs', authMiddleware, async (req: AuthRequest, res, next) 
 router.patch('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, npcId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageNpcs');
 
     const { name, avatarUrl, description, sceneId, isActive, statsJson, dynamicStats, isActiveInScene } = req.body;
 
@@ -109,7 +97,7 @@ router.patch('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, re
 router.post('/:roomId/npcs/:npcId/toggle', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, npcId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageNpcs');
 
     const npc = await prisma.roomNpc.findUnique({ where: { id: npcId } });
     if (!npc) throw new AppError('NPC_NOT_FOUND', 'NPC不存在', 404);
@@ -129,7 +117,7 @@ router.post('/:roomId/npcs/:npcId/toggle', authMiddleware, async (req: AuthReque
 router.delete('/:roomId/npcs/:npcId', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, npcId } = req.params;
-    await requireKP(req, roomId);
+    await requireRoomCapability(roomId, req.userId, 'canManageNpcs');
 
     await prisma.roomNpc.delete({ where: { id: npcId } });
     res.json({ success: true, message: 'NPC已删除' });

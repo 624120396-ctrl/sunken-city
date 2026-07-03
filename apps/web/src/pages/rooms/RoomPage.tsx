@@ -37,6 +37,17 @@ import { GMKitPanel } from '@components/room/GMKitPanel';
 import { RoomLogPanel } from '@components/room/RoomLogPanel';
 import { SubRoomManager } from '@components/room/SubRoomManager';
 import { AIAssistantPanel } from '@components/room/AIAssistantPanel';
+import type {
+  RoomBindingView,
+  RoomCapabilities,
+  RoomLifecycle,
+  RoomMemberView,
+  RoomRoleView,
+} from '@/types/room-contract';
+import { KpLifecycleControls } from './components/KpLifecycleControls';
+import { RoomJoinGate } from './components/RoomJoinGate';
+import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
+import { RoomSettlementPanel } from './components/RoomSettlementPanel';
 
 interface Room {
   id: string;
@@ -46,6 +57,10 @@ interface Room {
   status: string;
   isCreator: boolean;
   isMember: boolean;
+  myRole?: RoomRoleView;
+  myCapabilities?: RoomCapabilities;
+  myBinding?: RoomBindingView;
+  lifecycle?: RoomLifecycle;
   members: RoomMember[];
   atmosphere?: string;
   sceneDesc?: string;
@@ -88,7 +103,7 @@ interface RoomMember {
   nickname: string;
   avatarUrl?: string;
   frameUrl?: string;
-  role: 'KP' | 'PLAYER';
+  role: RoomMemberView['role'];
   exp?: number;
   coins?: number;
   stardust?: number;
@@ -253,6 +268,8 @@ export function RoomPage() {
     failRolls: 0,
     mostUsedSkill: null as string | null,
   });
+  const caps = room?.myCapabilities;
+  const canUseKPTools = caps?.canUseKPTools ?? !!room?.isCreator;
 
   // ===== SAN 扣除弹窗状态 =====
   const [showSanityModal, setShowSanityModal] = useState(false);
@@ -565,19 +582,6 @@ export function RoomPage() {
     }
   };
 
-  const handleJoinRoom = async (characterId?: string) => {
-    try {
-      await apiFetch(`/rooms/${roomId}/join`, {
-        method: 'POST',
-        body: JSON.stringify({ characterId }),
-      });
-      setShowCharacterModal(false);
-      fetchRoom();
-    } catch (error: any) {
-      alert(error.message || '加入房间失败');
-    }
-  };
-
   const handleLeaveRoom = async () => {
     if (!confirm('确定要离开这个房间吗？')) return;
     try {
@@ -627,7 +631,7 @@ export function RoomPage() {
     }
 
     // KP 专属指令
-    if (room?.isCreator) {
+    if (canUseKPTools) {
       if (inputMessage === '/结束战斗') {
         socket.current?.emit('combat:end', { roomId });
         setInputMessage('');
@@ -840,7 +844,7 @@ export function RoomPage() {
             <DoorOpen size={14} />
             离开
           </button>
-          {room?.isCreator && (
+          {(caps?.canCloseRoom ?? !!room?.isCreator) && (
             <button onClick={handleCloseRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
                        bg-[url('/btn-off.png')] bg-cover bg-center
                        hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
@@ -1016,7 +1020,30 @@ export function RoomPage() {
           currentPhase={room?.currentPhase || null}
           currentScene={room?.currentScene || null}
           phases={room?.phases}
-          isKP={!!room?.isCreator}
+          isKP={canUseKPTools}
+        />
+      )}
+
+      {room && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <RoomLifecycleBanner
+            lifecycle={room.lifecycle}
+            myRole={room.myRole}
+            className="flex-1"
+          />
+          <KpLifecycleControls
+            roomId={roomId || ''}
+            capabilities={caps}
+            lifecycle={room.lifecycle}
+            onChanged={fetchRoom}
+          />
+        </div>
+      )}
+
+      {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (
+        <RoomSettlementPanel
+          roomId={roomId || ''}
+          onFinalized={fetchRoom}
         />
       )}
 
@@ -1028,7 +1055,7 @@ export function RoomPage() {
             roomId={roomId || ''}
             isOpen={showCluePanel}
             onClose={() => setShowCluePanel(false)}
-            isKP={!!room?.isCreator}
+            isKP={canUseKPTools}
           />
         )}
 
@@ -1220,7 +1247,7 @@ export function RoomPage() {
                   )}
 
                   {/* KP可编辑状态标记 */}
-                  {room?.isCreator && char && (
+                  {canUseKPTools && char && (
                     <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
                       <StatusTags
                         tags={memberStatuses[member.id] || []}
@@ -1236,7 +1263,7 @@ export function RoomPage() {
           </Surface>
 
           {/* 战斗控制 */}
-          {activeTab === 'combat' && room?.isCreator && (
+          {activeTab === 'combat' && canUseKPTools && (
             <Surface variant="panel" tone="blood" padding="sm">
               <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
                 <Swords size={12} />
@@ -1309,11 +1336,11 @@ export function RoomPage() {
               className={cn("flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
             >
               {/* ===== 新增：场景描述卡片 ===== */}
-              {!isMobile && (sceneDesc || room?.isCreator) && (
+              {!isMobile && (sceneDesc || canUseKPTools) && (
                 <div className={cn("flex-shrink-0", isMobile ? "px-1 pt-1" : "px-4 pt-4")}>
                   <SceneCard
                     description={sceneDesc}
-                    isKP={!!room?.isCreator}
+                    isKP={canUseKPTools}
                     onUpdate={updateSceneDesc}
                   />
                 </div>
@@ -1469,7 +1496,7 @@ export function RoomPage() {
                           <QuickPhrases
                             onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
                           />
-                          {room?.isCreator && (
+                          {canUseKPTools && (
                             <>
                               <SecretDiceToggle
                                 isSecret={isSecretDice}
@@ -1618,7 +1645,7 @@ export function RoomPage() {
                   <div className="text-center">
                     <Swords size={48} className="mx-auto mb-4" style={{ color: "#6b6558" }} />
                     <p style={{ color: "#8b8375" }}>战斗未开始</p>
-                    {room?.isCreator && (
+                    {canUseKPTools && (
                       <MagneticButton
                         variant="blood"
                         size="sm"
@@ -1634,7 +1661,7 @@ export function RoomPage() {
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
                     <p style={{ color: "#8b8375" }}>战斗已结束</p>
-                    {room?.isCreator && (
+                    {canUseKPTools && (
                       <MagneticButton
                         variant="blood"
                         size="sm"
@@ -1751,7 +1778,7 @@ export function RoomPage() {
             </Tooltip>
           ))}
 
-          {room?.isCreator && (
+          {canUseKPTools && (
             <Tooltip content="KP工具">
               <button
                 type="button"
@@ -1800,7 +1827,7 @@ export function RoomPage() {
           roomId={roomId || ''}
           isOpen={showLogPanel}
           onClose={() => setShowLogPanel(false)}
-          isKP={!!room?.isCreator}
+          isKP={canUseKPTools}
         />
       )}
       {/* ===== V2.1 新增：AI 助手面板 ===== */}
@@ -1817,7 +1844,7 @@ export function RoomPage() {
           roomId={roomId || ''}
           isOpen={showSubRooms}
           onClose={() => setShowSubRooms(false)}
-          isKP={!!room?.isCreator}
+          isKP={canUseKPTools}
           members={room?.members?.map(m => ({ userId: m.userId, nickname: m.nickname, avatarUrl: m.avatarUrl })) || []}
         />
       )}
@@ -1827,11 +1854,11 @@ export function RoomPage() {
           roomId={roomId || ''}
           isOpen={showEventLog}
           onClose={() => setShowEventLog(false)}
-          isKP={!!room?.isCreator}
+          isKP={canUseKPTools}
         />
       )}
       {/* ===== V2.1 新增：GM 工具箱面板 ===== */}
-      {showGMKit && room?.isCreator && (
+      {showGMKit && canUseKPTools && (
         <GMKitPanel
           roomId={roomId || ''}
           isOpen={showGMKit}
@@ -1845,7 +1872,7 @@ export function RoomPage() {
           isOpen={showNpcPanel}
           onClose={() => setShowNpcPanel(false)}
           currentSceneId={room?.currentScene?.id}
-          isKP={!!room?.isCreator}
+          isKP={canUseKPTools}
         />
       )}
     </div>
@@ -1856,7 +1883,7 @@ export function RoomPage() {
         roomId={roomId || ''}
         isOpen={showCombatTimeline}
         onClose={() => setShowCombatTimeline(false)}
-        isKP={!!room?.isCreator}
+        isKP={canUseKPTools}
         userId={user?.id}
       />
     )}
@@ -1867,59 +1894,17 @@ export function RoomPage() {
         onClose={() => navigate('/rooms')}
         title="选择调查员"
       >
-        <div className="space-y-4">
-          <p className="text-sm" style={{ color: '#8b8375' }}>
-            进入房间需要绑定一个调查员角色卡
-          </p>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {myCharacters.length === 0 ? (
-              <div className="text-center py-8">
-                <EmptyState
-                  icon={EmptyIcons.Investigator}
-                  title="你还没有创建调查员"
-                  description="先创建一位调查员，才能踏入房间。"
-                  size="sm"
-                  animate={false}
-                />
-                <Link
-                  to="/characters/new"
-                  className="hover:underline mt-2 inline-block"
-                  style={{ color: '#a63848' }}
-                >
-                  创建调查员
-                </Link>
-              </div>
-            ) : (
-              myCharacters.map((char) => (
-                <button
-                  key={char.id}
-                  onClick={() => {
-                    setSelectedCharacter(char);
-                    handleJoinRoom(char.id);
-                  }}
-                  className="w-full p-3 rounded transition-colors text-left border border-[#3a3a3a]/40 hover:bg-[#a63848]/15 hover:border-[#a63848]/30"
-                  style={{ background: 'rgba(0,0,0,0.2)', color: '#d4c5a8' }}
-                >
-                  <div className="font-medium">{char.name}</div>
-                  <div className="text-sm" style={{ color: '#8b8375' }}>
-                    {char.occupation} | HP:{char.hp} MP:{char.mp} SAN:{char.san}
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-          <button
-            onClick={() => handleJoinRoom()}
-            className="btn-v2 w-full"
-            style={{ 
-              background: 'rgba(0,0,0,0.3)', 
-              border: '1px solid rgba(58,58,58,0.6)', 
-              color: '#8b8375',
-            }}
-          >
-            以观察者身份加入
-          </button>
-        </div>
+        <RoomJoinGate
+          roomId={roomId || ''}
+          characters={myCharacters}
+          capabilities={caps}
+          lifecycle={room?.lifecycle}
+          onJoined={() => {
+            setShowCharacterModal(false);
+            fetchRoom();
+          }}
+          onCancel={() => navigate('/rooms')}
+        />
       </Modal>
 
       {/* 攻击弹窗 */}

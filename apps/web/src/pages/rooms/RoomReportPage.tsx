@@ -49,6 +49,17 @@ interface ReportData {
     mpChange?: { before: number; after: number };
     sanChange?: { before: number; after: number };
     skillGrowth?: { name: string; before: number; after: number }[];
+    settlement?: {
+      outcome?: string;
+      hpFinal?: number | null;
+      mpFinal?: number | null;
+      sanFinal?: number | null;
+      expAward?: number;
+      skillGrowth?: unknown[];
+      itemChanges?: unknown[];
+      kpNote?: string | null;
+      status?: string;
+    };
   }[];
   lootedRelics: {
     characterId: string;
@@ -76,10 +87,11 @@ export function RoomReportPage() {
   const fetchReport = async () => {
     try {
       const response = await apiFetch(`/rooms/${roomId}/report`);
-      const data = await handleApiResponse<{ data: ReportData }>(response);
-      setReport(data.data);
-      setEditedSummary(data.data.summary || '');
-      if (data.data.isCreator) {
+      const data = await handleApiResponse<ReportData | { data: ReportData }>(response);
+      const reportData = 'data' in data ? data.data : data;
+      setReport(reportData);
+      setEditedSummary(reportData.summary || '');
+      if (reportData.isCreator) {
         fetchRelicRegistry();
       }
     } catch (error) {
@@ -402,26 +414,44 @@ export function RoomReportPage() {
               {report.characterProgress.map((c, i) => (
                 <div key={i} className="p-4 bg-coc-bg-tertiary rounded">
                   <h4 className="font-bold mb-3">{c.name}</h4>
+                  {c.settlement?.outcome && (
+                    <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded bg-coc-accent-gold/20 px-2 py-0.5 text-coc-accent-gold">
+                        结局：{c.settlement.outcome}
+                      </span>
+                      <span className="rounded bg-coc-bg-secondary px-2 py-0.5 text-coc-text-secondary">
+                        状态：{c.settlement.status || 'DRAFT'}
+                      </span>
+                      <span className="rounded bg-coc-bg-secondary px-2 py-0.5 text-coc-text-secondary">
+                        EXP：{c.settlement.expAward ?? 0}
+                      </span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-3 gap-4 mb-3">
                     <div className="text-center">
                       <div className="text-xs text-coc-text-muted">HP</div>
                       <div className="text-sm">
-                        {c.hpChange?.before ?? '-'} → {c.hpChange?.after ?? '-'}
+                        {c.hpChange?.before ?? '-'} → {c.settlement?.hpFinal ?? c.hpChange?.after ?? '-'}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-coc-text-muted">MP</div>
                       <div className="text-sm">
-                        {c.mpChange?.before ?? '-'} → {c.mpChange?.after ?? '-'}
+                        {c.mpChange?.before ?? '-'} → {c.settlement?.mpFinal ?? c.mpChange?.after ?? '-'}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-coc-text-muted">SAN</div>
                       <div className="text-sm">
-                        {c.sanChange?.before ?? '-'} → {c.sanChange?.after ?? '-'}
+                        {c.sanChange?.before ?? '-'} → {c.settlement?.sanFinal ?? c.sanChange?.after ?? '-'}
                       </div>
                     </div>
                   </div>
+                  {c.settlement?.kpNote && (
+                    <div className="mb-3 rounded bg-coc-bg-secondary/70 p-3 text-sm text-coc-text-secondary">
+                      <span className="text-coc-text-muted">KP 备注：</span>{c.settlement.kpNote}
+                    </div>
+                  )}
                   {c.skillGrowth && c.skillGrowth.length > 0 && (
                     <div>
                       <div className="text-xs text-coc-text-muted mb-1">技能成长</div>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
 
@@ -11,18 +11,9 @@ router.post('/:roomId/events', authMiddleware, async (req: AuthRequest, res, nex
     const { roomId } = req.params;
     const { eventType, payload, isSecret, phaseId, sceneId } = req.body;
 
-    const room = await prisma.room.findUnique({
-      where: { roomId },
-      include: { members: true },
-    });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-
-    // 任何成员都可以写日志，但 secret 只能 KP 写
-    const member = room.members.find(m => m.userId === req.userId);
-    if (!member) throw new AppError('FORBIDDEN', '不是房间成员', 403);
-
-    if (isSecret && member.role !== 'KP') {
-      throw new AppError('FORBIDDEN', '只有KP可以添加私密事件', 403);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canSendPublicMessage');
+    if (isSecret) {
+      await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
     }
 
     const event = await prisma.roomEventLog.create({
@@ -49,23 +40,15 @@ router.get('/:roomId/events', authMiddleware, async (req: AuthRequest, res, next
     const { roomId } = req.params;
     const { eventType, limit = '50', offset = '0' } = req.query;
 
-    const room = await prisma.room.findUnique({
-      where: { roomId },
-      include: { members: true },
-    });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-
-    const member = room.members.find(m => m.userId === req.userId);
-    if (!member) throw new AppError('FORBIDDEN', '不是房间成员', 403);
-
-    const isKP = member.role === 'KP';
+    const { room, capabilities } = await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
+    const canViewSecret = capabilities.canViewSecretEvents;
     const take = Math.min(parseInt(limit as string) || 50, 200);
     const skip = parseInt(offset as string) || 0;
 
     const where: any = {
       roomId: room.id,
       ...(eventType && { eventType: eventType as string }),
-      ...(!isKP && { isSecret: false }),
+      ...(!canViewSecret && { isSecret: false }),
     };
 
     const [events, total] = await Promise.all([
@@ -95,18 +78,11 @@ router.get('/:roomId/events/summary', authMiddleware, async (req: AuthRequest, r
   try {
     const { roomId } = req.params;
 
-    const room = await prisma.room.findUnique({
-      where: { roomId },
-      include: { members: true },
-    });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-
-    const member = room.members.find(m => m.userId === req.userId);
-    if (!member) throw new AppError('FORBIDDEN', '不是房间成员', 403);
+    const { room, capabilities } = await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
 
     const events = await prisma.roomEventLog.groupBy({
       by: ['eventType'],
-      where: { roomId: room.id, ...(member.role !== 'KP' && { isSecret: false }) },
+      where: { roomId: room.id, ...(!capabilities.canViewSecretEvents && { isSecret: false }) },
       _count: { eventType: true },
     });
 

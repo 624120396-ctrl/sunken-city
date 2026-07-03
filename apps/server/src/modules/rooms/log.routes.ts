@@ -2,21 +2,9 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: true },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 async function requireMember(req: AuthRequest, roomId: string) {
   const room = await prisma.room.findUnique({
@@ -102,9 +90,7 @@ router.post('/:roomId/log/events', authMiddleware, async (req: AuthRequest, res,
 router.get('/:roomId/log/annotations', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    await requireKP(req, roomId);
-    const room = await prisma.room.findUnique({ where: { roomId } });
-    if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
 
     const log = await getOrCreateLog(room.id);
     const annotations = await prisma.roomLogAnnotation.findMany({
@@ -122,7 +108,7 @@ router.get('/:roomId/log/annotations', authMiddleware, async (req: AuthRequest, 
 router.post('/:roomId/log/annotations', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
     const { fromEventId, toEventId, type, content } = req.body;
 
     const log = await getOrCreateLog(room.id);
@@ -226,7 +212,7 @@ router.post('/:roomId/log/export', authMiddleware, async (req: AuthRequest, res,
   try {
     const { roomId } = req.params;
     const { format = 'markdown', eventTypes } = req.body;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canUseKPTools');
 
     const log = await getOrCreateLog(room.id);
 

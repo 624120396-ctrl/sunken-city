@@ -2,21 +2,9 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { requireRoomCapability } from './room-auth';
 
 const router = Router();
-
-async function requireKP(req: AuthRequest, roomId: string) {
-  const room = await prisma.room.findUnique({
-    where: { roomId },
-    include: { members: { include: { user: { select: { nickname: true } } } } },
-  });
-  if (!room) throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
-  const member = room.members.find(m => m.userId === req.userId);
-  if (!member || member.role !== 'KP') {
-    throw new AppError('FORBIDDEN', '只有KP可以操作', 403);
-  }
-  return room;
-}
 
 async function requireMember(req: AuthRequest, roomId: string) {
   const room = await prisma.room.findUnique({
@@ -33,7 +21,7 @@ async function requireMember(req: AuthRequest, roomId: string) {
 router.post('/:roomId/combat/init', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageCombat');
 
     // 检查是否已有活跃战斗
     const existing = await prisma.combatSession.findFirst({
@@ -159,7 +147,7 @@ router.get('/:roomId/combat/current', authMiddleware, async (req: AuthRequest, r
 router.post('/:roomId/combat/:combatId/next-turn', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, combatId } = req.params;
-    const { room, member } = await requireMember(req, roomId);
+    const { room } = await requireMember(req, roomId);
 
     const session = await prisma.combatSession.findUnique({
       where: { id: combatId },
@@ -181,11 +169,12 @@ router.post('/:roomId/combat/:combatId/next-turn', authMiddleware, async (req: A
     // 获取当前行动者
     const currentActor = initiative[currentIndex];
 
-    // 只有当前行动者或KP可以推进
-    const isKP = member.role === 'KP';
+    // 只有当前行动者或具备战斗管理权限者可以推进
     const isActor = currentActor?.userId === req.userId;
-    if (!isKP && !isActor) {
-      throw new AppError('FORBIDDEN', '不是你的回合', 403);
+    if (!isActor) {
+      await requireRoomCapability(roomId, req.userId, 'canManageCombat');
+    } else {
+      await requireRoomCapability(roomId, req.userId, 'canRollPublicDice');
     }
 
     // 如果行动者没有提交行动，自动添加 "end" 行动
@@ -280,9 +269,11 @@ router.post('/:roomId/combat/:combatId/action', authMiddleware, async (req: Auth
     const currentIndex = actionCount % initiative.length;
     const currentActor = initiative[currentIndex];
 
-    // 只有当前行动者可以提交行动
-    if (currentActor?.userId !== req.userId && member.role !== 'KP') {
-      throw new AppError('FORBIDDEN', '不是你的回合', 403);
+    // 只有当前行动者或具备战斗管理权限者可以提交行动
+    if (currentActor?.userId !== req.userId) {
+      await requireRoomCapability(roomId, req.userId, 'canManageCombat');
+    } else {
+      await requireRoomCapability(roomId, req.userId, 'canRollPublicDice');
     }
 
     const actorId = currentActor?.actorId || req.userId;
@@ -327,7 +318,7 @@ router.post('/:roomId/combat/:combatId/action', authMiddleware, async (req: Auth
 router.post('/:roomId/combat/:combatId/end-round', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, combatId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageCombat');
 
     const session = await prisma.combatSession.findUnique({
       where: { id: combatId },
@@ -391,7 +382,7 @@ router.post('/:roomId/combat/:combatId/end-round', authMiddleware, async (req: A
 router.post('/:roomId/combat/:combatId/end', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId, combatId } = req.params;
-    const room = await requireKP(req, roomId);
+    const { room } = await requireRoomCapability(roomId, req.userId, 'canManageCombat');
 
     const session = await prisma.combatSession.findUnique({ where: { id: combatId } });
     if (!session || session.roomId !== room.id) {

@@ -3,13 +3,49 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { logger } from '../../utils/logger';
+import { requireRoomCapability } from '../rooms/room-auth';
 
 const router = Router();
+
+type KeyEvent = {
+  time: string;
+  event: string;
+};
+
+type SkillGrowthEntry = {
+  name?: string;
+  before?: number;
+  after?: number;
+};
+
+type CharacterGrowthEntry = {
+  userId?: string;
+  characterId?: string;
+  name?: string;
+  hpChange?: { before?: number; after?: number };
+  mpChange?: { before?: number; after?: number };
+  sanChange?: { before?: number; after?: number };
+  skillGrowth?: SkillGrowthEntry[];
+  settlement?: unknown;
+};
+
+function parseJsonArray<T = unknown>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value !== 'string') return [];
+
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed as T[] : [];
+  } catch {
+    return [];
+  }
+}
 
 // 获取房间报告
 router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
+    await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
 
     // 获取房间信息
     const room = await prisma.room.findUnique({
@@ -19,6 +55,11 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
           include: {
             user: { select: { id: true, nickname: true } },
             character: true,
+          },
+        },
+        roomRun: {
+          include: {
+            settlements: true,
           },
         },
       },
@@ -79,8 +120,8 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
     }
 
     // 解析JSON字段
-    const parsedKeyEvents = JSON.parse(report.keyEvents as string);
-    const parsedCharacterGrowth = JSON.parse(report.characterGrowth as string);
+    const parsedKeyEvents = parseJsonArray<KeyEvent>(report.keyEvents);
+    const parsedCharacterGrowth = parseJsonArray<CharacterGrowthEntry>(report.characterGrowth);
 
     // 构建战斗记录
     const combatRecords = combatLogs.map(log => ({
@@ -101,16 +142,46 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
       successLevel: roll.successLevel,
     }));
 
+    const settlementByCharacterId = new Map(
+      (room.roomRun?.settlements || []).map(settlement => [
+        settlement.characterId,
+        {
+          outcome: settlement.outcome,
+          hpFinal: settlement.hpFinal,
+          mpFinal: settlement.mpFinal,
+          sanFinal: settlement.sanFinal,
+          expAward: settlement.expAward,
+          skillGrowth: parseJsonArray(settlement.skillGrowth),
+          itemChanges: parseJsonArray(settlement.itemChanges),
+          kpNote: settlement.kpNote,
+          status: settlement.status,
+        },
+      ])
+    );
+
     // 构建角色成长记录
     const characterProgress = room.members
       .filter(m => m.character)
-      .map(m => ({
-        name: m.character!.name,
-        hpChange: { before: m.character!.hp, after: m.character!.hp },
-        mpChange: { before: m.character!.mp, after: m.character!.mp },
-        sanChange: { before: m.character!.san, after: m.character!.san },
-        skillGrowth: [],
-      }));
+      .map(m => {
+        const settlement = settlementByCharacterId.get(m.character!.id);
+        return {
+          userId: m.userId,
+          characterId: m.character!.id,
+          name: m.character!.name,
+          hpChange: { before: m.character!.hp, after: settlement?.hpFinal ?? m.character!.hp },
+          mpChange: { before: m.character!.mp, after: settlement?.mpFinal ?? m.character!.mp },
+          sanChange: { before: m.character!.san, after: settlement?.sanFinal ?? m.character!.san },
+          skillGrowth: settlement?.skillGrowth ?? [],
+          settlement,
+        };
+      });
+
+    const mergedCharacterProgress = parsedCharacterGrowth.length > 0
+      ? parsedCharacterGrowth.map((entry) => ({
+          ...entry,
+          settlement: entry.characterId ? settlementByCharacterId.get(entry.characterId) ?? entry.settlement : entry.settlement,
+        }))
+      : characterProgress;
 
     res.json({
       success: true,
@@ -128,7 +199,7 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
         keyEvents: parsedKeyEvents,
         combatRecords,
         skillChecks,
-        characterProgress: parsedCharacterGrowth.length > 0 ? parsedCharacterGrowth : characterProgress,
+        characterProgress: mergedCharacterProgress,
       },
     });
   } catch (error) {
@@ -141,6 +212,7 @@ router.patch('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, r
   try {
     const { roomId } = req.params;
     const { summary, characterGrowth } = req.body;
+    await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
 
     const report = await prisma.sessionReport.findFirst({
       where: { roomId },
@@ -151,9 +223,11 @@ router.patch('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, r
       throw new AppError('REPORT_NOT_FOUND', '报告不存在', 404);
     }
 
-    const updateData: any = {};
+    const updateData: { summary?: string; characterGrowth?: string } = {};
     if (summary !== undefined) updateData.summary = summary;
-    if (characterGrowth !== undefined) updateData.characterGrowth = JSON.stringify(characterGrowth);
+    if (characterGrowth !== undefined) {
+      updateData.characterGrowth = JSON.stringify(parseJsonArray<CharacterGrowthEntry>(characterGrowth));
+    }
 
     await prisma.sessionReport.update({
       where: { id: report.id },
@@ -173,6 +247,7 @@ router.patch('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, r
 router.get('/rooms/:roomId/report/export', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const { roomId } = req.params;
+    await requireRoomCapability(roomId, req.userId, 'canViewPublicContent');
 
     // 获取报告数据
     const room = await prisma.room.findUnique({
@@ -206,8 +281,8 @@ router.get('/rooms/:roomId/report/export', authMiddleware, async (req: AuthReque
       orderBy: { createdAt: 'asc' },
     });
 
-    const keyEvents = report ? JSON.parse(report.keyEvents as string) : [];
-    const characterGrowth = report ? JSON.parse(report.characterGrowth as string) : [];
+    const keyEvents = report ? parseJsonArray<KeyEvent>(report.keyEvents) : [];
+    const characterGrowth = report ? parseJsonArray<CharacterGrowthEntry>(report.characterGrowth) : [];
 
     // 生成Markdown
     const md = `# ${room.name} - 游戏报告
@@ -226,7 +301,7 @@ ${room.members.filter(m => m.leftAt === null).map(m => `- ${m.user.nickname}${m.
 ${report?.summary || '暂无概要'}
 
 ## 关键事件
-${keyEvents.map((e: any) => `- ${new Date(e.time).toLocaleTimeString()} - ${e.event}`).join('\n')}
+${keyEvents.map((event) => `- ${new Date(event.time).toLocaleTimeString()} - ${event.event}`).join('\n')}
 
 ## 战斗记录
 ${combatLogs.map(log => `### 第${log.round}回合 - ${log.actor}
@@ -240,11 +315,11 @@ ${combatLogs.map(log => `### 第${log.round}回合 - ${log.actor}
 ${diceRolls.map(roll => `| ${new Date(roll.createdAt).toLocaleTimeString()} | ${roll.targetName || '未知'} | ${roll.rollType} | ${roll.rollResult} | ${roll.successLevel} |`).join('\n')}
 
 ## 角色成长
-${characterGrowth.length > 0 ? characterGrowth.map((c: any) => `### ${c.name}
-- **HP**: ${c.hpChange?.before} → ${c.hpChange?.after}
-- **MP**: ${c.mpChange?.before} → ${c.mpChange?.after}
-- **SAN**: ${c.sanChange?.before} → ${c.sanChange?.after}
-${c.skillGrowth?.length > 0 ? `- **技能成长**: ${c.skillGrowth.map((s: any) => `${s.name} ${s.before}% → ${s.after}%`).join(', ')}` : ''}
+${characterGrowth.length > 0 ? characterGrowth.map((character) => `### ${character.name || '未知角色'}
+- **HP**: ${character.hpChange?.before ?? '-'} → ${character.hpChange?.after ?? '-'}
+- **MP**: ${character.mpChange?.before ?? '-'} → ${character.mpChange?.after ?? '-'}
+- **SAN**: ${character.sanChange?.before ?? '-'} → ${character.sanChange?.after ?? '-'}
+${character.skillGrowth && character.skillGrowth.length > 0 ? `- **技能成长**: ${character.skillGrowth.map((skill) => `${skill.name || '未知技能'} ${skill.before ?? '-'}% → ${skill.after ?? '-'}%`).join(', ')}` : ''}
 `).join('\n') : '暂无成长记录'}
 
 ---

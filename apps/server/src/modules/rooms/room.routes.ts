@@ -2,6 +2,14 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { deriveLifecycle } from './room-auth';
+import { buildRoomAuthView } from './room-view';
+import {
+  assertCharacterAvailableForRoom,
+  assertCharacterOwnedByUser,
+  buildMemberJoinData,
+  normalizeJoinMode,
+} from './room-binding.service';
 
 const router = Router();
 
@@ -18,8 +26,20 @@ function generateRoomId(): string {
 // 获取房间列表
 router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
+    const userId = req.userId!;
     const rooms = await prisma.room.findMany({
-      where: { status: 'ACTIVE' },
+      where: {
+        OR: [
+          { status: 'ACTIVE' },
+          {
+            status: 'CLOSED',
+            OR: [
+              { creatorId: userId },
+              { members: { some: { userId } } },
+            ],
+          },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -27,6 +47,21 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
         name: true,
         description: true,
         creatorId: true,
+        status: true,
+        members: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            leftAt: true,
+            characterId: true,
+          },
+        },
+        roomRun: {
+          select: {
+            lifecycle: true,
+          },
+        },
         _count: {
           select: { members: true },
         },
@@ -36,14 +71,29 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
     res.json({
       success: true,
       data: {
-        rooms: rooms.map(r => ({
-          id: r.id,
-          roomId: r.roomId,
-          name: r.name,
-          description: r.description,
-          memberCount: r._count.members,
-          isCreator: r.creatorId === req.userId,
-        })),
+        rooms: rooms.map(r => {
+          const member = r.members.find(m => m.userId === userId && !m.leftAt) || null;
+          const roomAuthView = buildRoomAuthView({
+            room: r,
+            userId,
+            member,
+            lifecycle: r.roomRun?.lifecycle,
+          });
+          const activeMembers = r.members.filter(m => !m.leftAt);
+
+          return {
+            id: r.id,
+            roomId: r.roomId,
+            name: r.name,
+            description: r.description,
+            memberCount: r._count.members,
+            activeMemberCount: activeMembers.length,
+            playerCount: activeMembers.filter(m => m.role === 'PLAYER').length,
+            observerCount: activeMembers.filter(m => m.role === 'OBSERVER').length,
+            isCreator: r.creatorId === userId,
+            ...roomAuthView,
+          };
+        }),
       },
     });
   } catch (error) {
@@ -131,6 +181,11 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
             scenes: { orderBy: { sortOrder: 'asc' } },
           },
         },
+        roomRun: {
+          select: {
+            lifecycle: true,
+          },
+        },
       },
     });
 
@@ -141,6 +196,13 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
     // 检查用户是否在房间中
     const isMember = room.members.some(m => m.userId === req.userId);
     const isCreator = room.creatorId === req.userId;
+    const member = room.members.find(m => m.userId === req.userId && !m.leftAt) || null;
+    const roomAuthView = buildRoomAuthView({
+      room,
+      userId: req.userId,
+      member,
+      lifecycle: room.roomRun?.lifecycle,
+    });
 
     // 批量获取头像框图片URL
     const frameKeys = [...new Set(room.members.map(m => m.user.equippedFrame).filter(Boolean))] as string[];
@@ -182,6 +244,7 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
           sceneDesc: room.sceneDesc,
           isCreator,
           isMember,
+          ...roomAuthView,
           // V2.1 阶段信息
           currentPhase: currentPhase ? {
             id: currentPhase.id,
@@ -249,11 +312,6 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     // 生成短ID (6位字母数字)
     const roomId = generateRoomId();
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { displayedCharacterId: true },
-    });
-
     const room = await prisma.room.create({
       data: {
         roomId,
@@ -264,8 +322,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
           create: {
             userId,
             role: 'KP',
-            characterId: user?.displayedCharacterId || null,
-            displayedCharacterId: user?.displayedCharacterId || null,
+            characterId: null,
+            displayedCharacterId: null,
           },
         },
       },
@@ -285,13 +343,22 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
   try {
     const { roomId } = req.params;
     const userId = req.userId!;
-    const { characterId } = req.body;
+    const rawJoinAs = req.body?.joinAs;
+    const rawCharacterId = req.body?.characterId;
+    const characterId = typeof rawCharacterId === 'string' && rawCharacterId.trim()
+      ? rawCharacterId.trim()
+      : undefined;
+    // Old observer clients sent an empty join body, before joinAs existed.
+    const joinAs = rawJoinAs === undefined && !characterId ? 'OBSERVER' : normalizeJoinMode(rawJoinAs);
 
     const room = await prisma.room.findUnique({
       where: { roomId },
       include: {
         members: {
           include: { character: true },
+        },
+        roomRun: {
+          select: { lifecycle: true },
         },
       },
     });
@@ -300,8 +367,17 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
       throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
     }
 
-    if (room.status !== 'ACTIVE') {
+    if (room.status === 'CLOSED') {
       throw new AppError('ROOM_CLOSED', '房间已关闭', 400);
+    }
+
+    const lifecycle = deriveLifecycle(room.status, room.roomRun?.lifecycle);
+    if (joinAs === 'PLAYER' && lifecycle !== 'PREPARING' && lifecycle !== 'READY') {
+      throw new AppError('INVALID_ROOM_LIFECYCLE', '只有开团前可以加入玩家席位', 400);
+    }
+
+    if (joinAs === 'OBSERVER' && (lifecycle === 'FINISHED' || lifecycle === 'CANCELLED')) {
+      throw new AppError('INVALID_ROOM_LIFECYCLE', '已结束或已取消的房间不能加入旁观', 400);
     }
 
     // 检查是否已在房间中（未离开）
@@ -310,17 +386,35 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
       throw new AppError('ALREADY_MEMBER', '你已在房间中', 400);
     }
 
+    if (joinAs === 'PLAYER') {
+      if (!characterId) {
+        throw new AppError('CHARACTER_REQUIRED', '加入玩家席位需要选择角色', 400);
+      }
+      await assertCharacterOwnedByUser(characterId, userId);
+      await assertCharacterAvailableForRoom(characterId, room.id);
+    }
+
+    const joinData = buildMemberJoinData({
+      roomDbId: room.id,
+      userId,
+      joinAs,
+      characterId,
+    });
+
     // 检查是否有之前的快照（已离开的成员）
     const leftMember = room.members.find(m => m.userId === userId && m.leftAt);
     let snapshot: any = null;
-    if (leftMember) {
+    if (leftMember && joinData.characterId) {
       const snapshots = await prisma.memberSnapshot.findMany({
         where: { roomMemberId: leftMember.id },
         orderBy: { createdAt: 'desc' },
         take: 1,
       });
       if (snapshots.length > 0) {
-        snapshot = JSON.parse(snapshots[0].snapshotData);
+        const parsedSnapshot = JSON.parse(snapshots[0].snapshotData);
+        if (parsedSnapshot.characterId === joinData.characterId) {
+          snapshot = parsedSnapshot;
+        }
       }
     }
 
@@ -331,19 +425,16 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
         where: { id: leftMember.id },
         data: {
           leftAt: null,
-          characterId: characterId || leftMember.characterId,
+          role: joinData.role,
+          characterId: joinData.characterId,
+          displayedCharacterId: joinData.displayedCharacterId,
           ...(snapshot?.statusTags && { statusTags: JSON.stringify(snapshot.statusTags) }),
         },
       });
     } else {
       // 新成员
       member = await prisma.roomMember.create({
-        data: {
-          roomId: room.id,
-          userId,
-          characterId,
-          role: 'PLAYER',
-        },
+        data: joinData,
       });
     }
 
@@ -397,36 +488,42 @@ router.post('/:roomId/leave', authMiddleware, async (req: AuthRequest, res, next
       throw new AppError('KP_CANNOT_LEAVE', 'KP不能离开房间，请关闭房间', 400);
     }
 
-    // 创建成员快照
-    const snapshotData = {
-      hp: member.character?.hp || 10,
-      mp: member.character?.mp || 10,
-      san: member.character?.san || 50,
-      maxHp: member.character?.maxHp || 10,
-      maxMp: member.character?.maxMp || 10,
-      maxSan: member.character?.maxSan || 50,
-      statusTags: JSON.parse(member.statusTags || '[]'),
-      characterId: member.characterId,
-      leftAt: new Date().toISOString(),
-    };
+    const leftAt = new Date();
+    let snapshotCreated = false;
 
-    await prisma.memberSnapshot.create({
-      data: {
-        roomMemberId: member.id,
-        snapshotData: JSON.stringify(snapshotData),
-        reason: 'member_left',
-      },
-    });
+    if (member.characterId && member.character) {
+      // 创建成员快照
+      const snapshotData = {
+        hp: member.character.hp,
+        mp: member.character.mp,
+        san: member.character.san,
+        maxHp: member.character.maxHp,
+        maxMp: member.character.maxMp,
+        maxSan: member.character.maxSan,
+        statusTags: JSON.parse(member.statusTags || '[]'),
+        characterId: member.characterId,
+        leftAt: leftAt.toISOString(),
+      };
+
+      await prisma.memberSnapshot.create({
+        data: {
+          roomMemberId: member.id,
+          snapshotData: JSON.stringify(snapshotData),
+          reason: 'member_left',
+        },
+      });
+      snapshotCreated = true;
+    }
 
     await prisma.roomMember.update({
       where: { id: member.id },
-      data: { leftAt: new Date() },
+      data: { leftAt },
     });
 
     res.json({
       success: true,
       message: '已离开房间',
-      data: { snapshotCreated: true },
+      data: { snapshotCreated },
     });
   } catch (error) {
     next(error);

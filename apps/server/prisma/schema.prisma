@@ -52,6 +52,10 @@ model User {
   sentMessages    UserMessage[] @relation("SentUserMessages")
   receivedMessages UserMessage[] @relation("ReceivedUserMessages")
   boardModerators ForumBoardModerator[]
+  finalizedRoomRuns RoomRun[] @relation("RoomRunFinalizedBy")
+  roomRunParticipants RoomRunParticipant[]
+  roomCharacterLocks RoomCharacterLock[]
+  roomSettlements RoomSettlement[]
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -136,6 +140,9 @@ model Character {
   user        User     @relation(fields: [userId], references: [id])
   displayedByUsers User[] @relation("UserDisplayedCharacter")
   roomMembers RoomMember[]
+  roomRunParticipants RoomRunParticipant[]
+  roomCharacterLocks RoomCharacterLock[]
+  roomSettlements RoomSettlement[]
   privateMessagesSent   PrivateMessage[] @relation("SentMessages")
   privateMessagesReceived PrivateMessage[] @relation("ReceivedMessages")
   relics                  CharacterRelic[]
@@ -213,6 +220,105 @@ model Room {
   eventLogs        RoomEventLog[]
   roomLogs         RoomLog[]
   subRooms         SubRoom[]
+  roomRun          RoomRun?
+  characterLocks   RoomCharacterLock[]
+}
+
+model RoomRun {
+  id              String   @id @default(uuid())
+  roomId          String   @unique
+  lifecycle       String   @default("PREPARING")
+  startedAt       DateTime?
+  pausedAt        DateTime?
+  finishingAt     DateTime?
+  finishedAt      DateTime?
+  cancelledAt     DateTime?
+  finalizedById   String?
+  startSnapshot   String   @default("{}")
+  finishSummary   String   @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  finalizedBy     User?    @relation("RoomRunFinalizedBy", fields: [finalizedById], references: [id], onDelete: SetNull)
+  participants    RoomRunParticipant[]
+  characterLocks  RoomCharacterLock[]
+  settlements     RoomSettlement[]
+
+  @@index([lifecycle])
+}
+
+model RoomRunParticipant {
+  id                 String   @id @default(uuid())
+  roomRunId           String
+  roomMemberId        String
+  userId              String
+  role                String   @default("PLAYER")
+  characterId         String?
+  initialSnapshot     String   @default("{}")
+  joinSnapshot        String   @default("{}")
+  finalSnapshot       String   @default("{}")
+  participationStatus String   @default("ACTIVE")
+  joinedRunAt         DateTime @default(now())
+  leftRunAt           DateTime?
+
+  roomRun             RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  roomMember          RoomMember @relation(fields: [roomMemberId], references: [id])
+  user                User     @relation(fields: [userId], references: [id])
+  character           Character? @relation(fields: [characterId], references: [id])
+
+  @@index([roomRunId])
+  @@index([userId])
+  @@index([characterId])
+  @@unique([roomRunId, userId])
+}
+
+model RoomCharacterLock {
+  id          String   @id @default(uuid())
+  characterId String
+  roomId      String
+  roomRunId   String
+  userId      String
+  activeKey   String?  @unique
+  status      String   @default("ACTIVE")
+  lockedAt    DateTime @default(now())
+  releasedAt  DateTime?
+
+  roomRun     RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+  character   Character @relation(fields: [characterId], references: [id])
+
+  @@index([characterId, status])
+  @@index([roomId])
+  @@index([roomRunId])
+}
+
+model RoomSettlement {
+  id           String   @id @default(uuid())
+  roomRunId     String
+  characterId   String
+  userId         String
+  status         String   @default("DRAFT")
+  outcome        String   @default("SURVIVED")
+  hpFinal        Int?
+  mpFinal        Int?
+  sanFinal       Int?
+  expAward       Int      @default(0)
+  skillGrowth    String   @default("[]")
+  itemChanges    String   @default("[]")
+  kpNote         String?
+  appliedAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  roomRun        RoomRun  @relation(fields: [roomRunId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id])
+  character      Character @relation(fields: [characterId], references: [id])
+
+  @@index([roomRunId])
+  @@index([characterId])
+  @@unique([roomRunId, characterId])
 }
 
 model RoomMember {
@@ -234,6 +340,7 @@ model RoomMember {
   room        Room      @relation(fields: [roomId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
   character   Character? @relation(fields: [characterId], references: [id])
+  runParticipants RoomRunParticipant[]
 
   @@unique([roomId, userId])
 }
