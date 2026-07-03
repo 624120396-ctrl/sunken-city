@@ -324,8 +324,13 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
   try {
     const { roomId } = req.params;
     const userId = req.userId!;
-    const joinAs = normalizeJoinMode(req.body?.joinAs);
-    const characterId = typeof req.body?.characterId === 'string' ? req.body.characterId : undefined;
+    const rawJoinAs = req.body?.joinAs;
+    const rawCharacterId = req.body?.characterId;
+    const characterId = typeof rawCharacterId === 'string' && rawCharacterId.trim()
+      ? rawCharacterId.trim()
+      : undefined;
+    // Old observer clients sent an empty join body, before joinAs existed.
+    const joinAs = rawJoinAs === undefined && !characterId ? 'OBSERVER' : normalizeJoinMode(rawJoinAs);
 
     const room = await prisma.room.findUnique({
       where: { roomId },
@@ -387,7 +392,10 @@ router.post('/:roomId/join', authMiddleware, async (req: AuthRequest, res, next)
         take: 1,
       });
       if (snapshots.length > 0) {
-        snapshot = JSON.parse(snapshots[0].snapshotData);
+        const parsedSnapshot = JSON.parse(snapshots[0].snapshotData);
+        if (parsedSnapshot.characterId === joinData.characterId) {
+          snapshot = parsedSnapshot;
+        }
       }
     }
 

@@ -83,6 +83,11 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
     const userId = req.userId!;
     const { receiverCharacterId, content } = req.body;
 
+    if (typeof receiverCharacterId !== 'string' || !receiverCharacterId.trim()) {
+      throw new AppError('INVALID_RECEIVER', '接收者无效', 400);
+    }
+    const normalizedReceiverCharacterId = receiverCharacterId.trim();
+
     const room = await prisma.room.findUnique({
       where: { roomId },
       include: {
@@ -119,7 +124,7 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
     const receiverMember = await prisma.roomMember.findFirst({
       where: {
         roomId: room.id,
-        characterId: receiverCharacterId,
+        characterId: normalizedReceiverCharacterId,
         role: 'PLAYER',
         leftAt: null,
       },
@@ -133,7 +138,7 @@ router.post('/rooms/:roomId/private-messages', authMiddleware, async (req: AuthR
       data: {
         roomId: room.id,
         senderId,
-        receiverId: receiverCharacterId,
+        receiverId: normalizedReceiverCharacterId,
         content,
       },
       include: {
