@@ -1,0 +1,364 @@
+.rank-title-page {
+  width: min(100%, 98rem);
+}
+
+.rank-altar-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.rank-altar-card::before,
+.rank-detail-card::before,
+.rank-source-panel::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1.5rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--coc-accent-gold) 78%, transparent), transparent);
+  pointer-events: none;
+}
+
+.rank-altar-card__seal {
+  --rank-color: var(--coc-accent-gold);
+
+  position: relative;
+  display: grid;
+  width: clamp(8rem, 12vw, 11rem);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 62%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--rank-color) 22%, transparent), transparent 56%),
+    rgba(0, 0, 0, 0.32);
+  box-shadow:
+    0 0 0 0.45rem color-mix(in srgb, var(--rank-color) 7%, transparent),
+    0 0 44px color-mix(in srgb, var(--rank-color) 18%, transparent);
+}
+
+.rank-altar-card__seal span {
+  font-size: clamp(3rem, 7vw, 5.25rem);
+  line-height: 1;
+}
+
+.rank-altar-card__seal strong {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 68%, transparent);
+  border-radius: 999px;
+  background: rgba(5, 8, 12, 0.88);
+  color: var(--rank-color);
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-altar-card__body {
+  min-width: 0;
+}
+
+.rank-altar-card__eyebrow,
+.rank-section__heading h2,
+.rank-detail-card h4 {
+  color: var(--coc-accent-gold-strong);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.rank-altar-card__body h2 {
+  margin: 0.4rem 0 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.rank-altar-card__body > p {
+  max-width: 72ch;
+  margin: 0.8rem 0 0;
+  color: var(--coc-on-surface-secondary);
+  line-height: 1.65;
+}
+
+.rank-progress-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1.15rem;
+}
+
+.rank-progress-strip__item {
+  --rank-summary-color: var(--coc-accent-gold);
+
+  display: grid;
+  gap: 0.3rem;
+  min-height: 4.4rem;
+  border: 1px solid color-mix(in srgb, var(--rank-summary-color) 34%, transparent);
+  border-radius: var(--coc-radius-card);
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.24), rgba(255, 255, 255, 0.035)),
+    color-mix(in srgb, var(--rank-summary-color) 7%, transparent);
+  padding: 0.75rem;
+}
+
+.rank-progress-strip__item[data-tone="ocean"] {
+  --rank-summary-color: var(--coc-accent-ocean);
+}
+
+.rank-progress-strip__item[data-tone="blood"] {
+  --rank-summary-color: var(--coc-accent-blood);
+}
+
+.rank-progress-strip__item span {
+  color: var(--coc-on-surface-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.rank-progress-strip__item strong {
+  overflow: hidden;
+  color: var(--coc-on-surface-primary);
+  font-size: 1.08rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-exp-track {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.rank-exp-track__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--coc-on-surface-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.rank-max-note {
+  margin-top: 1rem;
+  color: var(--coc-accent-gold-strong);
+  font-weight: 900;
+}
+
+.rank-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.rank-section__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.rank-section__heading h2 {
+  margin: 0;
+  color: var(--coc-on-surface-primary);
+  font-size: 1.12rem;
+}
+
+.rank-ladder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.9rem;
+}
+
+.rank-ladder-card {
+  --rank-color: var(--coc-accent-gold);
+
+  position: relative;
+  display: grid;
+  min-height: 11.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 26%, var(--coc-border-subtle));
+  border-radius: var(--coc-radius-card);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--coc-surface-solid) 88%, transparent), color-mix(in srgb, var(--coc-surface-panel) 80%, transparent)),
+    radial-gradient(circle at 84% 0%, color-mix(in srgb, var(--rank-color) 16%, transparent), transparent 10rem);
+  color: var(--coc-on-surface-primary);
+  padding: 1rem;
+  text-align: left;
+  box-shadow: var(--coc-shadow-panel);
+}
+
+.rank-ladder-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0.9rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rank-color) 78%, transparent), transparent);
+}
+
+.rank-ladder-card[data-current="true"],
+.rank-ladder-card[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--rank-color) 62%, transparent);
+  box-shadow: var(--coc-shadow-panel), 0 0 24px color-mix(in srgb, var(--rank-color) 12%, transparent);
+}
+
+.rank-ladder-card[data-locked="true"] {
+  filter: grayscale(0.38);
+  opacity: 0.58;
+}
+
+.rank-ladder-card__icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.rank-ladder-card__level {
+  margin-top: 0.8rem;
+  color: var(--rank-color);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.rank-ladder-card strong {
+  margin-top: 0.2rem;
+  overflow: hidden;
+  color: var(--coc-on-surface-primary);
+  font-size: 1rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-ladder-card small {
+  margin-top: 0.4rem;
+  color: var(--coc-on-surface-muted);
+  font-size: 0.75rem;
+}
+
+.rank-ladder-card em {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 48%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rank-color) 12%, rgba(0, 0, 0, 0.24));
+  color: var(--rank-color);
+  padding: 0.18rem 0.45rem;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.rank-detail-card__header,
+.rank-detail-card__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.rank-detail-card__header {
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.rank-detail-card__title > span {
+  font-size: 2.7rem;
+  line-height: 1;
+}
+
+.rank-detail-card h3 {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+.rank-detail-card p {
+  color: var(--coc-on-surface-secondary);
+}
+
+.rank-detail-card__description {
+  margin: 0 0 1.25rem;
+  line-height: 1.65;
+}
+
+.rank-detail-card__close {
+  color: var(--coc-on-surface-muted);
+  font-weight: 900;
+}
+
+.rank-detail-card__close:hover {
+  color: var(--coc-on-surface-primary);
+}
+
+.rank-detail-card h4 {
+  margin: 0 0 0.75rem;
+}
+
+.rank-detail-card ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rank-detail-card li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--coc-on-surface-secondary);
+  font-size: 0.9rem;
+}
+
+.rank-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.8rem;
+}
+
+.rank-source-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--coc-border-subtle);
+  border-radius: var(--coc-radius-card);
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.9rem;
+}
+
+.rank-source-card span {
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--coc-accent-gold) 32%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--coc-accent-gold) 10%, transparent);
+  color: var(--coc-accent-gold-strong);
+  padding: 0.25rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+@media (min-width: 1800px) {
+  .rank-ladder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .rank-altar-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rank-progress-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rank-exp-track__labels {
+    flex-direction: column;
+  }
+}

@@ -5,6 +5,7 @@
 @import './economy.css';
 @import './profile.css';
 @import './characters.css';
+@import './rank-title.css';
 
 @tailwind base;
 @tailwind components;

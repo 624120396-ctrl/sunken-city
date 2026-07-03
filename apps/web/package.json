@@ -22,6 +22,7 @@
     "test:market-listing-presentation": "node --test --experimental-strip-types scripts/market-listing-presentation.test.ts",
     "test:profile-dossier": "node --test --experimental-strip-types scripts/profile-dossier.test.ts",
     "test:character-archive": "node --test --experimental-strip-types scripts/character-archive.test.ts",
+    "test:rank-title-display": "node --test --experimental-strip-types scripts/rank-title-display.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
   "dependencies": {

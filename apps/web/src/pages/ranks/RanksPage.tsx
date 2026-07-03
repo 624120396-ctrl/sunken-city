@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Sparkles, Crown, Info, Loader2 } from 'lucide-react';
 import { ExpBar } from '@components/ui/ExpBar';
 import { PageShell, Surface } from '@components/system';
+import { getRankLadderItems, getRankProgressSummary } from '@components/rank-title/rankTitleMeta';
 import { 
   getRanks, 
   getMyRankTitle, 
@@ -61,6 +62,18 @@ export function RanksPage() {
   const currentRank = rankInfo?.rank || ranks[0];
   const nextRank = rankInfo?.nextRank;
   const expToNext = rankInfo?.expToNext || 0;
+  const rankProgressSummary = getRankProgressSummary({
+    currentRank,
+    nextRank,
+    exp: rankInfo?.exp || 0,
+    expToNext,
+  });
+  const ladderItems = getRankLadderItems({
+    ranks,
+    currentLevel: currentRank?.level,
+    exp: rankInfo?.exp || 0,
+    selectedLevel: selectedRank?.level,
+  });
 
   if (loading) {
     return (
@@ -94,6 +107,7 @@ export function RanksPage() {
       className="pb-12"
     >
       <PageShell
+        className="rank-title-page rank-page"
         eyebrow="rank ladder"
         title={
           <span className="flex items-center gap-3">
@@ -112,133 +126,79 @@ export function RanksPage() {
           </Link>
         }
       >
-        {/* 当前位阶展示 */}
-        <Surface variant="solid" tone="gold" padding="lg">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* 位阶图标 */}
-              <div className="relative">
-                <div 
-                  className="w-32 h-32 rounded-full flex items-center justify-center text-6xl
-                           border-4 animate-pulse"
-                  style={{ 
-                    borderColor: currentRank?.color || '#c9a227',
-                    background: `linear-gradient(135deg, ${currentRank?.color || '#c9a227'}20, ${currentRank?.color || '#c9a227'}05)`,
-                    boxShadow: `0 0 30px ${currentRank?.color || '#c9a227'}30`,
-                  }}
-                >
-                  {currentRank?.icon || '👑'}
+        <Surface variant="solid" tone="gold" padding="lg" className="rank-altar-card">
+          <div className="rank-altar-card__seal" style={{ '--rank-color': currentRank?.color || '#c9a227' } as CSSProperties}>
+            <span>{currentRank?.icon || '👑'}</span>
+            <strong>{currentRank?.level || 1}</strong>
+          </div>
+
+          <div className="rank-altar-card__body">
+            <div className="rank-altar-card__eyebrow">当前位阶</div>
+            <h2 style={{ color: currentRank?.color || '#c9a227' }}>{currentRank?.name || '海岸漫步者'}</h2>
+            <p>{currentRank?.description || '你站在悬崖边缘，脚下的海水拍打着礁石，远处有什么在呼唤。'}</p>
+
+            <div className="rank-progress-strip">
+              {rankProgressSummary.map((item) => (
+                <div key={item.key} className="rank-progress-strip__item" data-tone={item.tone}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full 
-                              bg-coc-bg-overlay border-2 border-coc-gold 
-                              flex items-center justify-center font-ritual font-bold text-[#c9a227]">
-                  {currentRank?.level || 1}
-                </div>
-              </div>
-              
-              {/* 位阶信息 */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="text-sm text-[#6b6558] font-rune mb-2">
-                  当前位阶
-                </div>
-                <h2 
-                  className="text-4xl font-ritual font-bold mb-2"
-                  style={{ color: currentRank?.color || '#c9a227' }}
-                >
-                  {currentRank?.name || '海岸漫步者'}
-                </h2>
-                <p className="text-[#6b6558] mb-4 max-w-lg">
-                  {currentRank?.description || '你站在悬崖边缘，脚下的海水拍打着礁石，远处有什么在呼唤。'}
-                </p>
-                
-                {/* 进度条 */}
-                {nextRank ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#6b6558]">
-                        灵魂碎片: <span className="text-[#c9a227]">{rankInfo?.exp || 0}</span>
-                      </span>
-                      <span className="text-[#6b6558]">
-                        下一级还需: <span className="text-[#c9a227]">{expToNext} SP</span>
-                      </span>
-                    </div>
-                    <ExpBar
-                      current={rankInfo?.exp || 0}
-                      max={(rankInfo?.exp || 0) + (rankInfo?.expToNext || 0)}
-                      color={currentRank?.color || '#c9a227'}
-                      showPercentage
-                    />
-                    <div className="flex items-center justify-between text-xs text-[#6b6558]">
-                      <span>{currentRank?.name}</span>
-                      <span>{nextRank.name}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-[#c9a227] font-ritual">
-                    已达到最高位阶
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
+
+            {nextRank ? (
+              <div className="rank-exp-track">
+                <div className="rank-exp-track__labels">
+                  <span>灵魂碎片 {rankInfo?.exp || 0}</span>
+                  <span>还需 {expToNext} SP</span>
+                </div>
+                <ExpBar
+                  current={rankInfo?.exp || 0}
+                  max={(rankInfo?.exp || 0) + (rankInfo?.expToNext || 0)}
+                  color={currentRank?.color || '#c9a227'}
+                  showPercentage
+                />
+                <div className="rank-exp-track__labels">
+                  <span>{currentRank?.name}</span>
+                  <span>{nextRank.name}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rank-max-note">已达到最高位阶</div>
+            )}
+          </div>
         </Surface>
 
         {/* 位阶天梯 */}
-        <div>
-          <div className="flex items-center gap-3 mb-6">
+        <section className="rank-section">
+          <div className="rank-section__heading">
             <Crown size={20} className="text-[#c9a227]" />
-            <h2 className="text-xl font-ritual font-bold text-[#e8d4a0]">
-              位阶天梯
-            </h2>
+            <h2>位阶天梯</h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5 2xl:grid-cols-6 [@media(min-width:2200px)]:grid-cols-8">
-            {ranks.map((rank, i) => {
-              const isCurrent = rank.level === currentRank?.level;
-              const isLocked = rankInfo ? rank.expRequired > rankInfo.exp : rank.level > 1;
-              
-              return (
-                <motion.button
-                  key={rank.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: i * 0.04 }}
-                  onClick={() => setSelectedRank(rank)}
-                  className="text-left"
-                >
-                  <Surface variant="panel" padding="md" interactive className={`h-full transition-all ${
-                    isCurrent ? 'ring-1 ring-coc-gold/50' : ''
-                  } ${isLocked ? 'opacity-50' : ''}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{rank.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-rune text-[#6b6558]">
-                            Lv.{rank.level}
-                          </span>
-                          {isCurrent && (
-                            <span className="px-2 py-0.5 bg-coc-gold/20 text-[#c9a227] text-xs rounded">
-                              当前
-                            </span>
-                          )}
-                        </div>
-                        
-                        <h3 
-                          className="font-ritual font-bold truncate"
-                          style={{ color: isLocked ? '#6b6558' : rank.color }}
-                        >
-                          {rank.name}
-                        </h3>
-                        
-                        <p className="text-xs text-[#6b6558] mt-1">
-                          {rank.expRequired} 灵魂碎片
-                        </p>
-                      </div>
-                    </div>
-                  </Surface>
-                </motion.button>
-              );
-            })}
+          <div className="rank-ladder-grid">
+            {ladderItems.map((rank, i) => (
+              <motion.button
+                key={rank.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: i * 0.04 }}
+                onClick={() => setSelectedRank(ranks.find((item) => item.id === rank.id) || null)}
+                className="rank-ladder-card"
+                data-current={rank.current ? 'true' : 'false'}
+                data-locked={rank.locked ? 'true' : 'false'}
+                data-selected={rank.selected ? 'true' : 'false'}
+                style={{ '--rank-color': rank.color || '#c9a227' } as CSSProperties}
+              >
+                <span className="rank-ladder-card__icon">{rank.icon}</span>
+                <span className="rank-ladder-card__level">Lv.{rank.level}</span>
+                <strong>{rank.name}</strong>
+                <small>{rank.expRequired} 灵魂碎片</small>
+                {rank.current && <em>当前</em>}
+              </motion.button>
+            ))}
           </div>
-        </div>
+        </section>
 
         {/* 选中位阶详情 */}
         {selectedRank && (
@@ -249,13 +209,12 @@ export function RanksPage() {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <Surface variant="solid" tone="gold" padding="lg">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl">{selectedRank.icon}</span>
+            <Surface variant="solid" tone="gold" padding="lg" className="rank-detail-card">
+              <div className="rank-detail-card__header">
+                <div className="rank-detail-card__title">
+                  <span>{selectedRank.icon}</span>
                   <div>
                     <h3 
-                      className="text-2xl font-ritual font-bold"
                       style={{ color: selectedRank.color }}
                     >
                       {selectedRank.name}
@@ -268,24 +227,22 @@ export function RanksPage() {
                 
                 <button 
                   onClick={() => setSelectedRank(null)}
-                  className="text-[#6b6558] hover:text-[#e8d4a0]"
+                  className="rank-detail-card__close"
                 >
                   ✕
                 </button>
               </div>
 
-              <p className="text-[#6b6558] mb-6">
+              <p className="rank-detail-card__description">
                 {selectedRank.description}
               </p>
 
               {selectedRank.privileges && JSON.parse(selectedRank.privileges as unknown as string || '[]').length > 0 && (
                 <div>
-                  <h4 className="text-sm font-rune text-[#c9a227] mb-3">
-                    位阶特权
-                  </h4>
-                  <ul className="space-y-2">
+                  <h4>位阶特权</h4>
+                  <ul>
                     {(JSON.parse(selectedRank.privileges as unknown as string || '[]') as string[]).map((privilege: string, i: number) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-[#6b6558]">
+                      <li key={i}>
                         <Sparkles size={14} className="text-[#c9a227] shrink-0" />
                         {privilege}
                       </li>
@@ -298,23 +255,21 @@ export function RanksPage() {
         )}
 
         {/* 灵魂碎片获取方式 */}
-        <div>
-          <div className="flex items-center gap-3 mb-6">
+        <section className="rank-section">
+          <div className="rank-section__heading">
             <Info size={20} className="text-coc-blood" />
-            <h2 className="text-xl font-ritual font-bold text-[#e8d4a0]">
-              灵魂碎片来源
-            </h2>
+            <h2>灵魂碎片来源</h2>
           </div>
 
-          <Surface variant="solid" padding="lg">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          <Surface variant="solid" padding="lg" className="rank-source-panel">
+              <div className="rank-source-grid">
                 {EXP_SOURCES.map((source, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: i * 0.03 }}
-                    className="flex items-center justify-between p-4 backdrop-blur-md bg-black/40 rounded border border-[#3a3a3a]/40"
+                    className="rank-source-card"
                   >
                     <div className="flex items-center gap-3">
                       <Info size={16} className="text-[#6b6558] shrink-0" />
@@ -327,14 +282,14 @@ export function RanksPage() {
                         </div>
                       </div>
                     </div>
-                    <span className="px-2 py-1 bg-coc-gold/10 text-[#c9a227] text-sm rounded font-rune">
+                    <span>
                       {source.exp}
                     </span>
                   </motion.div>
                 ))}
               </div>
           </Surface>
-        </div>
+        </section>
       </PageShell>
     </motion.div>
   );
