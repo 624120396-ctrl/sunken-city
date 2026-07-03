@@ -2,11 +2,8 @@ import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useRef, useState } from 'react';
 import { Anchor, Clock3, Fish, PackageOpen, Waves } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { WaterSurface } from '@components/fishing/WaterSurface';
-import { FishingRod } from '@components/fishing/FishingRod';
-import { Bobber } from '@components/fishing/Bobber';
-import { FishingLine } from '@components/fishing/FishingLine';
 import { CatchReveal } from '@components/fishing/CatchReveal';
+import { FishingCanvas } from '@components/fishing/FishingCanvas';
 import { Button, PageShell, Surface } from '@components/system';
 
 type FishingState = 'idle' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'result';
@@ -62,10 +59,6 @@ export function FishingPage() {
   const [logs, setLogs] = useState<FishingLogItem[]>([]);
   const [collectionPct, setCollectionPct] = useState(0);
   const [message, setMessage] = useState('');
-
-  const stageRef = useRef<HTMLDivElement>(null);
-  const rodTipRef = useRef<SVGCircleElement>(null);
-  const bobberRef = useRef<HTMLDivElement>(null);
 
   const timers = useRef<{ wait?: number; bite?: number }>({});
   const stateRef = useRef<FishingState>(state);
@@ -283,18 +276,9 @@ export function FishingPage() {
               </div>
             </div>
             <div
-              ref={stageRef}
-              className="fishing-stage relative h-[23rem] w-full overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] md:h-[30rem] 2xl:h-[36rem]"
+              className="fishing-stage relative h-[24rem] w-full overflow-hidden rounded-lg border border-[var(--coc-border-subtle)] md:h-[31rem] 2xl:h-[38rem]"
             >
-              <WaterSurface />
-              <FishingRod ref={rodTipRef} />
-              <Bobber ref={bobberRef} state={state} />
-              <FishingLine
-                rodTipRef={rodTipRef}
-                bobberRef={bobberRef}
-                containerRef={stageRef}
-                state={state}
-              />
+              <FishingCanvas state={state} />
               {state === 'biting' && (
                 <div className="fishing-bite-alert">
                   <span>咬钩</span>
