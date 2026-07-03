@@ -47,6 +47,7 @@ import type {
 import { KpLifecycleControls } from './components/KpLifecycleControls';
 import { RoomJoinGate } from './components/RoomJoinGate';
 import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
+import { RoomSettlementPanel } from './components/RoomSettlementPanel';
 
 interface Room {
   id: string;
@@ -1037,6 +1038,13 @@ export function RoomPage() {
             onChanged={fetchRoom}
           />
         </div>
+      )}
+
+      {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (
+        <RoomSettlementPanel
+          roomId={roomId || ''}
+          onFinalized={fetchRoom}
+        />
       )}
 
       {/* 主内容区 */}

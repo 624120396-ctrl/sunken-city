@@ -203,6 +203,65 @@ export type RoomJsonValue =
   | RoomJsonValue[]
   | { [key: string]: RoomJsonValue };
 
+export type RoomSettlementOutcome = 'SURVIVED' | 'DEAD' | 'MISSING' | 'INSANE' | 'WITHDREW';
+export type RoomSettlementStatus = 'DRAFT' | 'CONFIRMED' | 'APPROVED';
+
+export interface RoomSettlementParticipantView {
+  id: string;
+  userId: string;
+  userNickname: string;
+  characterId: string;
+  characterName: string;
+  currentHp: number;
+  currentMp: number;
+  currentSan: number;
+  maxHp: number;
+  maxMp: number;
+  maxSan: number;
+}
+
+export interface RoomSettlementView {
+  id: string;
+  roomRunId: string;
+  characterId: string;
+  userId: string;
+  status: RoomSettlementStatus;
+  outcome: RoomSettlementOutcome;
+  hpFinal: number | null;
+  mpFinal: number | null;
+  sanFinal: number | null;
+  expAward: number;
+  skillGrowth: RoomJsonValue[];
+  itemChanges: RoomJsonValue[];
+  kpNote: string | null;
+  appliedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoomSettlementEntryView {
+  participant: RoomSettlementParticipantView;
+  settlement: RoomSettlementView | null;
+}
+
+export interface RoomSettlementListResponse {
+  roomRunId: string;
+  lifecycle: RoomLifecycle;
+  settlements: RoomSettlementEntryView[];
+}
+
+export interface RoomSettlementSavePayload {
+  outcome?: RoomSettlementOutcome;
+  hpFinal?: number | null;
+  mpFinal?: number | null;
+  sanFinal?: number | null;
+  expAward?: number;
+  skillGrowth?: RoomJsonValue[];
+  itemChanges?: RoomJsonValue[];
+  kpNote?: string | null;
+  status?: RoomSettlementStatus;
+}
+
 export interface RoomRunView {
   id: string;
   roomId: string;

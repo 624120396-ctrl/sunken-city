@@ -6,6 +6,15 @@ import { logger } from '../../utils/logger';
 
 const router = Router();
 
+function parseArrayJson(value: string): unknown[] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 // 获取房间报告
 router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res, next) => {
   try {
@@ -19,6 +28,11 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
           include: {
             user: { select: { id: true, nickname: true } },
             character: true,
+          },
+        },
+        roomRun: {
+          include: {
+            settlements: true,
           },
         },
       },
@@ -101,16 +115,46 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
       successLevel: roll.successLevel,
     }));
 
+    const settlementByCharacterId = new Map(
+      (room.roomRun?.settlements || []).map(settlement => [
+        settlement.characterId,
+        {
+          outcome: settlement.outcome,
+          hpFinal: settlement.hpFinal,
+          mpFinal: settlement.mpFinal,
+          sanFinal: settlement.sanFinal,
+          expAward: settlement.expAward,
+          skillGrowth: parseArrayJson(settlement.skillGrowth),
+          itemChanges: parseArrayJson(settlement.itemChanges),
+          kpNote: settlement.kpNote,
+          status: settlement.status,
+        },
+      ])
+    );
+
     // 构建角色成长记录
     const characterProgress = room.members
       .filter(m => m.character)
-      .map(m => ({
-        name: m.character!.name,
-        hpChange: { before: m.character!.hp, after: m.character!.hp },
-        mpChange: { before: m.character!.mp, after: m.character!.mp },
-        sanChange: { before: m.character!.san, after: m.character!.san },
-        skillGrowth: [],
-      }));
+      .map(m => {
+        const settlement = settlementByCharacterId.get(m.character!.id);
+        return {
+          userId: m.userId,
+          characterId: m.character!.id,
+          name: m.character!.name,
+          hpChange: { before: m.character!.hp, after: settlement?.hpFinal ?? m.character!.hp },
+          mpChange: { before: m.character!.mp, after: settlement?.mpFinal ?? m.character!.mp },
+          sanChange: { before: m.character!.san, after: settlement?.sanFinal ?? m.character!.san },
+          skillGrowth: settlement?.skillGrowth ?? [],
+          settlement,
+        };
+      });
+
+    const mergedCharacterProgress = parsedCharacterGrowth.length > 0
+      ? parsedCharacterGrowth.map((entry: any) => ({
+          ...entry,
+          settlement: entry.characterId ? settlementByCharacterId.get(entry.characterId) ?? entry.settlement : entry.settlement,
+        }))
+      : characterProgress;
 
     res.json({
       success: true,
@@ -128,7 +172,7 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
         keyEvents: parsedKeyEvents,
         combatRecords,
         skillChecks,
-        characterProgress: parsedCharacterGrowth.length > 0 ? parsedCharacterGrowth : characterProgress,
+        characterProgress: mergedCharacterProgress,
       },
     });
   } catch (error) {
