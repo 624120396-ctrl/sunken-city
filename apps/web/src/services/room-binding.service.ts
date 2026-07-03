@@ -1,4 +1,5 @@
 import { apiFetch, handleApiResponse } from '../lib/api';
+import type { RoomJoinResult } from '../types/room-contract';
 
 export type JoinMode = 'PLAYER' | 'OBSERVER';
 
@@ -7,17 +8,17 @@ export interface JoinRoomPayload {
   characterId?: string;
 }
 
-export function joinRoom(roomId: string, payload: JoinRoomPayload) {
+export function joinRoom(roomId: string, payload: JoinRoomPayload): Promise<RoomJoinResult> {
   return apiFetch(`/rooms/${roomId}/join`, {
     method: 'POST',
     body: JSON.stringify(payload),
-  }).then((res) => handleApiResponse(res));
+  }).then((res) => handleApiResponse<RoomJoinResult>(res));
 }
 
-export function joinRoomAsObserver(roomId: string) {
+export function joinRoomAsObserver(roomId: string): Promise<RoomJoinResult> {
   return joinRoom(roomId, { joinAs: 'OBSERVER' });
 }
 
-export function joinRoomAsPlayer(roomId: string, characterId: string) {
+export function joinRoomAsPlayer(roomId: string, characterId: string): Promise<RoomJoinResult> {
   return joinRoom(roomId, { joinAs: 'PLAYER', characterId });
 }
