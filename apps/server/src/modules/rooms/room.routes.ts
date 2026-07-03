@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../config/database';
 import { authMiddleware, AuthRequest } from '../../middleware/auth';
+import { capabilitiesFor, deriveLifecycle, deriveRoomRole } from './room-auth';
+import { buildRoomAuthView } from './room-view';
 
 const router = Router();
 
@@ -27,6 +29,15 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
         name: true,
         description: true,
         creatorId: true,
+        status: true,
+        members: {
+          select: {
+            userId: true,
+            role: true,
+            leftAt: true,
+            characterId: true,
+          },
+        },
         _count: {
           select: { members: true },
         },
@@ -36,14 +47,23 @@ router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
     res.json({
       success: true,
       data: {
-        rooms: rooms.map(r => ({
-          id: r.id,
-          roomId: r.roomId,
-          name: r.name,
-          description: r.description,
-          memberCount: r._count.members,
-          isCreator: r.creatorId === req.userId,
-        })),
+        rooms: rooms.map(r => {
+          const lifecycle = deriveLifecycle(r.status);
+          const member = r.members.find(m => m.userId === req.userId && !m.leftAt) || null;
+          const myRole = deriveRoomRole({ creatorId: r.creatorId, userId: req.userId, member });
+
+          return {
+            id: r.id,
+            roomId: r.roomId,
+            name: r.name,
+            description: r.description,
+            memberCount: r._count.members,
+            isCreator: r.creatorId === req.userId,
+            lifecycle,
+            myRole,
+            myCapabilities: capabilitiesFor(myRole, lifecycle),
+          };
+        }),
       },
     });
   } catch (error) {
@@ -141,6 +161,12 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
     // 检查用户是否在房间中
     const isMember = room.members.some(m => m.userId === req.userId);
     const isCreator = room.creatorId === req.userId;
+    const member = room.members.find(m => m.userId === req.userId && !m.leftAt) || null;
+    const roomAuthView = buildRoomAuthView({
+      room,
+      userId: req.userId,
+      member,
+    });
 
     // 批量获取头像框图片URL
     const frameKeys = [...new Set(room.members.map(m => m.user.equippedFrame).filter(Boolean))] as string[];
@@ -182,6 +208,7 @@ router.get('/:roomId', authMiddleware, async (req: AuthRequest, res, next) => {
           sceneDesc: room.sceneDesc,
           isCreator,
           isMember,
+          ...roomAuthView,
           // V2.1 阶段信息
           currentPhase: currentPhase ? {
             id: currentPhase.id,
