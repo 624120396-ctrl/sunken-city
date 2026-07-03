@@ -7,6 +7,7 @@
 @import './characters.css';
 @import './rank-title.css';
 @import './story-entry.css';
+@import './auth-portal.css';
 
 @tailwind base;
 @tailwind components;
