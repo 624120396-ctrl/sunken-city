@@ -96,7 +96,7 @@ export async function requireRoomCapability(
 ) {
   const room = await prisma.room.findUnique({
     where: { roomId },
-    include: { members: true },
+    include: { members: true, roomRun: true },
   });
 
   if (!room) {
@@ -104,7 +104,7 @@ export async function requireRoomCapability(
   }
 
   const member = room.members.find(m => m.userId === userId && !m.leftAt) || null;
-  const lifecycle = deriveLifecycle(room.status);
+  const lifecycle = deriveLifecycle(room.status, room.roomRun?.lifecycle);
   const role = deriveRoomRole({ creatorId: room.creatorId, userId, member });
   const capabilities = capabilitiesFor(role, lifecycle);
 
