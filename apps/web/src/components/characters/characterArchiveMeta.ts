@@ -46,12 +46,21 @@ export interface CharacterDossierTab {
   active: boolean;
 }
 
+export interface CharacterCreationStep {
+  index: number;
+  label: string;
+  active: boolean;
+  complete: boolean;
+}
+
 const dossierTabs: Array<Omit<CharacterDossierTab, 'active'>> = [
   { key: 'attributes', label: '属性' },
   { key: 'skills', label: '技能' },
   { key: 'combat', label: '战斗' },
   { key: 'background', label: '背景' },
 ];
+
+const creationStepLabels = ['方式', '属性', '年龄', '职业', '技能', '背景', '确认'];
 
 function ratio(value: number, max: number): number {
   if (max <= 0) return 0;
@@ -97,4 +106,16 @@ export function getCharacterDossierTabs(active: CharacterDossierTabKey): Charact
     ...tab,
     active: tab.key === active,
   }));
+}
+
+export function getCharacterCreationSteps(currentStep: number): CharacterCreationStep[] {
+  return creationStepLabels.map((label, index) => {
+    const step = index + 1;
+    return {
+      index: step,
+      label,
+      active: step === currentStep,
+      complete: step < currentStep,
+    };
+  });
 }

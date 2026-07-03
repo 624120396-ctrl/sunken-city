@@ -5,6 +5,7 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS, getDefaultSkills, resolveDynamicBases, getOccupationInfo, COC7E_OCCUPATIONS } from '@lib/coc7-data';
 import { calculateDerivedAttributes } from '@lib/coc-data';
 import { PageShell, Surface } from '@components/system';
+import { getCharacterCreationSteps } from '@components/characters/characterArchiveMeta';
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   str: '力量 STR', con: '体质 CON', siz: '体型 SIZ', dex: '敏捷 DEX',
@@ -266,6 +267,7 @@ export function CharacterCreateV2Page() {
 
   // ========== UI ==========
   const totalSteps = 7;
+  const creationSteps = getCharacterCreationSteps(step);
 
   const nextStep = () => {
     setError('');
@@ -294,25 +296,41 @@ export function CharacterCreateV2Page() {
     <PageShell
       title="创建调查员"
       eyebrow="investigator intake"
-      description="按 COC7 规则完成属性、年龄、职业、技能和背景信息。先迁移外层可读结构，内部步骤保持原逻辑。"
-      className="pb-20"
+      description="按 COC7 规则完成属性、年龄、职业、技能和背景信息。创建流程以档案登记仪式呈现，规则控件保持原逻辑。"
+      className="character-create-page pb-20"
     >
-      <Surface variant="panel" padding="none">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate('/characters')} className="flex items-center gap-1 text-[#8b8375] hover:text-[#a63848] transition-colors">
+      <Surface variant="panel" padding="none" className="character-create-progress">
+        <div className="character-create-progress__top">
+          <button onClick={() => navigate('/characters')}>
             <ArrowLeft size={18} />
             <span>返回</span>
           </button>
-          <h1 className="font-ritual text-lg tracking-wide">创建调查员</h1>
-          <div className="text-sm text-[#6b6558]">步骤 {step}/{totalSteps}</div>
+          <h1>调查员登记仪式</h1>
+          <div>步骤 {step}/{totalSteps}</div>
         </div>
-        {/* Progress bar */}
-        <div className="h-0.5 bg-black/20">
-          <div className="h-full bg-[#a63848] transition-all" style={{ width: `${(step / totalSteps) * 100}%` }} />
+        <div className="character-create-progress__steps">
+          {creationSteps.map((item) => (
+            <button
+              key={item.index}
+              type="button"
+              onClick={() => {
+                if (item.complete || item.active) setStep(item.index);
+              }}
+              disabled={!item.complete && !item.active}
+              data-active={item.active ? 'true' : 'false'}
+              data-complete={item.complete ? 'true' : 'false'}
+            >
+              <span>{item.index}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="character-create-progress__bar">
+          <div style={{ width: `${(step / totalSteps) * 100}%` }} />
         </div>
       </Surface>
 
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="character-create-shell">
         {error && (
           <Surface variant="danger" padding="sm" className="mb-4 text-sm">{error}</Surface>
         )}
@@ -704,11 +722,10 @@ export function CharacterCreateV2Page() {
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between mt-6">
+        <div className="character-create-nav">
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className="px-4 py-2 rounded border border-[#3a3a3a]/40 text-[#8b8375] hover:border-coc-text-muted disabled:opacity-30 flex items-center gap-1"
           >
             <ChevronLeft size={18} /> 上一步
           </button>
@@ -716,7 +733,6 @@ export function CharacterCreateV2Page() {
           {step < totalSteps && (
             <button
               onClick={nextStep}
-              className="px-4 py-2 rounded bg-[#a63848] text-white hover:bg-coc-blood.glow flex items-center gap-1"
             >
               下一步 <ChevronRight size={18} />
             </button>

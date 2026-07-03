@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   getCharacterArchiveSummary,
   getCharacterCondition,
+  getCharacterCreationSteps,
   getCharacterDossierTabs,
   getCharacterVitals,
 } from '../src/components/characters/characterArchiveMeta.ts';
@@ -55,5 +56,17 @@ test('dossier tabs keep archive reading order and active state', () => {
     ['skills', '技能', false],
     ['combat', '战斗', true],
     ['background', '背景', false],
+  ]);
+});
+
+test('creation steps expose seven intake seals with current step marked', () => {
+  assert.deepEqual(getCharacterCreationSteps(3).map((step) => [step.index, step.label, step.active, step.complete]), [
+    [1, '方式', false, true],
+    [2, '属性', false, true],
+    [3, '年龄', true, false],
+    [4, '职业', false, false],
+    [5, '技能', false, false],
+    [6, '背景', false, false],
+    [7, '确认', false, false],
   ]);
 });
