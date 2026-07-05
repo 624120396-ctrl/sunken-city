@@ -115,4 +115,10 @@ export interface RoomReportArchiveItem {
     createdAt: string;
     link: string;
   };
+  investigation: {
+    publicClueCount: number;
+    publicNpcCount: number;
+    sceneCount: number;
+    publicLogCount: number;
+  };
 }

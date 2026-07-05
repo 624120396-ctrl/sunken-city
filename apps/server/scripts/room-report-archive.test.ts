@@ -21,6 +21,12 @@ test('report archive maps room, report and participant role for current user', (
         summary: '灯塔案件已经归档。',
         createdAt: new Date('2026-07-03T01:00:00.000Z'),
       }],
+      investigation: {
+        publicClueCount: 4,
+        publicNpcCount: 2,
+        sceneCount: 3,
+        publicLogCount: 8,
+      },
     },
   ], 'player-a');
 
@@ -28,6 +34,12 @@ test('report archive maps room, report and participant role for current user', (
   assert.equal(archive[0].myRole, 'PLAYER');
   assert.equal(archive[0].report?.link, '/rooms/MIST01/report');
   assert.equal(archive[0].report?.summary, '灯塔案件已经归档。');
+  assert.deepEqual(archive[0].investigation, {
+    publicClueCount: 4,
+    publicNpcCount: 2,
+    sceneCount: 3,
+    publicLogCount: 8,
+  });
 });
 
 test('report archive supports hosted rooms without generated report yet', () => {
@@ -44,6 +56,12 @@ test('report archive supports hosted rooms without generated report yet', () => 
       },
       members: [],
       reports: [],
+      investigation: {
+        publicClueCount: 0,
+        publicNpcCount: 0,
+        sceneCount: 0,
+        publicLogCount: 0,
+      },
     },
   ], 'keeper');
 

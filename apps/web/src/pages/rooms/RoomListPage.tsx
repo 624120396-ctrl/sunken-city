@@ -292,6 +292,9 @@ export function RoomListPage() {
                       <div className="mt-1 line-clamp-1 text-xs text-[var(--coc-text-muted)]">
                         {archive.report ? archive.report.summary || archive.report.title : '尚未生成报告，点击回到房间。'}
                       </div>
+                      <div className="mt-1 text-[11px] text-[var(--coc-text-muted)]">
+                        线索 {archive.investigation.publicClueCount} · NPC {archive.investigation.publicNpcCount} · 日志 {archive.investigation.publicLogCount}
+                      </div>
                     </button>
                   ))}
                 </div>

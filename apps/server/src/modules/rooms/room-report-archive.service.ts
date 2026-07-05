@@ -22,6 +22,12 @@ export interface RoomReportArchiveRoom {
     summary: string | null;
     createdAt: Date;
   }>;
+  investigation: {
+    publicClueCount: number;
+    publicNpcCount: number;
+    sceneCount: number;
+    publicLogCount: number;
+  };
 }
 
 export interface RoomReportArchiveItem {
@@ -37,6 +43,12 @@ export interface RoomReportArchiveItem {
     summary: string;
     createdAt: string;
     link: string;
+  };
+  investigation: {
+    publicClueCount: number;
+    publicNpcCount: number;
+    sceneCount: number;
+    publicLogCount: number;
   };
 }
 
@@ -68,8 +80,13 @@ export function buildRoomReportArchiveView(
         createdAt: report.createdAt.toISOString(),
         link: `/rooms/${room.roomId}/report`,
       } : null,
+      investigation: room.investigation,
     };
   });
+}
+
+function countRowsByRoomId(rows: Array<{ roomId: string; _count: { _all: number } }>) {
+  return new Map(rows.map(row => [row.roomId, row._count._all]));
 }
 
 export async function getMyRoomReportArchive(req: Request, res: Response, next: NextFunction) {
@@ -132,12 +149,47 @@ export async function getMyRoomReportArchive(req: Request, res: Response, next: 
       list.push(report);
       reportsByRoomId.set(report.roomId, list);
     }
+    const dbRoomIds = rooms.map(room => room.id);
+    const [clueCounts, npcCounts, sceneCounts, logCounts] = dbRoomIds.length > 0
+      ? await Promise.all([
+          prisma.investigationClue.groupBy({
+            by: ['roomId'],
+            where: { roomId: { in: dbRoomIds }, visibility: 'PUBLIC' },
+            _count: { _all: true },
+          }),
+          prisma.investigationNpc.groupBy({
+            by: ['roomId'],
+            where: { roomId: { in: dbRoomIds }, visibility: 'PUBLIC' },
+            _count: { _all: true },
+          }),
+          prisma.investigationScene.groupBy({
+            by: ['roomId'],
+            where: { roomId: { in: dbRoomIds } },
+            _count: { _all: true },
+          }),
+          prisma.investigationLogEntry.groupBy({
+            by: ['roomId'],
+            where: { roomId: { in: dbRoomIds }, visibility: 'PUBLIC' },
+            _count: { _all: true },
+          }),
+        ])
+      : [[], [], [], []];
+    const clueCountByRoomId = countRowsByRoomId(clueCounts);
+    const npcCountByRoomId = countRowsByRoomId(npcCounts);
+    const sceneCountByRoomId = countRowsByRoomId(sceneCounts);
+    const logCountByRoomId = countRowsByRoomId(logCounts);
 
     res.json({
       archives: buildRoomReportArchiveView(
         rooms.map(room => ({
           ...room,
           reports: reportsByRoomId.get(room.roomId) ?? [],
+          investigation: {
+            publicClueCount: clueCountByRoomId.get(room.id) ?? 0,
+            publicNpcCount: npcCountByRoomId.get(room.id) ?? 0,
+            sceneCount: sceneCountByRoomId.get(room.id) ?? 0,
+            publicLogCount: logCountByRoomId.get(room.id) ?? 0,
+          },
         })),
         userId
       ),
