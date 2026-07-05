@@ -63,6 +63,17 @@ export interface RoomOperationsOverview {
     pendingApplicationCount?: number;
     pendingInvitationCount?: number;
   };
+  launchReadiness?: {
+    status: 'READY' | 'NEEDS_ATTENTION';
+    doneCount: number;
+    todoCount: number;
+    items: Array<{
+      key: string;
+      label: string;
+      status: 'DONE' | 'TODO' | 'INFO';
+      detail: string;
+    }>;
+  };
 }
 
 export interface RoomListOverviewItem {

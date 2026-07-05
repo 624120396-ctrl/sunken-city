@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/database';
 import { buildRoomAuthView } from './room-view';
 import { requireRoomCapability } from './room-auth';
+import { buildRoomLaunchReadiness } from './room-launch-readiness.service';
 
 function parseArray(raw: string | null | undefined): unknown[] {
   if (!raw) return [];
@@ -42,6 +43,7 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       communicationState,
       queue,
       recruitmentProfile,
+      sessionPrep,
       pendingApplicationsCount,
       pendingInvitationsCount,
     ] = await Promise.all([
@@ -79,7 +81,7 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       }),
       prisma.roomMember.findMany({
         where: { roomId: auth.room.id, leftAt: null },
-        select: { userId: true, role: true },
+        select: { userId: true, role: true, characterId: true },
       }),
       prisma.roomAnnouncement.findFirst({
         where: { roomId: auth.room.id, isPinned: true },
@@ -94,6 +96,12 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
         select: { id: true, kind: true, status: true, label: true, targetUserId: true, requesterUserId: true },
       }),
       prisma.roomRecruitmentProfile.findUnique({ where: { roomId: auth.room.id } }),
+      canUseKpTools
+        ? prisma.roomSessionPrep.findUnique({
+            where: { roomId: auth.room.id },
+            select: { checklist: true },
+          })
+        : Promise.resolve(null),
       canUseKpTools
         ? prisma.roomJoinApplication.count({ where: { roomId: auth.room.id, status: 'PENDING' } })
         : Promise.resolve(0),
@@ -114,6 +122,13 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       acc[item.visibility] = item._count._all;
       return acc;
     }, {});
+    const prepChecklist = parseArray(sessionPrep?.checklist).map((entry: any) => ({
+      text: typeof entry?.text === 'string' ? entry.text : '',
+      done: Boolean(entry?.done),
+    })).filter(entry => entry.text);
+    const playerMembers = activeMembers
+      .filter(member => member.role === 'PLAYER')
+      .map(member => ({ userId: member.userId, characterId: member.characterId }));
     const waitingQueue = queue.filter(item => item.status === 'WAITING');
     const activeQueue = queue.filter(item => item.status === 'ACTIVE');
 
@@ -182,6 +197,23 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
         pendingApplicationCount: canUseKpTools ? pendingApplicationsCount : undefined,
         pendingInvitationCount: canUseKpTools ? pendingInvitationsCount : undefined,
       },
+      launchReadiness: canUseKpTools
+        ? buildRoomLaunchReadiness({
+            currentObjective: focus?.currentObjective ?? '',
+            nextSession,
+            attendanceSummary: countBy(activeAttendance, {
+              PENDING: 0,
+              AVAILABLE: 0,
+              LEAVE: 0,
+              TENTATIVE: 0,
+            }),
+            playerMembers,
+            sceneCount: sceneStats._count._all,
+            publicClueCount: clueCounts.PUBLIC ?? 0,
+            pendingApplicationCount: pendingApplicationsCount ?? 0,
+            checklist: prepChecklist,
+          })
+        : undefined,
     });
   } catch (error) {
     next(error);

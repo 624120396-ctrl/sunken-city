@@ -49,7 +49,7 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
       (overview.recruitment.pendingApplicationCount ?? 0) +
       (overview.recruitment.pendingInvitationCount ?? 0) +
       (overview.communication.waitingQueueCount ?? 0) +
-      (overview.coordination.attendanceSummary.PENDING ?? 0)
+      (overview.launchReadiness?.todoCount ?? 0)
     );
   }, [overview]);
 
@@ -65,6 +65,7 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
 
   const nextSession = overview.coordination.nextSession;
   const attendance = overview.coordination.attendanceSummary;
+  const launchTodos = overview.launchReadiness?.items.filter(item => item.status === 'TODO').slice(0, 3) ?? [];
 
   return (
     <section className="mb-3 rounded-lg border border-[#3a3a3a]/55 bg-[#101018]/88 p-3 shadow-lg shadow-black/20">
@@ -144,8 +145,17 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
             <>
               <div className="text-sm font-medium text-[#f4ead1]">{kpTodoCount} 项待处理</div>
               <div className="mt-2 text-xs text-[#b0a898]">
-                申请 {overview.recruitment.pendingApplicationCount ?? 0} · 邀请 {overview.recruitment.pendingInvitationCount ?? 0} · 私密便签 {overview.investigation.kpPrivateNoteCount ?? 0}
+                开团准备 {overview.launchReadiness?.todoCount ?? 0} · 申请 {overview.recruitment.pendingApplicationCount ?? 0} · 邀请 {overview.recruitment.pendingInvitationCount ?? 0}
               </div>
+              {launchTodos.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {launchTodos.map(item => (
+                    <p key={item.key} className="line-clamp-1 text-[11px] text-[#d8ccb4]">
+                      {item.label}：{item.detail}
+                    </p>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <>
