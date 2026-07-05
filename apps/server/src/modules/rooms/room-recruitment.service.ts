@@ -9,6 +9,7 @@ import {
   buildRoomInvitationNotification,
   tryNotifyRoomUser,
 } from './room-notifications.service';
+import { buildRecruitmentStyleMatch } from './room-recruitment-match.service';
 
 const profileSchema = z.object({
   status: z.enum(['CLOSED', 'OPEN', 'PAUSED']).optional(),
@@ -101,7 +102,8 @@ function mapApplication(application: {
   createdAt: Date;
   updatedAt: Date;
   applicant?: { nickname: string | null; email: string };
-}) {
+}, roomStyleTags: string[] = []) {
+  const preferredStyleTags = parseStringArray(application.preferredStyleTags);
   return {
     id: application.id,
     userId: application.userId,
@@ -110,7 +112,8 @@ function mapApplication(application: {
     message: application.message,
     experienceNote: application.experienceNote,
     availabilityNote: application.availabilityNote,
-    preferredStyleTags: parseStringArray(application.preferredStyleTags),
+    preferredStyleTags,
+    styleMatch: buildRecruitmentStyleMatch(roomStyleTags, preferredStyleTags),
     reviewerId: application.reviewerId,
     reviewNote: application.reviewNote,
     reviewedAt: application.reviewedAt?.toISOString() ?? null,
@@ -221,10 +224,12 @@ export async function getRoomRecruitment(req: Request, res: Response, next: Next
         : Promise.resolve(null),
     ]);
 
+    const roomStyleTags = profile ? parseStringArray(profile.styleTags) : [];
+
     res.json({
       profile: profile ? mapProfile(profile) : null,
-      applications: applications.map(mapApplication),
-      ownApplication: ownApplication ? mapApplication(ownApplication) : null,
+      applications: applications.map(application => mapApplication(application, roomStyleTags)),
+      ownApplication: ownApplication ? mapApplication(ownApplication, roomStyleTags) : null,
       invitations: invitations.map(mapInvitation),
       ownInvitation: ownInvitation ? mapInvitation(ownInvitation) : null,
       canManageRecruitment,
@@ -330,7 +335,7 @@ export async function submitRoomJoinApplication(req: Request, res: Response, nex
       include: { applicant: { select: { nickname: true, email: true } } },
     });
 
-    res.status(201).json({ application: mapApplication(application) });
+    res.status(201).json({ application: mapApplication(application, parseStringArray(profile.styleTags)) });
   } catch (error) {
     next(error);
   }
@@ -377,7 +382,9 @@ export async function reviewRoomJoinApplication(req: Request, res: Response, nex
       });
     }
 
-    res.json({ application: mapApplication(application) });
+    const profile = await prisma.roomRecruitmentProfile.findUnique({ where: { roomId: auth.room.id } });
+
+    res.json({ application: mapApplication(application, profile ? parseStringArray(profile.styleTags) : []) });
   } catch (error) {
     next(error);
   }

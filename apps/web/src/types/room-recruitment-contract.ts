@@ -2,6 +2,15 @@ export type RoomRecruitmentStatus = 'CLOSED' | 'OPEN' | 'PAUSED';
 export type RoomJoinApplicationStatus = 'PENDING' | 'APPROVED' | 'DECLINED' | 'WITHDRAWN' | 'JOINED';
 export type RoomInvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED';
 export type RoomInvitationRole = 'PLAYER' | 'OBSERVER';
+export type RecruitmentStyleMatchLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+
+export interface RecruitmentStyleMatchView {
+  score: number | null;
+  level: RecruitmentStyleMatchLevel;
+  matchedTags: string[];
+  unmatchedTags: string[];
+  summary: string;
+}
 
 export interface RoomRecruitmentProfileView {
   id: string;
@@ -46,6 +55,7 @@ export interface RoomJoinApplicationView {
   experienceNote: string;
   availabilityNote: string;
   preferredStyleTags: string[];
+  styleMatch: RecruitmentStyleMatchView;
   reviewerId: string | null;
   reviewNote: string;
   reviewedAt: string | null;

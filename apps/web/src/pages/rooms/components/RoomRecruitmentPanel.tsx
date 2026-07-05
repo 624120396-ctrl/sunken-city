@@ -8,6 +8,7 @@ import {
   saveRoomRecruitmentProfile,
 } from '@/services/room-recruitment.service';
 import type {
+  RecruitmentStyleMatchLevel,
   RoomJoinApplicationStatus,
   RoomInvitationRole,
   RoomInvitationStatus,
@@ -43,6 +44,20 @@ const invitationStatusLabels: Record<RoomInvitationStatus, string> = {
 const invitationRoleLabels: Record<RoomInvitationRole, string> = {
   PLAYER: '调查员',
   OBSERVER: '观察者',
+};
+
+const styleMatchLabels: Record<RecruitmentStyleMatchLevel, string> = {
+  HIGH: '高匹配',
+  MEDIUM: '需确认',
+  LOW: '低匹配',
+  UNKNOWN: '待判断',
+};
+
+const styleMatchClasses: Record<RecruitmentStyleMatchLevel, string> = {
+  HIGH: 'border-[#3f7f55]/45 text-[#9fd7aa]',
+  MEDIUM: 'border-[#c9a227]/45 text-[#f4d778]',
+  LOW: 'border-[#a63848]/45 text-[#f1b7bd]',
+  UNKNOWN: 'border-[#3a3a3a]/45 text-[#b0a898]',
 };
 
 const defaultStyleTags = ['严肃调查', '恐怖氛围', '新手友好'];
@@ -450,8 +465,25 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
                       <div className="text-sm font-medium text-[#f4ead1]">{application.applicantName}</div>
                       <div className="text-[11px] text-[#8f8778]">{applicationStatusLabels[application.status]}</div>
                     </div>
+                    {application.styleMatch && (
+                      <span className={`rounded border px-2 py-0.5 text-[10px] ${styleMatchClasses[application.styleMatch.level]}`}>
+                        {styleMatchLabels[application.styleMatch.level]}
+                        {application.styleMatch.score !== null ? ` ${application.styleMatch.score}%` : ''}
+                      </span>
+                    )}
                   </div>
                   <p className="mb-2 whitespace-pre-wrap text-xs text-[#d8ccb4]">{application.message || '未填写留言'}</p>
+                  {application.styleMatch && (
+                    <div className="mb-2 rounded border border-[#3a3a3a]/25 bg-black/15 px-2 py-1.5 text-[11px] text-[#b0a898]">
+                      <div>{application.styleMatch.summary}</div>
+                      {application.styleMatch.matchedTags.length > 0 && (
+                        <div className="mt-1 text-[#9fd7aa]">重合：{application.styleMatch.matchedTags.join('、')}</div>
+                      )}
+                      {application.styleMatch.unmatchedTags.length > 0 && (
+                        <div className="mt-1 text-[#f1b7bd]">需确认：{application.styleMatch.unmatchedTags.join('、')}</div>
+                      )}
+                    </div>
+                  )}
                   {application.preferredStyleTags.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1">
                       {application.preferredStyleTags.map(tag => (
