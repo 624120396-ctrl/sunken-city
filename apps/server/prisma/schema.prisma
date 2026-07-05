@@ -62,6 +62,10 @@ model User {
   reviewedRoomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationReviewer")
   sentRoomInvitations RoomInvitation[] @relation("RoomInvitationInviter")
   receivedRoomInvitations RoomInvitation[] @relation("RoomInvitationInvitee")
+  updatedRoomAiSettings RoomAiSettings[] @relation("RoomAiSettingsUpdatedBy")
+  createdAiJobs AiJob[] @relation("AiJobCreatedBy")
+  createdAiContextSnapshots AiContextSnapshot[] @relation("AiContextSnapshotCreatedBy")
+  aiUsageLedgers AiUsageLedger[] @relation("AiUsageLedgerUser")
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -243,6 +247,10 @@ model Room {
   recruitmentProfile RoomRecruitmentProfile?
   joinApplications RoomJoinApplication[]
   invitations RoomInvitation[]
+  aiSettings RoomAiSettings?
+  aiJobs AiJob[]
+  aiUsageLedgers AiUsageLedger[]
+  aiContextSnapshots AiContextSnapshot[]
 }
 
 model RoomRun {
@@ -621,6 +629,106 @@ model RoomInvitation {
   @@unique([roomId, inviteeId])
   @@index([roomId, status])
   @@index([inviteeId, status])
+}
+
+model RoomAiSettings {
+  id                         String   @id @default(uuid())
+  roomId                     String   @unique
+  enabled                    Boolean  @default(false)
+  textAssistantEnabled       Boolean  @default(false)
+  imageWorkshopEnabled       Boolean  @default(false)
+  voiceReservedStatus        String   @default("DISABLED_READ_ONLY")
+  defaultTextProvider        String?
+  defaultTextModelId         String?
+  defaultCharacterProvider   String?
+  defaultCharacterModelId    String?
+  defaultImageProvider       String?
+  defaultImageModelId        String?
+  playerVisibleContextEnabled Boolean @default(true)
+  kpPrivateContextEnabled    Boolean  @default(false)
+  monthlyCostLimitCents      Int      @default(0)
+  updatedById                String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  room                       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  updatedBy                  User?    @relation("RoomAiSettingsUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+model AiJob {
+  id                 String   @id @default(uuid())
+  roomId             String
+  createdById        String?
+  taskType           String
+  status             String   @default("DRAFT")
+  visibility         String   @default("KP_ONLY")
+  contextScope       String   @default("PLAYER_VISIBLE")
+  provider           String?
+  modelId            String?
+  inputJson          String   @default("{}")
+  outputJson         String?
+  errorMessage       String?
+  providerRequestId  String?
+  estimatedInputUnits Int?
+  estimatedOutputUnits Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  completedAt        DateTime?
+
+  room               Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy          User?    @relation("AiJobCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  usageLedgers       AiUsageLedger[]
+  contextSnapshots   AiContextSnapshot[]
+
+  @@index([roomId, status])
+  @@index([roomId, taskType])
+  @@index([createdById, createdAt])
+}
+
+model AiUsageLedger {
+  id                 String   @id @default(uuid())
+  roomId             String
+  jobId              String?
+  userId             String?
+  provider           String
+  model              String
+  taskType           String
+  unitType           String
+  inputUnits         Int      @default(0)
+  outputUnits        Int      @default(0)
+  totalUnits         Int      @default(0)
+  estimatedCostCents Int      @default(0)
+  providerRequestId  String?
+  metadataJson       String   @default("{}")
+  createdAt          DateTime @default(now())
+
+  room               Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  job                AiJob?   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  user               User?    @relation("AiUsageLedgerUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, createdAt])
+  @@index([jobId])
+  @@index([provider, model])
+  @@index([unitType])
+}
+
+model AiContextSnapshot {
+  id              String   @id @default(uuid())
+  roomId          String
+  jobId           String?
+  createdById     String?
+  contextScope    String   @default("PLAYER_VISIBLE")
+  sourceVersion   String   @default("room-ai-context-v1")
+  snapshotJson    String   @default("{}")
+  createdAt       DateTime @default(now())
+
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  job             AiJob?   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  createdBy       User?    @relation("AiContextSnapshotCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([roomId, createdAt])
+  @@index([jobId])
+  @@index([contextScope])
 }
 
 model RoomMember {
