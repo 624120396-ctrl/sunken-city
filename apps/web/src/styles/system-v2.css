@@ -15,6 +15,48 @@
   --coc-text-muted: var(--coc-on-surface-muted);
 }
 
+.coc-surface-v2 > * {
+  position: relative;
+  z-index: 1;
+}
+
+.coc-surface-v2[data-material]:not([data-material="none"])::before,
+.coc-surface-v2[data-material]:not([data-material="none"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.coc-surface-v2[data-material]:not([data-material="none"])::before {
+  z-index: 0;
+  opacity: var(--coc-material-grain-opacity, 0.38);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(96, 79, 48, 0.075) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.12) 0 1px,
+      transparent 1px 9px
+    );
+  mix-blend-mode: multiply;
+}
+
+.coc-surface-v2[data-material]:not([data-material="none"])::after {
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 28%),
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.34), transparent 34%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -18px 34px rgba(84, 66, 36, 0.09);
+}
+
 .coc-surface-v2[data-variant="page"] {
   background: var(--coc-surface-page);
   border-color: var(--coc-border-strong);
@@ -43,6 +85,97 @@
   background: var(--coc-surface-danger);
   border-color: var(--coc-border-danger);
   box-shadow: var(--coc-shadow-panel), var(--coc-shadow-glow-blood);
+}
+
+.coc-surface-v2[data-material="archive"] {
+  --coc-material-grain-opacity: 0.46;
+
+  background:
+    linear-gradient(rgba(255, 251, 238, 0.74), rgba(252, 246, 226, 0.80)),
+    var(--coc-texture-archive-paper);
+  background-blend-mode: normal, multiply;
+  background-size: auto, 300px 300px;
+  border-color: rgba(102, 78, 37, 0.28);
+  box-shadow:
+    var(--coc-shadow-panel),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.32),
+    inset 0 -24px 42px rgba(118, 93, 45, 0.08);
+  color: var(--coc-on-light-primary);
+
+  --coc-text-primary: var(--coc-on-light-primary);
+  --coc-text-secondary: var(--coc-on-light-secondary);
+  --coc-text-muted: #6f6450;
+}
+
+.coc-surface-v2[data-material="limestone"] {
+  --coc-material-grain-opacity: 0.34;
+
+  background:
+    linear-gradient(rgba(248, 244, 228, 0.70), rgba(240, 234, 212, 0.78)),
+    var(--coc-texture-pale-limestone);
+  background-blend-mode: normal, multiply;
+  background-size: auto, 360px 360px;
+  border-color: rgba(67, 100, 93, 0.30);
+  box-shadow:
+    var(--coc-shadow-panel),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset 0 -22px 44px rgba(70, 89, 76, 0.10);
+  color: var(--coc-on-light-primary);
+
+  --coc-text-primary: var(--coc-on-light-primary);
+  --coc-text-secondary: var(--coc-on-light-secondary);
+  --coc-text-muted: #667061;
+}
+
+.coc-surface-v2[data-material="basalt"] {
+  --coc-material-grain-opacity: 0.22;
+
+  background:
+    linear-gradient(rgba(10, 18, 20, 0.78), rgba(7, 13, 16, 0.86)),
+    var(--coc-texture-dark-glazed-stone);
+  background-blend-mode: normal, screen;
+  background-size: auto, 520px 520px;
+  border-color: rgba(132, 169, 159, 0.16);
+  color: #f4ead4;
+
+  --coc-text-primary: #f4ead4;
+  --coc-text-secondary: #c9d1bf;
+  --coc-text-muted: #91a095;
+}
+
+.coc-surface-v2[data-material="copper"] {
+  --coc-material-grain-opacity: 0.20;
+
+  background:
+    linear-gradient(rgba(19, 31, 29, 0.66), rgba(13, 24, 23, 0.78)),
+    var(--coc-texture-oxidized-copper);
+  background-blend-mode: normal, screen;
+  background-size: auto, 760px 380px;
+  border-color: rgba(191, 149, 75, 0.34);
+  color: #f4ead4;
+
+  --coc-surface-accent: var(--coc-accent-gold);
+  --coc-text-primary: #f4ead4;
+  --coc-text-secondary: #d9c89d;
+  --coc-text-muted: #a99d82;
+}
+
+.coc-surface-v2[data-material="relic"] {
+  --coc-material-grain-opacity: 0.18;
+
+  background:
+    linear-gradient(rgba(18, 24, 22, 0.70), rgba(15, 20, 18, 0.82)),
+    var(--coc-texture-antique-gold-thread);
+  background-blend-mode: normal, screen;
+  background-size: auto, 760px 506px;
+  border-color: rgba(214, 170, 34, 0.34);
+  color: #f8eed8;
+  box-shadow: var(--coc-shadow-panel), var(--coc-shadow-glow-gold);
+
+  --coc-surface-accent: var(--coc-accent-gold);
+  --coc-text-primary: #f8eed8;
+  --coc-text-secondary: #dfcfaa;
+  --coc-text-muted: #a99d82;
 }
 
 .coc-surface-v2[data-tone="gold"] {
@@ -111,7 +244,7 @@
 
 .coc-page-shell__title {
   margin: 0.35rem 0 0;
-  color: var(--coc-on-surface-primary);
+  color: var(--coc-text-primary);
   font-size: 1.875rem;
   line-height: 1.15;
   letter-spacing: 0;
@@ -120,7 +253,7 @@
 .coc-page-shell__description {
   margin-top: 0.65rem;
   max-width: 64rem;
-  color: var(--coc-on-surface-secondary);
+  color: var(--coc-text-secondary);
   font-size: 0.95rem;
   line-height: 1.65;
 }
@@ -193,7 +326,7 @@
 
 .coc-readable-panel__title {
   margin: 0.25rem 0 0;
-  color: var(--coc-on-surface-primary);
+  color: var(--coc-text-primary);
   font-size: 1.15rem;
   line-height: 1.3;
   letter-spacing: 0;
@@ -201,7 +334,7 @@
 
 .coc-readable-panel__description,
 .coc-readable-panel__content {
-  color: var(--coc-on-surface-secondary);
+  color: var(--coc-text-secondary);
   font-size: 0.95rem;
 }
 
@@ -255,7 +388,7 @@
 
 .coc-action-card__title {
   margin: 0.15rem 0 0;
-  color: var(--coc-on-surface-primary);
+  color: var(--coc-text-primary);
   font-size: 1.05rem;
   line-height: 1.25;
   letter-spacing: 0;
@@ -265,7 +398,7 @@
 .coc-action-card__content,
 .coc-action-card__meta,
 .coc-data-card__detail {
-  color: var(--coc-on-surface-secondary);
+  color: var(--coc-text-secondary);
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -279,7 +412,7 @@
 }
 
 .coc-action-card__meta {
-  color: var(--coc-on-surface-muted);
+  color: var(--coc-text-muted);
 }
 
 .coc-data-card {
@@ -294,7 +427,7 @@
 }
 
 .coc-data-card__label {
-  color: var(--coc-on-surface-muted);
+  color: var(--coc-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -302,7 +435,7 @@
 
 .coc-data-card__value {
   margin-top: 0.5rem;
-  color: var(--coc-on-surface-primary);
+  color: var(--coc-text-primary);
   font-variant-numeric: tabular-nums;
   font-size: 1.4rem;
   font-weight: 800;
@@ -311,7 +444,7 @@
 
 .coc-data-card__detail {
   margin-top: 0.45rem;
-  color: var(--coc-on-surface-secondary);
+  color: var(--coc-text-secondary);
 }
 
 .coc-focus-ring:focus-visible {

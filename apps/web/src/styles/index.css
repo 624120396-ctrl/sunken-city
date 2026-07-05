@@ -8,6 +8,7 @@
 @import './rank-title.css';
 @import './story-entry.css';
 @import './auth-portal.css';
+@import './rooms.css';
 
 @tailwind base;
 @tailwind components;

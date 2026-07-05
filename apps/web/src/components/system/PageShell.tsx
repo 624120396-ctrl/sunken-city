@@ -30,7 +30,7 @@ export function PageShell({
   return (
     <section className={cn('coc-page-shell', className)} data-layout={layout} {...props}>
       <Surface variant="page" padding="lg" className="coc-page-shell__header">
-        <div className="min-w-0">
+        <div className="coc-page-shell__intro min-w-0">
           {eyebrow && <div className="coc-page-shell__eyebrow">{eyebrow}</div>}
           <h1 className="coc-page-shell__title">{title}</h1>
           {description && <div className="coc-page-shell__description">{description}</div>}

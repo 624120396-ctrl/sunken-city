@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@lib/utils';
-import { Surface, type SurfaceTone } from './Surface';
+import { Surface, type SurfaceMaterial, type SurfaceTone } from './Surface';
 
 interface ActionCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   eyebrow?: ReactNode;
@@ -11,6 +11,7 @@ interface ActionCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> 
   meta?: ReactNode;
   actions?: ReactNode;
   tone?: SurfaceTone;
+  material?: SurfaceMaterial;
 }
 
 export function ActionCard({
@@ -22,6 +23,7 @@ export function ActionCard({
   meta,
   actions,
   tone = 'neutral',
+  material = 'none',
   className,
   children,
   ...props
@@ -30,6 +32,7 @@ export function ActionCard({
     <Surface
       variant="panel"
       tone={tone}
+      material={material}
       padding="none"
       interactive
       className={cn('coc-action-card', className)}

@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@lib/utils';
-import { Surface, type SurfaceTone } from './Surface';
+import { Surface, type SurfaceMaterial, type SurfaceTone } from './Surface';
 
 interface ReadablePanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   eyebrow?: ReactNode;
@@ -8,6 +8,7 @@ interface ReadablePanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title
   description?: ReactNode;
   actions?: ReactNode;
   tone?: SurfaceTone;
+  material?: SurfaceMaterial;
 }
 
 export function ReadablePanel({
@@ -16,6 +17,7 @@ export function ReadablePanel({
   description,
   actions,
   tone = 'neutral',
+  material = 'none',
   className,
   children,
   ...props
@@ -24,6 +26,7 @@ export function ReadablePanel({
     <Surface
       variant="solid"
       tone={tone}
+      material={material}
       padding="lg"
       className={cn('coc-readable-panel', className)}
       {...props}

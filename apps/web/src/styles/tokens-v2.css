@@ -14,6 +14,18 @@
   --coc-surface-1: var(--coc-surface-panel);
   --coc-surface-2: var(--coc-surface-solid);
 
+  --coc-texture-archive-paper: url('/ui-textures/archive-paper-light-surface.webp');
+  --coc-texture-pale-limestone: url('/ui-textures/pale-limestone-balanced-panel.webp');
+  --coc-texture-oxidized-copper: url('/ui-textures/oxidized-copper-dark-edge.webp');
+  --coc-texture-sea-mist: url('/ui-textures/sea-mist-balanced-overlay.webp');
+  --coc-texture-header-cold-mist: url('/ui-textures/header-cold-mist-seam-x.webp');
+  --coc-texture-dark-glazed-stone: url('/ui-textures/dark-glazed-stone-dark-tool.webp');
+  --coc-texture-antique-gold-thread: url('/ui-textures/antique-gold-thread-accent.webp');
+  --coc-texture-gold-vertical-sigil: url('/ui-textures/gold-vertical-sigil.webp');
+  --coc-texture-gold-sunburst-arc: url('/ui-textures/gold-sunburst-arc.webp');
+  --coc-texture-gold-crescent-index: url('/ui-textures/gold-crescent-index.webp');
+  --coc-texture-gold-empty-state: url('/ui-textures/gold-empty-state-ritual.webp');
+
   --coc-border-subtle: rgba(212, 197, 168, 0.12);
   --coc-border-strong: rgba(201, 162, 39, 0.34);
   --coc-border-danger: rgba(225, 58, 74, 0.42);

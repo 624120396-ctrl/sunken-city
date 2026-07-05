@@ -5,12 +5,14 @@ export type SurfaceVariant = 'page' | 'panel' | 'solid' | 'glass' | 'elevated' |
 export type SurfaceTone = 'neutral' | 'gold' | 'blood' | 'ocean' | 'madness';
 export type SurfaceDensity = 'compact' | 'normal' | 'spacious';
 export type SurfacePadding = 'none' | 'sm' | 'md' | 'lg';
+export type SurfaceMaterial = 'none' | 'archive' | 'limestone' | 'basalt' | 'copper' | 'relic';
 
 interface SurfaceProps extends HTMLAttributes<HTMLDivElement> {
   variant?: SurfaceVariant;
   tone?: SurfaceTone;
   density?: SurfaceDensity;
   padding?: SurfacePadding;
+  material?: SurfaceMaterial;
   interactive?: boolean;
 }
 
@@ -26,6 +28,7 @@ export function Surface({
   tone = 'neutral',
   density = 'normal',
   padding = 'md',
+  material = 'none',
   interactive = false,
   className,
   children,
@@ -36,6 +39,7 @@ export function Surface({
       data-variant={variant}
       data-tone={tone}
       data-density={density}
+      data-material={material}
       data-interactive={interactive ? 'true' : 'false'}
       className={cn('coc-surface-v2', paddingClass[padding], className)}
       {...props}

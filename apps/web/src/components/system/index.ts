@@ -1,5 +1,11 @@
 export { Surface } from './Surface';
-export type { SurfaceDensity, SurfacePadding, SurfaceTone, SurfaceVariant } from './Surface';
+export type {
+  SurfaceDensity,
+  SurfaceMaterial,
+  SurfacePadding,
+  SurfaceTone,
+  SurfaceVariant,
+} from './Surface';
 export { PageShell } from './PageShell';
 export { ReadablePanel } from './ReadablePanel';
 export { ActionCard } from './ActionCard';

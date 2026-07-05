@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@lib/utils';
-import { Surface, type SurfaceTone } from './Surface';
+import { Surface, type SurfaceMaterial, type SurfaceTone } from './Surface';
 
 interface DataCardProps {
   label: ReactNode;
@@ -8,6 +8,7 @@ interface DataCardProps {
   detail?: ReactNode;
   icon?: ReactNode;
   tone?: SurfaceTone;
+  material?: SurfaceMaterial;
   className?: string;
 }
 
@@ -17,12 +18,14 @@ export function DataCard({
   detail,
   icon,
   tone = 'neutral',
+  material = 'none',
   className,
 }: DataCardProps) {
   return (
     <Surface
       variant="panel"
       tone={tone}
+      material={material}
       density="compact"
       padding="sm"
       className={cn('coc-data-card', className)}
