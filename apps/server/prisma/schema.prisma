@@ -234,6 +234,8 @@ model Room {
   nextSession RoomNextSession?
   attendanceConfirmations RoomAttendanceConfirmation[]
   roomAnnouncements RoomAnnouncement[]
+  communicationState RoomCommunicationState?
+  actionQueueItems RoomActionQueueItem[]
 }
 
 model RoomRun {
@@ -506,6 +508,41 @@ model RoomAnnouncement {
   createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([roomId, isPinned])
+  @@index([roomId, createdAt])
+}
+
+model RoomCommunicationState {
+  id                   String   @id @default(uuid())
+  roomId               String   @unique
+  currentTopic         String   @default("")
+  spotlightUserId      String?
+  keeperPrompt         String   @default("")
+  environmentChecklist String   @default("[]")
+  updatedById          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  room                 Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model RoomActionQueueItem {
+  id              String   @id @default(uuid())
+  roomId          String
+  kind            String   @default("SPEAK")
+  status          String   @default("WAITING")
+  label           String
+  note            String   @default("")
+  requesterUserId String?
+  targetUserId    String?
+  createdById     String
+  resolvedById    String?
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, status, sortOrder])
   @@index([roomId, createdAt])
 }
 
