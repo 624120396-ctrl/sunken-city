@@ -64,3 +64,28 @@ export interface RoomOperationsOverview {
     pendingInvitationCount?: number;
   };
 }
+
+export interface RoomListOverviewItem {
+  roomId: string;
+  name: string;
+  lifecycle: string;
+  myRole: string;
+  activeMemberCount: number;
+  nextSession: null | {
+    scheduledAt: string | null;
+    timezone: string;
+    title: string;
+    status: string;
+  };
+  attendanceSummary: Record<string, number>;
+  recruitment: {
+    status: string;
+    headline: string;
+    newcomerFriendly: boolean;
+  };
+  kpTodo: null | {
+    pendingApplications: number;
+    pendingInvitations: number;
+    pendingAttendance: number;
+  };
+}

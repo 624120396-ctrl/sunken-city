@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/database';
+import { buildRoomAuthView } from './room-view';
 import { requireRoomCapability } from './room-auth';
 
 function parseArray(raw: string | null | undefined): unknown[] {
@@ -181,6 +182,118 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
         pendingApplicationCount: canUseKpTools ? pendingApplicationsCount : undefined,
         pendingInvitationCount: canUseKpTools ? pendingInvitationsCount : undefined,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getRoomListOverview(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId || (req as any).userId;
+    if (!userId) {
+      res.status(401).json({ error: 'UNAUTHORIZED', message: '请先登录' });
+      return;
+    }
+
+    const rooms = await prisma.room.findMany({
+      where: {
+        OR: [
+          { status: 'ACTIVE' },
+          {
+            status: 'CLOSED',
+            OR: [
+              { creatorId: userId },
+              { members: { some: { userId } } },
+            ],
+          },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        roomId: true,
+        name: true,
+        creatorId: true,
+        status: true,
+        members: {
+          select: { id: true, userId: true, role: true, leftAt: true, characterId: true },
+        },
+        roomRun: {
+          select: { lifecycle: true },
+        },
+        nextSession: {
+          select: {
+            scheduledAt: true,
+            timezone: true,
+            title: true,
+            status: true,
+          },
+        },
+        attendanceConfirmations: {
+          select: { userId: true, status: true },
+        },
+        recruitmentProfile: {
+          select: { status: true, headline: true, newcomerFriendly: true },
+        },
+        joinApplications: {
+          select: { status: true },
+        },
+        invitations: {
+          select: { status: true },
+        },
+      },
+    });
+
+    res.json({
+      rooms: rooms.map(room => {
+        const member = room.members.find(item => item.userId === userId && !item.leftAt) || null;
+        const activeMembers = room.members.filter(item => !item.leftAt);
+        const roomAuthView = buildRoomAuthView({
+          room,
+          userId,
+          member,
+          lifecycle: room.roomRun?.lifecycle,
+        });
+        const canUseKpTools = roomAuthView.myCapabilities.canUseKPTools;
+        const attendanceSummary = countBy(
+          activeMembers.map(activeMember => {
+            const attendance = room.attendanceConfirmations.find(item => item.userId === activeMember.userId);
+            return { status: attendance?.status ?? 'PENDING' };
+          }),
+          { PENDING: 0, AVAILABLE: 0, LEAVE: 0, TENTATIVE: 0 }
+        );
+
+        return {
+          roomId: room.roomId,
+          name: room.name,
+          lifecycle: roomAuthView.lifecycle,
+          myRole: roomAuthView.myRole,
+          activeMemberCount: activeMembers.length,
+          nextSession: room.nextSession
+            ? {
+                scheduledAt: room.nextSession.scheduledAt?.toISOString() ?? null,
+                timezone: room.nextSession.timezone,
+                title: room.nextSession.title,
+                status: room.nextSession.status,
+              }
+            : null,
+          attendanceSummary,
+          recruitment: {
+            status: room.recruitmentProfile?.status ?? 'CLOSED',
+            headline: room.recruitmentProfile?.headline ?? '',
+            newcomerFriendly: room.recruitmentProfile?.newcomerFriendly ?? true,
+          },
+          kpTodo: canUseKpTools
+            ? {
+                pendingApplications: room.joinApplications.filter(item => item.status === 'PENDING').length,
+                pendingInvitations: room.invitations.filter(item => item.status === 'PENDING').length,
+                pendingAttendance: attendanceSummary.PENDING ?? 0,
+              }
+            : null,
+        };
+      }),
     });
   } catch (error) {
     next(error);
