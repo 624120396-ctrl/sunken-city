@@ -21,6 +21,7 @@ import {
   deleteNotification,
   NotificationItem,
 } from '@services/notification.service';
+import { getNotificationTargetPath, getNotificationTypeLabel } from '@services/notification-meta';
 import {
   getConversations,
   getMessagesWithUser,
@@ -31,40 +32,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Skeleton, SkeletonCard } from '@components/ui/Skeleton';
 
 type Tab = 'notifications' | 'messages';
-
-function typeLabel(type: NotificationItem['type']) {
-  switch (type) {
-    case 'mention':
-      return '提到你';
-    case 'reply':
-      return '回复';
-    case 'like':
-      return '点赞';
-    case 'best_reply':
-      return '最佳回复';
-    case 'forum_reply':
-      return '论坛回复';
-    case 'forum_mention':
-      return '论坛提及';
-    case 'forum_like':
-      return '论坛点赞';
-    case 'forum_best_reply':
-      return '最佳回复';
-    case 'rank_up':
-      return '位阶晋升';
-    case 'title_unlock':
-      return '获得印记';
-    case 'shop_purchase':
-      return '商城';
-    case 'system_announcement':
-      return '公告';
-    case 'moderator_action':
-      return '管理';
-    case 'system':
-    default:
-      return '系统';
-  }
-}
 
 export function MessageCenterPage() {
   const queryClient = useQueryClient();
@@ -180,8 +147,8 @@ export function MessageCenterPage() {
 
   // ===== 操作 =====
   const handleNotifNavigate = (n: NotificationItem) => {
-    if (n.link) navigate(n.link);
-    else if (n.postId) navigate(`/forums/${n.postId}`);
+    const target = getNotificationTargetPath(n);
+    if (target) navigate(target);
     if (!n.isRead) readMutation.mutate(n.id);
   };
 
@@ -275,7 +242,7 @@ export function MessageCenterPage() {
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNotifNavigate(n)}>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="px-1.5 py-0.5 rounded border border-coc-border text-coc-text-muted">
-                                {typeLabel(n.type)}
+                                {getNotificationTypeLabel(n.type)}
                               </span>
                               {!n.isRead && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-coc-accent-red" />

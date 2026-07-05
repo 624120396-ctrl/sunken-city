@@ -8,36 +8,8 @@ import {
   deleteNotification,
   NotificationItem,
 } from '../../services/notification.service';
+import { getNotificationTargetPath, getNotificationTypeLabel } from '../../services/notification-meta';
 import { formatTimeAgo } from '../../lib/utils';
-
-function typeLabel(type: NotificationItem['type']) {
-  switch (type) {
-    case 'mention':
-      return '提到你';
-    case 'reply':
-      return '回复';
-    case 'like':
-      return '点赞';
-    case 'best_reply':
-      return '最佳回复';
-    case 'friend_request':
-      return '好友请求';
-    case 'friend_accept':
-      return '好友通过';
-    case 'room_invite':
-      return '房间邀请';
-    case 'room_next_session':
-      return '跑团排期';
-    case 'room_announcement':
-      return '房间公告';
-    case 'room_application_review':
-      return '申请结果';
-    case 'room_application_submitted':
-      return '入团申请';
-    default:
-      return '系统';
-  }
-}
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -92,20 +64,13 @@ export function NotificationBell() {
   };
 
   const hasLink = (n: NotificationItem) => {
-    return n.type === 'friend_request' || n.type === 'friend_accept' || n.type === 'room_invite' || !!n.link || !!n.postId;
+    return Boolean(getNotificationTargetPath(n));
   };
 
   const goLink = (n: NotificationItem) => {
     if (!n.isRead) handleRead(n.id);
-    if (n.link) {
-      navigate(n.link);
-    } else if (n.type === 'friend_request' || n.type === 'friend_accept') {
-      navigate('/friends');
-    } else if (n.type === 'room_invite') {
-      navigate('/rooms');
-    } else if (n.postId) {
-      navigate(`/forums/${n.postId}`);
-    }
+    const target = getNotificationTargetPath(n);
+    if (target) navigate(target);
     setOpen(false);
     setDetailNotification(null);
   };
@@ -168,7 +133,7 @@ export function NotificationBell() {
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openDetail(n)}>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="notification-dropdown-v2__type">
-                          {typeLabel(n.type)}
+                          {getNotificationTypeLabel(n.type)}
                         </span>
                         {!n.isRead && (
                           <span className="w-1.5 h-1.5 rounded-full bg-coc-accent-red" />
@@ -232,7 +197,7 @@ export function NotificationBell() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-coc-border shrink-0">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded border border-coc-border text-xs text-coc-text-muted">
-                  {typeLabel(detailNotification.type)}
+                  {getNotificationTypeLabel(detailNotification.type)}
                 </span>
                 {hasLink(detailNotification) && (
                   <button
