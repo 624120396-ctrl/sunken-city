@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { capabilitiesFor, deriveLifecycle, deriveRoomRole, requireRoomCapability } from './room-auth';
+import { createOrRestoreRoomMember } from './room-binding.service';
 
 const profileSchema = z.object({
   status: z.enum(['CLOSED', 'OPEN', 'PAUSED']).optional(),
@@ -29,6 +30,21 @@ const applicationSchema = z.object({
 const applicationReviewSchema = z.object({
   status: z.enum(['PENDING', 'APPROVED', 'DECLINED']),
   reviewNote: z.string().trim().max(1000).optional(),
+});
+
+const invitationSchema = z.object({
+  email: z.string().trim().email(),
+  role: z.enum(['PLAYER', 'OBSERVER']).optional(),
+  message: z.string().trim().max(1000).optional(),
+});
+
+const invitationResponseSchema = z.object({
+  status: z.enum(['ACCEPTED', 'DECLINED']),
+  characterId: z.string().trim().optional(),
+});
+
+const approvedJoinSchema = z.object({
+  characterId: z.string().trim().min(1),
 });
 
 function parseStringArray(raw: string): string[] {
@@ -98,6 +114,44 @@ function mapApplication(application: {
   };
 }
 
+function mapInvitation(invitation: {
+  id: string;
+  inviteeId: string;
+  inviterId: string;
+  role: string;
+  status: string;
+  message: string;
+  respondedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  invitee?: { nickname: string | null; email: string };
+  inviter?: { nickname: string | null; email: string };
+}) {
+  return {
+    id: invitation.id,
+    inviteeId: invitation.inviteeId,
+    inviteeName: invitation.invitee?.nickname || invitation.invitee?.email || '受邀用户',
+    inviteeEmail: invitation.invitee?.email ?? '',
+    inviterId: invitation.inviterId,
+    inviterName: invitation.inviter?.nickname || invitation.inviter?.email || '邀请人',
+    role: invitation.role,
+    status: invitation.status,
+    message: invitation.message,
+    respondedAt: invitation.respondedAt?.toISOString() ?? null,
+    createdAt: invitation.createdAt.toISOString(),
+    updatedAt: invitation.updatedAt.toISOString(),
+  };
+}
+
+function assertCanJoinByRecruitment(lifecycle: string, joinAs: 'PLAYER' | 'OBSERVER') {
+  if (joinAs === 'PLAYER' && lifecycle !== 'PREPARING' && lifecycle !== 'READY') {
+    throw new AppError('INVALID_ROOM_LIFECYCLE', '只有开团前可以加入玩家席位', 400);
+  }
+  if (joinAs === 'OBSERVER' && (lifecycle === 'FINISHED' || lifecycle === 'CANCELLED')) {
+    throw new AppError('INVALID_ROOM_LIFECYCLE', '已结束或已取消的房间不能加入旁观', 400);
+  }
+}
+
 async function getRecruitmentRoom(roomId: string, userId?: string) {
   const room = await prisma.room.findUnique({
     where: { roomId },
@@ -126,7 +180,7 @@ export async function getRoomRecruitment(req: Request, res: Response, next: Next
     const auth = await getRecruitmentRoom(roomId, userId);
     const canManageRecruitment = auth.capabilities.canManageMembers;
 
-    const [profile, applications, ownApplication] = await Promise.all([
+    const [profile, applications, ownApplication, invitations, ownInvitation] = await Promise.all([
       prisma.roomRecruitmentProfile.findUnique({ where: { roomId: auth.room.id } }),
       canManageRecruitment
         ? prisma.roomJoinApplication.findMany({
@@ -141,12 +195,33 @@ export async function getRoomRecruitment(req: Request, res: Response, next: Next
             include: { applicant: { select: { nickname: true, email: true } } },
           })
         : Promise.resolve(null),
+      canManageRecruitment
+        ? prisma.roomInvitation.findMany({
+            where: { roomId: auth.room.id },
+            include: {
+              invitee: { select: { nickname: true, email: true } },
+              inviter: { select: { nickname: true, email: true } },
+            },
+            orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+          })
+        : Promise.resolve([]),
+      userId
+        ? prisma.roomInvitation.findUnique({
+            where: { roomId_inviteeId: { roomId: auth.room.id, inviteeId: userId } },
+            include: {
+              invitee: { select: { nickname: true, email: true } },
+              inviter: { select: { nickname: true, email: true } },
+            },
+          })
+        : Promise.resolve(null),
     ]);
 
     res.json({
       profile: profile ? mapProfile(profile) : null,
       applications: applications.map(mapApplication),
       ownApplication: ownApplication ? mapApplication(ownApplication) : null,
+      invitations: invitations.map(mapInvitation),
+      ownInvitation: ownInvitation ? mapInvitation(ownInvitation) : null,
       canManageRecruitment,
       isRoomMember: Boolean(auth.member) || auth.role === 'OWNER_KP',
     });
@@ -313,6 +388,168 @@ export async function withdrawRoomJoinApplication(req: Request, res: Response, n
     });
 
     res.json({ application: mapApplication(application) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function inviteRoomUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    const { roomId } = req.params;
+    const auth = await requireRoomCapability(roomId, userId, 'canManageMembers');
+    const payload = invitationSchema.parse(req.body);
+    const invitee = await prisma.user.findUnique({
+      where: { email: payload.email },
+      select: { id: true, email: true, nickname: true },
+    });
+
+    if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
+    if (!invitee) throw new AppError('INVITEE_NOT_FOUND', '没有找到这个邮箱对应的用户', 404);
+    if (invitee.id === userId) throw new AppError('CANNOT_INVITE_SELF', '不能邀请自己', 400);
+
+    const activeMember = auth.room.members.find(member => member.userId === invitee.id && !member.leftAt);
+    if (activeMember || auth.room.creatorId === invitee.id) {
+      throw new AppError('ALREADY_ROOM_MEMBER', '该用户已经在房间中', 400);
+    }
+
+    const invitation = await prisma.roomInvitation.upsert({
+      where: { roomId_inviteeId: { roomId: auth.room.id, inviteeId: invitee.id } },
+      create: {
+        roomId: auth.room.id,
+        inviterId: userId,
+        inviteeId: invitee.id,
+        role: payload.role ?? 'PLAYER',
+        status: 'PENDING',
+        message: payload.message ?? '',
+      },
+      update: {
+        inviterId: userId,
+        role: payload.role ?? 'PLAYER',
+        status: 'PENDING',
+        message: payload.message ?? '',
+        respondedAt: null,
+      },
+      include: {
+        invitee: { select: { nickname: true, email: true } },
+        inviter: { select: { nickname: true, email: true } },
+      },
+    });
+
+    res.status(201).json({ invitation: mapInvitation(invitation) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function cancelRoomInvitation(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    const { roomId, invitationId } = req.params;
+    const auth = await requireRoomCapability(roomId, userId, 'canManageMembers');
+    const existing = await prisma.roomInvitation.findFirst({
+      where: { id: invitationId, roomId: auth.room.id },
+    });
+
+    if (!existing) throw new AppError('INVITATION_NOT_FOUND', '邀请不存在', 404);
+
+    const invitation = await prisma.roomInvitation.update({
+      where: { id: invitationId },
+      data: { status: 'CANCELLED', respondedAt: new Date() },
+      include: {
+        invitee: { select: { nickname: true, email: true } },
+        inviter: { select: { nickname: true, email: true } },
+      },
+    });
+
+    res.json({ invitation: mapInvitation(invitation) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function respondRoomInvitation(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    const { roomId, invitationId } = req.params;
+    if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
+
+    const auth = await getRecruitmentRoom(roomId, userId);
+    if (auth.member || auth.role === 'OWNER_KP') {
+      throw new AppError('ALREADY_ROOM_MEMBER', '你已经在这个房间中', 400);
+    }
+
+    const payload = invitationResponseSchema.parse(req.body);
+    const existing = await prisma.roomInvitation.findFirst({
+      where: { id: invitationId, roomId: auth.room.id },
+    });
+
+    if (!existing) throw new AppError('INVITATION_NOT_FOUND', '邀请不存在', 404);
+    if (existing.inviteeId !== userId) throw new AppError('FORBIDDEN', '你不能处理其他人的邀请', 403);
+    if (existing.status !== 'PENDING') throw new AppError('INVITATION_NOT_PENDING', '该邀请已经处理过', 400);
+
+    let member = null;
+    if (payload.status === 'ACCEPTED') {
+      const joinAs = existing.role === 'OBSERVER' ? 'OBSERVER' : 'PLAYER';
+      assertCanJoinByRecruitment(auth.lifecycle, joinAs);
+      member = await createOrRestoreRoomMember({
+        roomDbId: auth.room.id,
+        userId,
+        joinAs,
+        characterId: joinAs === 'PLAYER' ? payload.characterId : undefined,
+      });
+    }
+
+    const invitation = await prisma.roomInvitation.update({
+      where: { id: invitationId },
+      data: { status: payload.status, respondedAt: new Date() },
+      include: {
+        invitee: { select: { nickname: true, email: true } },
+        inviter: { select: { nickname: true, email: true } },
+      },
+    });
+
+    res.json({ invitation: mapInvitation(invitation), member });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function joinApprovedRoomApplication(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    const { roomId, applicationId } = req.params;
+    if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
+
+    const auth = await getRecruitmentRoom(roomId, userId);
+    if (auth.member || auth.role === 'OWNER_KP') {
+      throw new AppError('ALREADY_ROOM_MEMBER', '你已经在这个房间中', 400);
+    }
+
+    assertCanJoinByRecruitment(auth.lifecycle, 'PLAYER');
+    const payload = approvedJoinSchema.parse(req.body);
+    const existing = await prisma.roomJoinApplication.findFirst({
+      where: { id: applicationId, roomId: auth.room.id },
+    });
+
+    if (!existing) throw new AppError('APPLICATION_NOT_FOUND', '申请不存在', 404);
+    if (existing.userId !== userId) throw new AppError('FORBIDDEN', '你不能使用其他人的申请加入', 403);
+    if (existing.status !== 'APPROVED') throw new AppError('APPLICATION_NOT_APPROVED', '申请通过后才能加入', 400);
+
+    const member = await createOrRestoreRoomMember({
+      roomDbId: auth.room.id,
+      userId,
+      joinAs: 'PLAYER',
+      characterId: payload.characterId,
+    });
+
+    const application = await prisma.roomJoinApplication.update({
+      where: { id: applicationId },
+      data: { status: 'JOINED' },
+      include: { applicant: { select: { nickname: true, email: true } } },
+    });
+
+    res.json({ application: mapApplication(application), member });
   } catch (error) {
     next(error);
   }

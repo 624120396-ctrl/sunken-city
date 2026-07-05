@@ -1,5 +1,7 @@
 export type RoomRecruitmentStatus = 'CLOSED' | 'OPEN' | 'PAUSED';
-export type RoomJoinApplicationStatus = 'PENDING' | 'APPROVED' | 'DECLINED' | 'WITHDRAWN';
+export type RoomJoinApplicationStatus = 'PENDING' | 'APPROVED' | 'DECLINED' | 'WITHDRAWN' | 'JOINED';
+export type RoomInvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED';
+export type RoomInvitationRole = 'PLAYER' | 'OBSERVER';
 
 export interface RoomRecruitmentProfileView {
   id: string;
@@ -63,10 +65,33 @@ export interface RoomJoinApplicationReviewPayload {
   reviewNote?: string;
 }
 
+export interface RoomInvitationView {
+  id: string;
+  inviteeId: string;
+  inviteeName: string;
+  inviteeEmail: string;
+  inviterId: string;
+  inviterName: string;
+  role: RoomInvitationRole;
+  status: RoomInvitationStatus;
+  message: string;
+  respondedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoomInvitationPayload {
+  email: string;
+  role?: RoomInvitationRole;
+  message?: string;
+}
+
 export interface RoomRecruitmentView {
   profile: RoomRecruitmentProfileView | null;
   applications: RoomJoinApplicationView[];
   ownApplication: RoomJoinApplicationView | null;
+  invitations: RoomInvitationView[];
+  ownInvitation: RoomInvitationView | null;
   canManageRecruitment: boolean;
   isRoomMember: boolean;
 }

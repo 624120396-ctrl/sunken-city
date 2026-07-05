@@ -60,6 +60,8 @@ model User {
   roomAnnouncements RoomAnnouncement[]
   roomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationApplicant")
   reviewedRoomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationReviewer")
+  sentRoomInvitations RoomInvitation[] @relation("RoomInvitationInviter")
+  receivedRoomInvitations RoomInvitation[] @relation("RoomInvitationInvitee")
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -240,6 +242,7 @@ model Room {
   actionQueueItems RoomActionQueueItem[]
   recruitmentProfile RoomRecruitmentProfile?
   joinApplications RoomJoinApplication[]
+  invitations RoomInvitation[]
 }
 
 model RoomRun {
@@ -597,6 +600,27 @@ model RoomJoinApplication {
   @@unique([roomId, userId])
   @@index([roomId, status])
   @@index([userId, status])
+}
+
+model RoomInvitation {
+  id            String   @id @default(uuid())
+  roomId        String
+  inviterId     String
+  inviteeId     String
+  role          String   @default("PLAYER")
+  status        String   @default("PENDING")
+  message       String   @default("")
+  respondedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  inviter       User     @relation("RoomInvitationInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee       User     @relation("RoomInvitationInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, inviteeId])
+  @@index([roomId, status])
+  @@index([inviteeId, status])
 }
 
 model RoomMember {

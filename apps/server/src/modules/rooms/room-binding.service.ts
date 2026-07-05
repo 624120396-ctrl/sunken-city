@@ -63,3 +63,49 @@ export function buildMemberJoinData(input: {
     displayedCharacterId: input.characterId,
   };
 }
+
+export async function createOrRestoreRoomMember(input: {
+  roomDbId: string;
+  userId: string;
+  joinAs: JoinMode;
+  characterId?: string | null;
+}) {
+  const room = await prisma.room.findUnique({
+    where: { id: input.roomDbId },
+    include: { members: true },
+  });
+
+  if (!room) {
+    throw new AppError('ROOM_NOT_FOUND', '房间不存在', 404);
+  }
+
+  const existingMember = room.members.find(member => member.userId === input.userId && !member.leftAt);
+  if (existingMember) {
+    throw new AppError('ALREADY_MEMBER', '你已在房间中', 400);
+  }
+
+  if (input.joinAs === 'PLAYER') {
+    if (!input.characterId) {
+      throw new AppError('CHARACTER_REQUIRED', '加入玩家席位需要选择角色', 400);
+    }
+    await assertCharacterOwnedByUser(input.characterId, input.userId);
+    await assertCharacterAvailableForRoom(input.characterId, input.roomDbId);
+  }
+
+  const joinData = buildMemberJoinData(input);
+  const leftMember = room.members.find(member => member.userId === input.userId && member.leftAt);
+
+  if (leftMember) {
+    return prisma.roomMember.update({
+      where: { id: leftMember.id },
+      data: {
+        leftAt: null,
+        role: joinData.role,
+        characterId: joinData.characterId,
+        displayedCharacterId: joinData.displayedCharacterId,
+      },
+    });
+  }
+
+  return prisma.roomMember.create({ data: joinData });
+}

@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ClipboardList, RefreshCw, Save, UserPlus, X } from 'lucide-react';
 import {
+  cancelRoomInvitation,
   getRoomRecruitment,
+  inviteRoomUser,
   reviewRoomJoinApplication,
   saveRoomRecruitmentProfile,
 } from '@/services/room-recruitment.service';
 import type {
   RoomJoinApplicationStatus,
+  RoomInvitationRole,
+  RoomInvitationStatus,
   RoomRecruitmentStatus,
   RoomRecruitmentView,
 } from '@/types/room-recruitment-contract';
@@ -26,6 +30,19 @@ const applicationStatusLabels: Record<RoomJoinApplicationStatus, string> = {
   APPROVED: '已通过',
   DECLINED: '已拒绝',
   WITHDRAWN: '已撤回',
+  JOINED: '已入房',
+};
+
+const invitationStatusLabels: Record<RoomInvitationStatus, string> = {
+  PENDING: '待回应',
+  ACCEPTED: '已接受',
+  DECLINED: '已拒绝',
+  CANCELLED: '已取消',
+};
+
+const invitationRoleLabels: Record<RoomInvitationRole, string> = {
+  PLAYER: '调查员',
+  OBSERVER: '观察者',
 };
 
 const defaultStyleTags = ['严肃调查', '恐怖氛围', '新手友好'];
@@ -53,6 +70,9 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
   const [newcomerFriendly, setNewcomerFriendly] = useState(true);
   const [plGuide, setPlGuide] = useState(defaultPlGuide);
   const [kpChecklist, setKpChecklist] = useState(defaultKpChecklist);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<RoomInvitationRole>('PLAYER');
+  const [inviteMessage, setInviteMessage] = useState('');
 
   async function loadRecruitment() {
     setLoading(true);
@@ -128,6 +148,48 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
       } : prev);
     } catch (err: any) {
       setError(err?.message || '申请审核失败');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleInvite() {
+    if (!inviteEmail.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const invitation = await inviteRoomUser(roomId, {
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        message: inviteMessage,
+      });
+      setData(prev => prev ? {
+        ...prev,
+        invitations: [
+          invitation,
+          ...prev.invitations.filter(item => item.id !== invitation.id),
+        ],
+      } : prev);
+      setInviteEmail('');
+      setInviteMessage('');
+    } catch (err: any) {
+      setError(err?.message || '邀请发送失败');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCancelInvitation(invitationId: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      const invitation = await cancelRoomInvitation(roomId, invitationId);
+      setData(prev => prev ? {
+        ...prev,
+        invitations: prev.invitations.map(item => item.id === invitation.id ? invitation : item),
+      } : prev);
+    } catch (err: any) {
+      setError(err?.message || '邀请取消失败');
     } finally {
       setSaving(false);
     }
@@ -313,6 +375,72 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
           </div>
           {data.canManageRecruitment ? (
             <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+              <div className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+                <div className="mb-2 text-[11px] text-[#8f8778]">邀请用户入房</div>
+                <input
+                  value={inviteEmail}
+                  onChange={event => setInviteEmail(event.target.value)}
+                  placeholder="用户邮箱"
+                  className="mb-2 w-full rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+                />
+                <div className="mb-2 grid grid-cols-[1fr_auto] gap-2">
+                  <select
+                    value={inviteRole}
+                    onChange={event => setInviteRole(event.target.value as RoomInvitationRole)}
+                    className="rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+                  >
+                    {Object.entries(invitationRoleLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void handleInvite()}
+                    disabled={saving || !inviteEmail.trim()}
+                    className="btn-v2 inline-flex min-h-8 items-center gap-1 rounded border border-[#c9a227]/40 px-2 text-[11px] text-[#f4d778] disabled:opacity-50"
+                  >
+                    <UserPlus size={12} />
+                    邀请
+                  </button>
+                </div>
+                <textarea
+                  value={inviteMessage}
+                  onChange={event => setInviteMessage(event.target.value)}
+                  rows={2}
+                  placeholder="邀请留言"
+                  className="w-full resize-none rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+                />
+              </div>
+
+              {data.invitations.length > 0 && (
+                <div className="space-y-2">
+                  {data.invitations.map(invitation => (
+                    <article key={invitation.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-medium text-[#f4ead1]">{invitation.inviteeName}</div>
+                          <div className="text-[11px] text-[#8f8778]">
+                            {invitationRoleLabels[invitation.role]} · {invitationStatusLabels[invitation.status]}
+                          </div>
+                        </div>
+                        {invitation.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => void handleCancelInvitation(invitation.id)}
+                            disabled={saving}
+                            className="btn-v2 inline-flex min-h-7 items-center gap-1 rounded border border-[#a63848]/35 px-2 text-[11px] text-[#f1b7bd] disabled:opacity-50"
+                          >
+                            <X size={11} />
+                            取消
+                          </button>
+                        )}
+                      </div>
+                      {invitation.message && <p className="whitespace-pre-wrap text-xs text-[#d8ccb4]">{invitation.message}</p>}
+                    </article>
+                  ))}
+                </div>
+              )}
+
               {data.applications.length === 0 ? (
                 <div className="text-xs text-[#6b6558]">暂无申请</div>
               ) : data.applications.map(application => (
