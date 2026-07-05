@@ -100,3 +100,19 @@ export interface RoomListOverviewItem {
     pendingAttendance: number;
   };
 }
+
+export interface RoomReportArchiveItem {
+  roomId: string;
+  roomName: string;
+  myRole: 'OWNER_KP' | 'ASSISTANT_KP' | 'PLAYER' | 'OBSERVER';
+  lifecycle: string;
+  createdAt: string;
+  finishedAt: string | null;
+  report: null | {
+    id: string;
+    title: string;
+    summary: string;
+    createdAt: string;
+    link: string;
+  };
+}

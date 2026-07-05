@@ -24,8 +24,8 @@ import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
 import { EmptyIcons, EmptyState } from '@components/ui/EmptyState';
 import { ActionCard, Button, DataCard, PageShell, ReadablePanel, Surface } from '@components/system';
-import { getRoomListOverview } from '@/services/room-overview.service';
-import type { RoomListOverviewItem } from '@/types/room-overview-contract';
+import { getRoomListOverview, getRoomReportArchive } from '@/services/room-overview.service';
+import type { RoomListOverviewItem, RoomReportArchiveItem } from '@/types/room-overview-contract';
 import {
   isActiveLifecycle,
   isClosedLifecycle,
@@ -113,6 +113,7 @@ export function RoomListPage() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<RoomListItem[]>([]);
   const [roomSummaries, setRoomSummaries] = useState<RoomListOverviewItem[]>([]);
+  const [reportArchives, setReportArchives] = useState<RoomReportArchiveItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -134,9 +135,11 @@ export function RoomListPage() {
         apiFetch('/rooms'),
         getRoomListOverview().catch(() => [] as RoomListOverviewItem[]),
       ]);
+      const archives = await getRoomReportArchive().catch(() => [] as RoomReportArchiveItem[]);
       const data = await handleApiResponse<{ rooms: RoomListItemResponse[] }>(response);
       setRooms(Array.isArray(data.rooms) ? data.rooms.map(normalizeRoomListItem) : []);
       setRoomSummaries(summaries);
+      setReportArchives(archives);
     } catch (error) {
       console.error('获取房间列表失败:', error);
     } finally {
@@ -267,6 +270,32 @@ export function RoomListPage() {
                 <DataCard label="参与" value={roomStats.playing} material="archive" />
                 <DataCard label="席位" value={roomStats.members} tone="ocean" material="archive" />
               </div>
+            </Surface>
+
+            <Surface variant="panel" material="archive" padding="md" className="room-library-index-card">
+              <div className="room-library-index-title">
+                <BookOpen size={16} className="text-[var(--coc-accent-gold)]" />
+                报告归档
+              </div>
+              {reportArchives.length === 0 ? (
+                <p className="mt-2 text-sm text-[var(--coc-text-muted)]">暂无可回看的房间报告。</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {reportArchives.slice(0, 3).map((archive) => (
+                    <button
+                      key={archive.roomId}
+                      type="button"
+                      onClick={() => navigate(archive.report?.link ?? `/rooms/${archive.roomId}`)}
+                      className="w-full rounded border border-[var(--coc-border-subtle)] bg-black/10 px-3 py-2 text-left transition-colors hover:bg-white/[0.05]"
+                    >
+                      <div className="text-sm font-semibold text-[var(--coc-text-primary)]">{archive.roomName}</div>
+                      <div className="mt-1 line-clamp-1 text-xs text-[var(--coc-text-muted)]">
+                        {archive.report ? archive.report.summary || archive.report.title : '尚未生成报告，点击回到房间。'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </Surface>
           </div>
         }
