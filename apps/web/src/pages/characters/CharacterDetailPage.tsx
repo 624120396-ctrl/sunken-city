@@ -2,7 +2,7 @@ import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X, User } from 'lucide-react';
+import { ArrowLeft, Trash2, Heart, Brain, Sparkles, Zap, Shield, Download, Wand2, X, User, BookOpen } from 'lucide-react';
 import { COC7E_SKILLS, SKILL_CATEGORIES } from '@lib/coc7-data';
 import { apiFetch } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
@@ -64,11 +64,57 @@ interface PortraitQuota {
   nextAvailableAt: string | null;
 }
 
+interface CharacterRoomHistoryItem {
+  participantId: string;
+  roomId: string;
+  roomName: string;
+  role: string;
+  lifecycle: string;
+  participationStatus: string;
+  joinedRunAt: string;
+  leftRunAt: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  report: null | {
+    id: string;
+    title: string;
+    summary: string;
+    createdAt: string;
+    link: string;
+  };
+  settlement: null | {
+    status: string;
+    outcome: string;
+    hpFinal: number | null;
+    mpFinal: number | null;
+    sanFinal: number | null;
+  };
+}
+
+const lifecycleLabels: Record<string, string> = {
+  PREPARING: '准备中',
+  READY: '待开团',
+  IN_PROGRESS: '进行中',
+  PAUSED: '暂停',
+  FINISHING: '结团中',
+  FINISHED: '已结团',
+  CANCELLED: '已取消',
+};
+
+const outcomeLabels: Record<string, string> = {
+  SURVIVED: '生还',
+  DEAD: '死亡',
+  MISSING: '失踪',
+  INSANE: '疯狂',
+  WITHDREW: '退出',
+};
+
 export function CharacterDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const [character, setCharacter] = useState<Character | null>(null);
+  const [roomHistory, setRoomHistory] = useState<CharacterRoomHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<CharacterDossierTabKey>('attributes');
 
@@ -85,6 +131,7 @@ export function CharacterDetailPage() {
 
   useEffect(() => {
     fetchCharacter();
+    fetchRoomHistory();
   }, [id]);
 
   useEffect(() => {
@@ -171,6 +218,19 @@ export function CharacterDetailPage() {
       if (data.success) setPortraitQuota(data.data);
     } catch (err) {
       console.error('获取形象配额失败:', err);
+    }
+  };
+
+  const fetchRoomHistory = async () => {
+    try {
+      const response = await apiFetch(`/characters/${id}/room-history`);
+      const data = await response.json();
+      if (data.success) {
+        setRoomHistory(data.data.history || []);
+      }
+    } catch (error) {
+      console.error('获取角色房间经历失败:', error);
+      setRoomHistory([]);
     }
   };
 
@@ -363,6 +423,46 @@ export function CharacterDetailPage() {
             </button>
           </div>
         </div>
+      </Surface>
+
+      <Surface variant="panel" padding="md" className="mb-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#e8d4a0]">
+          <BookOpen size={16} />
+          房间经历
+        </div>
+        {roomHistory.length === 0 ? (
+          <p className="text-sm text-[#6b6558]">暂无已记录的跑团经历。</p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {roomHistory.slice(0, 4).map((entry) => (
+              <article key={entry.participantId} className="rounded border border-coc-void bg-black/20 p-3">
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-bold text-[#f4ead1]">{entry.roomName}</div>
+                    <div className="text-xs text-[#8b8375]">
+                      {lifecycleLabels[entry.lifecycle] || entry.lifecycle} · {new Date(entry.joinedRunAt).toLocaleDateString('zh-CN')}
+                    </div>
+                  </div>
+                  {entry.report && (
+                    <Link to={entry.report.link} className="text-xs text-[#c9a227] hover:underline">
+                      报告
+                    </Link>
+                  )}
+                </div>
+                {entry.report?.summary && (
+                  <p className="mb-2 line-clamp-2 text-xs text-[#b0a898]">{entry.report.summary}</p>
+                )}
+                {entry.settlement && (
+                  <div className="text-xs text-[#8b8375]">
+                    结局：{outcomeLabels[entry.settlement.outcome] || entry.settlement.outcome}
+                    {entry.settlement.sanFinal !== null ? ` · SAN ${entry.settlement.sanFinal}` : ''}
+                    {entry.settlement.hpFinal !== null ? ` · HP ${entry.settlement.hpFinal}` : ''}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
       </Surface>
 
       {/* ===== 标签页 ===== */}

@@ -15,6 +15,7 @@ import {
 } from '../../utils/character-calc';
 import { COC7_OCCUPATIONS } from '../../data/occupations';
 import { getDefaultSkills, resolveDynamicBaseValues } from '../../data/coc7-skills';
+import { buildCharacterRoomHistoryView } from './character-room-history.service';
 
 const router = Router();
 
@@ -316,6 +317,83 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res, next) => {
     res.json({
       success: true,
       data: { character: parsedCharacter },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========== 获取角色参与过的房间经历 ==========
+router.get('/:id/room-history', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId!;
+
+    const character = await prisma.character.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+
+    if (!character) {
+      throw new AppError('CHARACTER_NOT_FOUND', '调查员不存在', 404);
+    }
+
+    const participants = await prisma.roomRunParticipant.findMany({
+      where: { characterId: id, userId },
+      orderBy: { joinedRunAt: 'desc' },
+      take: 20,
+      include: {
+        roomRun: {
+          include: {
+            room: {
+              select: {
+                roomId: true,
+                name: true,
+              },
+            },
+            settlements: {
+              where: { characterId: id },
+              select: {
+                status: true,
+                outcome: true,
+                hpFinal: true,
+                mpFinal: true,
+                sanFinal: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const roomIds = participants.map(participant => participant.roomRun.room.roomId);
+    const reports = roomIds.length > 0
+      ? await prisma.sessionReport.findMany({
+          where: { roomId: { in: roomIds } },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            roomId: true,
+            title: true,
+            summary: true,
+            createdAt: true,
+          },
+        })
+      : [];
+    const reportsByRoomId = new Map(
+      reports.map(report => [report.roomId, {
+        id: report.id,
+        title: report.title,
+        summary: report.summary,
+        createdAt: report.createdAt,
+      }])
+    );
+
+    res.json({
+      success: true,
+      data: {
+        history: buildCharacterRoomHistoryView(participants, reportsByRoomId),
+      },
     });
   } catch (error) {
     next(error);
