@@ -53,7 +53,7 @@ import { RoomInvestigationFocusStrip } from './components/RoomInvestigationFocus
 import { RoomCoordinationPanel } from './components/RoomCoordinationPanel';
 import { RoomCommunicationPanel } from './components/RoomCommunicationPanel';
 import { RoomRecruitmentPanel } from './components/RoomRecruitmentPanel';
-import { RoomAiFoundationPanel } from './components/RoomAiFoundationPanel';
+import { RoomOperationsOverviewPanel } from './components/RoomOperationsOverviewPanel';
 import { archiveImportantMessage, archiveKeyDice } from '@/services/investigation.service';
 
 interface Room {
@@ -1114,6 +1114,10 @@ export function RoomPage() {
       )}
 
       {roomId && (caps?.canViewPublicContent ?? false) && (
+        <RoomOperationsOverviewPanel roomId={roomId} />
+      )}
+
+      {roomId && (caps?.canViewPublicContent ?? false) && (
         <RoomCoordinationPanel roomId={roomId} />
       )}
 
@@ -1123,13 +1127,6 @@ export function RoomPage() {
 
       {roomId && (caps?.canViewPublicContent ?? false) && (
         <RoomRecruitmentPanel roomId={roomId} />
-      )}
-
-      {roomId && (caps?.canViewPublicContent ?? false) && (
-        <RoomAiFoundationPanel
-          roomId={roomId}
-          canUseKPTools={caps?.canUseKPTools ?? false}
-        />
       )}
 
       {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (
