@@ -9,7 +9,7 @@ export interface RoomNotificationRoom {
   creatorId: string;
   roomId: string;
   title?: string | null;
-  members: Array<{ userId: string; leftAt: Date | null }>;
+  members: Array<{ userId: string; role?: string; leftAt: Date | null }>;
 }
 
 export function collectRoomNotificationRecipients(room: RoomNotificationRoom, actorId?: string): string[] {
@@ -17,6 +17,16 @@ export function collectRoomNotificationRecipients(room: RoomNotificationRoom, ac
   recipients.add(room.creatorId);
   for (const member of room.members) {
     if (!member.leftAt) recipients.add(member.userId);
+  }
+  if (actorId) recipients.delete(actorId);
+  return [...recipients];
+}
+
+export function collectRoomManagerNotificationRecipients(room: RoomNotificationRoom, actorId?: string): string[] {
+  const recipients = new Set<string>();
+  recipients.add(room.creatorId);
+  for (const member of room.members) {
+    if (!member.leftAt && member.role === 'KP') recipients.add(member.userId);
   }
   if (actorId) recipients.delete(actorId);
   return [...recipients];
@@ -91,6 +101,20 @@ export function buildApplicationReviewNotification(input: {
   };
 }
 
+export function buildApplicationSubmittedNotification(input: {
+  roomTitle?: string | null;
+  roomId: string;
+  applicantName: string;
+  message: string;
+}): RoomNotificationPayload {
+  return {
+    type: 'room_application_submitted',
+    title: `${roomTitle(input.roomTitle)}：收到新的入团申请`,
+    content: `${input.applicantName || '玩家'} 提交了入团申请。${input.message?.trim() || ''}`.trim(),
+    link: roomLink(input.roomId),
+  };
+}
+
 export function buildRoomInvitationNotification(input: {
   roomTitle?: string | null;
   roomId: string;
@@ -121,11 +145,33 @@ export async function notifyRoomMembers(input: {
   })));
 }
 
+export async function notifyRoomManagers(input: {
+  prisma: PrismaClient;
+  io?: Server | null;
+  room: RoomNotificationRoom;
+  actorId?: string;
+  notification: RoomNotificationPayload;
+}) {
+  const recipients = collectRoomManagerNotificationRecipients(input.room, input.actorId);
+  await Promise.all(recipients.map(userId => createNotification(input.prisma, input.io, {
+    userId,
+    ...input.notification,
+  })));
+}
+
 export async function tryNotifyRoomMembers(input: Parameters<typeof notifyRoomMembers>[0]) {
   try {
     await notifyRoomMembers(input);
   } catch (error) {
     logger.warn('房间通知发送失败', error);
+  }
+}
+
+export async function tryNotifyRoomManagers(input: Parameters<typeof notifyRoomManagers>[0]) {
+  try {
+    await notifyRoomManagers(input);
+  } catch (error) {
+    logger.warn('房间 KP 通知发送失败', error);
   }
 }
 

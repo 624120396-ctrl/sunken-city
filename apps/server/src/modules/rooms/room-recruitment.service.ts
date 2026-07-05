@@ -5,8 +5,10 @@ import { AppError } from '../../middleware/error';
 import { capabilitiesFor, deriveLifecycle, deriveRoomRole, requireRoomCapability } from './room-auth';
 import { createOrRestoreRoomMember } from './room-binding.service';
 import {
+  buildApplicationSubmittedNotification,
   buildApplicationReviewNotification,
   buildRoomInvitationNotification,
+  tryNotifyRoomManagers,
   tryNotifyRoomUser,
 } from './room-notifications.service';
 import { buildRecruitmentStyleMatch } from './room-recruitment-match.service';
@@ -333,6 +335,20 @@ export async function submitRoomJoinApplication(req: Request, res: Response, nex
         reviewedAt: null,
       },
       include: { applicant: { select: { nickname: true, email: true } } },
+    });
+
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
+    await tryNotifyRoomManagers({
+      prisma,
+      io,
+      room: auth.room,
+      actorId: userId,
+      notification: buildApplicationSubmittedNotification({
+        roomTitle: auth.room.name,
+        roomId: auth.room.roomId,
+        applicantName: application.applicant?.nickname || application.applicant?.email || '玩家',
+        message: application.message,
+      }),
     });
 
     res.status(201).json({ application: mapApplication(application, parseStringArray(profile.styleTags)) });

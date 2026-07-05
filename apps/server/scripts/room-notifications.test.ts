@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildApplicationSubmittedNotification,
   buildApplicationReviewNotification,
   buildNextSessionNotification,
+  collectRoomManagerNotificationRecipients,
   collectRoomNotificationRecipients,
 } from '../src/modules/rooms/room-notifications.service';
 
@@ -69,4 +71,35 @@ test('application review notifications distinguish approved and declined results
   });
 
   assert.equal(declined.title, '雾港疑案：入团申请未通过');
+});
+
+test('room manager notification recipients include owner and active assistant keepers only', () => {
+  const recipients = collectRoomManagerNotificationRecipients(
+    {
+      creatorId: 'owner',
+      roomId: 'room-public-id',
+      members: [
+        { userId: 'assistant', role: 'KP', leftAt: null },
+        { userId: 'player', role: 'PLAYER', leftAt: null },
+        { userId: 'departed-kp', role: 'KP', leftAt: new Date('2026-07-01T00:00:00.000Z') },
+      ],
+    },
+    'player'
+  );
+
+  assert.deepEqual(recipients.sort(), ['assistant', 'owner']);
+});
+
+test('application submitted notifications point keepers back to recruitment review', () => {
+  const notification = buildApplicationSubmittedNotification({
+    roomTitle: '雾港疑案',
+    roomId: 'room-public-id',
+    applicantName: '林舟',
+    message: '想参加严肃调查团',
+  });
+
+  assert.equal(notification.type, 'room_application_submitted');
+  assert.equal(notification.title, '雾港疑案：收到新的入团申请');
+  assert.match(notification.content, /林舟/);
+  assert.equal(notification.link, '/rooms/room-public-id');
 });

@@ -32,6 +32,8 @@ function typeLabel(type: NotificationItem['type']) {
       return '房间公告';
     case 'room_application_review':
       return '申请结果';
+    case 'room_application_submitted':
+      return '入团申请';
     default:
       return '系统';
   }
