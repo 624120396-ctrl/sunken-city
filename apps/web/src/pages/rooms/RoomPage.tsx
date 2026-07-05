@@ -52,6 +52,7 @@ import { InvestigationDock } from './components/InvestigationDock';
 import { RoomInvestigationFocusStrip } from './components/RoomInvestigationFocusStrip';
 import { RoomCoordinationPanel } from './components/RoomCoordinationPanel';
 import { RoomCommunicationPanel } from './components/RoomCommunicationPanel';
+import { RoomRecruitmentPanel } from './components/RoomRecruitmentPanel';
 import { archiveImportantMessage, archiveKeyDice } from '@/services/investigation.service';
 
 interface Room {
@@ -1117,6 +1118,10 @@ export function RoomPage() {
 
       {roomId && (caps?.canViewPublicContent ?? false) && (
         <RoomCommunicationPanel roomId={roomId} />
+      )}
+
+      {roomId && (caps?.canViewPublicContent ?? false) && (
+        <RoomRecruitmentPanel roomId={roomId} />
       )}
 
       {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (

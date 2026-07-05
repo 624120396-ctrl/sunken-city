@@ -58,6 +58,8 @@ model User {
   roomSettlements RoomSettlement[]
   roomAttendanceConfirmations RoomAttendanceConfirmation[]
   roomAnnouncements RoomAnnouncement[]
+  roomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationApplicant")
+  reviewedRoomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationReviewer")
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -236,6 +238,8 @@ model Room {
   roomAnnouncements RoomAnnouncement[]
   communicationState RoomCommunicationState?
   actionQueueItems RoomActionQueueItem[]
+  recruitmentProfile RoomRecruitmentProfile?
+  joinApplications RoomJoinApplication[]
 }
 
 model RoomRun {
@@ -544,6 +548,55 @@ model RoomActionQueueItem {
 
   @@index([roomId, status, sortOrder])
   @@index([roomId, createdAt])
+}
+
+model RoomRecruitmentProfile {
+  id                String   @id @default(uuid())
+  roomId            String   @unique
+  status            String   @default("CLOSED")
+  headline          String   @default("")
+  pitch             String   @default("")
+  styleTags         String   @default("[]")
+  scheduleText      String   @default("")
+  requirements      String   @default("")
+  safetyTools       String   @default("")
+  playerCountMin    Int      @default(3)
+  playerCountMax    Int      @default(4)
+  newcomerFriendly  Boolean  @default(true)
+  plGuide           String   @default("")
+  kpChecklist       String   @default("")
+  updatedById       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  room              Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([newcomerFriendly])
+}
+
+model RoomJoinApplication {
+  id                 String   @id @default(uuid())
+  roomId             String
+  userId             String
+  status             String   @default("PENDING")
+  message            String   @default("")
+  experienceNote     String   @default("")
+  availabilityNote   String   @default("")
+  preferredStyleTags String   @default("[]")
+  reviewerId         String?
+  reviewNote         String   @default("")
+  reviewedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  room               Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  applicant          User     @relation("RoomJoinApplicationApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer           User?    @relation("RoomJoinApplicationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([roomId, userId])
+  @@index([roomId, status])
+  @@index([userId, status])
 }
 
 model RoomMember {
