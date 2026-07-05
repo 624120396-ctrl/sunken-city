@@ -108,3 +108,37 @@ export interface RoomAiUsageLedgerView {
   metadata: Record<string, unknown>;
   createdAt: string;
 }
+
+export type RoomAiAssetType = 'IMAGE' | 'TEXT' | 'AUDIO_RESERVED';
+export type RoomAiAssetApprovalStatus = 'DRAFT' | 'APPROVED' | 'PUBLISHED' | 'DISCARDED';
+
+export interface RoomAiAssetView {
+  id: string;
+  jobId: string | null;
+  assetType: RoomAiAssetType;
+  purpose: string;
+  title: string;
+  prompt: string;
+  url: string | null;
+  storagePath: string | null;
+  mimeType: string | null;
+  visibility: 'KP_ONLY' | 'PLAYER_VISIBLE' | 'PUBLIC' | string;
+  linkedType: string | null;
+  linkedId: string | null;
+  approvalStatus: RoomAiAssetApprovalStatus;
+  provider: string | null;
+  modelId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoomAiAssetPayload {
+  assetType: RoomAiAssetType;
+  purpose: string;
+  title: string;
+  prompt?: string;
+  url?: string;
+  visibility?: 'KP_ONLY' | 'PLAYER_VISIBLE' | 'PUBLIC';
+  approvalStatus?: RoomAiAssetApprovalStatus;
+}

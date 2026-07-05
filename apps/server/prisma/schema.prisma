@@ -66,6 +66,7 @@ model User {
   createdAiJobs AiJob[] @relation("AiJobCreatedBy")
   createdAiContextSnapshots AiContextSnapshot[] @relation("AiContextSnapshotCreatedBy")
   aiUsageLedgers AiUsageLedger[] @relation("AiUsageLedgerUser")
+  createdAiAssets AiAsset[] @relation("AiAssetCreatedBy")
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -251,6 +252,7 @@ model Room {
   aiJobs AiJob[]
   aiUsageLedgers AiUsageLedger[]
   aiContextSnapshots AiContextSnapshot[]
+  aiAssets AiAsset[]
 }
 
 model RoomRun {
@@ -679,6 +681,7 @@ model AiJob {
   createdBy          User?    @relation("AiJobCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   usageLedgers       AiUsageLedger[]
   contextSnapshots   AiContextSnapshot[]
+  assets             AiAsset[]
 
   @@index([roomId, status])
   @@index([roomId, taskType])
@@ -729,6 +732,38 @@ model AiContextSnapshot {
   @@index([roomId, createdAt])
   @@index([jobId])
   @@index([contextScope])
+}
+
+model AiAsset {
+  id             String   @id @default(uuid())
+  roomId         String
+  jobId          String?
+  createdById    String?
+  assetType      String
+  purpose        String
+  title          String
+  prompt         String   @default("")
+  url            String?
+  storagePath    String?
+  mimeType       String?
+  visibility     String   @default("KP_ONLY")
+  linkedType     String?
+  linkedId       String?
+  approvalStatus String   @default("DRAFT")
+  provider       String?
+  modelId        String?
+  metadataJson   String   @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  room           Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  job            AiJob?   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  createdBy      User?    @relation("AiAssetCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([roomId, assetType, createdAt])
+  @@index([roomId, approvalStatus])
+  @@index([jobId])
+  @@index([linkedType, linkedId])
 }
 
 model RoomMember {

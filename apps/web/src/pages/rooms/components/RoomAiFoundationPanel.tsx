@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bot, ClipboardList, RefreshCw, Save, ShieldCheck, Sparkles } from 'lucide-react';
 import {
+  createRoomAiAsset,
   createRoomAiJob,
+  getRoomAiAssets,
   getRoomAiContextPreview,
   getRoomAiJobs,
   getRoomAiSettings,
@@ -9,6 +11,7 @@ import {
   saveRoomAiSettings,
 } from '@/services/room-ai.service';
 import type {
+  RoomAiAssetView,
   RoomAiContextPreview,
   RoomAiJobView,
   RoomAiSettingsView,
@@ -59,9 +62,13 @@ export function RoomAiFoundationPanel({ roomId, canUseKPTools }: RoomAiFoundatio
   const [settings, setSettings] = useState<RoomAiSettingsView>(defaultSettings());
   const [context, setContext] = useState<RoomAiContextPreview | null>(null);
   const [jobs, setJobs] = useState<RoomAiJobView[]>([]);
+  const [assets, setAssets] = useState<RoomAiAssetView[]>([]);
   const [ledger, setLedger] = useState<RoomAiUsageLedgerView[]>([]);
   const [taskType, setTaskType] = useState<RoomAiTaskType>(defaultTask);
   const [prompt, setPrompt] = useState('');
+  const [assetTitle, setAssetTitle] = useState('');
+  const [assetPurpose, setAssetPurpose] = useState('SCENE_IMAGE');
+  const [assetPrompt, setAssetPrompt] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,12 +94,14 @@ export function RoomAiFoundationPanel({ roomId, canUseKPTools }: RoomAiFoundatio
       setSettings(loadedSettings);
       setContext(loadedContext);
       if (canUseKPTools) {
-        const [loadedJobs, loadedLedger] = await Promise.all([
+        const [loadedJobs, loadedLedger, loadedAssets] = await Promise.all([
           getRoomAiJobs(roomId),
           getRoomAiUsageLedger(roomId),
+          getRoomAiAssets(roomId),
         ]);
         setJobs(loadedJobs);
         setLedger(loadedLedger);
+        setAssets(loadedAssets);
       }
     } catch (err: any) {
       setError(err?.message || 'AI 基础资料加载失败');
@@ -144,6 +153,29 @@ export function RoomAiFoundationPanel({ roomId, canUseKPTools }: RoomAiFoundatio
       setPrompt('');
     } catch (err: any) {
       setError(err?.message || 'AI 草稿任务创建失败');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCreateAsset() {
+    if (!assetTitle.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const asset = await createRoomAiAsset(roomId, {
+        assetType: 'IMAGE',
+        purpose: assetPurpose,
+        title: assetTitle,
+        prompt: assetPrompt,
+        visibility: 'KP_ONLY',
+        approvalStatus: 'DRAFT',
+      });
+      setAssets(prev => [asset, ...prev]);
+      setAssetTitle('');
+      setAssetPrompt('');
+    } catch (err: any) {
+      setError(err?.message || '素材草稿创建失败');
     } finally {
       setSaving(false);
     }
@@ -313,6 +345,66 @@ export function RoomAiFoundationPanel({ roomId, canUseKPTools }: RoomAiFoundatio
           )}
         </div>
       </div>
+
+      {canUseKPTools && (
+        <div className="mt-3 rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-[#8f8778]">
+            <ClipboardList size={14} />
+            素材草稿台账
+          </div>
+          <div className="grid gap-2 lg:grid-cols-[0.8fr_0.8fr_1.4fr_auto]">
+            <input
+              value={assetTitle}
+              onChange={event => setAssetTitle(event.target.value)}
+              placeholder="素材标题"
+              className="rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+            />
+            <select
+              value={assetPurpose}
+              onChange={event => setAssetPurpose(event.target.value)}
+              className="rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+            >
+              <option value="NPC_AVATAR">NPC 头像</option>
+              <option value="SCENE_IMAGE">场景氛围图</option>
+              <option value="HANDOUT">调查 handout</option>
+              <option value="NEWSPAPER">报纸剪报</option>
+              <option value="OLD_PHOTO">旧照片</option>
+              <option value="OCCULT_SYMBOL">神秘符号</option>
+              <option value="VOICE_RESERVED">语音预留</option>
+            </select>
+            <input
+              value={assetPrompt}
+              onChange={event => setAssetPrompt(event.target.value)}
+              placeholder="未来生成提示词 / 素材说明"
+              className="rounded border border-[#3a3a3a] bg-[#0d0d13] px-2 py-2 text-xs text-[#f4ead1]"
+            />
+            <button
+              type="button"
+              onClick={() => void handleCreateAsset()}
+              disabled={saving || !assetTitle.trim()}
+              className="btn-v2 inline-flex min-h-9 items-center justify-center gap-1.5 rounded border border-[#c9a227]/45 bg-[#3a2d10]/55 px-3 text-xs font-bold text-[#f4d778] disabled:opacity-50"
+            >
+              <Save size={14} />
+              入台账
+            </button>
+          </div>
+          <div className="mt-3 grid gap-2 lg:grid-cols-3">
+            {assets.length === 0 ? (
+              <div className="text-xs text-[#6b6558]">暂无素材草稿</div>
+            ) : assets.slice(0, 9).map(asset => (
+              <article key={asset.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+                <div className="text-sm font-medium text-[#f4ead1]">{asset.title}</div>
+                <div className="text-[11px] text-[#8f8778]">
+                  {asset.purpose} · {asset.approvalStatus} · {asset.provider}/{asset.modelId}
+                </div>
+                {asset.prompt && (
+                  <p className="mt-1 line-clamp-2 text-xs text-[#d8ccb4]">{asset.prompt}</p>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

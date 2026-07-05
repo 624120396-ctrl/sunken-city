@@ -1,6 +1,8 @@
 import { apiFetch, handleApiResponse } from '@lib/api';
 import type {
   RoomAiContextPreview,
+  RoomAiAssetPayload,
+  RoomAiAssetView,
   RoomAiJobView,
   RoomAiSettingsPayload,
   RoomAiSettingsView,
@@ -59,4 +61,22 @@ export function getRoomAiUsageLedger(roomId: string): Promise<RoomAiUsageLedgerV
   return apiFetch(`/rooms/${roomId}/ai-foundation/usage-ledger`)
     .then(res => handleApiResponse<{ ledger: RoomAiUsageLedgerView[] }>(res))
     .then(data => data.ledger);
+}
+
+export function getRoomAiAssets(roomId: string): Promise<RoomAiAssetView[]> {
+  return apiFetch(`/rooms/${roomId}/ai-foundation/assets`)
+    .then(res => handleApiResponse<{ assets: RoomAiAssetView[] }>(res))
+    .then(data => data.assets);
+}
+
+export function createRoomAiAsset(
+  roomId: string,
+  payload: RoomAiAssetPayload
+): Promise<RoomAiAssetView> {
+  return apiFetch(`/rooms/${roomId}/ai-foundation/assets`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+    .then(res => handleApiResponse<{ asset: RoomAiAssetView }>(res))
+    .then(data => data.asset);
 }

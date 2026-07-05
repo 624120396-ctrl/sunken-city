@@ -45,6 +45,26 @@ const createJobSchema = z.object({
   includeContextSnapshot: z.boolean().optional(),
 });
 
+const assetSchema = z.object({
+  jobId: z.string().trim().min(1).max(128).optional(),
+  assetType: z.enum(['IMAGE', 'TEXT', 'AUDIO_RESERVED']),
+  purpose: z.string().trim().min(1).max(64),
+  title: z.string().trim().min(1).max(120),
+  prompt: z.string().trim().max(4000).optional(),
+  url: z.string().trim().url().optional(),
+  storagePath: z.string().trim().max(500).optional(),
+  mimeType: z.string().trim().max(120).optional(),
+  visibility: z.enum(['KP_ONLY', 'PLAYER_VISIBLE', 'PUBLIC']).optional(),
+  linkedType: z.string().trim().max(64).optional(),
+  linkedId: z.string().trim().max(128).optional(),
+  approvalStatus: z.enum(['DRAFT', 'APPROVED', 'PUBLISHED', 'DISCARDED']).optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+const assetPatchSchema = assetSchema.partial().extend({
+  approvalStatus: z.enum(['DRAFT', 'APPROVED', 'PUBLISHED', 'DISCARDED']).optional(),
+});
+
 function getUserId(req: AuthRequest) {
   return req.userId || req.user?.userId;
 }
@@ -107,6 +127,16 @@ function mapLedger(entry: any) {
     metadata: parseJsonObject(entry.metadataJson),
     metadataJson: undefined,
     createdAt: entry.createdAt.toISOString(),
+  };
+}
+
+function mapAsset(asset: any) {
+  return {
+    ...asset,
+    metadata: parseJsonObject(asset.metadataJson),
+    metadataJson: undefined,
+    createdAt: asset.createdAt.toISOString(),
+    updatedAt: asset.updatedAt.toISOString(),
   };
 }
 
@@ -266,6 +296,109 @@ router.get('/:roomId/ai-foundation/usage-ledger', authMiddleware, async (req: Au
       take: 100,
     });
     res.json({ ledger: ledger.map(mapLedger) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:roomId/ai-foundation/assets', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = getUserId(req);
+    const { room } = await requireRoomCapability(req.params.roomId, userId, 'canUseKPTools');
+    const assets = await prisma.aiAsset.findMany({
+      where: { roomId: room.id },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    res.json({ assets: assets.map(mapAsset) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:roomId/ai-foundation/assets', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = getUserId(req);
+    const { room } = await requireRoomCapability(req.params.roomId, userId, 'canUseKPTools');
+    if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
+
+    const payload = assetSchema.parse(req.body);
+    if (payload.jobId) {
+      const job = await prisma.aiJob.findFirst({ where: { id: payload.jobId, roomId: room.id } });
+      if (!job) throw new AppError('AI_JOB_NOT_FOUND', 'AI 草稿任务不存在', 404);
+    }
+
+    const settings = await prisma.roomAiSettings.findUnique({ where: { roomId: room.id } });
+    const selection = payload.assetType === 'IMAGE'
+      ? resolveAiModelForTask(settings, 'IMAGE_ASSET_DRAFT')
+      : payload.assetType === 'AUDIO_RESERVED'
+        ? { provider: 'reserved', modelId: 'voice-reserved', unitType: 'reserved_voice' }
+        : resolveAiModelForTask(settings, 'CLUE_DRAFT');
+
+    const asset = await prisma.aiAsset.create({
+      data: {
+        roomId: room.id,
+        jobId: payload.jobId,
+        createdById: userId,
+        assetType: payload.assetType,
+        purpose: payload.purpose,
+        title: payload.title,
+        prompt: payload.prompt ?? '',
+        url: payload.url,
+        storagePath: payload.storagePath,
+        mimeType: payload.mimeType,
+        visibility: payload.visibility ?? 'KP_ONLY',
+        linkedType: payload.linkedType,
+        linkedId: payload.linkedId,
+        approvalStatus: payload.approvalStatus ?? 'DRAFT',
+        provider: selection.provider,
+        modelId: selection.modelId,
+        metadataJson: JSON.stringify({
+          ...(payload.metadata ?? {}),
+          externalCallsDisabled: true,
+        }),
+      },
+    });
+
+    res.status(201).json({ asset: mapAsset(asset) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:roomId/ai-foundation/assets/:assetId', authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = getUserId(req);
+    const { room } = await requireRoomCapability(req.params.roomId, userId, 'canUseKPTools');
+    const payload = assetPatchSchema.parse(req.body);
+    const existing = await prisma.aiAsset.findFirst({
+      where: { id: req.params.assetId, roomId: room.id },
+    });
+
+    if (!existing) throw new AppError('AI_ASSET_NOT_FOUND', 'AI 素材草稿不存在', 404);
+
+    const asset = await prisma.aiAsset.update({
+      where: { id: existing.id },
+      data: {
+        assetType: payload.assetType,
+        purpose: payload.purpose,
+        title: payload.title,
+        prompt: payload.prompt,
+        url: payload.url,
+        storagePath: payload.storagePath,
+        mimeType: payload.mimeType,
+        visibility: payload.visibility,
+        linkedType: payload.linkedType,
+        linkedId: payload.linkedId,
+        approvalStatus: payload.approvalStatus,
+        metadataJson: payload.metadata ? JSON.stringify({
+          ...payload.metadata,
+          externalCallsDisabled: true,
+        }) : undefined,
+      },
+    });
+
+    res.json({ asset: mapAsset(asset) });
   } catch (error) {
     next(error);
   }
