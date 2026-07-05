@@ -83,7 +83,7 @@ export function animateDrawer(
       opacity: open ? [0, 1] : [1, 0],
       duration: getMotionConfig().defaultDuration,
       ease: abyssEasings.drawerSpring,
-      onComplete,
+      ...(onComplete ? { onComplete } : {}),
     });
   }
 
@@ -95,7 +95,7 @@ export function animateDrawer(
     opacity: open ? [0, 1] : [1, 0],
     duration: getMotionConfig().defaultDuration,
     ease: abyssEasings.drawerSpring,
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 
@@ -130,7 +130,7 @@ export function animateDice(
     opacity: [0, 1],
     duration: 0.8,
     ease: abyssEasings.diceBounce,
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 
@@ -165,7 +165,7 @@ export function animateSceneTransition(
       opacity: [0, 1],
       duration: 0.4,
       ease: abyssEasings.sceneTransition,
-      onComplete,
+      ...(onComplete ? { onComplete } : {}),
     });
   }
 
@@ -174,7 +174,7 @@ export function animateSceneTransition(
     filter: ['blur(8px)', 'blur(0px)'],
     duration: 0.5,
     ease: abyssEasings.sceneTransition,
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 
@@ -194,7 +194,7 @@ export function animateClueReveal(
       opacity: [0, 1],
       duration: 0.4,
       ease: abyssEasings.messageSlide,
-      onComplete,
+      ...(onComplete ? { onComplete } : {}),
     });
   }
 
@@ -203,7 +203,7 @@ export function animateClueReveal(
     opacity: [0, 1],
     duration: 0.6,
     ease: abyssEasings.sceneTransition,
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 
@@ -241,7 +241,7 @@ export function animateTypewriter(
       translateY: [5, 0],
       duration: 0.3,
       ease: abyssEasings.messageSlide,
-      onComplete,
+      ...(onComplete ? { onComplete } : {}),
     });
   }
 
@@ -251,7 +251,7 @@ export function animateTypewriter(
     text: text,
     duration: text.length * 30,
     ease: 'linear',
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 
@@ -270,7 +270,7 @@ export function animateListStagger(
     duration: config.defaultDuration,
     delay: stagger(config.staggerDelay),
     ease: abyssEasings.messageSlide,
-    onComplete,
+    ...(onComplete ? { onComplete } : {}),
   });
 }
 

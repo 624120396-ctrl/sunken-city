@@ -61,6 +61,31 @@ interface ReportData {
       status?: string;
     };
   }[];
+  investigation?: {
+    lastRecap: string;
+    currentObjective: string;
+    unresolvedQuestions: string[];
+    pinnedMessage: string;
+    currentScene: {
+      title: string;
+      publicSummary: string;
+      atmosphere: string;
+    } | null;
+    publicClues: Array<{
+      id: string;
+      title: string;
+      content: string;
+      source: string | null;
+      status: string;
+      revealedAt: string | null;
+    }>;
+    timeline: Array<{
+      time: string;
+      eventType: string;
+      title: string;
+      content: string | null;
+    }>;
+  };
   lootedRelics: {
     characterId: string;
     relicKey: string;
@@ -283,6 +308,72 @@ export function RoomReportPage() {
               className="w-full h-32 coc-input resize-none"
             />
           </DoubleBezelCard>
+
+          {/* 调查档案 */}
+          {report.investigation && (
+            <DoubleBezelCard variant="default" runeCorners innerClassName="p-4">
+              <h3 className="font-bold mb-4">调查档案</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded bg-coc-bg-tertiary p-3">
+                  <div className="text-xs text-coc-text-muted mb-1">当前调查目标</div>
+                  <div className="text-sm whitespace-pre-wrap">{report.investigation.currentObjective || '暂无'}</div>
+                </div>
+                <div className="rounded bg-coc-bg-tertiary p-3">
+                  <div className="text-xs text-coc-text-muted mb-1">当前场景</div>
+                  <div className="text-sm">{report.investigation.currentScene?.title || '暂无'}</div>
+                  {report.investigation.currentScene?.publicSummary && (
+                    <div className="mt-1 text-xs text-coc-text-secondary line-clamp-2">{report.investigation.currentScene.publicSummary}</div>
+                  )}
+                </div>
+              </div>
+              {report.investigation.pinnedMessage && (
+                <div className="mt-3 rounded bg-coc-accent-gold/10 p-3 text-sm text-coc-accent-gold">
+                  {report.investigation.pinnedMessage}
+                </div>
+              )}
+              {report.investigation.lastRecap && (
+                <div className="mt-3">
+                  <div className="text-xs text-coc-text-muted mb-1">上次回顾</div>
+                  <p className="whitespace-pre-wrap text-sm text-coc-text-secondary">{report.investigation.lastRecap}</p>
+                </div>
+              )}
+              {report.investigation.unresolvedQuestions.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs text-coc-text-muted mb-1">未解决问题</div>
+                  <ul className="space-y-1 text-sm text-coc-text-secondary">
+                    {report.investigation.unresolvedQuestions.map(question => <li key={question}>· {question}</li>)}
+                  </ul>
+                </div>
+              )}
+              {report.investigation.publicClues.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs text-coc-text-muted mb-2">公开线索</div>
+                  <div className="space-y-2">
+                    {report.investigation.publicClues.map(clue => (
+                      <div key={clue.id} className="rounded bg-coc-bg-tertiary/70 p-2 text-sm">
+                        <span className="font-medium text-coc-parchment">{clue.title}</span>
+                        {clue.source && <span className="ml-2 text-xs text-coc-text-muted">{clue.source}</span>}
+                        {clue.content && <p className="mt-1 text-coc-text-secondary">{clue.content}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {report.investigation.timeline.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs text-coc-text-muted mb-2">调查日志</div>
+                  <div className="space-y-1.5">
+                    {report.investigation.timeline.map(entry => (
+                      <div key={`${entry.time}-${entry.title}`} className="flex gap-3 text-sm">
+                        <span className="w-20 shrink-0 text-coc-accent-gold">{new Date(entry.time).toLocaleTimeString()}</span>
+                        <span className="text-coc-text-secondary">{entry.title}{entry.content ? `：${entry.content}` : ''}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </DoubleBezelCard>
+          )}
 
           {/* 关键事件 */}
           {report.keyEvents.length > 0 && (

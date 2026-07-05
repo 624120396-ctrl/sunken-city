@@ -56,6 +56,8 @@ model User {
   roomRunParticipants RoomRunParticipant[]
   roomCharacterLocks RoomCharacterLock[]
   roomSettlements RoomSettlement[]
+  roomAttendanceConfirmations RoomAttendanceConfirmation[]
+  roomAnnouncements RoomAnnouncement[]
 
   // 好友系统
   sentFriendRequests     FriendRequest[]    @relation("SentRequests")
@@ -222,6 +224,16 @@ model Room {
   subRooms         SubRoom[]
   roomRun          RoomRun?
   characterLocks   RoomCharacterLock[]
+  investigationClues InvestigationClue[]
+  investigationNpcs InvestigationNpc[]
+  investigationScenes InvestigationScene[]
+  investigationLogEntries InvestigationLogEntry[]
+  kpPrivateNotes KpPrivateNote[]
+  sessionPrep RoomSessionPrep?
+  currentFocus RoomCurrentFocus?
+  nextSession RoomNextSession?
+  attendanceConfirmations RoomAttendanceConfirmation[]
+  roomAnnouncements RoomAnnouncement[]
 }
 
 model RoomRun {
@@ -319,6 +331,182 @@ model RoomSettlement {
   @@index([roomRunId])
   @@index([characterId])
   @@unique([roomRunId, characterId])
+}
+
+model InvestigationClue {
+  id          String   @id @default(uuid())
+  roomId      String
+  title       String
+  content     String
+  source      String?
+  status      String   @default("UNREVEALED")
+  visibility  String   @default("KP_ONLY")
+  npcId       String?
+  sceneId     String?
+  createdById String
+  revealedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, visibility])
+  @@index([roomId, status])
+}
+
+model InvestigationNpc {
+  id             String   @id @default(uuid())
+  roomId         String
+  name           String
+  avatarUrl      String?
+  publicProfile  String   @default("")
+  keeperNotes    String   @default("")
+  status         String   @default("UNSEEN")
+  visibility     String   @default("KP_ONLY")
+  createdById    String
+  revealedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  room           Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, visibility])
+  @@index([roomId, status])
+}
+
+model InvestigationScene {
+  id            String   @id @default(uuid())
+  roomId        String
+  title         String
+  publicSummary String   @default("")
+  keeperNotes   String   @default("")
+  atmosphere    String   @default("normal")
+  imageUrl      String?
+  isCurrent     Boolean  @default(false)
+  sortOrder     Int      @default(0)
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, isCurrent])
+  @@index([roomId, sortOrder])
+}
+
+model InvestigationLogEntry {
+  id          String   @id @default(uuid())
+  roomId      String
+  eventType   String
+  title       String
+  content     String?
+  payload     String   @default("{}")
+  visibility  String   @default("PUBLIC")
+  isPinned    Boolean  @default(false)
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, visibility, createdAt])
+  @@index([roomId, isPinned])
+}
+
+model KpPrivateNote {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String
+  title     String
+  content   String
+  tags      String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, userId])
+}
+
+model RoomSessionPrep {
+  id                     String   @id @default(uuid())
+  roomId                 String   @unique
+  scheduledAt            DateTime?
+  checklist              String   @default("[]")
+  characterConfirmations String   @default("{}")
+  publicNotes            String   @default("")
+  keeperNotes            String   @default("")
+  materialLinks          String   @default("[]")
+  createdById            String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  room                   Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model RoomCurrentFocus {
+  id                  String   @id @default(uuid())
+  roomId              String   @unique
+  lastRecap           String   @default("")
+  currentObjective    String   @default("")
+  unresolvedQuestions String   @default("[]")
+  pinnedMessage       String   @default("")
+  keeperNotes         String   @default("")
+  updatedById         String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  room                Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model RoomNextSession {
+  id          String   @id @default(uuid())
+  roomId      String   @unique
+  scheduledAt DateTime?
+  timezone    String   @default("Asia/Shanghai")
+  title       String   @default("")
+  note        String   @default("")
+  status      String   @default("SCHEDULED")
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model RoomAttendanceConfirmation {
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String
+  status      String   @default("PENDING")
+  note        String   @default("")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId, status])
+}
+
+model RoomAnnouncement {
+  id          String   @id @default(uuid())
+  roomId      String
+  title       String   @default("")
+  content     String
+  isPinned    Boolean  @default(true)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([roomId, isPinned])
+  @@index([roomId, createdAt])
 }
 
 model RoomMember {

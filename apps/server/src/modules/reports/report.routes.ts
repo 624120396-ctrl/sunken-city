@@ -29,6 +29,13 @@ type CharacterGrowthEntry = {
   settlement?: unknown;
 };
 
+type InvestigationReportEntry = {
+  time: string;
+  eventType: string;
+  title: string;
+  content: string | null;
+};
+
 function parseJsonArray<T = unknown>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
   if (typeof value !== 'string') return [];
@@ -85,6 +92,27 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
     let report = await prisma.sessionReport.findFirst({
       where: { roomId },
       orderBy: { createdAt: 'desc' },
+    });
+
+    const currentFocus = await prisma.roomCurrentFocus.findUnique({
+      where: { roomId: room.id },
+    });
+
+    const currentScene = await prisma.investigationScene.findFirst({
+      where: { roomId: room.id, isCurrent: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const publicClues = await prisma.investigationClue.findMany({
+      where: { roomId: room.id, visibility: 'PUBLIC' },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
+
+    const investigationTimeline = await prisma.investigationLogEntry.findMany({
+      where: { roomId: room.id, visibility: 'PUBLIC' },
+      orderBy: { createdAt: 'asc' },
+      take: 100,
     });
 
     // 如果没有报告，创建一个
@@ -200,6 +228,31 @@ router.get('/rooms/:roomId/report', authMiddleware, async (req: AuthRequest, res
         combatRecords,
         skillChecks,
         characterProgress: mergedCharacterProgress,
+        investigation: {
+          lastRecap: currentFocus?.lastRecap ?? '',
+          currentObjective: currentFocus?.currentObjective ?? '',
+          unresolvedQuestions: currentFocus ? parseJsonArray<string>(currentFocus.unresolvedQuestions) : [],
+          pinnedMessage: currentFocus?.pinnedMessage ?? '',
+          currentScene: currentScene ? {
+            title: currentScene.title,
+            publicSummary: currentScene.publicSummary,
+            atmosphere: currentScene.atmosphere,
+          } : null,
+          publicClues: publicClues.map(clue => ({
+            id: clue.id,
+            title: clue.title,
+            content: clue.content,
+            source: clue.source,
+            status: clue.status,
+            revealedAt: clue.revealedAt?.toISOString() ?? null,
+          })),
+          timeline: investigationTimeline.map<InvestigationReportEntry>(entry => ({
+            time: entry.createdAt.toISOString(),
+            eventType: entry.eventType,
+            title: entry.title,
+            content: entry.content,
+          })),
+        },
       },
     });
   } catch (error) {
@@ -283,6 +336,23 @@ router.get('/rooms/:roomId/report/export', authMiddleware, async (req: AuthReque
 
     const keyEvents = report ? parseJsonArray<KeyEvent>(report.keyEvents) : [];
     const characterGrowth = report ? parseJsonArray<CharacterGrowthEntry>(report.characterGrowth) : [];
+    const currentFocus = await prisma.roomCurrentFocus.findUnique({
+      where: { roomId: room.id },
+    });
+    const currentScene = await prisma.investigationScene.findFirst({
+      where: { roomId: room.id, isCurrent: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    const publicClues = await prisma.investigationClue.findMany({
+      where: { roomId: room.id, visibility: 'PUBLIC' },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
+    const investigationTimeline = await prisma.investigationLogEntry.findMany({
+      where: { roomId: room.id, visibility: 'PUBLIC' },
+      orderBy: { createdAt: 'asc' },
+      take: 100,
+    });
 
     // 生成Markdown
     const md = `# ${room.name} - 游戏报告
@@ -299,6 +369,23 @@ ${room.members.filter(m => m.leftAt === null).map(m => `- ${m.user.nickname}${m.
 
 ## 故事概要
 ${report?.summary || '暂无概要'}
+
+## 调查档案
+- **当前目标**: ${currentFocus?.currentObjective || '暂无'}
+- **当前场景**: ${currentScene?.title || '暂无'}
+- **KP 置顶消息**: ${currentFocus?.pinnedMessage || '暂无'}
+
+### 上次回顾
+${currentFocus?.lastRecap || '暂无'}
+
+### 未解决问题
+${currentFocus ? parseJsonArray<string>(currentFocus.unresolvedQuestions).map(question => `- ${question}`).join('\n') || '暂无' : '暂无'}
+
+### 公开线索
+${publicClues.length > 0 ? publicClues.map(clue => `- **${clue.title}**${clue.source ? `（${clue.source}）` : ''}: ${clue.content || '无内容'}`).join('\n') : '暂无'}
+
+### 调查日志
+${investigationTimeline.length > 0 ? investigationTimeline.map(entry => `- ${new Date(entry.createdAt).toLocaleString()} - ${entry.title}${entry.content ? `：${entry.content}` : ''}`).join('\n') : '暂无'}
 
 ## 关键事件
 ${keyEvents.map((event) => `- ${new Date(event.time).toLocaleTimeString()} - ${event.event}`).join('\n')}

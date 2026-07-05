@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5, BookOpen } from 'lucide-react';
+import { Archive, ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5, BookOpen } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -48,6 +48,10 @@ import { KpLifecycleControls } from './components/KpLifecycleControls';
 import { RoomJoinGate } from './components/RoomJoinGate';
 import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
 import { RoomSettlementPanel } from './components/RoomSettlementPanel';
+import { InvestigationDock } from './components/InvestigationDock';
+import { RoomInvestigationFocusStrip } from './components/RoomInvestigationFocusStrip';
+import { RoomCoordinationPanel } from './components/RoomCoordinationPanel';
+import { archiveImportantMessage, archiveKeyDice } from '@/services/investigation.service';
 
 interface Room {
   id: string;
@@ -258,6 +262,7 @@ export function RoomPage() {
   const [showSubRooms, setShowSubRooms] = useState(false);
   const [showAI, setShowAI] = useState(false);
   const [showNotesPanel, setShowNotesPanel] = useState(false);
+  const [showInvestigationDock, setShowInvestigationDock] = useState(false);
   const [showMobileActionDrawer, setShowMobileActionDrawer] = useState(false);
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [showMobileQuickRolls, setShowMobileQuickRolls] = useState(false);
@@ -269,7 +274,8 @@ export function RoomPage() {
     mostUsedSkill: null as string | null,
   });
   const caps = room?.myCapabilities;
-  const canUseKPTools = caps?.canUseKPTools ?? !!room?.isCreator;
+  const canUseKPTools = caps?.canUseKPTools ?? false;
+  const canViewInvestigation = caps?.canViewPublicContent ?? false;
 
   // ===== SAN 扣除弹窗状态 =====
   const [showSanityModal, setShowSanityModal] = useState(false);
@@ -303,6 +309,45 @@ export function RoomPage() {
     const newClues = [clue, ...clues];
     setClues(newClues);
     localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
+  };
+
+  const handleArchiveImportantMessage = async (msg: ChatMessage, displayName: string) => {
+    if (!roomId || !msg.content.trim()) return;
+    try {
+      await archiveImportantMessage(roomId, {
+        messageId: msg.id,
+        content: msg.content,
+        nickname: displayName,
+        timestamp: msg.timestamp,
+        isPinned: true,
+      });
+      alert('已归档为调查重要消息');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '归档重要消息失败');
+    }
+  };
+
+  const handleArchiveKeyDice = async (msg: ChatMessage, displayName: string) => {
+    if (!roomId || !msg.rollData?.rollResult) return;
+    const fallbackRollType = msg.rollData.targetName
+      ? '1D100'
+      : msg.content.match(/🎲\s*([^:：]+)/)?.[1]?.trim() || '1D100';
+    try {
+      await archiveKeyDice(roomId, {
+        diceRollId: msg.id,
+        rollType: fallbackRollType,
+        targetName: msg.rollData.targetName ?? null,
+        targetValue: msg.rollData.targetValue ?? null,
+        rollResult: msg.rollData.rollResult,
+        successLevel: msg.rollData.successLevel ?? null,
+        nickname: displayName,
+        timestamp: msg.timestamp,
+        isPinned: false,
+      });
+      alert('已归档为关键骰点');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '归档关键骰点失败');
+    }
   };
 
   // Socket连接
@@ -900,6 +945,22 @@ export function RoomPage() {
               >
                 <Search size={18} />
               </button>
+              {canViewInvestigation && (
+                <button
+                  type="button"
+                  data-room-mobile-action="true"
+                  aria-label="调查档案"
+                  title="调查档案"
+                  onClick={() => {
+                    setShowInvestigationDock(true);
+                    setShowMobileActionDrawer(false);
+                    setShowMobileToolTray(false);
+                  }}
+                  className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+                >
+                  <Archive size={18} />
+                </button>
+              )}
               <button
                 type="button"
                 data-room-mobile-action="true"
@@ -1038,6 +1099,19 @@ export function RoomPage() {
             onChanged={fetchRoom}
           />
         </div>
+      )}
+
+      {roomId && (
+        <RoomInvestigationFocusStrip
+          roomId={roomId}
+          currentSceneTitle={room?.currentScene?.title ?? null}
+          canView={canViewInvestigation}
+          onOpenArchive={() => setShowInvestigationDock(true)}
+        />
+      )}
+
+      {roomId && (caps?.canViewPublicContent ?? false) && (
+        <RoomCoordinationPanel roomId={roomId} />
       )}
 
       {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (
@@ -1454,6 +1528,28 @@ export function RoomPage() {
                               </div>
                             )}
 
+                            {canUseKPTools && msg.type === 'text' && (
+                              <button
+                                type="button"
+                                onClick={() => void handleArchiveImportantMessage(msg, displayName)}
+                                className="btn-v2 mt-2 inline-flex items-center gap-1 rounded border border-[#3a3a3a]/70 bg-[#15151d] px-2 py-1 text-[11px] text-[#e8d4a0] opacity-90 hover:border-[#c9a227]/60"
+                              >
+                                <ScrollText size={12} />
+                                归档重要消息
+                              </button>
+                            )}
+
+                            {canUseKPTools && msg.type === 'dice' && msg.rollData?.rollResult !== undefined && (
+                              <button
+                                type="button"
+                                onClick={() => void handleArchiveKeyDice(msg, displayName)}
+                                className="btn-v2 mt-2 inline-flex items-center gap-1 rounded border border-[#3a3a3a]/70 bg-[#15151d] px-2 py-1 text-[11px] text-[#e8d4a0] opacity-90 hover:border-[#c9a227]/60"
+                              >
+                                <Dice5 size={12} />
+                                归档关键骰点
+                              </button>
+                            )}
+
                             {msg.type === 'text' && (
                               <div className="absolute -right-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <ClueMarker
@@ -1732,6 +1828,7 @@ export function RoomPage() {
         >
           {[
             { label: '成员', icon: Users, active: !roomLeftPanelCollapsed, onClick: toggleRoomLeftPanel },
+            ...(canViewInvestigation ? [{ label: '调查档案', icon: Archive, active: showInvestigationDock, onClick: () => setShowInvestigationDock((v) => !v) }] : []),
             { label: '线索', icon: Search, active: showCluePanel, onClick: () => setShowCluePanel((v) => !v) },
             { label: 'NPC', icon: User, active: showNpcPanel, onClick: () => setShowNpcPanel((v) => !v) },
             {
@@ -1873,6 +1970,14 @@ export function RoomPage() {
           onClose={() => setShowNpcPanel(false)}
           currentSceneId={room?.currentScene?.id}
           isKP={canUseKPTools}
+        />
+      )}
+      {roomId && caps && (
+        <InvestigationDock
+          roomId={roomId}
+          capabilities={caps}
+          isOpen={showInvestigationDock}
+          onClose={() => setShowInvestigationDock(false)}
         />
       )}
     </div>
