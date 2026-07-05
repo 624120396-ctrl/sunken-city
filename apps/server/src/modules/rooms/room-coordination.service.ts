@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { requireRoomCapability } from './room-auth';
+import {
+  buildAnnouncementNotification,
+  buildNextSessionNotification,
+  tryNotifyRoomMembers,
+} from './room-notifications.service';
 
 const attendanceStatuses = ['PENDING', 'AVAILABLE', 'LEAVE', 'TENTATIVE'] as const;
 
@@ -167,6 +172,21 @@ export async function saveRoomNextSession(req: Request, res: Response, next: Nex
       },
     });
 
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
+    await tryNotifyRoomMembers({
+      prisma,
+      io,
+      room: auth.room,
+      actorId: userId,
+      notification: buildNextSessionNotification({
+        roomTitle: auth.room.name,
+        roomId: auth.room.roomId,
+        status: saved.status,
+        scheduledAt: saved.scheduledAt,
+        title: saved.title,
+      }),
+    });
+
     res.json({ nextSession: mapNextSession(saved) });
   } catch (error) {
     next(error);
@@ -221,6 +241,20 @@ export async function createRoomAnnouncement(req: Request, res: Response, next: 
         createdById: userId,
       },
       include: { createdBy: { select: { nickname: true, email: true } } },
+    });
+
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
+    await tryNotifyRoomMembers({
+      prisma,
+      io,
+      room: auth.room,
+      actorId: userId,
+      notification: buildAnnouncementNotification({
+        roomTitle: auth.room.name,
+        roomId: auth.room.roomId,
+        title: announcement.title,
+        content: announcement.content,
+      }),
     });
 
     res.status(201).json({ announcement: mapAnnouncement(announcement) });

@@ -26,6 +26,12 @@ function typeLabel(type: NotificationItem['type']) {
       return '好友通过';
     case 'room_invite':
       return '房间邀请';
+    case 'room_next_session':
+      return '跑团排期';
+    case 'room_announcement':
+      return '房间公告';
+    case 'room_application_review':
+      return '申请结果';
     default:
       return '系统';
   }
@@ -84,12 +90,14 @@ export function NotificationBell() {
   };
 
   const hasLink = (n: NotificationItem) => {
-    return n.type === 'friend_request' || n.type === 'friend_accept' || n.type === 'room_invite' || !!n.postId;
+    return n.type === 'friend_request' || n.type === 'friend_accept' || n.type === 'room_invite' || !!n.link || !!n.postId;
   };
 
   const goLink = (n: NotificationItem) => {
     if (!n.isRead) handleRead(n.id);
-    if (n.type === 'friend_request' || n.type === 'friend_accept') {
+    if (n.link) {
+      navigate(n.link);
+    } else if (n.type === 'friend_request' || n.type === 'friend_accept') {
       navigate('/friends');
     } else if (n.type === 'room_invite') {
       navigate('/rooms');

@@ -4,6 +4,7 @@ export interface NotificationItem {
   id: string;
   userId: string;
   type: 'mention' | 'reply' | 'like' | 'best_reply' | 'system' | 'friend_request' | 'friend_accept' | 'room_invite'
+    | 'room_next_session' | 'room_announcement' | 'room_application_review'
     | 'forum_reply' | 'forum_mention' | 'forum_like' | 'forum_best_reply'
     | 'rank_up' | 'title_unlock' | 'shop_purchase' | 'system_announcement' | 'moderator_action';
   title: string;

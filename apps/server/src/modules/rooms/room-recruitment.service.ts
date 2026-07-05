@@ -4,6 +4,11 @@ import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { capabilitiesFor, deriveLifecycle, deriveRoomRole, requireRoomCapability } from './room-auth';
 import { createOrRestoreRoomMember } from './room-binding.service';
+import {
+  buildApplicationReviewNotification,
+  buildRoomInvitationNotification,
+  tryNotifyRoomUser,
+} from './room-notifications.service';
 
 const profileSchema = z.object({
   status: z.enum(['CLOSED', 'OPEN', 'PAUSED']).optional(),
@@ -357,6 +362,21 @@ export async function reviewRoomJoinApplication(req: Request, res: Response, nex
       include: { applicant: { select: { nickname: true, email: true } } },
     });
 
+    if (application.status !== 'PENDING') {
+      const io = req.app.get('io') as import('socket.io').Server | undefined;
+      await tryNotifyRoomUser({
+        prisma,
+        io,
+        userId: application.userId,
+        notification: buildApplicationReviewNotification({
+          roomTitle: auth.room.name,
+          roomId: auth.room.roomId,
+          status: application.status,
+          reviewNote: application.reviewNote,
+        }),
+      });
+    }
+
     res.json({ application: mapApplication(application) });
   } catch (error) {
     next(error);
@@ -434,6 +454,20 @@ export async function inviteRoomUser(req: Request, res: Response, next: NextFunc
         invitee: { select: { nickname: true, email: true } },
         inviter: { select: { nickname: true, email: true } },
       },
+    });
+
+    const io = req.app.get('io') as import('socket.io').Server | undefined;
+    await tryNotifyRoomUser({
+      prisma,
+      io,
+      userId: invitee.id,
+      notification: buildRoomInvitationNotification({
+        roomTitle: auth.room.name,
+        roomId: auth.room.roomId,
+        inviterName: invitation.inviter?.nickname || invitation.inviter?.email || 'KP',
+        role: invitation.role,
+        message: invitation.message,
+      }),
     });
 
     res.status(201).json({ invitation: mapInvitation(invitation) });
