@@ -4,10 +4,11 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 
 const router = Router();
 
-// 火山 Coding Plan — Kimi-K2.6（替代 deepseekV4 做复杂推理）
-const CODING_BASE_URL = 'https://ark.cn-beijing.volces.com/api/coding/v3';
-const CODING_API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
-const CODING_MODEL = 'Kimi-K2.6';
+// 旧 AI 生成路由默认关闭，避免在基础骨架阶段误触发付费供应商调用。
+const LEGACY_AI_ROUTES_ENABLED = process.env.ENABLE_LEGACY_ROOM_AI_ROUTES === 'true';
+const CODING_BASE_URL = process.env.CODING_AI_BASE_URL || 'https://ark.cn-beijing.volces.com/api/coding/v3';
+const CODING_API_KEY = process.env.CODING_AI_API_KEY || '';
+const CODING_MODEL = process.env.CODING_AI_MODEL_ID || 'Kimi-K2.6';
 
 interface ChatCompletionBody {
   model: string;
@@ -18,6 +19,10 @@ interface ChatCompletionBody {
 }
 
 async function chatCompletion(body: ChatCompletionBody): Promise<string> {
+  if (!CODING_API_KEY) {
+    throw new AppError('AI_PROVIDER_NOT_CONFIGURED', 'Coding AI API Key 未配置，旧 AI 路由不会执行', 503);
+  }
+
   const response = await fetch(`${CODING_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -42,6 +47,13 @@ async function chatCompletion(body: ChatCompletionBody): Promise<string> {
 
   return data.choices?.[0]?.message?.content as string || '';
 }
+
+router.use((_req, _res, next) => {
+  if (!LEGACY_AI_ROUTES_ENABLED) {
+    return next(new AppError('LEGACY_AI_DISABLED', '旧 AI 生成接口默认关闭，请使用 AI 基础任务骨架', 503));
+  }
+  return next();
+});
 
 // ===== 战斗结算推理 =====
 // 输入：行动 + 双方状态 + 环境 → 输出：命中/伤害/效果 JSON

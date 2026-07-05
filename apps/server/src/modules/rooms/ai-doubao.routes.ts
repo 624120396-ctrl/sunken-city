@@ -5,10 +5,11 @@ import { authMiddleware, AuthRequest } from '../../middleware/auth';
 const router = Router();
 
 // Doubao-Seed 配置（火山引擎）
-const DOUBAO_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
-const DOUBAO_API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
-const DOUBAO_CHARACTER_ENDPOINT = 'ep-20260408172808-xwbvc'; // 角色扮演/叙事
-const DOUBAO_IMAGE_ENDPOINT = 'ep-20260408171908-9s9bs';    // Seedream-4.5 图片
+const LEGACY_AI_ROUTES_ENABLED = process.env.ENABLE_LEGACY_ROOM_AI_ROUTES === 'true';
+const DOUBAO_BASE_URL = process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
+const DOUBAO_API_KEY = process.env.DOUBAO_API_KEY || '';
+const DOUBAO_CHARACTER_ENDPOINT = process.env.DOUBAO_CHARACTER_MODEL_ID || 'doubao-seed-character';
+const DOUBAO_IMAGE_ENDPOINT = process.env.SEEDREAM_MODEL_ID || 'seedream-4.5';
 
 interface ChatCompletionBody {
   model: string;
@@ -19,6 +20,10 @@ interface ChatCompletionBody {
 }
 
 async function chatCompletion(body: ChatCompletionBody): Promise<string> {
+  if (!DOUBAO_API_KEY) {
+    throw new AppError('AI_PROVIDER_NOT_CONFIGURED', 'Doubao API Key 未配置，旧 AI 路由不会执行', 503);
+  }
+
   const response = await fetch(`${DOUBAO_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -43,6 +48,13 @@ async function chatCompletion(body: ChatCompletionBody): Promise<string> {
 
   return data.choices?.[0]?.message?.content as string || '';
 }
+
+router.use((_req, _res, next) => {
+  if (!LEGACY_AI_ROUTES_ENABLED) {
+    return next(new AppError('LEGACY_AI_DISABLED', '旧 AI 生成接口默认关闭，请使用 AI 基础任务骨架', 503));
+  }
+  return next();
+});
 
 // ===== 场景旁白生成 =====
 router.post('/:roomId/ai/scene-desc', authMiddleware, async (req: AuthRequest, res, next) => {

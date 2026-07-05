@@ -4,10 +4,11 @@ import { AppError } from '../../middleware/error';
 
 const router = Router();
 
-// 火山引擎 — Seedream-4.5 图片生成
-const API_KEY = '8e36469a-f376-4f3a-b957-2d6a7181473d';
-const BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3';
-const MODEL = 'ep-20260408171908-9s9bs'; // Doubao-Seedream-4.5
+// 旧图片生成路由默认关闭，避免基础骨架阶段误触发付费供应商调用。
+const LEGACY_AI_ROUTES_ENABLED = process.env.ENABLE_LEGACY_ROOM_AI_ROUTES === 'true';
+const API_KEY = process.env.SEEDREAM_API_KEY || process.env.DOUBAO_API_KEY || '';
+const BASE_URL = process.env.SEEDREAM_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
+const MODEL = process.env.SEEDREAM_MODEL_ID || 'seedream-4.5';
 
 interface GenerateImageBody {
   prompt: string;
@@ -16,6 +17,10 @@ interface GenerateImageBody {
 
 router.post('/ai/generate-image', authMiddleware, async (req, res, next) => {
   try {
+    if (!LEGACY_AI_ROUTES_ENABLED) {
+      throw new AppError('LEGACY_AI_DISABLED', '旧 AI 图片生成接口默认关闭，请使用 AI 基础任务骨架', 503);
+    }
+
     const { prompt, size = '1920x1920' } = req.body as GenerateImageBody;
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -26,7 +31,7 @@ router.post('/ai/generate-image', authMiddleware, async (req, res, next) => {
     }
 
     if (!API_KEY) {
-      throw new AppError('CONFIG_ERROR', 'AI 生成服务未配置', 500);
+      throw new AppError('AI_PROVIDER_NOT_CONFIGURED', 'Seedream API Key 未配置，旧 AI 路由不会执行', 503);
     }
 
     const response = await fetch(`${BASE_URL}/images/generations`, {
