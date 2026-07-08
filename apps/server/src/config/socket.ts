@@ -63,6 +63,29 @@ function canViewRoomMessage(message: { type: string; meta: string }, userId: str
   return participantUserIds.includes(userId);
 }
 
+function canViewSecretRoomMessage(
+  message: { isSecret: boolean; userId: string | null },
+  viewer: { userId: string; role?: string | null } | undefined,
+) {
+  if (!message.isSecret) return true;
+  if (!viewer) return false;
+  return message.userId === viewer.userId || viewer.role === 'KP';
+}
+
+function buildSecretDiceNotice(rollData: {
+  id: string;
+  sender: { userId: string; nickname: string };
+  timestamp: string;
+}) {
+  return {
+    id: rollData.id,
+    sender: rollData.sender,
+    content: '🔒 KP进行了一次暗骰',
+    isSecret: true,
+    timestamp: rollData.timestamp,
+  };
+}
+
 // 暴露给外部使用（实时查询数据库组装完整资料）
 export async function getOnlineUsers() {
   if (onlineUsers.size === 0) {
@@ -394,17 +417,23 @@ export function setupSocketHandlers(io: SocketIOServer) {
           } : null,
           messages: recentMessages
             .filter((m) => canViewRoomMessage(m, userId))
-            .map((m) => ({
-              id: m.id,
-              userId: m.userId,
-              nickname: m.nickname,
-              content: m.isSecret ? '🔒 KP进行了一次暗骰' : m.content,
-              characterId: m.characterId,
-              isSecret: m.isSecret,
-              type: m.type,
-              meta: parseRoomMessageMeta(m.meta),
-              timestamp: m.createdAt.toISOString(),
-            })),
+            .map((m) => {
+              const canViewSecret = canViewSecretRoomMessage(m, {
+                userId,
+                role: myMember?.role,
+              });
+              return {
+                id: m.id,
+                userId: m.userId,
+                nickname: m.nickname,
+                content: canViewSecret ? m.content : '🔒 KP进行了一次暗骰',
+                characterId: m.characterId,
+                isSecret: m.isSecret,
+                type: m.type,
+                meta: canViewSecret ? parseRoomMessageMeta(m.meta) : {},
+                timestamp: m.createdAt.toISOString(),
+              };
+            }),
         });
 
         // 通知房间内其他用户
@@ -763,15 +792,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
                   if (kpUserIds.has((memberSocket as any).user!.userId)) {
                     memberSocket.emit('dice:result', rollData);
                   } else {
-                    memberSocket.emit('dice:result', {
-                      ...rollData,
-                      rollResult: 0,
-                      rolls: [],
-                      successLevel: '-',
-                      targetName: undefined,
-                      targetValue: undefined,
-                      content: '🔒 KP进行了一次暗骰',
-                    });
+                    memberSocket.emit('dice:result', buildSecretDiceNotice(rollData));
                   }
                 }
               });
