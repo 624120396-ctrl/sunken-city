@@ -11811,3 +11811,23 @@
 .room-visual-rebuild {
   --room-player-paper: var(--room-v6-paper, url('/ui-textures/room-v6-aged-parchment-white.webp'));
 }
+
+/* V6.36: keep the PL empty quick-roll hint horizontal in the desktop bottom deck. */
+.room-visual-rebuild .room-bottom-command-deck.room-player-composer > .room-quick-roll-tray.room-quick-roll-tray--empty {
+  display: flex !important;
+  flex: 0 0 21.55rem !important;
+  width: 21.55rem !important;
+  min-width: 21.55rem !important;
+  max-width: 21.55rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.46rem !important;
+  padding: 0.4rem 0.72rem !important;
+  white-space: nowrap !important;
+}
+
+.room-visual-rebuild .room-quick-roll-tray--empty span {
+  display: inline-block !important;
+  min-width: max-content !important;
+  white-space: nowrap !important;
+}
