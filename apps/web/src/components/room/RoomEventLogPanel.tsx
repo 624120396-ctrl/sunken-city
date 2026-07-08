@@ -24,7 +24,7 @@ const EVENT_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   PHASE_CHANGE: { label: '阶段', color: 'text-coc-blood' },
   SCENE_CHANGE: { label: '场景', color: 'text-coc-parchment' },
   COMBAT_ACTION: { label: '战斗', color: 'text-red-400' },
-  NPC_STATE_CHANGE: { label: 'NPC', color: 'text-purple-300' },
+  NPC_STATE_CHANGE: { label: 'NPC', color: 'text-[#d7ac45]' },
   MEMBER_JOIN: { label: '加入', color: 'text-green-400' },
   MEMBER_LEAVE: { label: '离开', color: 'text-gray-400' },
   STATUS_CHANGE: { label: '状态', color: 'text-orange-300' },
@@ -70,7 +70,7 @@ export function RoomEventLogPanel({ roomId, isOpen, onClose, isKP }: RoomEventLo
       setLoading(true);
       try {
         const query = filter ? `?eventType=${filter}` : '';
-        const res = await apiFetch(`/api/rooms/${roomId}/events${query}`);
+        const res = await apiFetch(`/rooms/${roomId}/events${query}`);
         const json = await res.json();
         if (json.success) {
           setEvents(json.data.events || []);

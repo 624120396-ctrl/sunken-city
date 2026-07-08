@@ -14,9 +14,10 @@ interface NotesPanelProps {
   onOpenChange?: (open: boolean) => void;
   hideToggle?: boolean;
   compact?: boolean;
+  inline?: boolean;
 }
 
-export function NotesPanel({ roomId, isOpen: controlledOpen, onOpenChange, hideToggle = false, compact = false }: NotesPanelProps) {
+export function NotesPanel({ roomId, isOpen: controlledOpen, onOpenChange, hideToggle = false, compact = false, inline = false }: NotesPanelProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState('');
   const [isPrivate, setIsPrivate] = useState(true);
@@ -84,7 +85,9 @@ export function NotesPanel({ roomId, isOpen: controlledOpen, onOpenChange, hideT
   }
 
   return (
-    <div className={compact
+    <div className={inline
+      ? "room-inline-notes-panel w-[320px] border border-[#3a3a3a]/40 bg-black/20 shadow-xl shadow-black/60"
+      : compact
       ? "fixed inset-x-3 top-16 z-50 max-h-[70dvh] w-auto overflow-hidden bg-black/75 border border-[#3a3a3a]/60 rounded-lg shadow-xl shadow-black/60 backdrop-blur-xl"
       : "fixed right-4 top-20 z-30 w-72 bg-black/20 border border-[#3a3a3a]/40 rounded-lg shadow-xl shadow-black/60"
     }>

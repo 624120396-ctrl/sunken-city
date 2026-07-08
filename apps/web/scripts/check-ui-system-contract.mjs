@@ -47,6 +47,7 @@ const friendListPage = readProjectFile('src/pages/friends/FriendListPage.tsx');
 const dreamingPage = readProjectFile('src/pages/dreaming/DreamingPage.tsx');
 const fishingPage = readProjectFile('src/pages/fishing/FishingPage.tsx');
 const roomPage = readProjectFile('src/pages/rooms/RoomPage.tsx');
+const roomChatTranscript = readProjectFile('src/pages/rooms/components/RoomChatTranscript.tsx');
 const legacyCard = readProjectFile('src/components/system/Card.tsx');
 const skeleton = readProjectFile('src/components/ui/Skeleton.tsx');
 
@@ -295,10 +296,11 @@ assertContract(
 );
 
 assertContract(
-  roomPage.includes("from '@components/system'") &&
+    roomPage.includes("from '@components/system'") &&
     roomPage.includes('Surface') &&
     roomPage.includes('room-gameplay-shell') &&
-    roomPage.includes('room-message-list') &&
+    roomPage.includes('RoomChatTranscript') &&
+    roomChatTranscript.includes('room-message-list') &&
     roomPage.includes('room-mobile-action-drawer-toggle'),
   'RoomPage must use the readable system shell while preserving mobile chat controls.'
 );

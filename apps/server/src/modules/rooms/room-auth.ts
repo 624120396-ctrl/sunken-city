@@ -81,7 +81,7 @@ export function capabilitiesFor(role: RoomRoleView, lifecycle: string): RoomCapa
     canManageNpcs: isKp && canMutate,
     canManageCombat: isKp && canMutate,
     canSendPublicMessage: isMember && !closed,
-    canSendPrivateMessage: isPlayer && !closed,
+    canSendPrivateMessage: (isKp || isPlayer) && !closed,
     canRollPublicDice: (isKp || isPlayer) && !closed,
     canRollSecretDice: isKp && canMutate,
     canViewSecretEvents: isKp,

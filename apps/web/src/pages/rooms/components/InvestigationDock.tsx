@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Archive, CalendarCheck, MapPin, ScrollText, Search, StickyNote, Target, UserRound, X } from 'lucide-react';
 import { cn } from '@lib/utils';
 import type { RoomCapabilities } from '@/types/room-contract';
@@ -10,13 +10,14 @@ import { NpcArchivePanel } from './NpcArchivePanel';
 import { ScenePanel } from './ScenePanel';
 import { SessionPrepPanel } from './SessionPrepPanel';
 
-type InvestigationTab = 'focus' | 'prep' | 'clues' | 'npcs' | 'scenes' | 'timeline' | 'kpNotes';
+export type InvestigationTab = 'focus' | 'prep' | 'clues' | 'npcs' | 'scenes' | 'timeline' | 'kpNotes';
 
 interface InvestigationDockProps {
   roomId: string;
   capabilities: RoomCapabilities;
   isOpen: boolean;
   onClose: () => void;
+  activeTab?: InvestigationTab;
 }
 
 const baseTabs: Array<{ id: InvestigationTab; label: string; icon: typeof Search; kpOnly?: boolean }> = [
@@ -29,8 +30,14 @@ const baseTabs: Array<{ id: InvestigationTab; label: string; icon: typeof Search
   { id: 'kpNotes', label: 'KP 便签', icon: StickyNote, kpOnly: true },
 ];
 
-export function InvestigationDock({ roomId, capabilities, isOpen, onClose }: InvestigationDockProps) {
-  const [activeTab, setActiveTab] = useState<InvestigationTab>('focus');
+export function InvestigationDock({ roomId, capabilities, isOpen, onClose, activeTab: requestedTab }: InvestigationDockProps) {
+  const [activeTab, setActiveTab] = useState<InvestigationTab>(requestedTab ?? 'scenes');
+
+  useEffect(() => {
+    if (isOpen && requestedTab) {
+      setActiveTab(requestedTab);
+    }
+  }, [isOpen, requestedTab]);
 
   if (!isOpen || !capabilities.canViewPublicContent) return null;
 
@@ -38,37 +45,37 @@ export function InvestigationDock({ roomId, capabilities, isOpen, onClose }: Inv
   const resolvedTab = tabs.some(tab => tab.id === activeTab) ? activeTab : 'focus';
 
   return (
-    <div className="fixed inset-0 z-[80] flex justify-end bg-black/45 backdrop-blur-sm">
-      <section className="flex h-full w-full max-w-5xl flex-col border-l border-[#3a3a3a]/60 bg-[#0b0c12]/95 shadow-2xl shadow-black/40">
-        <header className="flex shrink-0 items-center justify-between border-b border-[#3a3a3a]/60 p-3">
+    <div className="investigation-dock-backdrop">
+      <section className="investigation-dock-panel">
+        <header className="investigation-dock-header">
           <div className="flex items-center gap-2">
-            <Archive size={18} className="text-[#f4d778]" />
+            <Archive size={18} className="investigation-dock-header__icon" />
             <div>
-              <h2 className="text-sm font-bold text-[#f4ead1]">调查档案</h2>
-              <p className="text-xs text-[#8f8778]">线索、NPC、场景、日志与 KP 便签</p>
+              <h2>调查档案</h2>
+              <p>线索、NPC、场景、日志与 KP 便签</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="btn-v2 flex h-9 w-9 items-center justify-center rounded border border-[#3a3a3a]/70 bg-[#15151d] text-[#b0a898]"
+            className="investigation-dock-close"
             aria-label="关闭调查档案"
           >
             <X size={16} />
           </button>
         </header>
 
-        <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-[#3a3a3a]/45 p-2">
+        <nav className="investigation-dock-tabs">
           {tabs.map(tab => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'btn-v2 inline-flex min-h-10 items-center gap-1.5 rounded px-3 text-sm transition-colors',
+                'investigation-dock-tab',
                 resolvedTab === tab.id
-                  ? 'border border-[#c9a227]/60 bg-[#c9a227]/15 text-[#f4d778]'
-                  : 'border border-transparent text-[#b0a898] hover:border-[#3a3a3a]/70 hover:text-[#e8d4a0]'
+                  ? 'investigation-dock-tab--active'
+                  : ''
               )}
             >
               <tab.icon size={15} />
@@ -77,7 +84,7 @@ export function InvestigationDock({ roomId, capabilities, isOpen, onClose }: Inv
           ))}
         </nav>
 
-        <div className="min-h-0 flex-1 overflow-hidden p-3">
+        <div className="investigation-dock-body">
           {resolvedTab === 'focus' && <CurrentFocusPanel roomId={roomId} canManage={capabilities.canUseKPTools} />}
           {resolvedTab === 'prep' && <SessionPrepPanel roomId={roomId} canManage={capabilities.canUseKPTools} />}
           {resolvedTab === 'clues' && <ClueBoardPanel roomId={roomId} canManage={capabilities.canManageClues} />}

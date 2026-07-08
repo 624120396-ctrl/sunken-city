@@ -12,7 +12,7 @@ interface MentionInputProps {
 export function MentionInput({ 
   value, 
   onChange, 
-  members, 
+  members = [],
   onSubmit, 
   placeholder = "输入消息...", 
   disabled 
@@ -80,6 +80,7 @@ export function MentionInput({
         onKeyDown={handleKeyDown}
         className="w-full px-3 py-2 rounded bg-coc-bg-secondary border border-coc-border text-sm text-coc-text-primary placeholder:text-coc-text-muted focus:border-coc-gold/60 focus:ring-1 focus:ring-coc-gold/20 focus:outline-none transition-all"
         placeholder={placeholder}
+        aria-label="聊天消息输入框"
         disabled={disabled}
       />
       

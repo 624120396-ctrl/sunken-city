@@ -16,6 +16,7 @@ import {
   Search,
   Shield,
   Sparkles,
+  UserPlus,
   UserRound,
   Users,
   type LucideIcon,
@@ -195,6 +196,12 @@ export function RoomListPage() {
     return new Map(roomSummaries.map((summary) => [summary.roomId, summary]));
   }, [roomSummaries]);
 
+  const recruitmentSummaries = useMemo(() => {
+    return roomSummaries
+      .filter((summary) => summary.recruitment.status === 'OPEN' || summary.recruitment.status === 'PAUSED')
+      .slice(0, 4);
+  }, [roomSummaries]);
+
   const canJoin = normalizeRoomId(joinRoomId).length > 0;
 
   if (loading) {
@@ -259,6 +266,37 @@ export function RoomListPage() {
               </form>
             </ReadablePanel>
 
+            <Surface variant="panel" material="archive" padding="md" className="room-library-index-card">
+              <div className="room-library-index-title">
+                <UserPlus size={16} className="text-[var(--coc-accent-gold)]" />
+                招募公告
+              </div>
+              {recruitmentSummaries.length === 0 ? (
+                <p className="mt-2 text-sm text-[var(--coc-text-muted)]">暂无公开招募中的房间。</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {recruitmentSummaries.map((summary) => (
+                    <button
+                      key={summary.roomId}
+                      type="button"
+                      onClick={() => navigate(`/rooms/${summary.roomId}`)}
+                      className="room-library-recruitment-card"
+                      data-status={summary.recruitment.status.toLowerCase()}
+                    >
+                      <div className="room-library-recruitment-card__topline">
+                        <span>{summary.recruitment.status === 'OPEN' ? '招募中' : '暂停招募'}</span>
+                        {summary.recruitment.newcomerFriendly && <span>新手友好</span>}
+                      </div>
+                      <div className="room-library-recruitment-card__title">{summary.name}</div>
+                      <div className="room-library-recruitment-card__summary">
+                        {summary.recruitment.headline || '查看房间招募资料与参团说明。'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Surface>
+
             <Surface variant="panel" material="limestone" padding="md" className="room-library-index-card">
               <div className="room-library-index-title">
                 <BookOpen size={16} className="text-[var(--coc-accent-gold)]" />
@@ -286,13 +324,13 @@ export function RoomListPage() {
                       key={archive.roomId}
                       type="button"
                       onClick={() => navigate(archive.report?.link ?? `/rooms/${archive.roomId}`)}
-                      className="w-full rounded border border-[var(--coc-border-subtle)] bg-black/10 px-3 py-2 text-left transition-colors hover:bg-white/[0.05]"
+                      className="room-library-report-card"
                     >
-                      <div className="text-sm font-semibold text-[var(--coc-text-primary)]">{archive.roomName}</div>
-                      <div className="mt-1 line-clamp-1 text-xs text-[var(--coc-text-muted)]">
+                      <div className="room-library-report-card__title">{archive.roomName}</div>
+                      <div className="room-library-report-card__summary">
                         {archive.report ? archive.report.summary || archive.report.title : '尚未生成报告，点击回到房间。'}
                       </div>
-                      <div className="mt-1 text-[11px] text-[var(--coc-text-muted)]">
+                      <div className="room-library-report-card__meta">
                         线索 {archive.investigation.publicClueCount} · NPC {archive.investigation.publicNpcCount} · 日志 {archive.investigation.publicLogCount}
                       </div>
                     </button>

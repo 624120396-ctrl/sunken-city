@@ -36,7 +36,7 @@ export function NpcFocusPanel({ roomId, isOpen, onClose, currentSceneId }: NpcFo
     setLoading(true);
     try {
       const query = currentSceneId ? `?sceneId=${currentSceneId}` : '';
-      const res = await apiFetch(`/api/rooms/${roomId}/npcs${query}`);
+      const res = await apiFetch(`/rooms/${roomId}/npcs${query}`);
       const json = await res.json();
       if (json.success) {
         const list = (json.data.npcs || []) as Npc[];

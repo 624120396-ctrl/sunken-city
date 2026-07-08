@@ -59,7 +59,7 @@ const ACTION_ICONS: Record<string, typeof Swords> = {
 const ACTION_COLORS: Record<string, string> = {
   attack: 'text-coc-blood',
   dodge: 'text-coc-ether',
-  spell: 'text-purple-300',
+  spell: 'text-[#d7ac45]',
   item: 'text-coc-gold',
   move: 'text-coc-text-muted',
   end: 'text-coc-text-muted',
@@ -78,7 +78,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
 
   async function loadCombat() {
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/combat/current`);
+      const res = await apiFetch(`/rooms/${roomId}/combat/current`);
       const json = await res.json();
       if (json.success) {
         setCombat(json.data.combat);
@@ -92,7 +92,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
     if (!combat) return;
     setActionError('');
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/combat/${combat.id}/action`, {
+      const res = await apiFetch(`/rooms/${roomId}/combat/${combat.id}/action`, {
         method: 'POST',
         body: JSON.stringify({ actionType, ...data }),
       });
@@ -109,7 +109,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
   async function handleNextTurn() {
     if (!combat) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/combat/${combat.id}/next-turn`, { method: 'POST' });
+      await apiFetch(`/rooms/${roomId}/combat/${combat.id}/next-turn`, { method: 'POST' });
       await loadCombat();
     } catch (err) {
       console.error('推进回合失败:', err);
@@ -120,7 +120,7 @@ export function CombatTimeline({ roomId, isOpen, onClose, isKP, userId }: Combat
     if (!combat || !isKP) return;
     if (!confirm('确定要结束战斗吗？')) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/combat/${combat.id}/end`, { method: 'POST' });
+      await apiFetch(`/rooms/${roomId}/combat/${combat.id}/end`, { method: 'POST' });
       setCombat(null);
     } catch (err) {
       console.error('结束战斗失败:', err);

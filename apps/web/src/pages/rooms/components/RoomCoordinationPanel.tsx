@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarClock, Megaphone, RefreshCw, Save, Trash2, Users } from 'lucide-react';
+import { Surface } from '@components/system';
 import {
   createRoomAnnouncement,
   deleteRoomAnnouncement,
@@ -15,6 +16,18 @@ import type {
 
 interface RoomCoordinationPanelProps {
   roomId: string;
+}
+
+function normalizeCoordination(value: Partial<RoomCoordinationView> | null | undefined): RoomCoordinationView | null {
+  if (!value) return null;
+
+  return {
+    nextSession: value.nextSession ?? null,
+    attendance: Array.isArray(value.attendance) ? value.attendance : [],
+    announcements: Array.isArray(value.announcements) ? value.announcements : [],
+    myAttendance: value.myAttendance ?? null,
+    canManageCoordination: value.canManageCoordination ?? false,
+  };
 }
 
 const attendanceLabels: Record<RoomAttendanceStatus, string> = {
@@ -66,7 +79,11 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getRoomCoordination(roomId);
+      const data = normalizeCoordination(await getRoomCoordination(roomId));
+      if (!data) {
+        setCoordination(null);
+        return;
+      }
       setCoordination(data);
       setScheduledAt(toDatetimeInputValue(data.nextSession?.scheduledAt));
       setSessionTitle(data.nextSession?.title ?? '');
@@ -127,13 +144,14 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
       });
       setCoordination(prev => {
         if (!prev) return prev;
-        const exists = prev.attendance.some(entry => entry.userId === attendance.userId);
+        const prevAttendance = Array.isArray(prev.attendance) ? prev.attendance : [];
+        const exists = prevAttendance.some(entry => entry.userId === attendance.userId);
         return {
           ...prev,
           myAttendance: attendance,
           attendance: exists
-            ? prev.attendance.map(entry => entry.userId === attendance.userId ? attendance : entry)
-            : [attendance, ...prev.attendance],
+            ? prevAttendance.map(entry => entry.userId === attendance.userId ? attendance : entry)
+            : [attendance, ...prevAttendance],
         };
       });
     } catch (err: any) {
@@ -153,7 +171,7 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
         content: announcementContent,
         isPinned: true,
       });
-      setCoordination(prev => prev ? { ...prev, announcements: [announcement, ...prev.announcements] } : prev);
+      setCoordination(prev => prev ? { ...prev, announcements: [announcement, ...(prev.announcements ?? [])] } : prev);
       setAnnouncementTitle('');
       setAnnouncementContent('');
     } catch (err: any) {
@@ -169,7 +187,7 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
     try {
       await deleteRoomAnnouncement(roomId, announcementId);
       setCoordination(prev => prev
-        ? { ...prev, announcements: prev.announcements.filter(item => item.id !== announcementId) }
+        ? { ...prev, announcements: (prev.announcements ?? []).filter(item => item.id !== announcementId) }
         : prev
       );
     } catch (err: any) {
@@ -181,25 +199,25 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
 
   if (loading) {
     return (
-      <section className="mb-3 rounded-lg border border-[#3a3a3a]/50 bg-[#101018]/80 p-3 text-sm text-[#8f8778]">
+      <Surface variant="panel" material="basalt" padding="sm" className="room-workbench-panel room-workbench-panel--loading room-coordination-panel">
         开团协作加载中...
-      </section>
+      </Surface>
     );
   }
 
   if (!coordination) return null;
 
   return (
-    <section className="mb-3 rounded-lg border border-[#3a3a3a]/55 bg-[#101018]/88 p-3 shadow-lg shadow-black/20">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#f4ead1]">
-          <CalendarClock size={16} className="text-[#c9a227]" />
+    <Surface variant="panel" material="basalt" padding="sm" className="room-workbench-panel room-coordination-panel">
+      <div className="room-workbench-panel__header">
+        <div className="room-workbench-panel__title">
+          <CalendarClock size={16} />
           开团协作
         </div>
         <button
           type="button"
           onClick={() => void loadCoordination()}
-          className="btn-v2 inline-flex min-h-8 items-center gap-1 rounded border border-[#3a3a3a]/60 px-2 text-xs text-[#b0a898]"
+          className="room-workbench-panel__refresh"
         >
           <RefreshCw size={13} />
           刷新
@@ -207,13 +225,13 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
       </div>
 
       {error && (
-        <div className="mb-3 rounded border border-[#a63848]/50 bg-[#4a111a]/35 px-3 py-2 text-xs text-[#f1b7bd]">
+        <div className="room-workbench-panel__error">
           {error}
         </div>
       )}
 
       <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr_1fr]">
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 flex items-center gap-1.5 text-xs text-[#8f8778]">
             <CalendarClock size={14} />
             下次开团
@@ -272,14 +290,14 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
           )}
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 flex items-center gap-1.5 text-xs text-[#8f8778]">
             <Users size={14} />
             参加确认
           </div>
           <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
             {Object.entries(attendanceLabels).map(([status, label]) => (
-              <div key={status} className="rounded border border-[#3a3a3a]/40 px-2 py-1 text-[#d8ccb4]">
+              <div key={status} className="room-workbench-mini-row">
                 {label}：{counts[status as RoomAttendanceStatus]}
               </div>
             ))}
@@ -312,7 +330,7 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
           </div>
           <div className="max-h-36 space-y-1 overflow-y-auto pr-1 text-xs">
             {coordination.attendance.map(entry => (
-              <div key={entry.userId} className="flex items-center justify-between gap-2 rounded bg-black/20 px-2 py-1">
+              <div key={entry.userId} className="room-workbench-list-row">
                 <span className="truncate text-[#d8ccb4]">{entry.userNickname}</span>
                 <span className="shrink-0 text-[#8f8778]">{attendanceLabels[entry.status]}</span>
               </div>
@@ -320,7 +338,7 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
           </div>
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 flex items-center gap-1.5 text-xs text-[#8f8778]">
             <Megaphone size={14} />
             KP 公告
@@ -355,7 +373,7 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
             {coordination.announcements.length === 0 ? (
               <div className="text-xs text-[#6b6558]">暂无公告</div>
             ) : coordination.announcements.map(item => (
-              <article key={item.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+              <article key={item.id} className="room-workbench-item">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <div className="min-w-0 text-sm font-medium text-[#f4ead1]">{item.title || '房间公告'}</div>
                   {coordination.canManageCoordination && (
@@ -375,6 +393,6 @@ export function RoomCoordinationPanel({ roomId }: RoomCoordinationPanelProps) {
           </div>
         </div>
       </div>
-    </section>
+    </Surface>
   );
 }

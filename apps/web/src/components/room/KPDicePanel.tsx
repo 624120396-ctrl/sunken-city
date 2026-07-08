@@ -1,13 +1,22 @@
 import { useState } from 'react';
-import { Dices } from 'lucide-react';
+import { Dices, Eye, EyeOff } from 'lucide-react';
+import { cn } from '@lib/utils';
 
 const ROLL_TYPES = ['1D100', '1D20', '1D6', '2D6', '3D6'];
 
 interface KPDicePanelProps {
   onRoll: (rollType: string, skillName?: string, skillValue?: number) => void;
+  connected?: boolean;
+  isSecret?: boolean;
+  onToggleSecret?: () => void;
 }
 
-export function KPDicePanel({ onRoll }: KPDicePanelProps) {
+export function KPDicePanel({
+  onRoll,
+  connected = true,
+  isSecret = false,
+  onToggleSecret,
+}: KPDicePanelProps) {
   const [rollType, setRollType] = useState('1D100');
   const [skillName, setSkillName] = useState('');
   const [skillValue, setSkillValue] = useState('');
@@ -20,43 +29,61 @@ export function KPDicePanel({ onRoll }: KPDicePanelProps) {
   };
 
   return (
-    <div className="px-4 py-2 bg-coc-bg-secondary border-t border-coc-border">
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span className="text-xs text-coc-text-muted">KP投骰:</span>
+    <div className="room-kp-dice-panel">
+      <div className="room-kp-dice-panel__topline">
+        <div>
+          <span className="room-kp-dice-panel__eyebrow">Keeper Roll</span>
+          <h3>完整投骰</h3>
+        </div>
+        {onToggleSecret && (
+          <button
+            type="button"
+            className={cn('room-kp-dice-panel__mode', isSecret && 'room-kp-dice-panel__mode--secret')}
+            onClick={onToggleSecret}
+            disabled={!connected}
+            aria-pressed={isSecret}
+          >
+            {isSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+            <span>{isSecret ? '暗骰' : '明骰'}</span>
+          </button>
+        )}
+      </div>
+
+      <div className="room-kp-dice-panel__types" aria-label="骰型">
         {ROLL_TYPES.map((type) => (
           <button
             key={type}
+            type="button"
             onClick={() => setRollType(type)}
-            className={`px-2 py-1 text-xs rounded border transition-colors ${
-              rollType === type
-                ? 'bg-coc-accent-gold/20 border-coc-accent-gold text-coc-accent-gold'
-                : 'bg-coc-bg-tertiary border-coc-border hover:border-coc-accent-gold/50'
-            }`}
+            className={cn('room-kp-dice-panel__type', rollType === type && 'room-kp-dice-panel__type--active')}
           >
             {type}
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2">
+
+      <div className="room-kp-dice-panel__fields">
         <input
           type="text"
-          placeholder="技能名 (可选)"
+          placeholder="目标 / 技能 / 剧情点（可选）"
           value={skillName}
           onChange={(e) => setSkillName(e.target.value)}
-          className="flex-1 min-w-[80px] px-2 py-1 bg-coc-bg-tertiary border border-coc-border rounded text-sm focus:border-coc-accent-gold outline-none"
+          className="room-kp-dice-panel__input"
         />
         <input
           type="number"
           placeholder="目标值"
           value={skillValue}
           onChange={(e) => setSkillValue(e.target.value)}
-          className="w-20 px-2 py-1 bg-coc-bg-tertiary border border-coc-border rounded text-sm focus:border-coc-accent-gold outline-none"
+          className="room-kp-dice-panel__input room-kp-dice-panel__input--value"
         />
         <button
+          type="button"
           onClick={handleRoll}
-          className="px-3 py-1.5 bg-coc-accent-red hover:bg-red-600 text-white rounded text-sm flex items-center gap-1"
+          disabled={!connected}
+          className="room-kp-dice-panel__submit"
         >
-          <Dices size={14} />
+          <Dices size={16} />
           投骰
         </button>
       </div>

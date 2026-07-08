@@ -105,7 +105,7 @@ export function PrivateChatPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-black/20 border-l border-[#3a3a3a]/40 shadow-xl shadow-black/60 z-50 flex flex-col">
+    <div className="room-private-chat-panel w-[360px] bg-black/20 border-l border-[#3a3a3a]/40 shadow-xl shadow-black/60 flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-[#3a3a3a]/40">
         <div className="flex items-center gap-2">
           <MessageSquare size={18} className="text-[#c9a227]" />

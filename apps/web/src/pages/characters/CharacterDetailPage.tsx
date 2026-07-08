@@ -425,35 +425,35 @@ export function CharacterDetailPage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" padding="md" className="mb-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#e8d4a0]">
+      <Surface variant="panel" material="archive" padding="md" className="character-room-history mb-4">
+        <div className="character-room-history__title">
           <BookOpen size={16} />
           房间经历
         </div>
         {roomHistory.length === 0 ? (
-          <p className="text-sm text-[#6b6558]">暂无已记录的跑团经历。</p>
+          <p className="character-room-history__empty">暂无已记录的跑团经历。</p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {roomHistory.slice(0, 4).map((entry) => (
-              <article key={entry.participantId} className="rounded border border-coc-void bg-black/20 p-3">
+              <article key={entry.participantId} className="character-room-history-card">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-bold text-[#f4ead1]">{entry.roomName}</div>
-                    <div className="text-xs text-[#8b8375]">
+                    <div className="character-room-history-card__name">{entry.roomName}</div>
+                    <div className="character-room-history-card__meta">
                       {lifecycleLabels[entry.lifecycle] || entry.lifecycle} · {new Date(entry.joinedRunAt).toLocaleDateString('zh-CN')}
                     </div>
                   </div>
                   {entry.report && (
-                    <Link to={entry.report.link} className="text-xs text-[#c9a227] hover:underline">
+                    <Link to={entry.report.link} className="character-room-history-card__link">
                       报告
                     </Link>
                   )}
                 </div>
                 {entry.report?.summary && (
-                  <p className="mb-2 line-clamp-2 text-xs text-[#b0a898]">{entry.report.summary}</p>
+                  <p className="character-room-history-card__summary">{entry.report.summary}</p>
                 )}
                 {entry.settlement && (
-                  <div className="text-xs text-[#8b8375]">
+                  <div className="character-room-history-card__settlement">
                     结局：{outcomeLabels[entry.settlement.outcome] || entry.settlement.outcome}
                     {entry.settlement.sanFinal !== null ? ` · SAN ${entry.settlement.sanFinal}` : ''}
                     {entry.settlement.hpFinal !== null ? ` · HP ${entry.settlement.hpFinal}` : ''}

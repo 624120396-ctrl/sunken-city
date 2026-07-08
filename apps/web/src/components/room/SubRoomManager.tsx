@@ -46,7 +46,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
 
   async function loadSubRooms() {
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/sub-rooms`);
+      const res = await apiFetch(`/rooms/${roomId}/sub-rooms`);
       const json = await res.json();
       if (json.success) {
         setSubRooms(json.data.subRooms || []);
@@ -59,7 +59,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
   async function createSubRoom() {
     if (!formName.trim()) return;
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/sub-rooms`, {
+      const res = await apiFetch(`/rooms/${roomId}/sub-rooms`, {
         method: 'POST',
         body: JSON.stringify({
           name: formName.trim(),
@@ -86,7 +86,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
 
   async function joinSubRoom(subRoomId: string) {
     try {
-      await apiFetch(`/api/rooms/${roomId}/sub-rooms/${subRoomId}/join`, { method: 'POST' });
+      await apiFetch(`/rooms/${roomId}/sub-rooms/${subRoomId}/join`, { method: 'POST' });
       loadSubRooms();
     } catch (err) {
       console.error('加入子房间失败:', err);
@@ -95,7 +95,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
 
   async function leaveSubRoom(subRoomId: string) {
     try {
-      await apiFetch(`/api/rooms/${roomId}/sub-rooms/${subRoomId}/leave`, { method: 'POST' });
+      await apiFetch(`/rooms/${roomId}/sub-rooms/${subRoomId}/leave`, { method: 'POST' });
       loadSubRooms();
     } catch (err) {
       console.error('离开子房间失败:', err);
@@ -105,7 +105,7 @@ export function SubRoomManager({ roomId, isOpen, onClose, isKP, members }: SubRo
   async function dissolveSubRoom(subRoomId: string) {
     if (!confirm('确定要解散此子房间吗？成员将返回主房间。')) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/sub-rooms/${subRoomId}/dissolve`, { method: 'POST' });
+      await apiFetch(`/rooms/${roomId}/sub-rooms/${subRoomId}/dissolve`, { method: 'POST' });
       loadSubRooms();
     } catch (err) {
       console.error('解散子房间失败:', err);

@@ -18,7 +18,7 @@ export function RoomLifecycleBanner({ lifecycle, myRole, className }: RoomLifecy
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2 rounded border border-[#3a3a3a]/50 bg-[#0f1016]/70 px-3 py-2 text-xs text-[#b0a898]',
+        'room-lifecycle-banner flex flex-wrap items-center gap-2 rounded border border-[#3a3a3a]/50 bg-[#0f1016]/70 px-3 py-2 text-xs text-[#b0a898]',
         className
       )}
     >

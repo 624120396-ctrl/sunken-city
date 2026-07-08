@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Settings, X, GripVertical } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Settings, X, GripVertical } from 'lucide-react';
 import { COC7E_SKILLS } from '@lib/coc7-data';
 import { Modal } from '@components/ui/Modal';
 import { cn } from '@lib/utils';
@@ -11,6 +11,7 @@ interface QuickRollBarProps {
   onUpdateQuickSkills?: (skills: string[]) => void;
   isEditable?: boolean;
   compact?: boolean;
+  desktopPageSize?: number;
 }
 
 export function QuickRollBar({
@@ -20,9 +21,21 @@ export function QuickRollBar({
   onUpdateQuickSkills,
   isEditable,
   compact = false,
+  desktopPageSize = 2,
 }: QuickRollBarProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [tempSkills, setTempSkills] = useState(quickSkills);
+  const [page, setPage] = useState(0);
+  const pageSize = compact ? 3 : desktopPageSize;
+  const pageCount = Math.max(1, Math.ceil(quickSkills.length / pageSize));
+  const visibleSkills = useMemo(
+    () => quickSkills.slice(page * pageSize, page * pageSize + pageSize),
+    [page, pageSize, quickSkills]
+  );
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, pageCount - 1));
+  }, [pageCount]);
 
   const getSkillDef = (key: string) => COC7E_SKILLS.find((s) => s.key === key);
   const getCompactSkillName = (name: string) => {
@@ -66,49 +79,87 @@ export function QuickRollBar({
       <div
         data-testid="room-quick-roll-bar"
         className={cn(
-          'flex items-center bg-coc-bg-secondary border-t border-coc-border overflow-x-auto',
+          'room-quick-roll-carousel flex items-center bg-coc-bg-secondary border-t border-coc-border',
           compact
-            ? 'h-10 gap-1.5 px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            ? 'h-10 gap-1.5 px-2 py-1'
             : 'gap-2 px-4 py-2'
         )}
       >
-        {quickSkills.map((skillKey) => {
-          const def = getSkillDef(skillKey);
-          const skillName = def?.name || skillKey;
-          const displayName = compact ? getCompactSkillName(skillName) : skillName;
-          const skillValue = characterSkills[skillKey] ?? def?.baseValue ?? 0;
+        {pageCount > 1 && (
+          <button
+            type="button"
+            className="room-quick-roll-carousel__nav"
+            onClick={() => setPage((current) => (current + pageCount - 1) % pageCount)}
+            aria-label="上一组快捷投骰"
+          >
+            <ChevronLeft size={14} />
+          </button>
+        )}
 
-          return (
-            <button
-              key={skillKey}
-              onClick={() => onRoll(skillName, skillValue)}
-              className={cn(
-                'flex-shrink-0 bg-coc-bg-tertiary hover:bg-coc-accent-gold/20 border border-coc-border hover:border-coc-accent-gold rounded transition-colors',
-                compact
-                  ? 'flex h-8 min-w-[52px] max-w-[72px] items-center justify-center px-1.5 text-[11px] leading-none'
-                  : 'px-3 py-1.5 text-sm'
-              )}
-            >
-              <span className={cn('text-coc-text-secondary', compact && 'min-w-0 truncate')} title={skillName}>{displayName}</span>
-              <span className={cn('text-coc-accent-gold', compact ? 'ml-0.5' : 'ml-1')}>{skillValue}</span>
-            </button>
-          );
-        })}
+        <div className="room-quick-roll-carousel__items">
+          {visibleSkills.map((skillKey) => {
+            const def = getSkillDef(skillKey);
+            const skillName = def?.name || skillKey;
+            const displayName = compact ? getCompactSkillName(skillName) : skillName;
+            const skillValue = characterSkills[skillKey] ?? def?.baseValue ?? 0;
+
+            return (
+              <button
+                key={skillKey}
+                type="button"
+                onClick={() => onRoll(skillName, skillValue)}
+                className={cn(
+                  'room-quick-roll-carousel__skill flex-shrink-0 bg-coc-bg-tertiary hover:bg-coc-accent-gold/20 border border-coc-border hover:border-coc-accent-gold rounded transition-colors',
+                  compact
+                    ? 'flex h-8 min-w-[52px] max-w-[72px] items-center justify-center px-1.5 text-[11px] leading-none'
+                    : 'px-3 py-1.5 text-sm'
+                )}
+              >
+                <span className={cn('room-quick-roll-carousel__name text-coc-text-secondary', compact && 'min-w-0 truncate')} title={skillName}>{displayName}</span>
+                <span className={cn('room-quick-roll-carousel__value text-coc-accent-gold', compact ? 'ml-0.5' : 'ml-1')}>{skillValue}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {pageCount > 1 && (
+          <button
+            type="button"
+            className="room-quick-roll-carousel__nav"
+            onClick={() => setPage((current) => (current + 1) % pageCount)}
+            aria-label="下一组快捷投骰"
+          >
+            <ChevronRight size={14} />
+          </button>
+        )}
+
+        {pageCount > 1 && (
+          <div className="room-quick-roll-carousel__dots" aria-label={`快捷投骰第 ${page + 1} 页，共 ${pageCount} 页`}>
+            {Array.from({ length: pageCount }, (_, index) => (
+              <span
+                key={index}
+                className={cn('room-quick-roll-carousel__dot', index === page && 'room-quick-roll-carousel__dot--active')}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        )}
 
         {isEditable && (
-          <button
-            onClick={() => {
-              setTempSkills(quickSkills);
-              setShowSettings(true);
-            }}
-            className={cn(
-              'flex-shrink-0 text-coc-text-muted hover:text-coc-accent-gold transition-colors',
-              compact ? 'flex h-8 w-8 items-center justify-center p-0' : 'p-1.5'
-            )}
-            title="设置快捷技能"
-          >
-            <Settings size={compact ? 14 : 16} />
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTempSkills(quickSkills);
+                setShowSettings(true);
+              }}
+              className={cn(
+                'room-quick-roll-carousel__settings flex-shrink-0 text-coc-text-muted hover:text-coc-accent-gold transition-colors',
+                compact ? 'flex h-8 w-8 items-center justify-center p-0' : 'p-1.5'
+              )}
+              title="设置快捷技能"
+            >
+              <Settings size={compact ? 14 : 16} />
+            </button>
         )}
       </div>
 

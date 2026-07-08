@@ -47,6 +47,22 @@ async function syncEventToLog(roomId: string, eventType: string, payload: any, m
   }
 }
 
+function parseRoomMessageMeta(meta: string | null | undefined): Record<string, any> {
+  if (!meta) return {};
+  try {
+    return JSON.parse(meta);
+  } catch {
+    return {};
+  }
+}
+
+function canViewRoomMessage(message: { type: string; meta: string }, userId: string) {
+  if (message.type !== 'private') return true;
+  const meta = parseRoomMessageMeta(message.meta);
+  const participantUserIds = Array.isArray(meta.participantUserIds) ? meta.participantUserIds : [];
+  return participantUserIds.includes(userId);
+}
+
 // 暴露给外部使用（实时查询数据库组装完整资料）
 export async function getOnlineUsers() {
   if (onlineUsers.size === 0) {
@@ -376,17 +392,19 @@ export function setupSocketHandlers(io: SocketIOServer) {
             weapons: myCharacter.weapons,
             armor: myCharacter.armor,
           } : null,
-          messages: recentMessages.map((m) => ({
-            id: m.id,
-            userId: m.userId,
-            nickname: m.nickname,
-            content: m.isSecret ? '🔒 KP进行了一次暗骰' : m.content,
-            characterId: m.characterId,
-            isSecret: m.isSecret,
-            type: m.type,
-            meta: m.meta ? JSON.parse(m.meta) : undefined,
-            timestamp: m.createdAt.toISOString(),
-          })),
+          messages: recentMessages
+            .filter((m) => canViewRoomMessage(m, userId))
+            .map((m) => ({
+              id: m.id,
+              userId: m.userId,
+              nickname: m.nickname,
+              content: m.isSecret ? '🔒 KP进行了一次暗骰' : m.content,
+              characterId: m.characterId,
+              isSecret: m.isSecret,
+              type: m.type,
+              meta: parseRoomMessageMeta(m.meta),
+              timestamp: m.createdAt.toISOString(),
+            })),
         });
 
         // 通知房间内其他用户
@@ -418,12 +436,95 @@ export function setupSocketHandlers(io: SocketIOServer) {
     });
 
     // 发送消息
-    socket.on('message:send', async (data: { roomId: string; content: string; characterId?: string; isSecret?: boolean }) => {
+    socket.on('message:send', async (data: {
+      roomId: string;
+      content: string;
+      characterId?: string;
+      isSecret?: boolean;
+      messageType?: string;
+      targetUserId?: string;
+    }) => {
       try {
-        const { roomId, content, characterId, isSecret } = data;
+        const { roomId, content, characterId, isSecret, messageType, targetUserId } = data;
         
-        const room = await prisma.room.findUnique({ where: { roomId } });
+        const room = await prisma.room.findUnique({
+          where: { roomId },
+          include: {
+            members: {
+              where: { leftAt: null },
+              include: { user: true, character: true },
+            },
+          },
+        });
         if (!room) return;
+        if (room.status === 'CLOSED') {
+          socket.emit('error', { message: '房间已关闭' });
+          return;
+        }
+
+        const senderMember = room.members.find((member) => member.userId === socket.user!.userId);
+        const canSendChat = senderMember?.role === 'KP' || senderMember?.role === 'PLAYER';
+        if (!canSendChat) {
+          socket.emit('error', { message: '你没有发送消息的权限' });
+          return;
+        }
+
+        if (messageType === 'private' && targetUserId) {
+          const targetMember = room.members.find((member) => member.userId === targetUserId);
+          const canReceivePrivate = targetMember?.role === 'KP' || targetMember?.role === 'PLAYER';
+          if (!targetMember || !canReceivePrivate || targetMember.userId === socket.user!.userId) {
+            socket.emit('error', { message: '私聊对象无效' });
+            return;
+          }
+
+          const meta = {
+            visibility: 'PRIVATE',
+            participantUserIds: [socket.user!.userId, targetMember.userId],
+            targetUserId: targetMember.userId,
+            targetNickname: targetMember.character?.name || targetMember.user.nickname,
+            targetRole: targetMember.role,
+            senderRole: senderMember.role,
+          };
+          const saved = await prisma.roomMessage.create({
+            data: {
+              roomId: room.id,
+              userId: socket.user!.userId,
+              nickname: socket.user!.nickname,
+              content,
+              characterId: characterId || null,
+              isSecret: false,
+              type: 'private',
+              meta: JSON.stringify(meta),
+            },
+          });
+
+          const messageData = {
+            id: saved.id,
+            sender: {
+              userId: socket.user!.userId,
+              nickname: socket.user!.nickname,
+            },
+            content,
+            characterId,
+            isSecret: false,
+            type: 'private',
+            meta,
+            timestamp: saved.createdAt.toISOString(),
+          };
+
+          socket.emit('message:received', messageData);
+
+          const roomSockets = io.sockets.adapter.rooms.get(roomId);
+          if (roomSockets) {
+            roomSockets.forEach((socketId) => {
+              const memberSocket = io.sockets.sockets.get(socketId) as AuthenticatedSocket | undefined;
+              if (memberSocket?.user && memberSocket !== socket && meta.participantUserIds.includes(memberSocket.user.userId)) {
+                memberSocket.emit('message:received', messageData);
+              }
+            });
+          }
+          return;
+        }
 
         const messageId = Date.now().toString();
         const messageData = {

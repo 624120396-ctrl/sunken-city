@@ -1,230 +1,126 @@
-import { useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Archive, ArrowLeft, Users, Send, Crown, DoorOpen, Swords, Play, Square, SkipForward, FileText, History, MessageSquare, BarChart3, User, ScrollText, Search, GitBranch, Sparkles, ChevronDown, Heart, Brain, ChevronLeft, ChevronRight, ChevronUp, Dice5, BookOpen } from 'lucide-react';
+import { Archive, ArrowLeft, Users, Crown, DoorOpen, Swords, FileText, History, User, ScrollText, Search, GitBranch, ChevronDown, ChevronUp, Dice5, BookOpen, PanelRightOpen } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
 import { useLayoutStore } from '@stores/layout.store';
 import { Modal } from '@components/ui/Modal';
-import { Tooltip } from '@components/ui/Tooltip';
 import { UserProfileCard } from '@components/UserProfileCard';
 import { useSocket } from '@hooks/useSocket';
-import { getSuccessExplanation, getSkillExplanation } from '@lib/dice-explanations';
-import { QuickPhrases } from '@components/room/QuickPhrases';
-import { MentionInput } from '@components/room/MentionInput';
-import { SecretDiceToggle } from '@components/room/SecretDiceToggle';
-import { NotesPanel } from '@components/room/NotesPanel';
-import { ClueMarker } from '@components/room/ClueMarker';
 import { Surface } from '@components/system';
-import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { MagneticButton } from '@components/ui/MagneticButton';
-import { PlayerHud } from '@components/room/PlayerHud';
 
 // ===== 新增沉浸式体验组件 =====
-import { SceneCard } from '@components/room/SceneCard';
-import { StatusTags } from '@components/room/StatusTags';
-import { PrivateChatPanel } from '@components/room/PrivateChatPanel';
 import { QuickRollBar } from '@components/room/QuickRollBar';
-import { RoomStatsPanel } from '@components/room/RoomStatsPanel';
-import { StaggerList, StaggerItem } from '@components/ui/Animation';
+import { KPDicePanel } from '@components/room/KPDicePanel';
 // ===== V2.1 新增 =====
 import { RoomStatusBar } from '@components/room/RoomStatusBar';
-import { RoomEventLogPanel } from '@components/room/RoomEventLogPanel';
-import { CluePanel } from '@components/room/CluePanel';
-import { NpcFocusPanel } from '@components/room/NpcFocusPanel';
-import { CombatTimeline } from '@components/room/CombatTimeline';
-import { GMKitPanel } from '@components/room/GMKitPanel';
-import { RoomLogPanel } from '@components/room/RoomLogPanel';
-import { SubRoomManager } from '@components/room/SubRoomManager';
-import { AIAssistantPanel } from '@components/room/AIAssistantPanel';
-import type {
-  RoomBindingView,
-  RoomCapabilities,
-  RoomLifecycle,
-  RoomMemberView,
-  RoomRoleView,
-} from '@/types/room-contract';
 import { KpLifecycleControls } from './components/KpLifecycleControls';
 import { RoomJoinGate } from './components/RoomJoinGate';
 import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
-import { RoomSettlementPanel } from './components/RoomSettlementPanel';
-import { InvestigationDock } from './components/InvestigationDock';
-import { RoomInvestigationFocusStrip } from './components/RoomInvestigationFocusStrip';
-import { RoomCoordinationPanel } from './components/RoomCoordinationPanel';
-import { RoomCommunicationPanel } from './components/RoomCommunicationPanel';
-import { RoomRecruitmentPanel } from './components/RoomRecruitmentPanel';
-import { RoomOperationsOverviewPanel } from './components/RoomOperationsOverviewPanel';
+import { RoomParticipantRail } from './components/RoomParticipantRail';
+import { RoomChatComposer } from './components/RoomChatComposer';
+import { RoomChatTranscript } from './components/RoomChatTranscript';
+import { RoomKeeperRollDock } from './components/RoomKeeperRollDock';
+import { RoomPlayerView } from './components/RoomPlayerView';
+import { RoomSceneBanner } from './components/RoomSceneBanner';
+import type {
+  RoomChatMessage,
+  RoomCombatState,
+  RoomGameplayMember,
+  RoomGameplayRoom,
+} from './components/RoomGameplayTypes';
+import type { InvestigationTab } from './components/InvestigationDock';
 import { archiveImportantMessage, archiveKeyDice } from '@/services/investigation.service';
 
-interface Room {
-  id: string;
-  roomId: string;
-  name: string;
-  description?: string;
-  status: string;
-  isCreator: boolean;
-  isMember: boolean;
-  myRole?: RoomRoleView;
-  myCapabilities?: RoomCapabilities;
-  myBinding?: RoomBindingView;
-  lifecycle?: RoomLifecycle;
-  members: RoomMember[];
-  atmosphere?: string;
-  sceneDesc?: string;
-  // ===== V2.1 新增 =====
-  phases?: Array<{
-    id: string;
-    title: string;
-    description?: string;
-    sortOrder: number;
-    status: string;
-    scenes: Array<{
-      id: string;
-      title: string;
-      description?: string;
-      atmosphere: string;
-      imageUrl?: string;
-      musicUrl?: string;
-      sortOrder: number;
-      status: string;
-    }>;
-  }>;
-  currentPhase?: {
-    id: string;
-    title: string;
-    description?: string;
-    status: string;
-  } | null;
-  currentScene?: {
-    id: string;
-    title: string;
-    description?: string;
-    atmosphere: string;
-    imageUrl?: string;
-  } | null;
-}
+const RoomCommandRail = lazy(() =>
+  import('./components/RoomCommandRail').then((module) => ({
+    default: module.RoomCommandRail,
+  }))
+);
 
-interface RoomMember {
-  id: string;
-  userId: string;
-  nickname: string;
-  avatarUrl?: string;
-  frameUrl?: string;
-  role: RoomMemberView['role'];
-  exp?: number;
-  coins?: number;
-  stardust?: number;
-  displayedTitleKey?: string | null;
-  rankName?: string;
-  rankColor?: string;
-  titleName?: string | null;
-  titleColor?: string | null;
-  expToNext?: number;
-  nextRankName?: string | null;
-  displayedCharacter?: {
-    id: string;
-    name: string;
-    occupation: string;
-    avatarUrl?: string;
-    hp: number;
-    maxHp: number;
-    mp: number;
-    maxMp: number;
-    san: number;
-    maxSan: number;
-    str?: number;
-    dex?: number;
-    con?: number;
-    siz?: number;
-    app?: number;
-    int?: number;
-    pow?: number;
-    edu?: number;
-    luck?: number;
-    mov?: number;
-    build?: number;
-    background?: string;
-    skills?: string;
-    quickSkills?: string;
-  } | null;
-  character?: {
-    id: string;
-    name: string;
-    occupation: string;
-    hp: number;
-    maxHp: number;
-    mp: number;
-    maxMp: number;
-    san: number;
-    maxSan: number;
-    str?: number;
-    dex?: number;
-    con?: number;
-    siz?: number;
-    app?: number;
-    int?: number;
-    pow?: number;
-    edu?: number;
-    luck?: number;
-    mov?: number;
-    build?: number;
-  } | null;
-}
+const RoomSettlementPanel = lazy(() =>
+  import('./components/RoomSettlementPanel').then((module) => ({
+    default: module.RoomSettlementPanel,
+  }))
+);
 
-interface ChatMessage {
-  id: string;
-  userId: string;
-  nickname: string;
-  content: string;
-  type: 'text' | 'dice' | 'system';
-  timestamp: string;
-  rollData?: {
-    targetName?: string;
-    targetValue?: number;
-    rollResult?: number;
-    successLevel?: string;
-  };
-}
+const InvestigationDock = lazy(() =>
+  import('./components/InvestigationDock').then((module) => ({
+    default: module.InvestigationDock,
+  }))
+);
 
-interface Combatant {
-  userId: string;
-  characterId?: string;
-  nickname: string;
-  characterName?: string;
-  dex: number;
-  hp: number;
-  maxHp: number;
-  mp: number;
-  san: number;
-  isKP: boolean;
-  weapons?: any[];
-  equippedWeapon?: any;
-  equippedArmor?: any;
-}
+const CluePanel = lazy(() =>
+  import('@components/room/CluePanel').then((module) => ({
+    default: module.CluePanel,
+  }))
+);
 
-interface CombatState {
-  status: 'IDLE' | 'IN_PROGRESS' | 'PAUSED' | 'ENDED';
-  currentRound: number;
-  currentTurnIndex: number;
-  turnOrder: Combatant[];
-  log: any[];
-}
+const RoomLogPanel = lazy(() =>
+  import('@components/room/RoomLogPanel').then((module) => ({
+    default: module.RoomLogPanel,
+  }))
+);
+
+const SubRoomManager = lazy(() =>
+  import('@components/room/SubRoomManager').then((module) => ({
+    default: module.SubRoomManager,
+  }))
+);
+
+const RoomEventLogPanel = lazy(() =>
+  import('@components/room/RoomEventLogPanel').then((module) => ({
+    default: module.RoomEventLogPanel,
+  }))
+);
+
+const GMKitPanel = lazy(() =>
+  import('@components/room/GMKitPanel').then((module) => ({
+    default: module.GMKitPanel,
+  }))
+);
+
+const NpcFocusPanel = lazy(() =>
+  import('@components/room/NpcFocusPanel').then((module) => ({
+    default: module.NpcFocusPanel,
+  }))
+);
+
+const CombatTimeline = lazy(() =>
+  import('@components/room/CombatTimeline').then((module) => ({
+    default: module.CombatTimeline,
+  }))
+);
+
+const NotesPanel = lazy(() =>
+  import('@components/room/NotesPanel').then((module) => ({
+    default: module.NotesPanel,
+  }))
+);
+
+const RoomStatsPanel = lazy(() =>
+  import('@components/room/RoomStatsPanel').then((module) => ({
+    default: module.RoomStatsPanel,
+  }))
+);
 
 export function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { roomLeftPanelCollapsed, toggleRoomLeftPanel, setRoomLeftPanelCollapsed, isMobile } = useLayoutStore();
-  const [room, setRoom] = useState<Room | null>(null);
+  const [room, setRoom] = useState<RoomGameplayRoom | null>(null);
   const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<RoomChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [showMobileMembers, setShowMobileMembers] = useState(false);
   const [showCharacterModal, setShowCharacterModal] = useState(false);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'combat'>('chat');
-  const [combatState, setCombatState] = useState<CombatState | null>(null);
+  const [combatState, setCombatState] = useState<RoomCombatState | null>(null);
   const [showAttackModal, setShowAttackModal] = useState(false);
   const [attackTarget, setAttackTarget] = useState('');
   const [isSecretDice, setIsSecretDice] = useState(false);
@@ -232,7 +128,7 @@ export function RoomPage() {
 
   // 成员详情弹窗
   const [showMemberDetail, setShowMemberDetail] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<RoomMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<RoomGameplayMember | null>(null);
 
   // 线索板
   const [clues, setClues] = useState<Array<{
@@ -246,8 +142,7 @@ export function RoomPage() {
   // ===== 新增沉浸式体验状态 =====
   const [sceneDesc, setSceneDesc] = useState<string>('');
   const [memberStatuses, setMemberStatuses] = useState<Record<string, string[]>>({});
-  const [showPrivateChat, setShowPrivateChat] = useState(false);
-  const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
+  const [chatTargetUserId, setChatTargetUserId] = useState('public');
   const [_countdowns, setCountdowns] = useState<Array<{
     id: string;
     title: string;
@@ -263,12 +158,15 @@ export function RoomPage() {
   const [showCombatTimeline, setShowCombatTimeline] = useState(false);
   const [showGMKit, setShowGMKit] = useState(false);
   const [showSubRooms, setShowSubRooms] = useState(false);
-  const [showAI, setShowAI] = useState(false);
   const [showNotesPanel, setShowNotesPanel] = useState(false);
+  const [showKpDicePanel, setShowKpDicePanel] = useState(false);
   const [showInvestigationDock, setShowInvestigationDock] = useState(false);
+  const [investigationDockTab, setInvestigationDockTab] = useState<InvestigationTab>('scenes');
   const [showMobileActionDrawer, setShowMobileActionDrawer] = useState(false);
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [showMobileQuickRolls, setShowMobileQuickRolls] = useState(false);
+  const [showDesktopCommandRail, setShowDesktopCommandRail] = useState(true);
+  const [showSceneBanner, setShowSceneBanner] = useState(true);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -279,6 +177,48 @@ export function RoomPage() {
   const caps = room?.myCapabilities;
   const canUseKPTools = caps?.canUseKPTools ?? false;
   const canViewInvestigation = caps?.canViewPublicContent ?? false;
+  const canSendPrivateMessage = caps?.canSendPrivateMessage ?? false;
+
+  type FloatingToolPanel =
+    | 'investigation'
+    | 'clues'
+    | 'npc'
+    | 'eventLog'
+    | 'log'
+    | 'gmKit'
+    | 'subRooms'
+    | 'notes';
+
+  const closeFloatingToolPanels = (except?: FloatingToolPanel) => {
+    if (except !== 'investigation') setShowInvestigationDock(false);
+    if (except !== 'clues') setShowCluePanel(false);
+    if (except !== 'npc') setShowNpcPanel(false);
+    if (except !== 'eventLog') setShowEventLog(false);
+    if (except !== 'log') setShowLogPanel(false);
+    if (except !== 'gmKit') setShowGMKit(false);
+    if (except !== 'subRooms') setShowSubRooms(false);
+    if (except !== 'notes') setShowNotesPanel(false);
+  };
+
+  const setFloatingToolPanel = (
+    panel: FloatingToolPanel,
+    currentValue: boolean,
+    setter: (value: boolean) => void,
+    updater: boolean | ((value: boolean) => boolean),
+  ) => {
+    const nextValue = typeof updater === 'function' ? updater(currentValue) : updater;
+    if (nextValue) {
+      closeFloatingToolPanels(panel);
+      setShowMobileActionDrawer(false);
+      setShowMobileToolTray(false);
+    }
+    setter(nextValue);
+  };
+
+  const openInvestigationDock = (tab: InvestigationTab = 'scenes') => {
+    setInvestigationDockTab(tab);
+    setFloatingToolPanel('investigation', showInvestigationDock, setShowInvestigationDock, true);
+  };
 
   // ===== SAN 扣除弹窗状态 =====
   const [showSanityModal, setShowSanityModal] = useState(false);
@@ -314,7 +254,7 @@ export function RoomPage() {
     localStorage.setItem(`clues_${roomId}`, JSON.stringify(newClues));
   };
 
-  const handleArchiveImportantMessage = async (msg: ChatMessage, displayName: string) => {
+  const handleArchiveImportantMessage = async (msg: RoomChatMessage, displayName: string) => {
     if (!roomId || !msg.content.trim()) return;
     try {
       await archiveImportantMessage(roomId, {
@@ -330,7 +270,7 @@ export function RoomPage() {
     }
   };
 
-  const handleArchiveKeyDice = async (msg: ChatMessage, displayName: string) => {
+  const handleArchiveKeyDice = async (msg: RoomChatMessage, displayName: string) => {
     if (!roomId || !msg.rollData?.rollResult) return;
     const fallbackRollType = msg.rollData.targetName
       ? '1D100'
@@ -362,8 +302,9 @@ export function RoomPage() {
         userId: msg.sender.userId,
         nickname: msg.sender.nickname,
         content: msg.content,
-        type: 'text',
+        type: msg.type === 'private' ? 'private' : 'text',
         timestamp: msg.timestamp,
+        privateMeta: msg.meta,
       }]);
     },
     onDiceRoll: (roll) => {
@@ -399,8 +340,9 @@ export function RoomPage() {
           userId: msg.userId || 'system',
           nickname: msg.nickname || '未知',
           content: msg.content,
-          type: (msg.type === 'dice' || msg.type === 'system' ? msg.type : 'text') as ChatMessage['type'],
+          type: (msg.type === 'dice' || msg.type === 'system' || msg.type === 'private' ? msg.type : 'text') as RoomChatMessage['type'],
           timestamp: msg.timestamp,
+          privateMeta: msg.type === 'private' ? msg.meta : undefined,
         };
         if (msg.type === 'dice' && msg.meta) {
           return {
@@ -410,7 +352,7 @@ export function RoomPage() {
               targetValue: msg.meta.targetValue,
               rollResult: msg.meta.rollResult,
               successLevel: msg.meta.successLevel,
-            } as ChatMessage['rollData'],
+            } as RoomChatMessage['rollData'],
           };
         }
         return base;
@@ -488,11 +430,10 @@ export function RoomPage() {
   useEffect(() => {
     fetchRoom();
 
-    // 定期轮询倒计时和未读数
+    // 定期轮询倒计时
     const interval = setInterval(() => {
       if (roomId) {
         fetchCountdowns();
-        fetchPrivateUnreadCount();
       }
     }, 5000);
 
@@ -506,9 +447,9 @@ export function RoomPage() {
   const fetchRoom = async () => {
     try {
       const response = await apiFetch(`/rooms/${roomId}`);
-      const data = await handleApiResponse<{ room: Room }>(response);
+      const data = await handleApiResponse<{ room: RoomGameplayRoom }>(response);
       setRoom(data.room);
-      const myMember = data.room.members?.find((m: RoomMember) => m.userId === user?.id);
+      const myMember = data.room.members?.find((m: RoomGameplayMember) => m.userId === user?.id);
       const myCharacter = myMember?.character || myMember?.displayedCharacter;
       if (myCharacter) {
         setSelectedCharacter(myCharacter);
@@ -520,7 +461,7 @@ export function RoomPage() {
 
       // 加载成员状态标记
       const statuses: Record<string, string[]> = {};
-      data.room.members?.forEach((m: RoomMember) => {
+      data.room.members?.forEach((m: RoomGameplayMember) => {
         // @ts-ignore
         if (m.statusTags) {
           try {
@@ -561,18 +502,6 @@ export function RoomPage() {
       setCountdowns(data.countdowns);
     } catch (error) {
       console.error('获取倒计时失败:', error);
-    }
-  };
-
-  // 加载私聊未读数
-  const fetchPrivateUnreadCount = async () => {
-    if (!selectedCharacter?.id) return;
-    try {
-      const response = await apiFetch(`/rooms/${roomId}/private-messages/unread`);
-      const data = await handleApiResponse<{ count: number }>(response);
-      setPrivateUnreadCount(data.count);
-    } catch (error) {
-      console.error('获取未读数失败:', error);
     }
   };
 
@@ -653,6 +582,18 @@ export function RoomPage() {
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputMessage.trim() || !connected) return;
+    const privateTargetUserId = canSendPrivateMessage && chatTargetUserId !== 'public'
+      ? chatTargetUserId
+      : undefined;
+    const sendChatText = (content: string, characterId?: string) => {
+      socketSendMessage(
+        content,
+        characterId,
+        privateTargetUserId ? false : isSecretDice,
+        privateTargetUserId ? 'private' : undefined,
+        privateTargetUserId,
+      );
+    };
 
     // 解析快捷命令
     if (inputMessage.startsWith('/骰 ')) {
@@ -672,7 +613,7 @@ export function RoomPage() {
     if (inputMessage === '/状态') {
       if (selectedCharacter) {
         const statusMsg = `【状态】HP: ${selectedCharacter.hp}/${selectedCharacter.maxHp || selectedCharacter.hp} | MP: ${selectedCharacter.mp}/${selectedCharacter.maxMp || selectedCharacter.mp} | SAN: ${selectedCharacter.san}/${selectedCharacter.maxSan || selectedCharacter.san}`;
-        socketSendMessage(statusMsg, selectedCharacter?.id, isSecretDice);
+        sendChatText(statusMsg, selectedCharacter?.id);
       }
       setInputMessage('');
       return;
@@ -731,7 +672,7 @@ export function RoomPage() {
       }
     }
 
-    socketSendMessage(inputMessage, selectedCharacter?.id, isSecretDice);
+    sendChatText(inputMessage, selectedCharacter?.id);
     setInputMessage('');
   };
 
@@ -747,6 +688,19 @@ export function RoomPage() {
     });
   };
 
+  const handleUpdateQuickSkills = async (skills: string[]) => {
+    if (!selectedCharacter?.id) return;
+    try {
+      await apiFetch(`/characters/${selectedCharacter.id}/quick-skills`, {
+        method: 'PATCH',
+        body: JSON.stringify({ quickSkills: skills }),
+      });
+      setSelectedCharacter({ ...selectedCharacter, quickSkills: JSON.stringify(skills) });
+    } catch (error) {
+      console.error('更新快捷技能失败:', error);
+    }
+  };
+
   const handleGenericRoll = (rollType: string, skillName?: string, skillValue?: number) => {
     if (!connected) return;
 
@@ -759,6 +713,16 @@ export function RoomPage() {
     });
   };
 
+  const handleKeeperQuickRoll = () => {
+    if (!connected || !canUseKPTools) return;
+
+    socketRollDice({
+      rollType: '1D100',
+      targetName: isSecretDice ? 'KP暗骰' : 'KP公开骰',
+      characterId: undefined,
+      isSecret: isSecretDice,
+    });
+  };
 
   // 战斗操作
   const handleStartCombat = () => {
@@ -795,6 +759,26 @@ export function RoomPage() {
   };
 
   const isMyTurn = combatState?.status === 'IN_PROGRESS' && combatState.turnOrder[combatState.currentTurnIndex]?.userId === user?.id;
+  const phaseSteps = room?.phases?.length
+    ? room.phases.slice(0, 4).map((phase, index) => ({
+        label: phase.title,
+        active: room.currentPhase?.id === phase.id || (!room.currentPhase && index === 0),
+      }))
+    : [
+        { label: '准备阶段', active: room?.lifecycle === 'PREPARING' },
+        { label: '探索阶段', active: room?.lifecycle === 'IN_PROGRESS' || room?.lifecycle === 'PAUSED' || !room?.lifecycle },
+        { label: '调查阶段', active: activeTab === 'chat' },
+        { label: '结算阶段', active: room?.lifecycle === 'FINISHING' || room?.lifecycle === 'FINISHED' },
+      ];
+  const roleLabel = room?.myRole === 'OWNER_KP'
+    ? '守密人'
+    : room?.myRole === 'ASSISTANT_KP'
+      ? '助理 KP'
+    : room?.myRole === 'PLAYER'
+      ? '调查员'
+      : room?.myRole === 'OBSERVER'
+        ? '观众'
+        : '访客';
 
   if (loading) {
     return (
@@ -805,9 +789,9 @@ export function RoomPage() {
   }
 
   return (
-    <div
-      data-testid="room-gameplay-shell"
-      className={cn("flex flex-col", isMobile ? "h-[calc(100dvh-1rem)]" : "h-[calc(100dvh-2.5rem)]")}
+      <div
+        data-testid="room-gameplay-shell"
+      className={cn("room-gameplay-shell room-visual-rebuild room-shell-v3 flex flex-col", isMobile ? "h-[calc(100dvh-1rem)]" : "h-[calc(100dvh-2.5rem)]")}
     >
       {/* 头部 */}
       <Surface
@@ -815,7 +799,7 @@ export function RoomPage() {
         padding="sm"
         data-testid={isMobile ? 'room-mobile-play-header' : 'room-desktop-header'}
         className={cn(
-          'relative z-50 flex items-center',
+          'room-gameplay-topbar relative z-50 flex items-center',
           isMobile
             ? 'mb-2 w-full flex-col items-stretch gap-1.5'
             : 'mb-4 justify-between'
@@ -835,10 +819,16 @@ export function RoomPage() {
           {isMobile ? (
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-baseline gap-1.5">
-                <span className="truncate text-sm font-serif font-bold leading-tight text-[#c9a227]">{room?.name}</span>
-                <span className="shrink-0 text-[10px] leading-tight text-[#6b6558]">#{room?.roomId}</span>
+                <span
+                  data-room-connection-indicator="true"
+                  data-status={connected ? 'connected' : 'disconnected'}
+                  aria-label={connected ? '房间已连接' : '房间未连接'}
+                  title={connected ? '已连接' : '未连接'}
+                />
+                <span data-room-mobile-title="true" className="truncate text-sm font-serif font-bold leading-tight text-[#c9a227]">{room?.name}</span>
+                <span data-room-mobile-id="true" className="shrink-0 text-[10px] leading-tight text-[#6b6558]">#{room?.roomId}</span>
               </div>
-              <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-none text-[#8b8375]">
+              <div data-room-mobile-scene="true" className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-none text-[#8b8375]">
                 {room?.currentScene ? (
                   <>
                     <span className="truncate">{room.currentScene.title}</span>
@@ -854,19 +844,12 @@ export function RoomPage() {
               </div>
             </div>
           ) : (
-            <div>
-              <h1 className="text-xl font-serif font-bold" style={{ color: '#c9a227' }}>{room?.name}</h1>
-              <p className="text-sm" style={{ color: '#6b6558' }}>#{room?.roomId}</p>
+            <div className="room-topnav-v4__brand">
+              <span className="room-topnav-v4__logo-mark">
+                <img src="/images/logo-sunken-gothic-cutout.png" alt="沉没之城" />
+              </span>
             </div>
           )}
-          <div
-            className={cn(
-              "rounded-full",
-              isMobile ? "h-2 w-2" : "h-2.5 w-2.5",
-              connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'
-            )}
-            title={connected ? '已连接' : '未连接'}
-          />
           {isMobile && (
             <button
               type="button"
@@ -884,22 +867,51 @@ export function RoomPage() {
           )}
         </div>
 
-        <div className="hidden md:flex items-center gap-1.5">
-          <button onClick={handleLeaveRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
-                       bg-[url('/btn-off.png')] bg-cover bg-center
-                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                       transition-all min-w-[60px] justify-center">
-            <DoorOpen size={14} />
-            离开
-          </button>
-          {(caps?.canCloseRoom ?? !!room?.isCreator) && (
-            <button onClick={handleCloseRoom} className="px-4 py-1.5 rounded text-sm flex items-center gap-1 text-[#e8d4a0]
-                       bg-[url('/btn-off.png')] bg-cover bg-center
-                       hover:bg-[url('/btn-on.png')] hover:text-white active:bg-[url('/btn-on.png')]
-                       transition-all min-w-[60px] justify-center">
-              关闭
+        <div className="room-topnav-v4__desktop hidden md:grid">
+          <div className="room-topnav-v4__room">
+            <span className="room-topnav-v4__room-kicker">房间名</span>
+            <strong
+              data-room-title="true"
+              data-room-connection-status={connected ? 'connected' : 'disconnected'}
+              aria-label={connected ? '房间已连接' : '房间未连接'}
+              title={connected ? '已连接' : '未连接'}
+            >
+              {room?.name || `房间 ${room?.roomId || roomId || ''}`}
+            </strong>
+            <small>房间号：{room?.roomId || roomId}</small>
+          </div>
+
+          <div className="room-topnav-v4__phases">
+            {phaseSteps.map((phase) => (
+              <div
+                key={phase.label}
+                className={cn('room-topnav-v4__phase', phase.active && 'room-topnav-v4__phase--active')}
+              >
+                <span />
+                {phase.label}
+              </div>
+            ))}
+          </div>
+
+          <div className="room-topnav-v4__actions">
+            <button type="button" className="room-topnav-v4__pill">
+              <Crown size={14} />
+              角色：{roleLabel}
             </button>
-          )}
+            <button type="button" className="room-topnav-v4__pill">
+              <Users size={14} />
+              观众：{room?.members?.filter(member => member.role === 'OBSERVER').length ?? 0} 人
+            </button>
+            <button onClick={handleLeaveRoom} className="room-topnav-v4__leave">
+              <DoorOpen size={14} />
+              离开
+            </button>
+            {caps?.canCloseRoom === true && (
+              <button onClick={handleCloseRoom} className="room-topnav-v4__danger">
+                关闭
+              </button>
+            )}
+          </div>
         </div>
 
         {isMobile && showMobileActionDrawer && (
@@ -943,7 +955,7 @@ export function RoomPage() {
                 data-room-mobile-action="true"
                 aria-label="线索"
                 title="线索"
-                onClick={() => setShowCluePanel(true)}
+                onClick={() => openInvestigationDock('clues')}
                 className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
               >
                 <Search size={18} />
@@ -954,31 +966,12 @@ export function RoomPage() {
                   data-room-mobile-action="true"
                   aria-label="调查档案"
                   title="调查档案"
-                  onClick={() => {
-                    setShowInvestigationDock(true);
-                    setShowMobileActionDrawer(false);
-                    setShowMobileToolTray(false);
-                  }}
+                  onClick={() => openInvestigationDock('scenes')}
                   className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
                 >
                   <Archive size={18} />
                 </button>
               )}
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="私聊"
-                title="私聊"
-                onClick={() => setShowPrivateChat(true)}
-                className="btn-v2 relative flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-              >
-                <MessageSquare size={18} />
-                {privateUnreadCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#a63848] px-1 text-[9px] text-white">
-                    {privateUnreadCount}
-                  </span>
-                )}
-              </button>
               <button
                 type="button"
                 data-room-mobile-action="true"
@@ -1010,7 +1003,7 @@ export function RoomPage() {
                 <button
                   type="button"
                   data-room-mobile-action="true"
-                  onClick={() => setShowNpcPanel(true)}
+                  onClick={() => openInvestigationDock('npcs')}
                   className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
                 >
                   <User size={15} />
@@ -1019,7 +1012,7 @@ export function RoomPage() {
                 <button
                   type="button"
                   data-room-mobile-action="true"
-                  onClick={() => setShowSubRooms(true)}
+                  onClick={() => setFloatingToolPanel('subRooms', showSubRooms, setShowSubRooms, true)}
                   className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
                 >
                   <GitBranch size={15} />
@@ -1037,11 +1030,7 @@ export function RoomPage() {
                 <button
                   type="button"
                   data-room-mobile-action="true"
-                  onClick={() => {
-                    setShowNotesPanel(true);
-                    setShowMobileActionDrawer(false);
-                    setShowMobileToolTray(false);
-                  }}
+                  onClick={() => setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, true)}
                   className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
                 >
                   <BookOpen size={15} />
@@ -1079,7 +1068,7 @@ export function RoomPage() {
       </Surface>
 
       {/* ===== V2.1 新增：房间状态栏 ===== */}
-      {!isMobile && (
+      {isMobile && (
         <RoomStatusBar
           currentPhase={room?.currentPhase || null}
           currentScene={room?.currentScene || null}
@@ -1089,7 +1078,7 @@ export function RoomPage() {
       )}
 
       {room && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="room-gameplay-status-row mb-3 flex flex-wrap items-center gap-2">
           <RoomLifecycleBanner
             lifecycle={room.lifecycle}
             myRole={room.myRole}
@@ -1104,644 +1093,206 @@ export function RoomPage() {
         </div>
       )}
 
-      {roomId && (
-        <RoomInvestigationFocusStrip
-          roomId={roomId}
-          currentSceneTitle={room?.currentScene?.title ?? null}
-          canView={canViewInvestigation}
-          onOpenArchive={() => setShowInvestigationDock(true)}
-        />
-      )}
-
-      {roomId && (caps?.canViewPublicContent ?? false) && (
-        <RoomOperationsOverviewPanel roomId={roomId} />
-      )}
-
-      {roomId && (caps?.canViewPublicContent ?? false) && (
-        <RoomCoordinationPanel roomId={roomId} />
-      )}
-
-      {roomId && (caps?.canViewPublicContent ?? false) && (
-        <RoomCommunicationPanel roomId={roomId} />
-      )}
-
-      {roomId && (caps?.canViewPublicContent ?? false) && (
-        <RoomRecruitmentPanel roomId={roomId} />
-      )}
-
       {room?.lifecycle === 'FINISHING' && caps?.canFinalizeRoom && (
-        <RoomSettlementPanel
-          roomId={roomId || ''}
-          onFinalized={fetchRoom}
-        />
+        <Suspense fallback={null}>
+          <RoomSettlementPanel
+            roomId={roomId || ''}
+            onFinalized={fetchRoom}
+          />
+        </Suspense>
       )}
 
       {/* 主内容区 */}
-      <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
-        {/* ===== V2.1 新增：线索面板（左侧抽屉） ===== */}
-        {showCluePanel && (
-          <CluePanel
-            roomId={roomId || ''}
-            isOpen={showCluePanel}
-            onClose={() => setShowCluePanel(false)}
-            isKP={canUseKPTools}
-          />
-        )}
-
-        <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* 左侧：成员列表 */}
-          <div className={cn(
-          'shrink-0 flex-col min-h-0 border-r border-[#3a3a3a]/30 transition-all duration-300',
-          roomLeftPanelCollapsed ? 'w-14' : 'w-[200px]',
-          isMobile ? 'hidden md:flex' : 'flex'
-        )}>
-            {/* 收放按钮 */}
-            <button
-              onClick={toggleRoomLeftPanel}
-              className="w-full flex items-center justify-center py-2 border-b border-[#3a3a3a]/20 hover:bg-[rgba(201,162,39,0.08)] transition-colors flex-shrink-0"
-            >
-              {roomLeftPanelCollapsed ? (
-                <ChevronRight size={16} style={{ color: '#6b6558' }} />
-              ) : (
-                <ChevronLeft size={16} style={{ color: '#6b6558' }} />
-              )}
-            </button>
-
-            {/* 收起态：竖向图标栏 */}
-            {roomLeftPanelCollapsed ? (
-              <div className="flex-1 overflow-y-auto py-2 space-y-3 px-1">
-                {room?.members.map((member) => {
-                  const char = member.displayedCharacter || member.character;
-                  return (
-                    <Tooltip key={member.id} content={char?.name || member.nickname} position="right">
-                      <div
-                        className="flex flex-col items-center gap-1 cursor-pointer py-1"
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setShowMemberDetail(true);
-                        }}
-                      >
-                        <div className="relative w-9 h-9">
-                          {member.avatarUrl ? (
-                            <img
-                              src={member.avatarUrl}
-                              className="w-9 h-9 rounded-full object-cover border border-coc-border bg-coc-bg-secondary"
-                              alt=""
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#3a3a3a] flex items-center justify-center">
-                              <User size={18} className="text-coc-text-muted" />
-                            </div>
-                          )}
-                          {member.frameUrl && (
-                            <img
-                              src={member.frameUrl}
-                              className="absolute inset-0 w-full h-full pointer-events-none"
-                              style={{ transform: 'scale(1.3)' }}
-                              alt=""
-                            />
-                          )}
-                        </div>
-                        {/* 状态点 */}
-                        {char && (
-                          <div className="flex flex-col items-center gap-0.5">
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ background: char.hp > char.maxHp * 0.3 ? '#a63848' : char.hp > 0 ? '#c9a227' : '#3a3a3a' }}
-                            />
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ background: char.mp > 0 ? '#4db8b8' : '#3a3a3a' }}
-                            />
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ background: char.san > char.maxSan * 0.3 ? '#fbbf24' : char.san > 0 ? '#c9a227' : '#3a3a3a' }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto space-y-3 pr-3 py-2">
-          {/* v1.5 PlayerHud */}
-          {selectedCharacter && (
-            <PlayerHud
-              character={selectedCharacter}
-              statusTags={memberStatuses[room?.members?.find(m => m.userId === user?.id)?.id || ''] || []}
+      <div className="room-gameplay-body flex-1 flex flex-row min-h-0 overflow-hidden">
+        <div
+          className={cn(
+            "room-gameplay-content flex-1 flex min-h-0 overflow-hidden",
+            !canUseKPTools && "room-gameplay-content--player",
+            roomLeftPanelCollapsed && "room-gameplay-content--left-collapsed",
+            !showDesktopCommandRail && "room-gameplay-content--right-collapsed",
+            !showSceneBanner && "room-gameplay-content--scene-collapsed"
+          )}
+        >
+          {!canUseKPTools && room ? (
+            <RoomPlayerView
+              room={room}
+              roomId={roomId || ''}
+              currentUserId={user?.id}
+              selectedCharacter={selectedCharacter}
+              messages={messages}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              connected={connected}
+              isMobile={isMobile}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              combatState={combatState}
+              isMyTurn={isMyTurn}
+              sceneDescription={sceneDesc}
+              showSceneBanner={showSceneBanner}
+              onToggleSceneBanner={() => setShowSceneBanner((visible) => !visible)}
+              showChatTools={showChatTools}
+              setShowChatTools={setShowChatTools}
+              showMobileQuickRolls={showMobileQuickRolls}
+              setShowMobileQuickRolls={setShowMobileQuickRolls}
+              canSendPrivateMessage={canSendPrivateMessage}
+              sendTargetUserId={chatTargetUserId}
+              onSendTargetChange={setChatTargetUserId}
+              onSubmitMessage={handleSendMessage}
+              onRollSkill={handleRollDice}
+              onUpdateQuickSkills={handleUpdateQuickSkills}
+              messagesEndRef={messagesEndRef}
+              clues={clues}
+              onMarkClue={addClue}
+              onArchiveImportantMessage={(msg, displayName) => void handleArchiveImportantMessage(msg, displayName)}
+              onArchiveKeyDice={(msg, displayName) => void handleArchiveKeyDice(msg, displayName)}
+              onOpenCharacter={openMyCharacter}
+              onOpenClues={() => openInvestigationDock('clues')}
+              onOpenNpc={() => openInvestigationDock('npcs')}
+              canViewInvestigation={canViewInvestigation}
+              setShowInvestigationDock={(updater) => {
+                const nextValue = typeof updater === 'function' ? updater(showInvestigationDock) : updater;
+                if (nextValue) {
+                  openInvestigationDock('scenes');
+                } else {
+                  setShowInvestigationDock(false);
+                }
+              }}
+              setShowNotesPanel={(updater) => setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, updater)}
+              setShowSubRooms={(updater) => setFloatingToolPanel('subRooms', showSubRooms, setShowSubRooms, updater)}
+              setShowCombatTimeline={setShowCombatTimeline}
+              onSelectMember={(member) => {
+                setSelectedMember(member);
+                setShowMemberDetail(true);
+              }}
             />
-          )}
-
-          <Surface variant="panel" padding="sm">
-            <h3 className="text-xs font-bold mb-2.5 flex items-center gap-1.5 uppercase tracking-wider" style={{ color: "#6b6558" }}>
-              <Users size={12} />
-              调查员 ({room?.members.length || 0})
-            </h3>
-            <div className="space-y-2">
-              {room?.members.map((member) => {
-                const char = member.displayedCharacter || member.character;
-                return (
-                <div
-                  key={member.id}
-                  className="p-2.5 rounded-lg cursor-pointer transition-all border border-transparent backdrop-blur-sm bg-black/20 hover:bg-black/40 hover:border-[#c9a227]/30 shadow-sm"
-                  onClick={() => {
-                    setSelectedMember(member);
-                    setShowMemberDetail(true);
-                  }}
-                >
-                  {/* 第一行：头像 + 名字 + 角色 */}
-                  <div className="flex items-center gap-2.5 mb-2">
-                    {/* 头像 */}
-                    <div className="relative w-9 h-9 flex-shrink-0">
-                      {member.avatarUrl ? (
-                        <img
-                          src={member.avatarUrl}
-                          className="w-9 h-9 rounded-full object-cover border border-coc-border bg-coc-bg-secondary"
-                          alt=""
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#3a3a3a] flex items-center justify-center">
-                          <User size={18} className="text-coc-text-muted" />
-                        </div>
-                      )}
-                      {member.frameUrl && (
-                        <img
-                          src={member.frameUrl}
-                          className="absolute inset-0 w-full h-full pointer-events-none"
-                          style={{ transform: 'scale(1.3)' }}
-                          alt=""
-                        />
-                      )}
-                    </div>
-                    {/* 名字 */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm truncate">
-                          {char?.name || member.nickname}
-                        </span>
-                        {member.role === 'KP' && (
-                          <Crown size={12} className="text-coc-accent-gold flex-shrink-0" />
-                        )}
-                      </div>
-                      {char?.name && (
-                        <div className="text-xs text-coc-text-secondary truncate">
-                          {member.nickname}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 两行：HP+MP / SAN */}
-                  {char ? (
-                    <div className="space-y-1">
-                      {/* 第一行：HP + MP */}
-                      <div className="flex items-center gap-2">
-                        <Tooltip content={`生命值 ${char.hp}/${char.maxHp || char.hp}`}>
-                          <div className="flex items-center gap-1 text-xs">
-                            <Heart size={12} className="text-coc-accent-red" />
-                            <span className="text-coc-accent-red font-mono">{char.hp}</span>
-                            <span className="text-coc-text-muted text-[10px]">/{char.maxHp || char.hp}</span>
-                          </div>
-                        </Tooltip>
-                        <Tooltip content={`魔法值 ${char.mp}/${char.maxMp || char.mp}`}>
-                          <div className="flex items-center gap-1 text-xs">
-                            <Sparkles size={12} className="text-coc-accent-cyan" />
-                            <span className="text-coc-accent-cyan font-mono">{char.mp}</span>
-                            <span className="text-coc-text-muted text-[10px]">/{char.maxMp || char.mp}</span>
-                          </div>
-                        </Tooltip>
-                      </div>
-                      {/* 第二行：SAN */}
-                      <div className="flex items-center gap-2">
-                        <Tooltip content={`理智值 ${char.san}/${char.maxSan || char.san}`}>
-                          <div className="flex items-center gap-1 text-xs">
-                            <Brain size={12} className="text-yellow-400" />
-                            <span className="text-yellow-400 font-mono">{char.san}</span>
-                            <span className="text-coc-text-muted text-[10px]">/{char.maxSan || char.san}</span>
-                          </div>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-xs" style={{ color: "#6b6558" }}>观察者</span>
-                  )}
-
-                  {/* 状态标签 */}
-                  {memberStatuses[member.id]?.length > 0 && (
-                    <div className="mt-1.5">
-                      <StatusTags tags={memberStatuses[member.id]} size="sm" />
-                    </div>
-                  )}
-
-                  {/* KP可编辑状态标记 */}
-                  {canUseKPTools && char && (
-                    <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
-                      <StatusTags
-                        tags={memberStatuses[member.id] || []}
-                        isEditable={true}
-                        onChange={(tags) => updateMemberStatus(member.id, tags)}
-                        size="sm"
-                      />
-                    </div>
-                  )}
-                </div>
-              )})}
-            </div>
-          </Surface>
-
-          {/* 战斗控制 */}
-          {activeTab === 'combat' && canUseKPTools && (
-            <Surface variant="panel" tone="blood" padding="sm">
-              <h3 className="text-xs font-bold text-coc-text-muted mb-2 flex items-center gap-1.5 uppercase tracking-wider">
-                <Swords size={12} />
-                战斗控制
-              </h3>
-              <div className="space-y-1.5">
-                {(!combatState || combatState.status === 'IDLE' || combatState.status === 'ENDED') ? (
-                  <MagneticButton
-                    variant="blood"
-                    size="sm"
-                    onClick={handleStartCombat}
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    <Play size={16} /> 开始战斗
-                  </MagneticButton>
-                ) : (
-                  <>
-                    <div className="text-sm text-coc-text-secondary">
-                      第 {combatState.currentRound} 回合
-                    </div>
-                    <div className="text-sm">
-                      当前行动: {combatState.turnOrder[combatState.currentTurnIndex]?.nickname}
-                    </div>
-                    {isMyTurn && (
-                      <>
-                        <MagneticButton
-                          variant="blood"
-                          size="sm"
-                          onClick={() => setShowAttackModal(true)}
-                          className="w-full mt-2 flex items-center justify-center gap-2"
-                        >
-                          <Swords size={16} /> 攻击
-                        </MagneticButton>
-                        <MagneticButton
-                          variant="void"
-                          size="sm"
-                          onClick={handleNextTurn}
-                          className="w-full mt-2 flex items-center justify-center gap-2"
-                        >
-                          <SkipForward size={16} /> 结束回合
-                        </MagneticButton>
-                      </>
-                    )}
-                    <MagneticButton
-                      variant="blood"
-                      size="sm"
-                      onClick={handleEndCombat}
-                      className="w-full mt-1 text-red-400 flex items-center justify-center gap-2"
-                    >
-                      <Square size={16} /> 结束战斗
-                    </MagneticButton>
-                  </>
-                )}
-              </div>
-            </Surface>
-          )}
-        </div>
-        )}
-        </div>
+          ) : (
+            <>
+          <RoomParticipantRail
+            roomCode={room?.roomId || roomId}
+            members={room?.members || []}
+            currentUserId={user?.id}
+            selectedCharacter={selectedCharacter}
+            memberStatuses={memberStatuses}
+            isCollapsed={roomLeftPanelCollapsed}
+            isMobile={isMobile}
+            activeTab={activeTab}
+            canUseKPTools={canUseKPTools}
+            combatState={combatState}
+            isMyTurn={isMyTurn}
+            onToggleCollapsed={toggleRoomLeftPanel}
+            onSelectMember={(member) => {
+              setSelectedMember(member);
+              setShowMemberDetail(true);
+            }}
+            onUpdateMemberStatus={updateMemberStatus}
+            onStartCombat={handleStartCombat}
+            onOpenAttackModal={() => setShowAttackModal(true)}
+            onNextTurn={handleNextTurn}
+            onEndCombat={handleEndCombat}
+          />
 
         {/* 右侧：聊天/战斗区 */}
         <div className={cn(
-          "flex-1 flex flex-col min-h-0 overflow-hidden",
+          "room-stage room-stage-v3 flex-1 flex flex-col min-h-0 overflow-hidden",
           isMobile ? "pl-0" : "pl-3"
         )}>
           {activeTab === 'chat' ? (
             <Surface
               variant="solid"
               padding="none"
-              className={cn("flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
+              className={cn("room-stage-surface room-stage-surface-v3 flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
             >
-              {/* ===== 新增：场景描述卡片 ===== */}
-              {!isMobile && (sceneDesc || canUseKPTools) && (
-                <div className={cn("flex-shrink-0", isMobile ? "px-1 pt-1" : "px-4 pt-4")}>
-                  <SceneCard
-                    description={sceneDesc}
-                    isKP={canUseKPTools}
-                    onUpdate={updateSceneDesc}
-                  />
-                </div>
+              {!isMobile && (
+                <RoomSceneBanner
+                  room={room}
+                  sceneDescription={sceneDesc}
+                  canEdit={canUseKPTools}
+                  onEdit={() => openInvestigationDock('scenes')}
+                  isCollapsed={!showSceneBanner}
+                  onToggleCollapsed={() => setShowSceneBanner((visible) => !visible)}
+                />
               )}
 
-              {/* 消息列表 */}
-              <StaggerList
-                data-testid="room-message-list"
-                className={cn(
-                  "flex-1 overflow-y-auto min-h-0",
-                  isMobile ? "p-2 space-y-2" : "p-4 space-y-3"
-                )}
-                staggerDelay={0.03}
-              >
-                {messages.length === 0 ? (
-                  <StaggerItem>
-                    <EmptyState
-                      icon={EmptyIcons.Messages}
-                      title="还没有消息"
-                      description="开始聊天吧，声音会在深渊中回响……"
-                      size="sm"
-                      animate={false}
+              <RoomChatTranscript
+                messages={messages}
+                members={room?.members || []}
+                currentUserId={user?.id}
+                isMobile={isMobile}
+                canUseKPTools={canUseKPTools}
+                messagesEndRef={messagesEndRef}
+                onArchiveImportantMessage={(msg, displayName) => void handleArchiveImportantMessage(msg, displayName)}
+                onArchiveKeyDice={(msg, displayName) => void handleArchiveKeyDice(msg, displayName)}
+                onMarkClue={addClue}
+              />
+
+              <div className="room-bottom-command-deck flex-shrink-0">
+                <RoomChatComposer
+                  value={inputMessage}
+                  onChange={setInputMessage}
+                  members={room?.members || []}
+                  currentUserId={user?.id}
+                  connected={connected}
+                  isMobile={isMobile}
+                  showChatTools={showChatTools}
+                  setShowChatTools={setShowChatTools}
+                  hasSelectedCharacter={!!selectedCharacter}
+                  showMobileQuickRolls={showMobileQuickRolls}
+                  setShowMobileQuickRolls={setShowMobileQuickRolls}
+                  canUseKPTools={canUseKPTools}
+                  canSendPrivateMessage={canSendPrivateMessage}
+                  sendTargetUserId={chatTargetUserId}
+                  onSendTargetChange={setChatTargetUserId}
+                  onOpenSanityModal={() => {
+                    const initial: Record<string, number> = {};
+                    room?.members.forEach(m => {
+                      if (m.character) initial[m.userId] = 0;
+                    });
+                    setSanityTargets(initial);
+                    setSanityDescription('');
+                    setShowSanityModal(true);
+                  }}
+                  onSubmit={handleSendMessage}
+                />
+
+                {canUseKPTools ? (
+                  <RoomKeeperRollDock
+                    connected={connected}
+                    isSecretDice={isSecretDice}
+                    onToggleSecretDice={() => setIsSecretDice(!isSecretDice)}
+                    onQuickRoll={handleKeeperQuickRoll}
+                    onOpenFull={() => setShowKpDicePanel(true)}
+                  />
+                ) : selectedCharacter && (!isMobile || showMobileQuickRolls) && (
+                  <div className="room-quick-roll-tray">
+                    <QuickRollBar
+                      quickSkills={(() => {
+                        const qs = selectedCharacter.quickSkills
+                          ? typeof selectedCharacter.quickSkills === 'string'
+                            ? JSON.parse(selectedCharacter.quickSkills)
+                            : selectedCharacter.quickSkills
+                          : ['侦查', '聆听', '图书馆使用', '心理学', '话术'];
+                        return qs;
+                      })()}
+                      characterSkills={(() => {
+                        const skills = selectedCharacter.skills
+                          ? typeof selectedCharacter.skills === 'string'
+                            ? JSON.parse(selectedCharacter.skills)
+                            : selectedCharacter.skills
+                          : {};
+                        return skills;
+                      })()}
+                      onRoll={(skillName, skillValue) => {
+                        handleRollDice(skillName, skillValue);
+                        if (isMobile) setShowMobileQuickRolls(false);
+                      }}
+                      onUpdateQuickSkills={handleUpdateQuickSkills}
+                      isEditable={true}
+                      compact={isMobile}
                     />
-                  </StaggerItem>
-                ) : (
-                  messages.map((msg) => {
-                    const isSystem = msg.userId === 'system';
-                    const isMe = msg.userId === user?.id;
-                    const sender = room?.members?.find(m => m.userId === msg.userId);
-                    const isKPMessage = sender?.role === 'KP';
-                    const displayName = sender?.character?.name || sender?.displayedCharacter?.name || msg.nickname;
-
-                    const Avatar = () => (
-                      <div className={cn("relative flex-shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
-                        {sender?.avatarUrl ? (
-                          <img
-                            src={sender.avatarUrl}
-                            className="h-full w-full rounded-full object-cover border border-coc-bg-tertiary bg-coc-bg-secondary"
-                            alt=""
-                          />
-                        ) : (
-                          <div className="h-full w-full rounded-full bg-coc-bg-tertiary border border-coc-border flex items-center justify-center">
-                            <User size={isMobile ? 16 : 20} className="text-coc-text-muted" />
-                          </div>
-                        )}
-                      </div>
-                    );
-
-                    if (isSystem) {
-                      return (
-                        <StaggerItem key={msg.id}>
-                          <div className="flex justify-center">
-                            <div className={cn(
-                              "max-w-[85%] rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/60 italic text-sm text-center shadow-md",
-                              isMobile ? "px-2 py-2" : "px-5 py-3"
-                            )} style={{ color: "#e8d4a0" }}>
-                              {msg.content}
-                              <span className="ml-2 text-xs text-coc-text-muted not-italic">
-                                {new Date(msg.timestamp).toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                        </StaggerItem>
-                      );
-                    }
-
-                    return (
-                      <StaggerItem key={msg.id}>
-                        <div className={cn("flex justify-start", isMobile ? "gap-2" : "gap-3")}>
-                          <Avatar />
-                          <div
-                            className={cn(
-                              "rounded-lg relative group border shadow-md",
-                              isMobile ? "max-w-[82%]" : "max-w-[75%]",
-                              isMobile ? "px-2 py-2" : "px-4 py-3",
-                              msg.type === 'dice'
-                                ? 'bg-[#1a1a1a] border-[#c9a227]/50'
-                                : isMe
-                                ? 'bg-[#1a1a1a] border-l-2 border-l-[#c9a227] border-[#3a3a3a]/60'
-                                : 'bg-coc-bg-tertiary'
-                            )}
-                          >
-                    <div className="text-sm font-bold mb-0.5 flex items-center gap-1.5">
-                              {isKPMessage ? (
-                                <>
-                                  <Crown size={14} className="text-coc-accent-gold" />
-                                  <span style={{ color: "#c9a227" }}>{displayName}</span>
-                                </>
-                              ) : (
-                                <span style={{ color: "#e8d4a0" }}>{displayName}</span>
-                              )}
-                              {isMe && <span className="text-xs font-normal text-coc-text-muted">(我)</span>}
-                              <Tooltip content={new Date(msg.timestamp).toLocaleString()}>
-                                <span className="text-xs font-normal ml-auto cursor-help" style={{ color: "#6b6558" }}>
-                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </Tooltip>
-                            </div>
-                            <p className="text-sm leading-relaxed" style={{ color: "#d4c5a8" }}>{msg.content}</p>
-
-                            {msg.type === 'dice' && msg.rollData?.successLevel && (
-                              <div className="text-xs mt-2 pt-2 border-t border-[#3a3a3a]/60" style={{ color: "#8b8375" }}>
-                                <Tooltip content={getSuccessExplanation(msg.rollData.successLevel)}>
-                                  <span className="cursor-help">{msg.rollData.successLevel} → {getSuccessExplanation(msg.rollData.successLevel)}</span>
-                                </Tooltip>
-                                {msg.rollData.targetName && (
-                                  <div className="mt-0.5 opacity-70">
-                                    {getSkillExplanation(msg.rollData.targetName)}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {canUseKPTools && msg.type === 'text' && (
-                              <button
-                                type="button"
-                                onClick={() => void handleArchiveImportantMessage(msg, displayName)}
-                                className="btn-v2 mt-2 inline-flex items-center gap-1 rounded border border-[#3a3a3a]/70 bg-[#15151d] px-2 py-1 text-[11px] text-[#e8d4a0] opacity-90 hover:border-[#c9a227]/60"
-                              >
-                                <ScrollText size={12} />
-                                归档重要消息
-                              </button>
-                            )}
-
-                            {canUseKPTools && msg.type === 'dice' && msg.rollData?.rollResult !== undefined && (
-                              <button
-                                type="button"
-                                onClick={() => void handleArchiveKeyDice(msg, displayName)}
-                                className="btn-v2 mt-2 inline-flex items-center gap-1 rounded border border-[#3a3a3a]/70 bg-[#15151d] px-2 py-1 text-[11px] text-[#e8d4a0] opacity-90 hover:border-[#c9a227]/60"
-                              >
-                                <Dice5 size={12} />
-                                归档关键骰点
-                              </button>
-                            )}
-
-                            {msg.type === 'text' && (
-                              <div className="absolute -right-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ClueMarker
-                                  messageId={msg.id}
-                                  messageContent={msg.content}
-                                  nickname={displayName}
-                                  timestamp={msg.timestamp}
-                                  onMarkAsClue={addClue}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </StaggerItem>
-                    );
-                  })
-                )}
-                <div ref={messagesEndRef} />
-              </StaggerList>
-
-              {/* 输入框 */}
-              <form
-                onSubmit={handleSendMessage}
-                className={cn(
-                  "border-t border-[#3a3a3a]/40 flex-shrink-0 backdrop-blur-md bg-black/20",
-                  isMobile ? "p-1" : "space-y-2 p-4"
-                )}
-              >
-                {(!isMobile || showChatTools) && (
-                  <div
-                    data-testid="room-chat-tools-row"
-                    className={cn(
-                      "flex items-center justify-between",
-                      isMobile && "pb-1"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 flex-1">
-                      {showChatTools && (
-                        <>
-                          <QuickPhrases
-                            onSelect={(phrase) => setInputMessage(prev => prev + phrase)}
-                          />
-                          {canUseKPTools && (
-                            <>
-                              <SecretDiceToggle
-                                isSecret={isSecretDice}
-                                onToggle={() => setIsSecretDice(!isSecretDice)}
-                                disabled={!connected}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const initial: Record<string, number> = {};
-                                  room?.members.forEach(m => {
-                                    if (m.character) initial[m.userId] = 0;
-                                  });
-                                  setSanityTargets(initial);
-                                  setSanityDescription('');
-                                  setShowSanityModal(true);
-                                }}
-                                disabled={!connected}
-                                className="px-2 py-1 rounded text-xs border border-purple-500/50 text-purple-300 hover:bg-purple-500/10 transition-colors"
-                              >
-                                理智侵蚀
-                              </button>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    {!isMobile && (
-                      <button
-                        type="button"
-                        onClick={() => setShowChatTools(!showChatTools)}
-                        className="p-1 text-[#6b6558] hover:text-[#c9a227] transition-colors flex-shrink-0"
-                        title={showChatTools ? '收起工具' : '展开工具'}
-                      >
-                        {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    )}
                   </div>
                 )}
-                <div className={cn("flex gap-2", isMobile && "items-center")}>
-                  {isMobile && (
-                    <button
-                      type="button"
-                      data-testid="room-chat-tools-toggle"
-                      onClick={() => setShowChatTools(!showChatTools)}
-                      className={cn(
-                        "btn-v2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
-                        showChatTools
-                          ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
-                          : "border-[#3a3a3a]/60 bg-[#0f1016]/75 text-[#8b8375] hover:text-[#c9a227]"
-                      )}
-                      title={showChatTools ? '收起工具' : '展开工具'}
-                      aria-label={showChatTools ? '收起聊天工具' : '展开聊天工具'}
-                    >
-                      {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                  )}
-                  {isMobile && selectedCharacter && (
-                    <button
-                      type="button"
-                      data-testid="room-mobile-quick-roll-toggle"
-                      onClick={() => setShowMobileQuickRolls((visible) => !visible)}
-                      className={cn(
-                        "btn-v2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
-                        showMobileQuickRolls
-                          ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
-                          : "border-[#3a3a3a]/60 bg-[#0f1016]/75 text-[#8b8375] hover:text-[#c9a227]"
-                      )}
-                      title={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
-                      aria-label={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
-                      aria-expanded={showMobileQuickRolls}
-                    >
-                      <Dice5 size={16} />
-                    </button>
-                  )}
-                  <MentionInput
-                    value={inputMessage}
-                    onChange={setInputMessage}
-                    members={room?.members.map(m => ({ userId: m.userId, nickname: m.nickname })) || []}
-                    onSubmit={handleSendMessage}
-                    placeholder={connected ? "输入消息..." : "连接中..."}
-                    disabled={!connected}
-                  />
-                  <MagneticButton
-                    variant="blood"
-                    size="sm"
-                    type="submit"
-                    disabled={!connected}
-                  >
-                    <Send size={18} />
-                  </MagneticButton>
-                </div>
-              </form>
-
-              {/* ===== 新增：快捷掷骰栏 ===== */}
-              {selectedCharacter && (!isMobile || showMobileQuickRolls) && (
-                <div className="flex-shrink-0">
-                  <QuickRollBar
-                  quickSkills={(() => {
-                    const qs = selectedCharacter.quickSkills
-                      ? typeof selectedCharacter.quickSkills === 'string'
-                        ? JSON.parse(selectedCharacter.quickSkills)
-                        : selectedCharacter.quickSkills
-                      : ['侦查', '聆听', '图书馆使用', '心理学', '话术'];
-                    return qs;
-                  })()}
-                  characterSkills={(() => {
-                    const skills = selectedCharacter.skills
-                      ? typeof selectedCharacter.skills === 'string'
-                        ? JSON.parse(selectedCharacter.skills)
-                        : selectedCharacter.skills
-                      : {};
-                    return skills;
-                  })()}
-                  onRoll={(skillName, skillValue) => {
-                    handleRollDice(skillName, skillValue);
-                    if (isMobile) setShowMobileQuickRolls(false);
-                  }}
-                  onUpdateQuickSkills={async (skills) => {
-                    try {
-                      await apiFetch(`/characters/${selectedCharacter.id}/quick-skills`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ quickSkills: skills }),
-                      });
-                      setSelectedCharacter({ ...selectedCharacter, quickSkills: JSON.stringify(skills) });
-                    } catch (error) {
-                      console.error('更新快捷技能失败:', error);
-                    }
-                  }}
-                  isEditable={true}
-                  compact={isMobile}
-                />
-                </div>
-              )}
+              </div>
             </Surface>
           ) : (
             /* 战斗面板 */
@@ -1749,7 +1300,7 @@ export function RoomPage() {
               variant="solid"
               tone="blood"
               padding="none"
-              className={cn("flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
+              className={cn("room-stage-surface room-stage-surface--combat flex-1 flex flex-col min-h-0 overflow-hidden", isMobile ? "p-1" : "p-4")}
             >
               {!combatState || combatState.status === 'IDLE' ? (
                 <div className="flex-1 flex items-center justify-center">
@@ -1835,177 +1386,174 @@ export function RoomPage() {
             </Surface>
           )}
         </div>
-        <Surface
-          variant="panel"
-          padding="none"
-          data-testid="room-desktop-command-rail"
-          className="hidden md:flex ml-3 w-16 shrink-0 flex-col items-center gap-2 overflow-y-auto p-2"
-        >
-          {[
-            { label: '成员', icon: Users, active: !roomLeftPanelCollapsed, onClick: toggleRoomLeftPanel },
-            ...(canViewInvestigation ? [{ label: '调查档案', icon: Archive, active: showInvestigationDock, onClick: () => setShowInvestigationDock((v) => !v) }] : []),
-            { label: '线索', icon: Search, active: showCluePanel, onClick: () => setShowCluePanel((v) => !v) },
-            { label: 'NPC', icon: User, active: showNpcPanel, onClick: () => setShowNpcPanel((v) => !v) },
-            {
-              label: activeTab === 'chat' ? '战斗视图' : '聊天视图',
-              icon: activeTab === 'chat' ? Swords : Send,
-              active: activeTab === 'combat',
-              onClick: () => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat'),
-            },
-            {
-              label: '私聊',
-              icon: MessageSquare,
-              active: showPrivateChat,
-              onClick: () => setShowPrivateChat(true),
-              badge: privateUnreadCount,
-            },
-            { label: '战斗记录', icon: History, active: showCombatTimeline, onClick: () => setShowCombatTimeline((v) => !v) },
-            { label: '笔记', icon: BookOpen, active: showNotesPanel, onClick: () => setShowNotesPanel((v) => !v) },
-            { label: 'AI', icon: Sparkles, active: showAI, onClick: () => setShowAI((v) => !v) },
-            { label: '子房间', icon: GitBranch, active: showSubRooms, onClick: () => setShowSubRooms((v) => !v) },
-            { label: '日志', icon: ScrollText, active: showLogPanel, onClick: () => setShowLogPanel((v) => !v) },
-            { label: '事件', icon: History, active: showEventLog, onClick: () => setShowEventLog((v) => !v) },
-            { label: '统计', icon: BarChart3, active: showStats, onClick: () => { fetchRoomStats(); setShowStats((v) => !v); } },
-          ].map((item) => (
-            <Tooltip key={item.label} content={item.label}>
-              <button
-                type="button"
-                data-room-desktop-action="true"
-                aria-label={item.label}
-                onClick={item.onClick}
-                className={cn(
-                  'btn-v2 relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
-                  item.active
-                    ? 'border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]'
-                    : 'border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]'
-                )}
-              >
-                <item.icon size={18} />
-                {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#a63848] px-1 text-[10px] leading-none text-white shadow-md">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            </Tooltip>
-          ))}
-
-          {canUseKPTools && (
-            <Tooltip content="KP工具">
-              <button
-                type="button"
-                data-room-desktop-action="true"
-                aria-label="KP工具"
-                onClick={() => setShowGMKit((v) => !v)}
-                className={cn(
-                  'btn-v2 mt-1 flex h-11 w-11 items-center justify-center rounded-lg border transition-colors',
-                  showGMKit
-                    ? 'border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]'
-                    : 'border-[#a63848]/45 bg-[#4a111a]/30 text-[#e8d4a0] hover:border-[#c9a227]/45'
-                )}
-              >
-                <Crown size={18} />
-              </button>
-            </Tooltip>
+        {!isMobile && showDesktopCommandRail ? (
+          <Suspense fallback={<aside className="room-command-rail room-command-rail--loading">工具台加载中...</aside>}>
+            <RoomCommandRail
+              roomId={roomId || ''}
+              members={room?.members || []}
+              currentUserId={user?.id}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              roomLeftPanelCollapsed={roomLeftPanelCollapsed}
+              toggleRoomLeftPanel={toggleRoomLeftPanel}
+              canViewInvestigation={canViewInvestigation}
+              showInvestigationDock={showInvestigationDock}
+              setShowInvestigationDock={(updater) => {
+                const nextValue = typeof updater === 'function' ? updater(showInvestigationDock) : updater;
+                if (nextValue) {
+                  openInvestigationDock('scenes');
+                } else {
+                  setShowInvestigationDock(false);
+                }
+              }}
+              showCluePanel={showCluePanel}
+              setShowCluePanel={(updater) => setFloatingToolPanel('clues', showCluePanel, setShowCluePanel, updater)}
+              showNpcPanel={showNpcPanel}
+              setShowNpcPanel={(updater) => setFloatingToolPanel('npc', showNpcPanel, setShowNpcPanel, updater)}
+              showCombatTimeline={showCombatTimeline}
+              setShowCombatTimeline={setShowCombatTimeline}
+              showNotesPanel={showNotesPanel}
+              setShowNotesPanel={(updater) => setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, updater)}
+              showSubRooms={showSubRooms}
+              setShowSubRooms={(updater) => setFloatingToolPanel('subRooms', showSubRooms, setShowSubRooms, updater)}
+              showLogPanel={showLogPanel}
+              setShowLogPanel={(updater) => setFloatingToolPanel('log', showLogPanel, setShowLogPanel, updater)}
+              showEventLog={showEventLog}
+              setShowEventLog={(updater) => setFloatingToolPanel('eventLog', showEventLog, setShowEventLog, updater)}
+              showStats={showStats}
+              onToggleStats={() => {
+                fetchRoomStats();
+                setShowStats((value) => {
+                  const nextValue = !value;
+                  if (nextValue) {
+                    closeFloatingToolPanels();
+                  }
+                  return nextValue;
+                });
+              }}
+              canUseKPTools={canUseKPTools}
+              showGMKit={showGMKit}
+              setShowGMKit={(updater) => setFloatingToolPanel('gmKit', showGMKit, setShowGMKit, updater)}
+              showKpDicePanel={showKpDicePanel}
+              onOpenKpDicePanel={() => setShowKpDicePanel(true)}
+              onOpenInvestigationTab={openInvestigationDock}
+              onRequestClose={() => setShowDesktopCommandRail(false)}
+            />
+          </Suspense>
+        ) : !isMobile ? (
+          <button
+            type="button"
+            className="room-rail-reopen room-rail-reopen--right"
+            onClick={() => setShowDesktopCommandRail(true)}
+            aria-label="展开工具台"
+          >
+            <PanelRightOpen size={18} />
+            <span>工具台</span>
+          </button>
+        ) : null}
+            </>
           )}
-
-          <div className="mt-auto flex flex-col gap-2">
-            <Tooltip content="报告">
-              <Link
-                to={`/rooms/${roomId}/report`}
-                data-room-desktop-action="true"
-                aria-label="报告"
-                className="btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]"
-              >
-                <FileText size={18} />
-              </Link>
-            </Tooltip>
-            <Tooltip content="投骰历史">
-              <Link
-                to={`/rooms/${roomId}/dice-history`}
-                data-room-desktop-action="true"
-                aria-label="投骰历史"
-                className="btn-v2 flex h-11 w-11 items-center justify-center rounded-lg border border-[#3a3a3a]/55 bg-[#0f1016]/70 text-[#b0a898] hover:border-[#c9a227]/45 hover:text-[#e8d4a0]"
-              >
-                <Dice5 size={18} />
-              </Link>
-            </Tooltip>
-          </div>
-        </Surface>
       </div>
-      {/* ===== V2.1 新增：跑团 Log 面板 ===== */}
-      {showLogPanel && (
-        <RoomLogPanel
-          roomId={roomId || ''}
-          isOpen={showLogPanel}
-          onClose={() => setShowLogPanel(false)}
-          isKP={canUseKPTools}
-        />
+      {(showLogPanel || showSubRooms || showEventLog || showGMKit || showNpcPanel || showCluePanel || showNotesPanel) && (
+        <div className="room-side-tool-drawer" data-room-side-tool-drawer="true">
+          {showLogPanel && (
+            <Suspense fallback={null}>
+              <RoomLogPanel
+                roomId={roomId || ''}
+                isOpen={showLogPanel}
+                onClose={() => setShowLogPanel(false)}
+                isKP={canUseKPTools}
+              />
+            </Suspense>
+          )}
+          {showSubRooms && (
+            <Suspense fallback={null}>
+              <SubRoomManager
+                roomId={roomId || ''}
+                isOpen={showSubRooms}
+                onClose={() => setShowSubRooms(false)}
+                isKP={canUseKPTools}
+                members={room?.members?.map(m => ({ userId: m.userId, nickname: m.nickname, avatarUrl: m.avatarUrl })) || []}
+              />
+            </Suspense>
+          )}
+          {showEventLog && (
+            <Suspense fallback={null}>
+              <RoomEventLogPanel
+                roomId={roomId || ''}
+                isOpen={showEventLog}
+                onClose={() => setShowEventLog(false)}
+                isKP={canUseKPTools}
+              />
+            </Suspense>
+          )}
+          {showGMKit && canUseKPTools && (
+            <Suspense fallback={null}>
+              <GMKitPanel
+                roomId={roomId || ''}
+                isOpen={showGMKit}
+                onClose={() => setShowGMKit(false)}
+              />
+            </Suspense>
+          )}
+          {showNpcPanel && (
+            <Suspense fallback={null}>
+              <NpcFocusPanel
+                roomId={roomId || ''}
+                isOpen={showNpcPanel}
+                onClose={() => setShowNpcPanel(false)}
+                currentSceneId={room?.currentScene?.id}
+                isKP={canUseKPTools}
+              />
+            </Suspense>
+          )}
+          {showCluePanel && (
+            <Suspense fallback={null}>
+              <CluePanel
+                roomId={roomId || ''}
+                isOpen={showCluePanel}
+                onClose={() => setShowCluePanel(false)}
+                isKP={canUseKPTools}
+              />
+            </Suspense>
+          )}
+          {roomId && showNotesPanel && (
+            <Suspense fallback={null}>
+              <NotesPanel
+                roomId={roomId}
+                isOpen={showNotesPanel}
+                onOpenChange={(open) => setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, open)}
+                hideToggle
+                inline
+              />
+            </Suspense>
+          )}
+        </div>
       )}
-      {/* ===== V2.1 新增：AI 助手面板 ===== */}
-      {showAI && (
-        <AIAssistantPanel
-          roomId={roomId || ''}
-          isOpen={showAI}
-          onClose={() => setShowAI(false)}
-        />
-      )}
-      {/* ===== V2.1 新增：子房间面板 ===== */}
-      {showSubRooms && (
-        <SubRoomManager
-          roomId={roomId || ''}
-          isOpen={showSubRooms}
-          onClose={() => setShowSubRooms(false)}
-          isKP={canUseKPTools}
-          members={room?.members?.map(m => ({ userId: m.userId, nickname: m.nickname, avatarUrl: m.avatarUrl })) || []}
-        />
-      )}
-      {/* ===== V2.1 新增：事件日志面板 ===== */}
-      {showEventLog && (
-        <RoomEventLogPanel
-          roomId={roomId || ''}
-          isOpen={showEventLog}
-          onClose={() => setShowEventLog(false)}
-          isKP={canUseKPTools}
-        />
-      )}
-      {/* ===== V2.1 新增：GM 工具箱面板 ===== */}
-      {showGMKit && canUseKPTools && (
-        <GMKitPanel
-          roomId={roomId || ''}
-          isOpen={showGMKit}
-          onClose={() => setShowGMKit(false)}
-        />
-      )}
-      {/* ===== V2.1 新增：NPC 焦点面板 ===== */}
-      {showNpcPanel && (
-        <NpcFocusPanel
-          roomId={roomId || ''}
-          isOpen={showNpcPanel}
-          onClose={() => setShowNpcPanel(false)}
-          currentSceneId={room?.currentScene?.id}
-          isKP={canUseKPTools}
-        />
-      )}
-      {roomId && caps && (
-        <InvestigationDock
-          roomId={roomId}
-          capabilities={caps}
-          isOpen={showInvestigationDock}
-          onClose={() => setShowInvestigationDock(false)}
-        />
+      {roomId && caps && showInvestigationDock && (
+        <Suspense fallback={null}>
+          <InvestigationDock
+            roomId={roomId}
+            capabilities={caps}
+            isOpen={showInvestigationDock}
+            activeTab={investigationDockTab}
+            onClose={() => setShowInvestigationDock(false)}
+          />
+        </Suspense>
       )}
     </div>
 
     {/* ===== V2.1 新增：战斗时间线（底部弹层） ===== */}
     {showCombatTimeline && (
-      <CombatTimeline
-        roomId={roomId || ''}
-        isOpen={showCombatTimeline}
-        onClose={() => setShowCombatTimeline(false)}
-        isKP={canUseKPTools}
-        userId={user?.id}
-      />
+      <Suspense fallback={null}>
+        <CombatTimeline
+          roomId={roomId || ''}
+          isOpen={showCombatTimeline}
+          onClose={() => setShowCombatTimeline(false)}
+          isKP={canUseKPTools}
+          userId={user?.id}
+        />
+      </Suspense>
     )}
 
       {/* 选择角色弹窗 */}
@@ -2115,6 +1663,25 @@ export function RoomPage() {
         </div>
           );
         })()}
+      </Modal>
+
+      {/* KP 完整投骰 */}
+      <Modal
+        isOpen={showKpDicePanel}
+        onClose={() => setShowKpDicePanel(false)}
+        title="守密人投骰"
+        className="room-kp-dice-modal"
+      >
+        <KPDicePanel
+          connected={connected}
+          isSecret={isSecretDice}
+          onToggleSecret={() => setIsSecretDice((value) => !value)}
+          onRoll={(rollType, skillName, skillValue) => {
+            if (!canUseKPTools) return;
+            handleGenericRoll(rollType, skillName, skillValue);
+            setShowKpDicePanel(false);
+          }}
+        />
       </Modal>
 
       {/* 成员详情弹窗 */}
@@ -2292,38 +1859,16 @@ export function RoomPage() {
         </div>
       </Modal>
 
-      {/* 笔记栏和线索板 */}
-      {roomId && (
-        <NotesPanel
-          roomId={roomId}
-          isOpen={showNotesPanel}
-          onOpenChange={setShowNotesPanel}
-          hideToggle
-          compact={isMobile}
-        />
-      )}
-
-      {/* ===== 新增：私聊面板 ===== */}
-      {roomId && (
-        <PrivateChatPanel
-          roomId={roomId}
-          members={room?.members || []}
-          myCharacterId={selectedCharacter?.id}
-          isOpen={showPrivateChat}
-          onClose={() => {
-            setShowPrivateChat(false);
-            fetchPrivateUnreadCount(); // 关闭时刷新未读数
-          }}
-          unreadCount={privateUnreadCount}
-        />
-      )}
-
       {/* ===== 新增：统计面板 ===== */}
-      <RoomStatsPanel
-        stats={roomStats}
-        isOpen={showStats}
-        onClose={() => setShowStats(false)}
-      />
+      {showStats && (
+        <Suspense fallback={null}>
+          <RoomStatsPanel
+            stats={roomStats}
+            isOpen={showStats}
+            onClose={() => setShowStats(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

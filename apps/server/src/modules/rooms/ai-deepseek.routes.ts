@@ -48,7 +48,7 @@ async function chatCompletion(body: ChatCompletionBody): Promise<string> {
   return data.choices?.[0]?.message?.content as string || '';
 }
 
-router.use((_req, _res, next) => {
+router.use('/:roomId/ai', (_req, _res, next) => {
   if (!LEGACY_AI_ROUTES_ENABLED) {
     return next(new AppError('LEGACY_AI_DISABLED', '旧 AI 生成接口默认关闭，请使用 AI 基础任务骨架', 503));
   }

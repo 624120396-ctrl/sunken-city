@@ -57,14 +57,14 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
 
       switch (tool) {
         case 'scene':
-          endpoint = `/api/rooms/${roomId}/ai/scene-desc`;
+          endpoint = `/rooms/${roomId}/ai/scene-desc`;
           body = {
             keywords: sceneKeywords.split(/[,，]/).map(s => s.trim()).filter(Boolean),
             atmosphere: sceneAtmosphere,
           };
           break;
         case 'npc':
-          endpoint = `/api/rooms/${roomId}/ai/npc-dialogue`;
+          endpoint = `/rooms/${roomId}/ai/npc-dialogue`;
           body = {
             npcName,
             npcDescription: npcDesc,
@@ -72,7 +72,7 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
           };
           break;
         case 'combat':
-          endpoint = `/api/rooms/${roomId}/ai/combat-resolve`;
+          endpoint = `/rooms/${roomId}/ai/combat-resolve`;
           body = {
             action: { type: 'attack', skillName: '格斗', skillValue: 50, weaponDamage: '1D6' },
             actorState: { name: combatActor || '行动者', hp: 10, maxHp: 10, dex: 50 },
@@ -80,15 +80,15 @@ export function AIAssistantPanel({ roomId, isOpen, onClose }: AIAssistantPanelPr
           };
           break;
         case 'log':
-          endpoint = `/api/rooms/${roomId}/ai/log-polish`;
+          endpoint = `/rooms/${roomId}/ai/log-polish`;
           body = { style: 'suspense' };
           break;
         case 'clue':
-          endpoint = `/api/rooms/${roomId}/ai/clue-analysis`;
+          endpoint = `/rooms/${roomId}/ai/clue-analysis`;
           body = {};
           break;
         case 'report':
-          endpoint = `/api/rooms/${roomId}/ai/combat-report`;
+          endpoint = `/rooms/${roomId}/ai/combat-report`;
           body = {};
           break;
       }

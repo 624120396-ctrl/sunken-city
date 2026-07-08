@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ListTodo, Megaphone, RefreshCw, Save, Trash2, UserCheck } from 'lucide-react';
+import { Surface } from '@components/system';
 import {
   createRoomActionQueueItem,
   deleteRoomActionQueueItem,
@@ -15,6 +16,25 @@ import type {
 
 interface RoomCommunicationPanelProps {
   roomId: string;
+}
+
+function normalizeCommunication(value: Partial<RoomCommunicationView> | null | undefined): RoomCommunicationView | null {
+  if (!value) return null;
+
+  return {
+    state: value.state
+      ? {
+          ...value.state,
+          currentTopic: value.state.currentTopic ?? '',
+          spotlightUserId: value.state.spotlightUserId ?? null,
+          keeperPrompt: value.state.keeperPrompt ?? '',
+          environmentChecklist: Array.isArray(value.state.environmentChecklist) ? value.state.environmentChecklist : [],
+        }
+      : null,
+    queue: Array.isArray(value.queue) ? value.queue : [],
+    members: Array.isArray(value.members) ? value.members : [],
+    canManageCommunication: value.canManageCommunication ?? false,
+  };
 }
 
 const kindLabels: Record<RoomQueueKind, string> = {
@@ -51,12 +71,17 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
     setLoading(true);
     setError(null);
     try {
-      const loaded = await getRoomCommunication(roomId);
+      const loaded = normalizeCommunication(await getRoomCommunication(roomId));
+      if (!loaded) {
+        setData(null);
+        return;
+      }
       setData(loaded);
       setCurrentTopic(loaded.state?.currentTopic ?? '');
       setSpotlightUserId(loaded.state?.spotlightUserId ?? '');
       setKeeperPrompt(loaded.state?.keeperPrompt ?? '');
-      setEnvironmentText((loaded.state?.environmentChecklist.length ? loaded.state.environmentChecklist : defaultChecklist).join('\n'));
+      const checklist = loaded.state?.environmentChecklist ?? [];
+      setEnvironmentText((checklist.length ? checklist : defaultChecklist).join('\n'));
     } catch (err: any) {
       setError(err?.message || '沟通队列加载失败');
     } finally {
@@ -68,9 +93,9 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
     void loadCommunication();
   }, [roomId]);
 
-  const activeItem = useMemo(() => data?.queue.find(item => item.status === 'ACTIVE') ?? null, [data?.queue]);
-  const waitingItems = useMemo(() => data?.queue.filter(item => item.status === 'WAITING') ?? [], [data?.queue]);
-  const spotlightName = data?.members.find(member => member.userId === data.state?.spotlightUserId)?.name ?? null;
+  const activeItem = useMemo(() => (data?.queue ?? []).find(item => item.status === 'ACTIVE') ?? null, [data?.queue]);
+  const waitingItems = useMemo(() => (data?.queue ?? []).filter(item => item.status === 'WAITING'), [data?.queue]);
+  const spotlightName = (data?.members ?? []).find(member => member.userId === data?.state?.spotlightUserId)?.name ?? null;
 
   async function handleSaveState() {
     setSaving(true);
@@ -100,7 +125,7 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
         label,
         note: requestNote,
       });
-      setData(prev => prev ? { ...prev, queue: [...prev.queue, item] } : prev);
+      setData(prev => prev ? { ...prev, queue: [...(prev.queue ?? []), item] } : prev);
       setRequestLabel('');
       setRequestNote('');
     } catch (err: any) {
@@ -120,7 +145,7 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
         label: checkInLabel || '请确认当前行动',
         targetUserId: checkInUserId,
       });
-      setData(prev => prev ? { ...prev, queue: [...prev.queue, item] } : prev);
+      setData(prev => prev ? { ...prev, queue: [...(prev.queue ?? []), item] } : prev);
       setCheckInUserId('');
     } catch (err: any) {
       setError(err?.message || '点名提醒失败');
@@ -136,7 +161,7 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
       const item = await updateRoomActionQueueItem(roomId, itemId, { status });
       setData(prev => {
         if (!prev) return prev;
-        const nextQueue = prev.queue
+        const nextQueue = (prev.queue ?? [])
           .map(existing => existing.id === item.id ? item : status === 'ACTIVE' && existing.status === 'ACTIVE' ? { ...existing, status: 'WAITING' as RoomQueueStatus } : existing)
           .filter(existing => existing.status === 'WAITING' || existing.status === 'ACTIVE');
         return { ...prev, queue: nextQueue };
@@ -153,7 +178,7 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
     setError(null);
     try {
       await deleteRoomActionQueueItem(roomId, itemId);
-      setData(prev => prev ? { ...prev, queue: prev.queue.filter(item => item.id !== itemId) } : prev);
+      setData(prev => prev ? { ...prev, queue: (prev.queue ?? []).filter(item => item.id !== itemId) } : prev);
     } catch (err: any) {
       setError(err?.message || '轮候项删除失败');
     } finally {
@@ -163,25 +188,25 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
 
   if (loading) {
     return (
-      <section className="mb-3 rounded-lg border border-[#3a3a3a]/50 bg-[#101018]/80 p-3 text-sm text-[#8f8778]">
+      <Surface variant="panel" material="basalt" padding="sm" className="room-workbench-panel room-workbench-panel--loading room-communication-panel">
         沟通队列加载中...
-      </section>
+      </Surface>
     );
   }
 
   if (!data) return null;
 
   return (
-    <section className="mb-3 rounded-lg border border-[#3a3a3a]/55 bg-[#101018]/88 p-3 shadow-lg shadow-black/20">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#f4ead1]">
-          <ListTodo size={16} className="text-[#c9a227]" />
+    <Surface variant="panel" material="basalt" padding="sm" className="room-workbench-panel room-communication-panel">
+      <div className="room-workbench-panel__header">
+        <div className="room-workbench-panel__title">
+          <ListTodo size={16} />
           沟通秩序
         </div>
         <button
           type="button"
           onClick={() => void loadCommunication()}
-          className="btn-v2 inline-flex min-h-8 items-center gap-1 rounded border border-[#3a3a3a]/60 px-2 text-xs text-[#b0a898]"
+          className="room-workbench-panel__refresh"
         >
           <RefreshCw size={13} />
           刷新
@@ -189,13 +214,13 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
       </div>
 
       {error && (
-        <div className="mb-3 rounded border border-[#a63848]/50 bg-[#4a111a]/35 px-3 py-2 text-xs text-[#f1b7bd]">
+        <div className="room-workbench-panel__error">
           {error}
         </div>
       )}
 
       <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr_1fr]">
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 text-xs text-[#8f8778]">当前焦点</div>
           <div className="mb-2 text-sm font-medium text-[#f4ead1]">
             {data.state?.currentTopic || '尚未设置当前讨论焦点'}
@@ -255,7 +280,7 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
           )}
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 text-xs text-[#8f8778]">我要排队</div>
           <div className="space-y-2">
             <select
@@ -320,11 +345,11 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
           )}
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-workbench-card">
           <div className="mb-2 text-xs text-[#8f8778]">轮候队列</div>
           <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
             {[activeItem, ...waitingItems.filter(item => item.id !== activeItem?.id)].filter(Boolean).map(item => (
-              <article key={item!.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+              <article key={item!.id} className="room-workbench-item">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-[#f4ead1]">{item!.label}</div>
@@ -372,6 +397,6 @@ export function RoomCommunicationPanel({ roomId }: RoomCommunicationPanelProps) 
           </div>
         </div>
       </div>
-    </section>
+    </Surface>
   );
 }

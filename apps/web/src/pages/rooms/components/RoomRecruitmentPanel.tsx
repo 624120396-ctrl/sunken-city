@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ClipboardList, RefreshCw, Save, UserPlus, X } from 'lucide-react';
+import { Surface } from '@components/system';
 import {
   cancelRoomInvitation,
   getRoomRecruitment,
@@ -212,9 +213,9 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
 
   if (loading) {
     return (
-      <section className="mb-3 rounded-lg border border-[#3a3a3a]/50 bg-[#101018]/80 p-3 text-sm text-[#8f8778]">
+      <Surface variant="panel" material="basalt" padding="sm" className="room-recruitment-panel room-recruitment-panel--loading">
         招募资料加载中...
-      </section>
+      </Surface>
     );
   }
 
@@ -223,16 +224,16 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
   const tags = profile?.styleTags.length ? profile.styleTags : splitLines(styleTagsText);
 
   return (
-    <section className="mb-3 rounded-lg border border-[#3a3a3a]/55 bg-[#101018]/88 p-3 shadow-lg shadow-black/20">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#f4ead1]">
-          <UserPlus size={16} className="text-[#c9a227]" />
+    <Surface variant="panel" material="basalt" padding="sm" className="room-recruitment-panel">
+      <div className="room-recruitment-panel__header">
+        <div className="room-recruitment-panel__title">
+          <UserPlus size={16} />
           招募与风格
         </div>
         <button
           type="button"
           onClick={() => void loadRecruitment()}
-          className="btn-v2 inline-flex min-h-8 items-center gap-1 rounded border border-[#3a3a3a]/60 px-2 text-xs text-[#b0a898]"
+          className="room-recruitment-panel__refresh"
         >
           <RefreshCw size={13} />
           刷新
@@ -240,13 +241,13 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
       </div>
 
       {error && (
-        <div className="mb-3 rounded border border-[#a63848]/50 bg-[#4a111a]/35 px-3 py-2 text-xs text-[#f1b7bd]">
+        <div className="room-recruitment-panel__error">
           {error}
         </div>
       )}
 
       <div className="grid gap-3 lg:grid-cols-[1.15fr_1fr_1fr]">
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-recruitment-card">
           <div className="mb-2 text-xs text-[#8f8778]">房间招募资料</div>
           <div className="mb-2 text-sm font-medium text-[#f4ead1]">
             {profile?.headline || headline || '尚未填写招募标题'}
@@ -323,7 +324,7 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
           )}
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-recruitment-card">
           <div className="mb-2 flex items-center gap-1.5 text-xs text-[#8f8778]">
             <ClipboardList size={14} />
             新手与 KP 小抄
@@ -384,13 +385,13 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
           )}
         </div>
 
-        <div className="rounded border border-[#3a3a3a]/45 bg-black/20 p-3">
+        <div className="room-recruitment-card">
           <div className="mb-2 text-xs text-[#8f8778]">
             申请审核 {pendingApplications.length > 0 ? `· ${pendingApplications.length} 待处理` : ''}
           </div>
           {data.canManageRecruitment ? (
             <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-              <div className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+              <div className="room-recruitment-item room-recruitment-item--form">
                 <div className="mb-2 text-[11px] text-[#8f8778]">邀请用户入房</div>
                 <input
                   value={inviteEmail}
@@ -430,7 +431,7 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
               {data.invitations.length > 0 && (
                 <div className="space-y-2">
                   {data.invitations.map(invitation => (
-                    <article key={invitation.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+                    <article key={invitation.id} className="room-recruitment-item">
                       <div className="mb-1 flex items-start justify-between gap-2">
                         <div>
                           <div className="text-sm font-medium text-[#f4ead1]">{invitation.inviteeName}</div>
@@ -459,7 +460,7 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
               {data.applications.length === 0 ? (
                 <div className="text-xs text-[#6b6558]">暂无申请</div>
               ) : data.applications.map(application => (
-                <article key={application.id} className="rounded border border-[#3a3a3a]/35 bg-black/20 p-2">
+                <article key={application.id} className="room-recruitment-item">
                   <div className="mb-1 flex items-start justify-between gap-2">
                     <div>
                       <div className="text-sm font-medium text-[#f4ead1]">{application.applicantName}</div>
@@ -474,7 +475,7 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
                   </div>
                   <p className="mb-2 whitespace-pre-wrap text-xs text-[#d8ccb4]">{application.message || '未填写留言'}</p>
                   {application.styleMatch && (
-                    <div className="mb-2 rounded border border-[#3a3a3a]/25 bg-black/15 px-2 py-1.5 text-[11px] text-[#b0a898]">
+                    <div className="room-recruitment-match">
                       <div>{application.styleMatch.summary}</div>
                       {application.styleMatch.matchedTags.length > 0 && (
                         <div className="mt-1 text-[#9fd7aa]">重合：{application.styleMatch.matchedTags.join('、')}</div>
@@ -527,6 +528,6 @@ export function RoomRecruitmentPanel({ roomId }: RoomRecruitmentPanelProps) {
           )}
         </div>
       </div>
-    </section>
+    </Surface>
   );
 }

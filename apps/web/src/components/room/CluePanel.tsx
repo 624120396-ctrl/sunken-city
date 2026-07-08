@@ -38,7 +38,7 @@ export function CluePanel({ roomId, isOpen, onClose, isKP, onReveal }: CluePanel
   async function loadClues() {
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/clues`);
+      const res = await apiFetch(`/rooms/${roomId}/clues`);
       const json = await res.json();
       if (json.success) {
         setClues(json.data.clues || []);
@@ -52,7 +52,7 @@ export function CluePanel({ roomId, isOpen, onClose, isKP, onReveal }: CluePanel
 
   async function handleReveal(clueId: string) {
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/clues/${clueId}/reveal`, {
+      const res = await apiFetch(`/rooms/${roomId}/clues/${clueId}/reveal`, {
         method: 'POST',
       });
       const json = await res.json();

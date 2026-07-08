@@ -51,11 +51,11 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
     setLoading(true);
     try {
       if (tab === 'notes') {
-        const res = await apiFetch(`/api/rooms/${roomId}/gm-notes`);
+        const res = await apiFetch(`/rooms/${roomId}/gm-notes`);
         const json = await res.json();
         if (json.success) setNotes(json.data.notes || []);
       } else {
-        const res = await apiFetch(`/api/rooms/${roomId}/presets`);
+        const res = await apiFetch(`/rooms/${roomId}/presets`);
         const json = await res.json();
         if (json.success) setPresets(json.data.presets || []);
       }
@@ -69,7 +69,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   async function createNote() {
     if (!newNoteTitle.trim()) return;
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/gm-notes`, {
+      const res = await apiFetch(`/rooms/${roomId}/gm-notes`, {
         method: 'POST',
         body: JSON.stringify({ title: newNoteTitle, content: newNoteContent }),
       });
@@ -87,7 +87,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   async function deleteNote(id: string) {
     if (!confirm('确定删除此笔记？')) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/gm-notes/${id}`, { method: 'DELETE' });
+      await apiFetch(`/rooms/${roomId}/gm-notes/${id}`, { method: 'DELETE' });
       loadData();
     } catch (err) {
       console.error('删除笔记失败:', err);
@@ -97,7 +97,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   async function createPreset() {
     if (!newPresetName.trim()) return;
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/presets`, {
+      const res = await apiFetch(`/rooms/${roomId}/presets`, {
         method: 'POST',
         body: JSON.stringify({
           name: newPresetName.trim(),
@@ -122,7 +122,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
   async function deletePreset(id: string) {
     if (!confirm('确定删除此场景预设？')) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/presets/${id}`, { method: 'DELETE' });
+      await apiFetch(`/rooms/${roomId}/presets/${id}`, { method: 'DELETE' });
       loadData();
     } catch (err) {
       console.error('删除场景预设失败:', err);
@@ -131,7 +131,7 @@ export function GMKitPanel({ roomId, isOpen, onClose }: GMKitPanelProps) {
 
   async function applyPreset(id: string) {
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/presets/${id}/apply`, { method: 'POST' });
+      const res = await apiFetch(`/rooms/${roomId}/presets/${id}/apply`, { method: 'POST' });
       const json = await res.json();
       if (json.success) {
         alert(json.data.message);

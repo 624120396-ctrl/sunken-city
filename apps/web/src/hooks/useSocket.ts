@@ -226,13 +226,14 @@ export function useSocket({
     };
   }, [token, roomId]);
 
-  const sendMessage = useCallback((content: string, characterId?: string, isSecret?: boolean, messageType?: string) => {
+  const sendMessage = useCallback((content: string, characterId?: string, isSecret?: boolean, messageType?: string, targetUserId?: string) => {
     socketRef.current?.emit('message:send', {
       roomId,
       content,
       characterId,
       isSecret,
       messageType,
+      targetUserId,
     });
   }, [roomId]);
 

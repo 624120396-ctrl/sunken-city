@@ -21,7 +21,7 @@ export function QuickPhrases({ onSelect }: QuickPhrasesProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="px-3 py-2 text-sm text-coc-text-secondary hover:text-coc-accent-red transition-colors"
       >
-        快捷短语 ▼
+        快捷短语
       </button>
       
       {isOpen && (

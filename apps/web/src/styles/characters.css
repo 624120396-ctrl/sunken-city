@@ -621,6 +621,126 @@
   background: rgba(0, 0, 0, 0.22);
 }
 
+.character-room-history {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(104, 84, 43, 0.28);
+  box-shadow:
+    var(--coc-shadow-panel),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -18px 36px rgba(103, 83, 42, 0.08);
+}
+
+.character-room-history::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7rem;
+  z-index: 0;
+  width: min(38rem, 128%);
+  aspect-ratio: 760 / 594;
+  background: var(--coc-texture-gold-crescent-index) center / contain no-repeat;
+  opacity: 0.22;
+  transform: translateX(-50%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.character-room-history > * {
+  position: relative;
+  z-index: 1;
+}
+
+.character-room-history__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  color: #241f16;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.character-room-history__title svg {
+  color: var(--coc-accent-gold);
+}
+
+.character-room-history__empty {
+  color: rgba(77, 68, 52, 0.72);
+  font-size: 0.9rem;
+}
+
+.character-room-history-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(114, 91, 44, 0.24);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(255, 252, 238, 0.70), rgba(232, 224, 199, 0.52)),
+    var(--coc-texture-archive-paper);
+  background-size: auto, 190px 190px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -10px 20px rgba(111, 88, 38, 0.08);
+  padding: 0.85rem;
+}
+
+.character-room-history-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--coc-accent-gold), rgba(125, 21, 30, 0.72));
+  opacity: 0.72;
+}
+
+.character-room-history-card__name {
+  color: #201a12;
+  font-size: 0.92rem;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.character-room-history-card__meta,
+.character-room-history-card__summary,
+.character-room-history-card__settlement {
+  color: rgba(77, 68, 52, 0.76);
+  font-size: 0.76rem;
+}
+
+.character-room-history-card__summary {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0.5rem 0 0.55rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.character-room-history-card__settlement {
+  color: rgba(88, 71, 36, 0.86);
+  font-weight: 800;
+}
+
+.character-room-history-card__link {
+  border: 1px solid rgba(178, 132, 32, 0.28);
+  border-radius: 999px;
+  color: #7d151e;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 0.22rem 0.5rem;
+  text-decoration: none;
+  transition:
+    border-color var(--coc-motion-base),
+    color var(--coc-motion-base),
+    background-color var(--coc-motion-base);
+}
+
+.character-room-history-card__link:hover {
+  border-color: rgba(178, 132, 32, 0.52);
+  background: rgba(222, 174, 58, 0.10);
+  color: #5f1018;
+}
+
 .character-create-page {
   width: min(100%, 96rem);
 }

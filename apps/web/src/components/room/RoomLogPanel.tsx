@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, FileText, BookOpen, Download, ChevronRight } from 'lucide-react';
+import { X, FileText, BookOpen, Download, ChevronRight, Dice5, Lightbulb, Swords } from 'lucide-react';
 import { apiFetch } from '../../lib/api';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 
@@ -39,7 +39,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   SCENE_CHANGE: 'text-coc-ether',
   COMBAT_ACTION: 'text-coc-blood',
   CLUE_REVEAL: 'text-coc-ether',
-  NPC_DIALOGUE: 'text-purple-300',
+  NPC_DIALOGUE: 'text-[#d7ac45]',
   PHASE_CHANGE: 'text-coc-gold',
   SYSTEM_EVENT: 'text-coc-text-muted',
 };
@@ -78,8 +78,8 @@ export function RoomLogPanel({ roomId, isOpen, onClose, isKP }: RoomLogPanelProp
   async function loadLog() {
     try {
       const [eventsRes, annsRes] = await Promise.all([
-        apiFetch(`/api/rooms/${roomId}/log/events`),
-        isKP ? apiFetch(`/api/rooms/${roomId}/log/annotations`) : Promise.resolve(null),
+        apiFetch(`/rooms/${roomId}/log/events`),
+        isKP ? apiFetch(`/rooms/${roomId}/log/annotations`) : Promise.resolve(null),
       ]);
       const eventsJson = await eventsRes.json();
       if (eventsJson.success) setEvents(eventsJson.data.events || []);
@@ -95,7 +95,7 @@ export function RoomLogPanel({ roomId, isOpen, onClose, isKP }: RoomLogPanelProp
   async function addNarration() {
     if (!narrationText.trim() || selectedEventIds.length === 0) return;
     try {
-      await apiFetch(`/api/rooms/${roomId}/log/annotations`, {
+      await apiFetch(`/rooms/${roomId}/log/annotations`, {
         method: 'POST',
         body: JSON.stringify({
           fromEventId: selectedEventIds[0],
@@ -114,7 +114,7 @@ export function RoomLogPanel({ roomId, isOpen, onClose, isKP }: RoomLogPanelProp
 
   async function handleExport() {
     try {
-      const res = await apiFetch(`/api/rooms/${roomId}/log/export`, {
+      const res = await apiFetch(`/rooms/${roomId}/log/export`, {
         method: 'POST',
         body: JSON.stringify({ format: exportFormat }),
       });
@@ -241,8 +241,9 @@ function LogRealtimeView({ events, annotations }: { events: LogEvent[]; annotati
                   </span>
                 )}
                 {event.eventType === 'DICE_ROLL' && (
-                  <span>
-                    🎲 <span className="text-[#e8d4a0]">{payload.skill || payload.targetName || '检定'}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Dice5 size={12} className="text-coc-gold" />
+                    <span className="text-[#e8d4a0]">{payload.skill || payload.targetName || '检定'}</span>
                     <span className="text-[#6b6558]"> {payload.rollResult || payload.result}/{payload.targetValue || '?'} </span>
                     <span className={payload.successLevel?.includes('成功') ? 'text-green-400' : 'text-coc-blood'}>{payload.successLevel || payload.result}</span>
                   </span>
@@ -253,15 +254,17 @@ function LogRealtimeView({ events, annotations }: { events: LogEvent[]; annotati
                   </span>
                 )}
                 {event.eventType === 'COMBAT_ACTION' && (
-                  <span>
-                    ⚔️ <span className="text-[#e8d4a0]">{payload.actor || '?'}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Swords size={12} className="text-coc-blood" />
+                    <span className="text-[#e8d4a0]">{payload.actor || '?'}</span>
                     <span className="text-[#6b6558]"> {payload.action || '行动'}</span>
                     {payload.target && <span className="text-[#6b6558]"> → {payload.target}</span>}
                   </span>
                 )}
                 {event.eventType === 'CLUE_REVEAL' && (
-                  <span>
-                    💡 <span className="text-coc-ether">线索揭示：{payload.clueTitle || '未知线索'}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Lightbulb size={12} className="text-coc-ether" />
+                    <span className="text-coc-ether">线索揭示：{payload.clueTitle || '未知线索'}</span>
                     <span className="text-[#6b6558]">（{payload.discoveredBy || event.userNickname}）</span>
                   </span>
                 )}
@@ -420,7 +423,7 @@ function LogExportView({
       </button>
       {exportResult && (
         <div className="text-[10px] text-green-400/80">
-          ✅ 已导出：{exportResult.eventCount} 个事件，{exportResult.annotationCount} 条注释
+          已导出：{exportResult.eventCount} 个事件，{exportResult.annotationCount} 条注释
         </div>
       )}
     </div>

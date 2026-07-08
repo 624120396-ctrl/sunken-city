@@ -14,11 +14,11 @@ The product provides an immersive web platform for CoC campaign play, character 
 
 ## Brand Personality
 
-Luminous occult archive: deep-sea mist, readable smoked glass, restrained ritual gold, selective blood-red danger, and a non-pure-black Cthulhu atmosphere.
+Brighter luminous occult archive: deep-sea daylight mist, illuminated archive paper, pale wet limestone, oxidized copper trim, restrained ritual gold, selective blood-red danger, and a non-pure-black Cthulhu atmosphere. The interface should feel refined, ornate, natural, and usable for long sessions.
 
 ## Anti-references
 
-Avoid global black veils as a readability crutch, gray-on-gray text, low-opacity gold body copy, large blood-red decoration, mobile layouts that bury the primary task, and page-specific overlay patches that do not strengthen the shared UI system.
+Avoid global black veils as a readability crutch, generic black transparent cards, decorative glassmorphism as a default, gray-on-gray text, low-opacity gold body copy, large blood-red decoration, mobile layouts that bury the primary task, and page-specific overlay patches that do not strengthen the shared UI system.
 
 ## Design Principles
 
@@ -27,6 +27,8 @@ Avoid global black veils as a readability crutch, gray-on-gray text, low-opacity
 3. Mobile prioritizes participation: room chat, dice records, state, then tools.
 4. Community and long-form surfaces should feel like archive records, not decorative cards.
 5. Shared components and tokens should carry visual decisions so pages do not drift.
+6. Generated image2 assets must be constrained by UI slots, texture specs, naming, compression, and CSS tokens before they enter production UI.
+7. Main content should use materialized surfaces such as archive paper, pale stone, basalt, copper, and relic treatments instead of ad hoc black glass panels.
 
 ## Accessibility & Inclusion
 
