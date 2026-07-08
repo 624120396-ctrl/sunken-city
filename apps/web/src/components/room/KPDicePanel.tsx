@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dices, Eye, EyeOff } from 'lucide-react';
+import { Dices, Eye, EyeOff, Target } from 'lucide-react';
 import { cn } from '@lib/utils';
 
 const ROLL_TYPES = ['1D100', '1D20', '1D6', '2D6', '3D6'];
@@ -32,8 +32,9 @@ export function KPDicePanel({
     <div className="room-kp-dice-panel">
       <div className="room-kp-dice-panel__topline">
         <div>
-          <span className="room-kp-dice-panel__eyebrow">Keeper Roll</span>
+          <span className="room-kp-dice-panel__eyebrow">Keeper Dice</span>
           <h3>完整投骰</h3>
+          <p>用于剧情点、NPC、环境风险或玩家行为的公开骰与暗骰。</p>
         </div>
         {onToggleSecret && (
           <button
@@ -63,27 +64,35 @@ export function KPDicePanel({
       </div>
 
       <div className="room-kp-dice-panel__fields">
-        <input
-          type="text"
-          placeholder="目标 / 技能 / 剧情点（可选）"
-          value={skillName}
-          onChange={(e) => setSkillName(e.target.value)}
-          className="room-kp-dice-panel__input"
-        />
-        <input
-          type="number"
-          placeholder="目标值"
-          value={skillValue}
-          onChange={(e) => setSkillValue(e.target.value)}
-          className="room-kp-dice-panel__input room-kp-dice-panel__input--value"
-        />
+        <label className="room-kp-dice-panel__field room-kp-dice-panel__field--name">
+          <span>对象</span>
+          <input
+            type="text"
+            placeholder="例如：潜行、NPC 察觉、暗流"
+            value={skillName}
+            onChange={(e) => setSkillName(e.target.value)}
+            className="room-kp-dice-panel__input"
+          />
+        </label>
+        <label className="room-kp-dice-panel__field room-kp-dice-panel__field--value">
+          <span>目标值</span>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="可选"
+            value={skillValue}
+            onChange={(e) => setSkillValue(e.target.value)}
+            className="room-kp-dice-panel__input room-kp-dice-panel__input--value"
+          />
+        </label>
         <button
           type="button"
           onClick={handleRoll}
           disabled={!connected}
           className="room-kp-dice-panel__submit"
         >
-          <Dices size={16} />
+          {skillName || skillValue ? <Target size={16} /> : <Dices size={16} />}
           投骰
         </button>
       </div>

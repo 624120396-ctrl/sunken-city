@@ -11054,3 +11054,760 @@
   font-weight: 700;
   line-height: 1;
 }
+
+/* V6.33: readability pass for KP full roll, KP settlement workbench, and PL recent roll. */
+.room-visual-rebuild .room-kp-dice-modal {
+  max-width: min(43rem, calc(100vw - 2rem)) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(147, 106, 37, 0.38) !important;
+  border-radius: 8px !important;
+  background:
+    radial-gradient(circle at 8% 0, rgba(203, 157, 67, 0.10), transparent 32%),
+    var(--room-player-paper) center / 340px 340px repeat,
+    rgba(251, 248, 238, 0.98) !important;
+  background-blend-mode: multiply, multiply, normal !important;
+  color: #2d2112 !important;
+  box-shadow:
+    0 18px 48px rgba(8, 7, 4, 0.34),
+    inset 0 0 0 1px rgba(255, 252, 238, 0.52) !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__surface-glow,
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__surface-blur {
+  display: none !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__header {
+  border-bottom: 1px solid rgba(137, 99, 37, 0.22) !important;
+  background:
+    linear-gradient(90deg, rgba(255, 250, 231, 0.88), rgba(244, 234, 204, 0.48)),
+    var(--room-player-paper) center / 260px 260px repeat !important;
+  background-blend-mode: normal, multiply !important;
+  padding: 1rem 1.18rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__header h3 {
+  color: #6f470c !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 1.08rem !important;
+  font-weight: 900 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__close {
+  display: inline-grid !important;
+  width: 2.1rem !important;
+  height: 2.1rem !important;
+  place-items: center !important;
+  border: 1px solid rgba(119, 86, 34, 0.22) !important;
+  border-radius: 5px !important;
+  background: rgba(255, 250, 232, 0.58) !important;
+  color: #7b571d !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__body {
+  color: #2d2112 !important;
+  padding: 1.12rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel {
+  gap: 1rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__topline {
+  align-items: flex-start !important;
+  padding: 0.12rem 0.06rem 0.2rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__eyebrow {
+  color: rgba(119, 79, 15, 0.74) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.02em !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel h3 {
+  color: #21170a !important;
+  font-size: 1.46rem !important;
+  line-height: 1.1 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__topline p {
+  margin: 0.28rem 0 0 !important;
+  color: rgba(66, 48, 24, 0.74) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.86rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__types {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__mode,
+.room-visual-rebuild .room-kp-dice-panel__type,
+.room-visual-rebuild .room-kp-dice-panel__submit {
+  min-height: 2.72rem !important;
+  border-color: rgba(124, 88, 31, 0.28) !important;
+  border-radius: 6px !important;
+  background:
+    var(--room-player-paper) center / 240px 240px repeat,
+    rgba(255, 251, 238, 0.82) !important;
+  background-blend-mode: multiply, normal !important;
+  color: #412d10 !important;
+  font-size: 0.88rem !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.44) !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__type {
+  font-family: var(--room-font-en) !important;
+  font-size: 0.96rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__type--active {
+  border-color: rgba(166, 116, 23, 0.60) !important;
+  background:
+    radial-gradient(circle at 50% 0, rgba(207, 156, 48, 0.18), transparent 58%),
+    var(--room-player-paper) center / 240px 240px repeat,
+    rgba(255, 244, 208, 0.90) !important;
+  color: #7a4e09 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__mode--secret {
+  border-color: rgba(129, 47, 42, 0.42) !important;
+  color: #7a2e29 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__fields {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 7.2rem 6.6rem !important;
+  gap: 0.58rem !important;
+  align-items: end !important;
+  padding-top: 0.08rem !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__field {
+  display: grid !important;
+  gap: 0.28rem !important;
+  min-width: 0 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__field span {
+  color: rgba(78, 55, 22, 0.82) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__input {
+  height: 2.78rem !important;
+  border-color: rgba(126, 91, 36, 0.28) !important;
+  border-radius: 6px !important;
+  background:
+    var(--room-player-paper) center / 230px 230px repeat,
+    rgba(255, 253, 245, 0.94) !important;
+  background-blend-mode: multiply, normal !important;
+  color: #2f2110 !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__input::placeholder {
+  color: rgba(93, 72, 38, 0.48) !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__submit {
+  height: 2.78rem !important;
+  border-color: rgba(117, 43, 38, 0.48) !important;
+  background:
+    linear-gradient(180deg, rgba(151, 87, 68, 0.94), rgba(111, 45, 41, 0.96)) !important;
+  color: #fff0d4 !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__submit:hover:not(:disabled) {
+  border-color: rgba(170, 98, 77, 0.76) !important;
+  color: #fff8e8 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  gap: 0.12rem 0.78rem !important;
+  min-height: 4.35rem !important;
+  padding: 0.66rem 0.78rem !important;
+  border: 1px solid rgba(130, 95, 39, 0.26) !important;
+  border-radius: 6px !important;
+  background:
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(253, 250, 241, 0.92) !important;
+  background-blend-mode: multiply, normal !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.48),
+    0 1px 2px rgba(55, 38, 15, 0.06) !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll span {
+  grid-column: 1 !important;
+  color: rgba(81, 58, 25, 0.76) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll strong {
+  grid-column: 2 !important;
+  grid-row: 1 / 3 !important;
+  justify-self: end !important;
+  color: currentColor !important;
+  font-family: var(--room-font-en) !important;
+  font-size: 2.62rem !important;
+  font-weight: 900 !important;
+  line-height: 0.92 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll b {
+  grid-column: 1 !important;
+  justify-self: start !important;
+  min-height: 1.34rem !important;
+  border: 1px solid currentColor !important;
+  border-radius: 999px !important;
+  padding: 0.1rem 0.48rem !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  color: currentColor !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.74rem !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="success"] {
+  background:
+    radial-gradient(circle at 100% 0, rgba(72, 138, 71, 0.10), transparent 46%),
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(248, 253, 241, 0.92) !important;
+  color: #3c7536 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="failure"] {
+  background:
+    radial-gradient(circle at 100% 0, rgba(153, 97, 36, 0.13), transparent 46%),
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(253, 248, 238, 0.92) !important;
+  color: #875b1d !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="fumble"] {
+  background:
+    radial-gradient(circle at 100% 0, rgba(151, 45, 41, 0.14), transparent 46%),
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(253, 244, 240, 0.92) !important;
+  color: #8b2d28 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="hard-success"],
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="extreme-success"] {
+  background:
+    radial-gradient(circle at 100% 0, rgba(45, 123, 116, 0.13), transparent 46%),
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(243, 252, 248, 0.92) !important;
+  color: #236d69 !important;
+}
+
+.room-visual-rebuild .room-player-latest-roll[data-result-tone="critical-success"] {
+  background:
+    radial-gradient(circle at 100% 0, rgba(209, 153, 37, 0.18), transparent 46%),
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(255, 250, 229, 0.94) !important;
+  color: #86570d !important;
+}
+
+.room-visual-rebuild .room-quick-roll-tray--empty {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.42rem !important;
+  width: 21.55rem !important;
+  min-width: 21.55rem !important;
+  min-height: 3.72rem !important;
+  border: 1px dashed rgba(132, 97, 42, 0.30) !important;
+  border-radius: 6px !important;
+  background:
+    var(--room-player-paper) center / 260px 260px repeat,
+    rgba(251, 248, 238, 0.68) !important;
+  background-blend-mode: multiply, normal !important;
+  color: rgba(87, 65, 31, 0.66) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench {
+  display: grid !important;
+  gap: 0.82rem !important;
+  min-height: 100% !important;
+  padding: 0.86rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #2d2112 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__header,
+.room-visual-rebuild .room-settlement-card,
+.room-visual-rebuild .room-settlement-workbench__empty,
+.room-visual-rebuild .room-settlement-workbench__state {
+  border: 1px solid rgba(139, 101, 40, 0.28) !important;
+  border-radius: 7px !important;
+  background:
+    var(--room-player-paper) center / 310px 310px repeat,
+    rgba(252, 249, 240, 0.92) !important;
+  background-blend-mode: multiply, normal !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.44),
+    0 1px 2px rgba(32, 22, 9, 0.06) !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.78rem !important;
+  padding: 0.82rem 0.9rem !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__title {
+  display: flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 0.62rem !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__title svg {
+  flex: 0 0 auto !important;
+  color: #9a6710 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__title h2 {
+  margin: 0 !important;
+  color: #2a1d0d !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 1.02rem !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__title p {
+  margin: 0.18rem 0 0 !important;
+  color: rgba(75, 54, 24, 0.68) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__finalize,
+.room-visual-rebuild .room-settlement-card__button {
+  display: inline-flex !important;
+  min-height: 2.36rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.36rem !important;
+  border: 1px solid rgba(136, 96, 32, 0.34) !important;
+  border-radius: 5px !important;
+  background:
+    var(--room-player-paper) center / 230px 230px repeat,
+    rgba(255, 248, 224, 0.78) !important;
+  color: #6d470b !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  padding: 0 0.72rem !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__finalize {
+  flex: 0 0 auto !important;
+  border-color: rgba(125, 47, 42, 0.40) !important;
+  background:
+    linear-gradient(180deg, rgba(143, 85, 68, 0.92), rgba(103, 43, 39, 0.95)) !important;
+  color: #fff1d8 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__error {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.48rem !important;
+  border: 1px solid rgba(143, 45, 40, 0.34) !important;
+  border-radius: 6px !important;
+  background: rgba(255, 236, 230, 0.92) !important;
+  color: #8b2d28 !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  padding: 0.68rem !important;
+}
+
+.room-visual-rebuild .room-settlement-list {
+  display: grid !important;
+  gap: 0.78rem !important;
+  overflow: auto !important;
+}
+
+.room-visual-rebuild .room-settlement-card {
+  display: grid !important;
+  gap: 0.74rem !important;
+  padding: 0.78rem !important;
+}
+
+.room-visual-rebuild .room-settlement-card__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.7rem !important;
+  padding-bottom: 0.58rem !important;
+  border-bottom: 1px solid rgba(128, 94, 39, 0.16) !important;
+}
+
+.room-visual-rebuild .room-settlement-card__header h3 {
+  margin: 0 !important;
+  color: #25190b !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+}
+
+.room-visual-rebuild .room-settlement-card__header p {
+  margin: 0.12rem 0 0 !important;
+  color: rgba(77, 56, 26, 0.66) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+.room-visual-rebuild .room-settlement-card__header > span {
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(132, 96, 39, 0.25) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 251, 235, 0.70) !important;
+  color: #6d470b !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  padding: 0.22rem 0.56rem !important;
+}
+
+.room-visual-rebuild .room-settlement-card__header > span[data-status="CONFIRMED"],
+.room-visual-rebuild .room-settlement-card__header > span[data-status="APPROVED"] {
+  border-color: rgba(48, 124, 88, 0.30) !important;
+  color: #276c49 !important;
+}
+
+.room-visual-rebuild .room-settlement-fields {
+  display: grid !important;
+  gap: 0.58rem !important;
+}
+
+.room-visual-rebuild .room-settlement-fields--primary {
+  grid-template-columns: minmax(7.2rem, 1.4fr) repeat(4, minmax(4.4rem, 1fr)) !important;
+}
+
+.room-visual-rebuild .room-settlement-fields--notes {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.room-visual-rebuild .room-settlement-field {
+  display: grid !important;
+  gap: 0.26rem !important;
+  min-width: 0 !important;
+  color: rgba(70, 49, 20, 0.78) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+}
+
+.room-visual-rebuild .room-settlement-field--wide {
+  grid-column: 1 / -1 !important;
+}
+
+.room-visual-rebuild .room-settlement-field span {
+  color: rgba(73, 51, 20, 0.78) !important;
+  line-height: 1.1 !important;
+}
+
+.room-visual-rebuild .room-settlement-field input,
+.room-visual-rebuild .room-settlement-field select,
+.room-visual-rebuild .room-settlement-field textarea {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 1px solid rgba(128, 94, 39, 0.25) !important;
+  border-radius: 5px !important;
+  background:
+    var(--room-player-paper) center / 240px 240px repeat,
+    rgba(255, 253, 246, 0.90) !important;
+  background-blend-mode: multiply, normal !important;
+  color: #2e2111 !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  outline: none !important;
+  padding: 0.52rem 0.58rem !important;
+}
+
+.room-visual-rebuild .room-settlement-field input,
+.room-visual-rebuild .room-settlement-field select {
+  height: 2.38rem !important;
+}
+
+.room-visual-rebuild .room-settlement-field textarea {
+  min-height: 4.8rem !important;
+  resize: vertical !important;
+}
+
+.room-visual-rebuild .room-settlement-fields--notes textarea {
+  min-height: 5.2rem !important;
+  font-family: "Cascadia Mono", Consolas, monospace !important;
+  font-size: 0.72rem !important;
+  line-height: 1.38 !important;
+}
+
+.room-visual-rebuild .room-settlement-card__actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 0.46rem !important;
+}
+
+.room-visual-rebuild .room-settlement-card__button--confirm {
+  border-color: rgba(44, 119, 82, 0.36) !important;
+  background:
+    var(--room-player-paper) center / 230px 230px repeat,
+    rgba(232, 249, 238, 0.84) !important;
+  color: #276c49 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.58 !important;
+}
+
+.room-visual-rebuild .room-settlement-workbench__empty,
+.room-visual-rebuild .room-settlement-workbench__state {
+  color: rgba(73, 52, 22, 0.68) !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  padding: 1.2rem !important;
+  text-align: center !important;
+}
+
+@media (max-width: 767px) {
+  .room-visual-rebuild .room-kp-dice-panel__types {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .room-visual-rebuild .room-kp-dice-panel__fields,
+  .room-visual-rebuild .room-settlement-fields--primary,
+  .room-visual-rebuild .room-settlement-fields--notes {
+    grid-template-columns: 1fr !important;
+  }
+
+  .room-visual-rebuild .room-settlement-workbench__header {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+}
+
+/* V6.34: brighten KP dice modal and replace legacy dark stats popup. */
+.room-visual-rebuild .room-kp-dice-modal {
+  background:
+    radial-gradient(circle at 8% 0, rgba(208, 158, 58, 0.08), transparent 34%),
+    var(--room-player-paper) center / 320px 320px repeat,
+    #fbf8ed !important;
+  color: #21170a !important;
+}
+
+.room-visual-rebuild .room-kp-dice-modal .modal-v2__body {
+  background: rgba(255, 253, 246, 0.72) !important;
+}
+
+.room-visual-rebuild .room-kp-dice-panel__type,
+.room-visual-rebuild .room-kp-dice-panel__input {
+  background:
+    var(--room-player-paper) center / 220px 220px repeat,
+    #fffdf4 !important;
+  background-blend-mode: multiply, normal !important;
+}
+
+.room-visual-rebuild .room-stats-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  background: rgba(8, 8, 6, 0.54) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.room-visual-rebuild .room-stats-modal__panel {
+  width: min(27.5rem, calc(100vw - 2rem)) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(145, 105, 39, 0.36) !important;
+  border-radius: 8px !important;
+  background:
+    radial-gradient(circle at 10% 0, rgba(205, 157, 61, 0.10), transparent 36%),
+    var(--room-player-paper) center / 300px 300px repeat,
+    #fbf8ed !important;
+  background-blend-mode: multiply, multiply, normal !important;
+  color: #2a1d0d !important;
+  box-shadow:
+    0 18px 44px rgba(8, 7, 4, 0.38),
+    inset 0 0 0 1px rgba(255, 252, 238, 0.52) !important;
+}
+
+.room-visual-rebuild .room-stats-modal__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  border-bottom: 1px solid rgba(137, 99, 37, 0.22) !important;
+  background:
+    linear-gradient(90deg, rgba(255, 250, 231, 0.88), rgba(244, 234, 204, 0.48)),
+    var(--room-player-paper) center / 240px 240px repeat !important;
+  background-blend-mode: normal, multiply !important;
+  padding: 0.95rem 1.05rem !important;
+}
+
+.room-visual-rebuild .room-stats-modal__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.52rem !important;
+  min-width: 0 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__title svg {
+  color: #9a6710 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__title span {
+  color: #6f470c !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 1.08rem !important;
+  font-weight: 900 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__close {
+  display: inline-grid !important;
+  width: 2.1rem !important;
+  height: 2.1rem !important;
+  place-items: center !important;
+  border: 1px solid rgba(119, 86, 34, 0.22) !important;
+  border-radius: 5px !important;
+  background: rgba(255, 250, 232, 0.68) !important;
+  color: #7b571d !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__body {
+  display: grid !important;
+  gap: 0.78rem !important;
+  padding: 0.95rem !important;
+}
+
+.room-visual-rebuild .room-stats-modal__duration,
+.room-visual-rebuild .room-stats-modal__metric,
+.room-visual-rebuild .room-stats-modal__skill {
+  border: 1px solid rgba(130, 95, 39, 0.24) !important;
+  border-radius: 6px !important;
+  background:
+    var(--room-player-paper) center / 230px 230px repeat,
+    rgba(255, 253, 246, 0.82) !important;
+  background-blend-mode: multiply, normal !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.44) !important;
+}
+
+.room-visual-rebuild .room-stats-modal__duration {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  padding: 0.74rem !important;
+}
+
+.room-visual-rebuild .room-stats-modal__icon {
+  display: inline-grid !important;
+  width: 2.55rem !important;
+  height: 2.55rem !important;
+  place-items: center !important;
+  border: 1px solid rgba(145, 104, 33, 0.28) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 245, 211, 0.76) !important;
+  color: #9a6710 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__duration p,
+.room-visual-rebuild .room-stats-modal__skill span,
+.room-visual-rebuild .room-stats-modal__metric span {
+  margin: 0 !important;
+  color: rgba(79, 57, 25, 0.66) !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__duration strong,
+.room-visual-rebuild .room-stats-modal__skill strong {
+  display: block !important;
+  margin-top: 0.12rem !important;
+  color: #2b1e0d !important;
+  font-family: var(--room-font-zh) !important;
+  font-size: 1.16rem !important;
+  font-weight: 900 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.58rem !important;
+}
+
+.room-visual-rebuild .room-stats-modal__metric {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 0.2rem !important;
+  padding: 0.7rem 0.42rem !important;
+  text-align: center !important;
+}
+
+.room-visual-rebuild .room-stats-modal__metric svg {
+  color: #9a6710 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__metric strong {
+  color: #2c1e0c !important;
+  font-family: var(--room-font-en) !important;
+  font-size: 1.8rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__metric[data-tone="success"] svg,
+.room-visual-rebuild .room-stats-modal__metric[data-tone="success"] strong {
+  color: #2f7a51 !important;
+}
+
+.room-visual-rebuild .room-stats-modal__skill {
+  padding: 0.72rem 0.82rem !important;
+}
+
+.room-visual-rebuild .room-stats-modal__skill strong {
+  color: #8a5a0e !important;
+}
+
+/* V6.35: expose parchment material tokens to modals and floating panels outside PL local scope. */
+.room-visual-rebuild {
+  --room-player-paper: var(--room-v6-paper, url('/ui-textures/room-v6-aged-parchment-white.webp'));
+}

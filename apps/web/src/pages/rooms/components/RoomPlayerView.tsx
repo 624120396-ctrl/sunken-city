@@ -349,6 +349,12 @@ export function RoomPlayerView({
                     />
                   </div>
                 )}
+                {!myCharacter && !isMobile && (
+                  <div className="room-quick-roll-tray room-quick-roll-tray--empty" aria-label="快捷检定未启用">
+                    <Dice5 size={16} />
+                    <span>绑定调查员后显示快捷检定</span>
+                  </div>
+                )}
               </div>
             </>
           ) : (

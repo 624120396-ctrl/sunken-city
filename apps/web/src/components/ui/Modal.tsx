@@ -16,7 +16,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* 遮罩 */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="modal-v2__scrim absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -28,16 +28,17 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
         )}
       >
         {/* 磨砂玻璃质感叠加层 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-        <div className="absolute inset-0 backdrop-blur-md bg-black/10 pointer-events-none" />
+        <div className="modal-v2__surface-glow absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+        <div className="modal-v2__surface-blur absolute inset-0 backdrop-blur-md bg-black/10 pointer-events-none" />
 
         {/* 头部 */}
         {title && (
-          <div className="relative flex items-center justify-between px-6 py-4 border-b border-[#3a3a3a]/40">
+          <div className="modal-v2__header relative flex items-center justify-between px-6 py-4 border-b border-[#3a3a3a]/40">
             <h3 className="text-lg font-bold" style={{ color: '#c9a227' }}>{title}</h3>
             <button
+              type="button"
               onClick={onClose}
-              className="transition-colors"
+              className="modal-v2__close transition-colors"
               style={{ color: '#6b6558' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#e8d4a0')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '#6b6558')}
@@ -48,7 +49,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
         )}
 
         {/* 内容 */}
-        <div className="relative p-6" style={{ color: '#d4c5a8' }}>{children}</div>
+        <div className="modal-v2__body relative p-6" style={{ color: '#d4c5a8' }}>{children}</div>
       </div>
     </div>
   );
