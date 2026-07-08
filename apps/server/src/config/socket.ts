@@ -677,6 +677,16 @@ export function setupSocketHandlers(io: SocketIOServer) {
         // 保存到数据库
         const room = await prisma.room.findUnique({ where: { roomId } });
         if (room) {
+          const secretVisibleUserIds = isSecret
+            ? [...new Set([
+                userId,
+                ...(await prisma.roomMember.findMany({
+                  where: { roomId: room.id, role: 'KP' },
+                  select: { userId: true },
+                })).map((member) => member.userId),
+              ])]
+            : [];
+
           await prisma.diceRoll.create({
             data: {
               roomId: room.id,
@@ -687,6 +697,8 @@ export function setupSocketHandlers(io: SocketIOServer) {
               rollResult,
               rolls: JSON.stringify(rolls),
               successLevel,
+              isBlind: !!isSecret,
+              visibleToUserIds: JSON.stringify(secretVisibleUserIds),
             },
           });
 
@@ -780,10 +792,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           if (isSecret) {
             // 暗骰：发送者和 KP 看到真实结果
             socket.emit('dice:result', rollData);
-            const kpMembers = await prisma.roomMember.findMany({
-              where: { roomId: room.id, role: 'KP' },
-            });
-            const kpUserIds = new Set(kpMembers.map(m => m.userId));
+            const kpUserIds = new Set(secretVisibleUserIds);
             const roomMembers = io.sockets.adapter.rooms.get(roomId);
             if (roomMembers) {
               roomMembers.forEach((socketId) => {
