@@ -86,6 +86,216 @@ function buildSecretDiceNotice(rollData: {
   };
 }
 
+type DiceExpression = {
+  rollType: string;
+  count: number;
+  sides: number;
+  modifier: number;
+};
+
+function parseDiceExpression(input: string, options?: { requireSlash?: boolean }): DiceExpression | null {
+  const source = input.trim();
+  const match = source.match(options?.requireSlash
+    ? /^\/\s*(\d{1,3})d(\d{1,5})(?:\s*([+-])\s*(\d{1,6}))?\s*$/i
+    : /^\/?\s*(\d{1,3})d(\d{1,5})(?:\s*([+-])\s*(\d{1,6}))?\s*$/i);
+
+  if (!match) return null;
+
+  const count = Number.parseInt(match[1], 10);
+  const sides = Number.parseInt(match[2], 10);
+  const modifierValue = Number.parseInt(match[4] || '0', 10);
+  const modifier = match[3] === '-' ? -modifierValue : modifierValue;
+
+  if (count < 1 || count > 100 || sides < 2 || sides > 10000 || Math.abs(modifier) > 100000) {
+    return null;
+  }
+
+  const rollType = `${count}D${sides}${modifier > 0 ? `+${modifier}` : modifier < 0 ? `${modifier}` : ''}`;
+  return { rollType, count, sides, modifier };
+}
+
+function rollDiceExpression(expression: DiceExpression) {
+  const rolls: number[] = [];
+  let rollResult = expression.modifier;
+
+  for (let i = 0; i < expression.count; i++) {
+    const roll = Math.floor(Math.random() * expression.sides) + 1;
+    rolls.push(roll);
+    rollResult += roll;
+  }
+
+  return { rolls, rollResult };
+}
+
+async function createAndBroadcastDiceRoll(
+  io: SocketIOServer,
+  socket: AuthenticatedSocket,
+  data: {
+    roomId: string;
+    rollType: string;
+    targetName?: string;
+    targetValue?: number;
+    isSecret?: boolean;
+    expression?: DiceExpression;
+  },
+) {
+  const { roomId, targetName, targetValue, isSecret } = data;
+  const userId = socket.user!.userId;
+  const expression = data.expression || parseDiceExpression(data.rollType) || parseDiceExpression('1D100')!;
+  const rollType = expression.rollType;
+  const { rolls, rollResult } = rollDiceExpression(expression);
+  const successLevel = targetValue
+    ? calculateSuccessLevel(rollResult, targetValue)
+    : '-';
+
+  const room = await prisma.room.findUnique({ where: { roomId } });
+  if (!room) return null;
+
+  const secretVisibleUserIds = isSecret
+    ? [...new Set([
+        userId,
+        ...(await prisma.roomMember.findMany({
+          where: { roomId: room.id, role: 'KP' },
+          select: { userId: true },
+        })).map((member) => member.userId),
+      ])]
+    : [];
+
+  await prisma.diceRoll.create({
+    data: {
+      roomId: room.id,
+      userId,
+      rollType,
+      targetName,
+      targetValue,
+      rollResult,
+      rolls: JSON.stringify(rolls),
+      successLevel,
+      isBlind: !!isSecret,
+      visibleToUserIds: JSON.stringify(secretVisibleUserIds),
+    },
+  });
+
+  const diceContent = targetName
+    ? `🎲 ${targetName} 检定: ${rollResult}/${targetValue} ${successLevel}`
+    : `🎲 ${rollType}: ${rollResult}`;
+
+  await prisma.roomMessage.create({
+    data: {
+      roomId: room.id,
+      userId,
+      nickname: socket.user!.nickname,
+      content: diceContent,
+      isSecret: !!isSecret,
+      type: 'dice',
+      meta: JSON.stringify({ rollType, targetName, targetValue, rollResult, successLevel }),
+    },
+  });
+
+  // ===== V2.1: 线索自动揭示钩子 =====
+  if (targetName && targetValue && successLevel && successLevel !== '-') {
+    const isFailure = ['FUMBLE', 'FAILURE'].includes(successLevel);
+    if (!isFailure) {
+      const autoClues = await prisma.roomClue.findMany({
+        where: {
+          roomId: room.id,
+          isHidden: true,
+          autoReveal: true,
+          discoverySkill: targetName,
+          discoveryThreshold: { lte: targetValue },
+        },
+      });
+
+      for (const clue of autoClues) {
+        await prisma.roomClue.update({
+          where: { id: clue.id },
+          data: {
+            isHidden: false,
+            discoveredByUserId: userId,
+            discoveredAt: new Date(),
+          },
+        });
+
+        await prisma.roomEventLog.create({
+          data: {
+            roomId: room.id,
+            eventType: 'CLUE_DISCOVERED',
+            payload: JSON.stringify({
+              clueId: clue.id,
+              clueTitle: clue.title,
+              discoveredBy: socket.user!.nickname,
+              skill: targetName,
+              rollResult,
+              successLevel,
+              auto: true,
+            }),
+            userId,
+          },
+        });
+      }
+
+      if (autoClues.length > 0) {
+        io.to(roomId).emit('clue:discovered', {
+          clues: autoClues.map(c => ({ id: c.id, title: c.title })),
+          discoveredBy: socket.user!.nickname,
+          skill: targetName,
+        });
+      }
+    }
+  }
+
+  const rollData = {
+    id: Date.now().toString(),
+    sender: {
+      userId,
+      nickname: socket.user!.nickname,
+    },
+    rollType,
+    targetName,
+    targetValue,
+    rollResult,
+    rolls,
+    successLevel,
+    timestamp: new Date().toISOString(),
+    revealedClues: undefined as any,
+  };
+
+  if (isSecret) {
+    socket.emit('dice:result', rollData);
+    const kpUserIds = new Set(secretVisibleUserIds);
+    const roomMembers = io.sockets.adapter.rooms.get(roomId);
+    if (roomMembers) {
+      roomMembers.forEach((socketId) => {
+        const memberSocket = io.sockets.sockets.get(socketId) as AuthenticatedSocket | undefined;
+        if (memberSocket?.user && memberSocket !== socket) {
+          if (kpUserIds.has(memberSocket.user.userId)) {
+            memberSocket.emit('dice:result', rollData);
+          } else {
+            memberSocket.emit('dice:result', buildSecretDiceNotice(rollData));
+          }
+        }
+      });
+    }
+  } else {
+    io.to(roomId).emit('dice:result', rollData);
+  }
+
+  await syncEventToLog(room.id, 'DICE_ROLL', {
+    rollType,
+    targetName,
+    targetValue,
+    rollResult,
+    rolls,
+    successLevel,
+  }, {
+    userId,
+    nickname: socket.user!.nickname,
+  });
+
+  logger.info(`用户 ${socket.user?.nickname} 在房间 ${roomId} 投骰: ${rollResult}`);
+  return rollData;
+}
+
 // 暴露给外部使用（实时查询数据库组装完整资料）
 export async function getOnlineUsers() {
   if (onlineUsers.size === 0) {
@@ -498,6 +708,17 @@ export function setupSocketHandlers(io: SocketIOServer) {
           return;
         }
 
+        const slashDiceExpression = parseDiceExpression(content, { requireSlash: true });
+        if (slashDiceExpression) {
+          await createAndBroadcastDiceRoll(io, socket, {
+            roomId,
+            rollType: slashDiceExpression.rollType,
+            isSecret: !!isSecret,
+            expression: slashDiceExpression,
+          });
+          return;
+        }
+
         if (messageType === 'private' && targetUserId) {
           const targetMember = room.members.find((member) => member.userId === targetUserId);
           const canReceivePrivate = targetMember?.role === 'KP' || targetMember?.role === 'PLAYER';
@@ -641,190 +862,16 @@ export function setupSocketHandlers(io: SocketIOServer) {
       isSecret?: boolean;
     }) => {
       try {
-        const { roomId, rollType, targetName, targetValue, characterId, isSecret } = data;
-        const userId = socket.user!.userId;
-
-        // 通用骰子解析 NdM
-        let count = 1;
-        let sides = 100;
-        const diceMatch = rollType.match(/^(\d+)d(\d+)$/i);
-        if (diceMatch) {
-          count = Math.min(parseInt(diceMatch[1], 10), 100);
-          sides = Math.min(parseInt(diceMatch[2], 10), 10000);
-        } else if (rollType === '1D20') {
-          count = 1; sides = 20;
-        } else if (rollType === '1D6') {
-          count = 1; sides = 6;
-        } else if (rollType === '2D6') {
-          count = 2; sides = 6;
-        } else if (rollType === '3D6') {
-          count = 3; sides = 6;
-        }
-
-        let rollResult = 0;
-        const rolls: number[] = [];
-        for (let i = 0; i < count; i++) {
-          const r = Math.floor(Math.random() * sides) + 1;
-          rolls.push(r);
-          rollResult += r;
-        }
-
-        // 计算成功等级
-        const successLevel = targetValue 
-          ? calculateSuccessLevel(rollResult, targetValue)
-          : '-';
-
-        // 保存到数据库
-        const room = await prisma.room.findUnique({ where: { roomId } });
-        if (room) {
-          const secretVisibleUserIds = isSecret
-            ? [...new Set([
-                userId,
-                ...(await prisma.roomMember.findMany({
-                  where: { roomId: room.id, role: 'KP' },
-                  select: { userId: true },
-                })).map((member) => member.userId),
-              ])]
-            : [];
-
-          await prisma.diceRoll.create({
-            data: {
-              roomId: room.id,
-              userId,
-              rollType,
-              targetName,
-              targetValue,
-              rollResult,
-              rolls: JSON.stringify(rolls),
-              successLevel,
-              isBlind: !!isSecret,
-              visibleToUserIds: JSON.stringify(secretVisibleUserIds),
-            },
-          });
-
-          // 同时保存到聊天记录
-          const diceContent = targetName
-            ? `🎲 ${targetName} 检定: ${rollResult}/${targetValue} ${successLevel}`
-            : `🎲 ${rollType}: ${rollResult}`;
-
-          await prisma.roomMessage.create({
-            data: {
-              roomId: room.id,
-              userId,
-              nickname: socket.user!.nickname,
-              content: diceContent,
-              isSecret: !!isSecret,
-              type: 'dice',
-              meta: JSON.stringify({ rollType, targetName, targetValue, rollResult, successLevel }),
-            },
-          });
-
-        // ===== V2.1: 线索自动揭示钩子 =====
-        if (targetName && targetValue && successLevel && successLevel !== '-' && room) {
-          const isFailure = ['FUMBLE', 'FAILURE'].includes(successLevel);
-          if (!isFailure) {
-            const autoClues = await prisma.roomClue.findMany({
-              where: {
-                roomId: room.id,
-                isHidden: true,
-                autoReveal: true,
-                discoverySkill: targetName,
-                discoveryThreshold: { lte: targetValue },
-              },
-            });
-
-            for (const clue of autoClues) {
-              await prisma.roomClue.update({
-                where: { id: clue.id },
-                data: {
-                  isHidden: false,
-                  discoveredByUserId: userId,
-                  discoveredAt: new Date(),
-                },
-              });
-
-              await prisma.roomEventLog.create({
-                data: {
-                  roomId: room.id,
-                  eventType: 'CLUE_DISCOVERED',
-                  payload: JSON.stringify({
-                    clueId: clue.id,
-                    clueTitle: clue.title,
-                    discoveredBy: socket.user!.nickname,
-                    skill: targetName,
-                    rollResult,
-                    successLevel,
-                    auto: true,
-                  }),
-                  userId,
-                },
-              });
-            }
-
-            if (autoClues.length > 0) {
-              // 广播线索揭示事件
-              io.to(roomId).emit('clue:discovered', {
-                clues: autoClues.map(c => ({ id: c.id, title: c.title })),
-                discoveredBy: socket.user!.nickname,
-                skill: targetName,
-              });
-            }
-          }
-        }
-
-        const rollData = {
-          id: Date.now().toString(),
-          sender: {
-            userId,
-            nickname: socket.user!.nickname,
-          },
+        const { roomId, rollType, targetName, targetValue, isSecret } = data;
+        const expression = parseDiceExpression(rollType);
+        await createAndBroadcastDiceRoll(io, socket, {
+          roomId,
           rollType,
           targetName,
           targetValue,
-          rollResult,
-          rolls,
-          successLevel,
-          timestamp: new Date().toISOString(),
-          // V2.1: 附加自动揭示的线索
-          revealedClues: undefined as any,
-        };
-
-          if (isSecret) {
-            // 暗骰：发送者和 KP 看到真实结果
-            socket.emit('dice:result', rollData);
-            const kpUserIds = new Set(secretVisibleUserIds);
-            const roomMembers = io.sockets.adapter.rooms.get(roomId);
-            if (roomMembers) {
-              roomMembers.forEach((socketId) => {
-                const memberSocket = io.sockets.sockets.get(socketId);
-                if (memberSocket && memberSocket !== socket) {
-                  if (kpUserIds.has((memberSocket as any).user!.userId)) {
-                    memberSocket.emit('dice:result', rollData);
-                  } else {
-                    memberSocket.emit('dice:result', buildSecretDiceNotice(rollData));
-                  }
-                }
-              });
-            }
-          } else {
-            io.to(roomId).emit('dice:result', rollData);
-          }
-
-          // ===== V2.1: 同步到 Log =====
-          await syncEventToLog(room.id, 'DICE_ROLL', {
-            rollType,
-            targetName,
-            targetValue,
-            rollResult,
-            rolls,
-            successLevel,
-          }, {
-            userId,
-            nickname: socket.user!.nickname,
-          });
-        }
-
-        logger.info(`用户 ${socket.user?.nickname} 在房间 ${roomId} 投骰: ${rollResult}`);
+          isSecret,
+          expression: expression || undefined,
+        });
       } catch (error) {
         logger.error('投骰失败:', error);
         socket.emit('error', { message: '投骰失败' });
