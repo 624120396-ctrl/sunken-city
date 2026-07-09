@@ -10,6 +10,8 @@
 - Web TypeScript 检查通过。
 - 本次部署范围内已跟踪文件未发现 `git diff --check` 阻断问题。
 - `.codex-run/` 已加入 `.gitignore`，本地深度测试产物不会误入提交。
+- 本地提交 `3b69240` 已通过 HTTPS 推送到远端分支 `codex/frontend-system-v2-phase1`。
+- 当前服务器部署脚本以 `origin/develop` 为基准；正式部署前需要先把该分支合入 `develop`，或明确采用静态前端发布/指定提交发布路径。
 
 ## 只建议提交这些文件
 
@@ -42,6 +44,23 @@ git diff --cached --name-status
 ```text
 Finalize room system web deployment package
 ```
+
+## 远端集成
+
+当前远端分支：
+
+```text
+codex/frontend-system-v2-phase1 -> 3b69240
+develop -> 2136a10
+```
+
+PR 创建地址：
+
+```text
+https://github.com/624120396-ctrl/sunken-city/compare/develop...codex/frontend-system-v2-phase1?expand=1
+```
+
+注意：本机 SSH 到 GitHub 不稳定，表现为 22/443 端口连接或 banner 阶段超时。当前可用路径是 HTTPS Git；如果部署机侧仍依赖 SSH，应优先检查是否被 `gntcloud` 虚拟网卡劫持，必要时使用 `BindAddress` 指向物理 WLAN，或改用 HTTPS/静态前端发布路径。
 
 ## 不建议提交
 

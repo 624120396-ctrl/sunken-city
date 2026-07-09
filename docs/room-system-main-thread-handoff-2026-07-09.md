@@ -71,6 +71,9 @@
 
 ## 部署注意
 
+- 本地提交 `3b69240` 已推送到 GitHub 分支 `codex/frontend-system-v2-phase1`。
+- 当前服务器部署脚本默认拉取 `origin/develop`；主线程需要先完成分支合并，或明确选择静态前端发布/指定提交发布路径。
+- PR 创建地址：`https://github.com/624120396-ctrl/sunken-city/compare/develop...codex/frontend-system-v2-phase1?expand=1`
 - 本地测试使用临时后端端口 `3011`，原因是默认 `3001` 当时不可用。
 - 本机没有可用 Docker 命令，因此本轮没有跑容器化验证。
 - 本机 SSH 默认可能走 `gntcloud` 虚拟网卡，若后续部署出现 `Connection timed out during banner exchange`，应优先使用静态前端发布路径，或在 Windows SSH 配置里用 `BindAddress` 强制走物理 WLAN。
