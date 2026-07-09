@@ -70,7 +70,7 @@ export default function ScenarioSelectPage() {
         className="story-entry-page scenario-library-page"
         eyebrow="scenario library"
         title="选择剧本"
-        description="剧本档案读取失败。"
+        description="档案柜在潮湿黑暗中拒绝开启，纸页背后传来迟缓的敲击。"
       >
         <Surface variant="panel" padding="lg" className="story-entry-empty">
           <EmptyState
@@ -95,7 +95,7 @@ export default function ScenarioSelectPage() {
           选择剧本
         </span>
       }
-      description="选择一个已封存的故事档案，进入单人调查流程。"
+      description="封蜡下的故事仍在呼吸，暗门之后有人替你留下了脚印。"
     >
       {scenarios.length === 0 ? (
         <Surface variant="panel" padding="lg" className="story-entry-empty">

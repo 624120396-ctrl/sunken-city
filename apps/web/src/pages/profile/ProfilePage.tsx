@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package, Coins, Sparkles, Wand2, Mail, BookOpen } from 'lucide-react';
+import { User, Lock, Save, Eye, EyeOff, Camera, Upload, X, Package, Coins, Sparkles, Wand2, Mail, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -241,14 +241,14 @@ export function ProfilePage() {
   return (
     <PageShell
       className="profile-page profile-investigator-dossier"
-      eyebrow="调查员档案"
+      eyebrow="PROFILE DOSSIER"
       title={
         <span className="flex items-center gap-3">
           <User className="h-7 w-7 text-[var(--coc-accent-gold)]" />
           调查员档案
         </span>
       }
-      description="整理公开身份、角色档案、论坛足迹、藏品展示与长期留存线索。"
+      description="你留在城中的影子被缓慢装订，纸页合拢时，海雾仍认得它。"
       actions={
         <div className="profile-page__header-actions">
           <Link to="/characters" className="profile-tool-button">
@@ -259,26 +259,9 @@ export function ProfilePage() {
             <Mail className="h-4 w-4" />
             进入消息中心
           </Link>
-          {dossierStats.slice(0, 2).map((stat) => (
-            <div key={stat.key} className="profile-currency-chip" data-tone={stat.tone}>
-              {dossierStatIcons[stat.key]}
-              <span>{stat.label}</span>
-              <strong>{stat.value}</strong>
-            </div>
-          ))}
         </div>
       }
     >
-      <Surface variant="panel" padding="sm" className="profile-backlink">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1 text-sm text-[var(--coc-text-secondary)] transition-colors hover:text-[var(--coc-text-primary)]"
-        >
-          <ChevronLeft size={18} />
-          <span>返回控制台</span>
-        </Link>
-      </Surface>
-
       <Surface variant="solid" tone={roleBadge.tone} material="archive" padding="lg" className="profile-identity-card">
         <div className="profile-identity-card__avatar">
           {avatarUrl ? (
@@ -310,44 +293,44 @@ export function ProfilePage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" material="archive" padding="md" className="relative overflow-hidden">
+      <Surface variant="panel" material="archive" padding="md" className="profile-entry-ledger">
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+          <div className="profile-entry-card">
+            <div className="profile-entry-card__label">
               <User className="h-4 w-4" />
               公开身份
             </div>
-            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">
+            <div className="profile-entry-card__title">
               {user?.nickname || nickname || '未命名调查员'}
             </div>
-            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+            <div className="profile-entry-card__body">
               头像、昵称和展示印记会影响其他调查员看到你的第一眼。
             </div>
           </div>
           <Link
             to="/characters"
-            className="coc-focus-ring rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4 transition hover:border-[var(--coc-accent-gold)] hover:bg-white/[0.05]"
+            className="coc-focus-ring profile-entry-card"
           >
-            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+            <div className="profile-entry-card__label">
               <BookOpen className="h-4 w-4" />
               角色档案
             </div>
-            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">查看调查员角色</div>
-            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+            <div className="profile-entry-card__title">查看调查员角色</div>
+            <div className="profile-entry-card__body">
               角色、经历和公开展示将继续在角色页沉淀。
             </div>
           </Link>
           <Link
             to="/messages"
-            className="coc-focus-ring rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4 transition hover:border-[var(--coc-accent-gold)] hover:bg-white/[0.05]"
+            className="coc-focus-ring profile-entry-card"
           >
-            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+            <div className="profile-entry-card__label">
               <FileText className="h-4 w-4" />
               长期留存
             </div>
-            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">通知、私信与归档入口</div>
-            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+            <div className="profile-entry-card__title">通知、私信与归档入口</div>
+            <div className="profile-entry-card__body">
               排期、申请、公告和社交消息从这里回到完整消息中心。
             </div>
           </Link>
@@ -355,7 +338,8 @@ export function ProfilePage() {
       </Surface>
 
       <div className="profile-layout-grid xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <Surface variant="solid" tone="gold" material="archive" padding="lg" className="profile-form-card">
+        <div className="profile-side-stack">
+          <Surface variant="solid" tone="gold" material="archive" padding="lg" className="profile-form-card">
           <div className="profile-section-heading">
             <Camera className="h-5 w-5" />
             <div>
@@ -403,12 +387,9 @@ export function ProfilePage() {
               {savingProfile ? '保存中...' : '保存档案'}
             </button>
           </form>
-        </Surface>
+          </Surface>
 
-        <div className="profile-side-stack">
-          <BackgroundPicker value={selectedBackground} saving={savingBackground} onChange={setSelectedBackground} onSave={handleSaveBackground} />
-
-          <Surface variant="solid" tone="madness" padding="lg" className="profile-security-card">
+          <Surface variant="solid" tone="madness" material="archive" padding="lg" className="profile-security-card">
             <div className="profile-section-heading">
               <Lock className="h-5 w-5" />
               <div>
@@ -471,9 +452,11 @@ export function ProfilePage() {
           </form>
           </Surface>
         </div>
+
+        <BackgroundPicker value={selectedBackground} saving={savingBackground} onChange={setSelectedBackground} onSave={handleSaveBackground} />
       </div>
 
-      <Surface variant="solid" tone="ocean" padding="lg" className="profile-inventory-card">
+      <Surface variant="solid" tone="ocean" material="archive" padding="lg" className="profile-inventory-card">
         <div className="profile-section-heading">
           <Package className="h-5 w-5" />
           <div>
@@ -554,29 +537,29 @@ export function ProfilePage() {
 
       {/* AI 生成头像弹窗 */}
       {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <Surface variant="elevated" padding="lg" className="w-full max-w-md space-y-4">
-            <h3 className="text-lg font-ritual font-bold text-[#e8d4a0]">AI 生成头像</h3>
+        <div className="profile-ai-modal">
+          <Surface variant="elevated" material="archive" padding="lg" className="profile-ai-card">
+            <h3>AI 生成头像</h3>
             <textarea
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="描述你想要的头像风格，例如：克苏鲁风格，年轻的侦探，戴着圆顶礼帽，眼神锐利，黑白素描"
-              className="w-full px-3 py-2 bg-[#0a0a0f] border border-coc-void rounded text-[#e8d4a0] focus:border-coc-gold focus:outline-none min-h-[100px]"
+              className="profile-ai-card__textarea"
               maxLength={600}
             />
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-coc-parchment-dim">{aiPrompt.length}/600</span>
-              <div className="flex items-center gap-2">
+            <div className="profile-ai-card__footer">
+              <span>{aiPrompt.length}/600</span>
+              <div>
                 <button
                   onClick={() => { setShowAiModal(false); setAiPrompt(''); }}
-                  className="px-4 py-2 text-coc-parchment-dim hover:text-[#e8d4a0] transition-colors"
+                  className="profile-secondary-button"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleAiGenerate}
                   disabled={aiGenerating || !aiPrompt.trim()}
-                  className="px-4 py-2 bg-coc-gold text-coc-abyss rounded font-medium hover:bg-coc-gold-glow disabled:opacity-50"
+                  className="profile-primary-button"
                 >
                   {aiGenerating ? '生成中...' : '生成'}
                 </button>

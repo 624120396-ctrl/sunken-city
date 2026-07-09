@@ -59,19 +59,8 @@ function Badge({
   children: ReactNode;
   variant?: 'pin' | 'essence' | 'bounty' | 'lock' | 'best' | 'default';
 }) {
-  const variants: Record<typeof variant, string> = {
-    pin: 'border-amber-400/60 text-amber-300 bg-amber-400/10',
-    essence: 'border-coc-accent-gold/60 text-coc-accent-gold bg-coc-accent-gold/10',
-    bounty: 'border-amber-500/60 text-amber-300 bg-amber-500/10',
-    lock: 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-muted)] bg-black/10',
-    best: 'border-amber-400/60 text-amber-300 bg-amber-400/10',
-    default: 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-muted)]',
-  };
-
   return (
-    <span
-      className={`inline-flex min-h-[1.5rem] items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${variants[variant]}`}
-    >
+    <span className={`forum-badge forum-badge--${variant}`}>
       {children}
     </span>
   );
@@ -110,10 +99,10 @@ function Metric({
   label: string;
 }) {
   return (
-    <span className="inline-flex min-h-[2rem] items-center gap-1.5 rounded border border-[var(--coc-border-subtle)] bg-black/15 px-2.5 text-xs text-[var(--coc-on-surface-secondary)]">
-      <span className="text-[var(--coc-accent-gold)]">{icon}</span>
-      <span className="font-semibold tabular-nums text-[var(--coc-on-surface-primary)]">{value}</span>
-      <span className="text-[var(--coc-on-surface-muted)]">{label}</span>
+    <span className="forum-metric">
+      <span className="forum-metric__icon">{icon}</span>
+      <span className="forum-metric__value">{value}</span>
+      <span className="forum-metric__label">{label}</span>
     </span>
   );
 }
@@ -130,6 +119,7 @@ function PostRow({
       <Surface
         variant="solid"
         tone={post.isEssence || post.isPinned ? 'gold' : 'neutral'}
+        material="archive"
         padding="md"
         interactive
         className="forum-post-row"
@@ -264,7 +254,7 @@ export function ForumBoardPage() {
   const moderators = modData?.moderators || [];
 
   const boardName = boards.find((b) => b.key === boardKey)?.name || boardKey;
-  const boardDescription = boards.find((b) => b.key === boardKey)?.description || '本卷收纳置顶告示、典藏记录与最近回声。';
+  const boardDescription = boards.find((b) => b.key === boardKey)?.description || '本卷在盐痕边缘缓慢翻页，告示与回声皆向深处倾斜。';
   const BoardIcon = boardIconMap[boardKey || ''] || LayoutGrid;
   const visibleThreadCount = pinnedPosts.length + essencePosts.length + posts.length;
 
@@ -283,13 +273,13 @@ export function ForumBoardPage() {
 
   const aside = (
     <div className="coc-section-stack">
-      <Surface variant="solid" tone="gold" padding="md" className="space-y-4">
+      <Surface variant="solid" tone="gold" material="archive" padding="md" className="space-y-4 forum-aside-card">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded border border-[var(--coc-border-strong)] bg-black/20 text-[var(--coc-accent-gold)]">
+          <span className="forum-aside-icon">
             <LayoutGrid size={20} />
           </span>
           <div>
-            <div className="text-xs font-bold text-[var(--coc-accent-gold-strong)]">旧日低语分卷</div>
+            <div className="text-xs font-bold text-[var(--coc-accent-gold-strong)]">WHISPER BOARD</div>
             <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">卷宗概览</div>
           </div>
         </div>
@@ -301,7 +291,7 @@ export function ForumBoardPage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" padding="md" className="space-y-3">
+      <Surface variant="panel" material="archive" padding="md" className="space-y-3 forum-aside-card">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
           执印席位
@@ -338,7 +328,7 @@ export function ForumBoardPage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" padding="md" className="space-y-3">
+      <Surface variant="panel" material="archive" padding="md" className="space-y-3 forum-aside-card">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ScrollText size={16} className="text-[var(--coc-accent-gold)]" />
           分卷守则
@@ -352,7 +342,7 @@ export function ForumBoardPage() {
 
   return (
     <PageShell
-      eyebrow="旧日低语分卷"
+      eyebrow="WHISPER BOARD"
       title={
         <span className="flex items-center gap-2">
           <BoardIcon size={24} className="text-[var(--coc-accent-gold)]" />
@@ -361,7 +351,7 @@ export function ForumBoardPage() {
       }
       description={boardDescription}
       actions={
-        <Link to={`/forums/new?board=${boardKey}`} className="btn-v2 coc-btn-primary flex items-center gap-2">
+        <Link to={`/forums/new?board=${boardKey}`} className="btn-v2 coc-btn-primary forum-primary-action flex items-center gap-2">
           <Plus size={16} />
           誊录低语
         </Link>
@@ -370,7 +360,7 @@ export function ForumBoardPage() {
       className="forum-board-page"
     >
       <div className="coc-section-stack">
-        <Surface variant="panel" padding="sm" className="forum-board-toolbar">
+        <Surface variant="panel" material="archive" padding="sm" className="forum-board-toolbar">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
             <Link
               to="/forums"
@@ -390,22 +380,14 @@ export function ForumBoardPage() {
             <button
               type="button"
               onClick={() => setSortValue('last_reply')}
-              className={`btn-v2 min-h-[2.5rem] rounded border px-3 text-sm transition-colors ${
-                sort === 'last_reply'
-                  ? 'border-coc-gold bg-coc-gold text-coc-abyss'
-                  : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
-              }`}
+              className={`forum-sort-button ${sort === 'last_reply' ? 'is-active' : ''}`}
             >
               最近回声
             </button>
             <button
               type="button"
               onClick={() => setSortValue('newest')}
-              className={`btn-v2 min-h-[2.5rem] rounded border px-3 text-sm transition-colors ${
-                sort === 'newest'
-                  ? 'border-coc-gold bg-coc-gold text-coc-abyss'
-                  : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
-              }`}
+              className={`forum-sort-button ${sort === 'newest' ? 'is-active' : ''}`}
             >
               最新誊录
             </button>
@@ -439,7 +421,7 @@ export function ForumBoardPage() {
 
             <ThreadSection title="所有低语" icon={<MessageSquare size={15} />}>
               {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
-                <Surface variant="solid" padding="lg" className="forum-empty-state text-center">
+                <Surface variant="solid" material="archive" padding="lg" className="forum-empty-state text-center">
                   <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">本卷尚无低语</div>
                   <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">可以将第一段不安的记录封入此处。</p>
                   <Link

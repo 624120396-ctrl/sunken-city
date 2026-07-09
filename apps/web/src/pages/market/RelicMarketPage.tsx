@@ -253,17 +253,17 @@ export function RelicMarketPage() {
   return (
     <EconomyPageShell
       active="market"
-      eyebrow="relic exchange"
+      eyebrow="RELIC EXCHANGE"
       title="遗物市场"
-      description="调查员之间的遗物交易大厅。上架、购买和取消挂单仍使用原有交易接口。"
+      description="遗物在掌心之外流转，契约上的金粉像沉睡鳞片一样发冷。"
       meta={
-        <div className="flex min-h-11 items-center justify-center gap-3 rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 text-sm">
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Coins size={16} className="text-[#c9a227]" />
+        <div className="economy-wallet-summary">
+          <div>
+            <Coins size={16} />
             <span>{user?.coins ?? 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Sparkles size={16} className="text-purple-400" />
+          <div>
+            <Sparkles size={16} />
             <span>{user?.stardust ?? 0}</span>
           </div>
         </div>
@@ -279,7 +279,7 @@ export function RelicMarketPage() {
     >
       <div className="market-contracts">
 
-      <Surface variant="panel" padding="sm" className="market-contract-tabs">
+      <Surface variant="panel" material="archive" padding="sm" className="market-contract-tabs">
         <button
           onClick={() => setActiveTab('market')}
           data-active={activeTab === 'market'}
@@ -296,7 +296,7 @@ export function RelicMarketPage() {
 
       {activeTab === 'market' && (
         <>
-          <Surface variant="panel" padding="md" className="market-contract-filter">
+          <Surface variant="panel" material="archive" padding="md" className="market-contract-filter">
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
@@ -330,7 +330,7 @@ export function RelicMarketPage() {
               <p>加载失败，请稍后重试</p>
             </div>
           ) : listings.length === 0 ? (
-            <div className="py-16 text-center text-[#6b6558]">
+            <div className="market-contract-empty">
               <Store
                 size={48}
                 className="mx-auto mb-4 text-coc-text-secondary/50"
@@ -351,7 +351,7 @@ export function RelicMarketPage() {
       {activeTab === 'mine' && (
         <>
           {myListings.length === 0 ? (
-            <div className="py-12 text-center text-[#6b6558]">
+            <div className="market-contract-empty">
               你没有正在出售的遗物
             </div>
           ) : (
@@ -364,17 +364,17 @@ export function RelicMarketPage() {
 
       {/* 上架 Modal */}
       {showListModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <Surface variant="elevated" padding="lg" className="w-full max-w-md">
-            <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">上架遗物</h3>
+        <div className="economy-contract-modal">
+          <Surface variant="elevated" material="relic" padding="lg" className="economy-contract-modal__card">
+            <h3>上架遗物</h3>
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-[#b0a898]">
+              <label className="economy-contract-label">
                 选择角色卡
               </label>
               <select
                 value={selectedCharId}
                 onChange={(e) => handleCharChange(e.target.value)}
-                className="min-h-11 w-full rounded border border-coc-void bg-black/45 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+                className="economy-contract-input"
               >
                 <option value="">请选择</option>
                 {characters.map((c) => (
@@ -387,20 +387,20 @@ export function RelicMarketPage() {
 
             {selectedCharId && (
               <div className="mb-4">
-                <label className="mb-1 block text-xs text-[#b0a898]">
+                <label className="economy-contract-label">
                   选择遗物
                 </label>
                 {charRelicsLoading ? (
-                  <div className="text-sm text-[#b0a898]">加载中...</div>
+                  <div className="economy-contract-note">加载中...</div>
                 ) : charRelics.length === 0 ? (
-                  <div className="text-sm text-[#b0a898]">
+                  <div className="economy-contract-note">
                     该角色没有可交易的遗物
                   </div>
                 ) : (
                   <select
                     value={selectedRelicId}
                     onChange={(e) => setSelectedRelicId(e.target.value)}
-                    className="min-h-11 w-full rounded border border-coc-void bg-black/45 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+                    className="economy-contract-input"
                   >
                     <option value="">请选择</option>
                     {charRelics.map((r) => {
@@ -421,7 +421,7 @@ export function RelicMarketPage() {
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-[#b0a898]">
+                <label className="economy-contract-label">
                   价格
                 </label>
                 <input
@@ -429,11 +429,11 @@ export function RelicMarketPage() {
                   value={listPrice}
                   onChange={(e) => setListPrice(e.target.value)}
                   min={1}
-                  className="min-h-11 w-full rounded border border-coc-void bg-black/45 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+                  className="economy-contract-input"
                 />
               </div>
               <div className="sm:w-36">
-                <label className="mb-1 block text-xs text-[#b0a898]">
+                <label className="economy-contract-label">
                   币种
                 </label>
                 <select
@@ -441,7 +441,7 @@ export function RelicMarketPage() {
                   onChange={(e) =>
                     setListCurrency(e.target.value as 'coin' | 'stardust')
                   }
-                  className="min-h-11 w-full rounded border border-coc-void bg-black/45 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+                  className="economy-contract-input"
                 >
                   <option value="coin">锈蚀硬币</option>
                   <option value="stardust">虚银</option>
@@ -475,16 +475,16 @@ export function RelicMarketPage() {
 
       {/* 购买 Modal */}
       {buyTradeId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <Surface variant="elevated" padding="lg" className="w-full max-w-sm">
-            <h3 className="mb-4 text-lg font-bold text-[#e8d4a0]">购买遗物</h3>
-            <p className="mb-3 text-sm text-[#b0a898]">
+        <div className="economy-contract-modal">
+          <Surface variant="elevated" material="relic" padding="lg" className="economy-contract-modal__card economy-contract-modal__card--compact">
+            <h3>购买遗物</h3>
+            <p className="economy-contract-note">
               请选择要接收该遗物的角色卡
             </p>
             <select
               value={buyCharId}
               onChange={(e) => setBuyCharId(e.target.value)}
-              className="mb-4 min-h-11 w-full rounded border border-coc-void bg-black/45 px-3 py-2 text-sm text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+              className="economy-contract-input mb-4"
             >
               <option value="">请选择</option>
               {characters.map((c) => (

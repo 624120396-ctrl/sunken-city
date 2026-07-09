@@ -1,4 +1,3 @@
-import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -354,12 +353,59 @@ export function CharacterDetailPage() {
     <PageShell
       className="character-detail-page character-public-dossier"
       title="调查员卷宗"
-      eyebrow="密斯卡托尼克式个案记录"
-      description="一份尚未完全可信的调查记录：身份、能力、公开经历与报告归档会在此处被谨慎保存。"
+      eyebrow="INVESTIGATOR DOSSIER"
+      description="这份卷宗不肯完全说真话；墨迹、骨相与过往在同一处发暗。"
+      aside={
+        <div className="character-detail-aside">
+          <Surface variant="panel" material="archive" padding="md" className="character-detail-aside-card">
+            <div className="character-detail-aside-card__heading">
+              <User size={14} />
+              身份索引
+            </div>
+            <div className="character-detail-aside-card__body">
+              <strong>{character.name}</strong>
+              <span>{character.occupation} · {character.age}岁 · {character.gender || '未登记'}</span>
+              <small>#{String(character.displayId).padStart(8, '0')}</small>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-detail-aside-card">
+            <div className="character-detail-aside-card__heading">
+              <Heart size={14} />
+              生命迹象
+            </div>
+            <div className="character-detail-aside-grid">
+              {vitals.map((vital) => (
+                <div key={vital.key} className="coc-archive-subcard character-detail-aside-entry" data-tone={vital.tone}>
+                  <span>{vital.label}</span>
+                  <strong>{vital.value}/{vital.max}</strong>
+                </div>
+              ))}
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-detail-aside-card">
+            <div className="character-detail-aside-card__heading">
+              <BookOpen size={14} />
+              经历归档
+            </div>
+            <div className="character-detail-aside-grid">
+              <div className="coc-archive-subcard character-detail-aside-entry">
+                <span>公开经历</span>
+                <strong>{roomHistory.length}</strong>
+              </div>
+              <div className="coc-archive-subcard character-detail-aside-entry">
+                <span>调查报告</span>
+                <strong>{reportCount}</strong>
+              </div>
+            </div>
+          </Surface>
+        </div>
+      }
     >
       {/* ===== 焦点图顶部：角色卡 Hero ===== */}
       <Surface variant="page" tone="gold" material="archive" padding="lg" className="character-detail-hero">
-        <div className="character-detail-portrait">
+        <div className="character-detail-portrait" data-has-portrait={character.portraitUrl ? 'true' : 'false'}>
           {character.portraitUrl ? (
             <img src={character.portraitUrl} alt={character.name} />
           ) : (
@@ -387,26 +433,35 @@ export function CharacterDetailPage() {
             <p className="character-detail-appearance">{character.appearance}</p>
           )}
 
-          <div className="character-detail-vitals">
-            {vitals.map((vital) => (
-              <div key={vital.key} className="character-detail-vital" data-tone={vital.tone}>
-                {vital.key === 'hp' ? <Heart size={16} /> : vital.key === 'mp' ? <Sparkles size={16} /> : <Brain size={16} />}
-                <span>{vital.label}</span>
-                <strong>{vital.value}</strong>
-                <small>/{vital.max}</small>
-              </div>
-            ))}
-            <div className="character-detail-vital" data-tone="ocean">
-              <Zap size={16} />
-              <span>MOV</span>
-              <strong>{character.mov}</strong>
+          <section className="character-detail-vitals-panel" aria-label="生命迹象">
+            <header>
+              <span>生命迹象</span>
+              <b>{condition.label}</b>
+            </header>
+            <div className="character-detail-vitals-panel__grid">
+              {vitals.map((vital) => (
+                <div key={vital.key} data-vital={vital.key}>
+                  {vital.key === 'hp' ? <Heart size={17} /> : vital.key === 'mp' ? <Sparkles size={17} /> : <Brain size={17} />}
+                  <span>{vital.label}</span>
+                  <strong>{vital.value}/{vital.max}</strong>
+                </div>
+              ))}
             </div>
-            <div className="character-detail-vital" data-tone="gold">
-              <Shield size={16} />
-              <span>体格</span>
-              <strong>{character.build}</strong>
+            <div className="character-detail-secondary-stats" aria-label="行动与体格">
+              <span>
+                <Zap size={13} />
+                MOV <b>{character.mov}</b>
+              </span>
+              <span>
+                <Shield size={13} />
+                体格 <b>{character.build}</b>
+              </span>
+              <span>
+                <Sparkles size={13} />
+                幸运 <b>{character.luck}</b>
+              </span>
             </div>
-          </div>
+          </section>
 
           <div className="character-detail-actions">
             {canManagePortrait && (
@@ -427,24 +482,24 @@ export function CharacterDetailPage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" material="archive" padding="md" className="relative overflow-hidden">
+      <Surface variant="panel" material="archive" padding="md" className="character-detail-ledger">
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+          <div className="character-detail-ledger-card rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
             <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">公开经历</div>
             <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{roomHistory.length}</div>
             <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
               这名调查员被记录在案的跑团经历。
             </div>
           </div>
-          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+          <div className="character-detail-ledger-card rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
             <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">报告归档</div>
             <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{reportCount}</div>
             <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
               可追溯的调查报告与事件摘要。
             </div>
           </div>
-          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+          <div className="character-detail-ledger-card rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
             <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">结案记号</div>
             <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{finishedRunCount}</div>
             <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
@@ -454,7 +509,7 @@ export function CharacterDetailPage() {
         </div>
       </Surface>
 
-      <Surface variant="panel" material="archive" padding="md" className="character-room-history mb-4">
+      <Surface variant="panel" material="archive" padding="md" className="character-room-history">
         <div className="character-room-history__title">
           <BookOpen size={16} />
           房间经历卷宗
@@ -495,7 +550,7 @@ export function CharacterDetailPage() {
       </Surface>
 
       {/* ===== 标签页 ===== */}
-      <Surface variant="panel" padding="none" className="character-detail-tabs">
+      <Surface variant="panel" material="archive" padding="none" className="character-detail-tabs">
         <div>
           {tabs.map((tab) => {
             const Icon = tabIcons[tab.key];
@@ -514,7 +569,8 @@ export function CharacterDetailPage() {
       </Surface>
 
       {/* ===== 内容区域 ===== */}
-      <DoubleBezelCard variant="gold" runeCorners className="character-detail-content" innerClassName="character-detail-content__inner p-4">
+      <Surface variant="panel" material="archive" padding="md" className="character-detail-content">
+        <div className="character-detail-content__inner">
         {activeTab === 'attributes' && (
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
             {[
@@ -528,7 +584,7 @@ export function CharacterDetailPage() {
               { key: 'edu', label: '教育 EDU' },
               { key: 'luck', label: '幸运 LUCK' },
             ].map((attr) => (
-              <div key={attr.key} className="text-center p-4 bg-black/20 rounded">
+              <div key={attr.key} className="character-detail-attribute-card text-center p-4 bg-black/20 rounded">
                 <div className="text-xs text-[#6b6558] mb-1">{attr.label}</div>
                 <div className="text-2xl font-bold">{(character as any)[attr.key]}</div>
                 <div className="text-xs text-[#6b6558] mt-1">
@@ -554,7 +610,7 @@ export function CharacterDetailPage() {
                     {skills.map((skill) => {
                       const value = character.skills[skill.key] ?? skill.baseValue;
                       return (
-                        <div key={skill.key} className="flex justify-between items-center p-2 bg-black/20 rounded">
+                        <div key={skill.key} className="character-detail-skill-row flex justify-between items-center p-2 bg-black/20 rounded">
                           <span className="text-sm">{skill.name}</span>
                           <div className="flex items-center gap-2 text-xs">
                             <span className="text-[#4db8b8]">{value}%</span>
@@ -577,7 +633,7 @@ export function CharacterDetailPage() {
                   {Object.entries(character.skills || {}).filter(([name]) =>
                     !COC7E_SKILLS.some(s => s.key === name)
                   ).map(([name, value]) => (
-                    <div key={name} className="flex justify-between items-center p-2 bg-black/20 rounded">
+                    <div key={name} className="character-detail-skill-row flex justify-between items-center p-2 bg-black/20 rounded">
                       <span className="text-sm">{name}</span>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-[#4db8b8]">{value}%</span>
@@ -599,7 +655,7 @@ export function CharacterDetailPage() {
               {character.weapons.length > 0 ? (
                 <div className="space-y-2">
                   {character.weapons.map((weapon: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-black/20 rounded">
+                    <div key={idx} className="character-detail-archive-card p-3 bg-black/20 rounded">
                       <div className="font-medium">{weapon.name}</div>
                       <div className="text-sm text-[#8b8375]">
                         伤害: {weapon.damage} | 射程: {weapon.range} | 贯穿: {weapon.impale ? '是' : '否'}
@@ -621,7 +677,7 @@ export function CharacterDetailPage() {
             <div>
               <h3 className="font-bold mb-3">护甲</h3>
               {character.armor ? (
-                <div className="p-3 bg-black/20 rounded">
+                <div className="character-detail-archive-card p-3 bg-black/20 rounded">
                   <div className="font-medium">{character.armor.name}</div>
                   <div className="text-sm text-[#8b8375]">
                     护甲值: {character.armor.rating} | 覆盖: {character.armor.coverage}
@@ -665,7 +721,8 @@ export function CharacterDetailPage() {
             )}
           </div>
         )}
-      </DoubleBezelCard>
+        </div>
+      </Surface>
 
       {/* ===== 形象铸造弹窗 ===== */}
       {showPortraitModal && (

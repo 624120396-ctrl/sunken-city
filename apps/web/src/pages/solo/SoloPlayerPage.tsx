@@ -41,9 +41,10 @@ function WorldTransitionOverlay({ show, world, onDone }: { show: boolean; world:
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-700 ${
+      className={`solo-world-transition fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-700 ${
         visible ? 'opacity-100' : 'opacity-0'
       } ${world === 'corrupted' ? 'bg-violet-900/90' : 'bg-slate-900/90'}`}
+      data-world={world}
     >
       <div className="text-center space-y-4">
         <Ghost className={`w-12 h-12 mx-auto animate-pulse ${world === 'corrupted' ? 'text-violet-300' : 'text-slate-300'}`} />
@@ -239,7 +240,7 @@ export function SoloPlayerPage() {
   }) || [];
 
   return (
-    <div className={`min-h-screen text-slate-100 transition-colors duration-700 ${bgClass} relative overflow-x-hidden`}>
+    <div className={`solo-play-page min-h-screen text-slate-100 transition-colors duration-700 ${bgClass} relative overflow-x-hidden`} data-world={currentWorld}>
       <CorruptionOverlay corruption={corruption} />
       <WorldTransitionOverlay
         show={worldTransitioning}
@@ -248,12 +249,12 @@ export function SoloPlayerPage() {
       />
 
       {/* 顶部状态条 */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/20 backdrop-blur">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="solo-play-topbar sticky top-0 z-30 border-b border-white/10 bg-black/20 backdrop-blur">
+        <div className="solo-play-topbar__inner max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/solo')}
-              className="p-2 rounded-lg hover:bg-white/10"
+              className="solo-play-back p-2 rounded-lg hover:bg-white/10"
               title="返回"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -264,20 +265,21 @@ export function SoloPlayerPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/15 text-red-300">
+          <div className="solo-play-vitals flex items-center gap-2 text-xs">
+            <div className="solo-play-vital flex items-center gap-1 px-2 py-1 rounded bg-red-500/15 text-red-300" data-tone="hp">
               <Heart className="w-3.5 h-3.5" /> {hp}/{maxHp}
             </div>
-            <div className="flex items-center gap-1 px-2 py-1 rounded bg-blue-500/15 text-blue-300">
+            <div className="solo-play-vital flex items-center gap-1 px-2 py-1 rounded bg-blue-500/15 text-blue-300" data-tone="san">
               <Brain className="w-3.5 h-3.5" /> {san}/{maxSan}
             </div>
-            <div className="flex items-center gap-1 px-2 py-1 rounded bg-purple-500/15 text-purple-300">
+            <div className="solo-play-vital flex items-center gap-1 px-2 py-1 rounded bg-purple-500/15 text-purple-300" data-tone="mp">
               <Sparkles className="w-3.5 h-3.5" /> {mp}/{maxMp}
             </div>
             <div
-              className={`flex items-center gap-1 px-2 py-1 rounded ${
+              className={`solo-play-vital flex items-center gap-1 px-2 py-1 rounded ${
                 corruption >= 50 ? 'bg-violet-500/20 text-violet-300' : 'bg-slate-500/15 text-slate-300'
               }`}
+              data-tone="corruption"
             >
               <Activity className="w-3.5 h-3.5" /> 侵蚀 {corruption}
             </div>
@@ -286,7 +288,7 @@ export function SoloPlayerPage() {
       </header>
 
       {/* 主内容区 — 视觉小说风格 */}
-      <main className="max-w-3xl mx-auto px-4 pb-28 space-y-4">
+      <main className="solo-play-main max-w-3xl mx-auto px-4 pb-28 space-y-4">
         {isLoading && !session && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
@@ -296,7 +298,7 @@ export function SoloPlayerPage() {
         {session && (
           <>
             {/* 场景氛围图 */}
-            <div className="pt-4">
+            <div className="solo-scene-frame pt-4">
               <AiSceneImage
                 src={session.sceneImageUrl}
                 fallbackPrompt={session.node.metadata?.stageDirection || '场景氛围渲染中...'}
@@ -304,7 +306,7 @@ export function SoloPlayerPage() {
             </div>
 
             {/* 世界观标签 */}
-            <div className="text-xs uppercase tracking-wider text-slate-500 px-1">
+            <div className="solo-world-label text-xs uppercase tracking-wider text-slate-500 px-1">
               {session.node.type === 'ENDING'
                 ? '结局'
                 : currentWorld === 'corrupted'
@@ -315,11 +317,12 @@ export function SoloPlayerPage() {
             {/* CHECK 节点检定结果（紧凑卡片） */}
             {session.globalState.lastCheckResult && (
               <div
-                className={`rounded-lg border p-3 ${
+                className={`solo-check-card rounded-lg border p-3 ${
                   session.globalState.lastCheckResult.isSuccess
                     ? 'border-emerald-500/30 bg-emerald-500/10'
                     : 'border-rose-500/30 bg-rose-500/10'
                 }`}
+                data-result={session.globalState.lastCheckResult.isSuccess ? 'success' : 'failure'}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <Dices className="w-4 h-4 text-slate-300" />
@@ -336,7 +339,7 @@ export function SoloPlayerPage() {
 
             {/* NPC 对话面板（紧凑模式） */}
             {npcs.length > 0 && (
-              <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur p-4 space-y-3">
+              <div className="solo-npc-panel rounded-xl border border-white/10 bg-black/40 backdrop-blur p-4 space-y-3">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500">
                   <MessageCircle className="w-3.5 h-3.5" />
                   对话
@@ -372,7 +375,7 @@ export function SoloPlayerPage() {
                               key={optIdx}
                               disabled={npcTalking}
                               onClick={() => handleNpcTalk(npcIndex, opt)}
-                              className="text-left px-3 py-2 rounded-md text-sm bg-white/5 hover:bg-white/10 border border-white/10 transition disabled:opacity-50"
+                              className="solo-choice-button text-left px-3 py-2 rounded-md text-sm bg-white/5 hover:bg-white/10 border border-white/10 transition disabled:opacity-50"
                             >
                               {opt}
                             </button>
@@ -418,11 +421,12 @@ export function SoloPlayerPage() {
                       key={i}
                       disabled={unlockingClue === c || unlocked}
                       onClick={() => handleUnlockClue(c)}
-                      className={`w-full text-left flex items-start gap-2 text-sm rounded-lg px-3 py-2 transition border ${
+                      className={`solo-clue-button w-full text-left flex items-start gap-2 text-sm rounded-lg px-3 py-2 transition border ${
                         unlocked
                           ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20'
                           : 'text-amber-300 bg-white/5 border-white/10 hover:bg-white/10'
                       } disabled:cursor-default`}
+                      data-unlocked={unlocked ? 'true' : 'false'}
                     >
                       <span>{unlocked ? '✓' : '🔍'}</span>
                       <span className={unlocked ? 'line-through opacity-80' : ''}>{c}</span>
@@ -433,9 +437,9 @@ export function SoloPlayerPage() {
             )}
 
             {/* 操作按钮区 */}
-            <div className="space-y-2 pt-2">
+            <div className="solo-action-stack space-y-2 pt-2">
               {session.node.type !== 'ENDING' && session.edges.length === 0 && session.node.type !== 'CHECK' && (
-                <div className="text-center text-sm text-slate-500 py-4">
+                <div className="solo-empty-action text-center text-sm text-slate-500 py-4">
                   当前没有可用的行动选项。
                 </div>
               )}
@@ -445,7 +449,7 @@ export function SoloPlayerPage() {
                   key={edge.id}
                   disabled={advancing}
                   onClick={() => handleAdvance(edge)}
-                  className="w-full text-left px-5 py-3.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/40 transition disabled:opacity-50"
+                  className="solo-action-button w-full text-left px-5 py-3.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/40 transition disabled:opacity-50"
                 >
                   <div className="font-medium">{edge.label}</div>
                   {edge.type === 'CONDITIONAL' && edge.conditions?.expression && (
@@ -455,11 +459,11 @@ export function SoloPlayerPage() {
               ))}
 
               {session.node.type === 'ENDING' && (
-                <div className="text-center py-4">
+                <div className="solo-ending-panel text-center py-4">
                   <div className="text-2xl font-bold text-amber-500 mb-4">剧终</div>
                   <button
                     onClick={() => navigate('/solo')}
-                    className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20"
+                    className="solo-action-button px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20"
                   >
                     返回首页
                   </button>
@@ -473,7 +477,7 @@ export function SoloPlayerPage() {
       {/* 物品栏悬浮按钮 */}
       <button
         onClick={() => setInventoryOpen(true)}
-        className="fixed right-4 top-20 z-30 p-2.5 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 backdrop-blur transition"
+        className="solo-inventory-trigger fixed right-4 top-20 z-30 p-2.5 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 backdrop-blur transition"
         title="物品栏"
       >
         <Package className="w-5 h-5 text-slate-200" />
@@ -492,17 +496,17 @@ export function SoloPlayerPage() {
       />
 
       {/* 底部地点抽屉开关 */}
-      <div className="fixed bottom-0 left-0 right-0 z-20">
+      <div className="solo-history-drawer fixed bottom-0 left-0 right-0 z-20">
         <button
           onClick={() => setDrawerOpen((v) => !v)}
-          className="w-full flex items-center justify-center gap-1 py-2 text-xs bg-black/40 hover:bg-black/50 border-t border-white/10 backdrop-blur"
+          className="solo-history-drawer__toggle w-full flex items-center justify-center gap-1 py-2 text-xs bg-black/40 hover:bg-black/50 border-t border-white/10 backdrop-blur"
         >
           {drawerOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           已访问地点
         </button>
 
         {drawerOpen && (
-          <div className="max-h-56 overflow-auto bg-black/70 backdrop-blur border-t border-white/10 px-4 py-3">
+          <div className="solo-history-drawer__panel max-h-56 overflow-auto bg-black/70 backdrop-blur border-t border-white/10 px-4 py-3">
             <div className="max-w-3xl mx-auto space-y-2">
               {session?.visitedNodes.length === 0 && (
                 <div className="text-sm text-slate-500">尚无访问记录</div>
@@ -515,7 +519,7 @@ export function SoloPlayerPage() {
                     key={`${v.nodeId}-${v.worldState}-${idx}`}
                     onClick={() => handleBacktrack(v.nodeId, v.worldState)}
                     disabled={isCurrent}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm border transition ${
+                    className={`solo-history-row w-full flex items-center justify-between px-3 py-2 rounded-md text-sm border transition ${
                       isCurrent
                         ? 'bg-amber-500/15 border-amber-500/30 text-amber-200'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'

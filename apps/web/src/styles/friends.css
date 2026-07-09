@@ -1,0 +1,239 @@
+.friend-social-page {
+  --friend-paper: url('/ui-textures/room-v6-aged-parchment-white.webp');
+  --friend-ink: #21180f;
+  --friend-muted: #6d614d;
+  --friend-line: rgba(151, 103, 31, 0.26);
+  --friend-gold: #b87912;
+  --friend-gold-strong: #8c5c08;
+  --friend-ocean: #4f8f93;
+  --coc-on-surface-primary: var(--friend-ink);
+  --coc-on-surface-secondary: #4f4435;
+  --coc-on-surface-muted: var(--friend-muted);
+  --coc-surface-accent: var(--friend-gold);
+}
+
+.friend-social-page.coc-page-shell {
+  width: min(100%, calc(100vw - 4rem));
+  gap: 1.5rem;
+}
+
+.friend-social-page .coc-page-shell__body,
+.friend-social-page .coc-page-shell__main {
+  gap: 1.5rem;
+}
+
+.friend-social-page .coc-page-shell__main {
+  display: grid;
+}
+
+.friend-social-page .coc-page-shell__eyebrow {
+  text-transform: uppercase;
+}
+
+.friend-social-page .coc-page-shell__header.coc-surface-v2 {
+  border-color: rgba(208, 151, 42, 0.46);
+}
+
+.friend-social-page .coc-page-shell__actions .coc-focus-ring {
+  border-radius: 5px;
+}
+
+.friend-social-page .coc-page-shell__actions .bg-\[var\(--coc-accent-gold\)\] {
+  background: linear-gradient(135deg, #a66d0d, #e5b835 48%, #c88614);
+}
+
+.friend-social-page .coc-page-shell__actions .bg-black\/35 {
+  border-color: rgba(215, 164, 51, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.82), rgba(231, 219, 191, 0.68)),
+    var(--friend-paper);
+  color: var(--friend-ink);
+}
+
+.friend-social-page .coc-surface-v2[data-material="archive"],
+.friend-ledger-group,
+.friend-contact-card.coc-surface-v2[data-material="archive"],
+.friend-request-card.coc-surface-v2[data-material="archive"],
+.friend-empty-panel.coc-surface-v2[data-material="archive"] {
+  border-color: var(--friend-line);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 242, 0.9), rgba(238, 229, 207, 0.82)),
+    var(--friend-paper);
+  background-size: auto, 420px 420px;
+  color: var(--friend-ink);
+  box-shadow:
+    0 14px 30px rgba(31, 22, 9, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+}
+
+.friend-ledger-stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 5rem;
+  border: 1px solid var(--friend-line);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 78% 14%, rgba(186, 131, 31, 0.13), transparent 38%),
+    var(--friend-paper) center / 240px 240px repeat,
+    rgba(255, 251, 239, 0.78);
+  background-blend-mode: multiply, multiply, normal;
+  padding: 0.85rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 232, 0.20);
+}
+
+.friend-ledger-stat::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(129, 86, 12, 0.72), rgba(211, 158, 43, 0.38));
+}
+
+.friend-ledger-stat:nth-child(2)::after {
+  background: linear-gradient(90deg, rgba(31, 91, 87, 0.70), rgba(87, 151, 145, 0.36));
+}
+
+.friend-ledger-stat:nth-child(3)::after {
+  background: linear-gradient(90deg, rgba(117, 33, 29, 0.58), rgba(196, 86, 73, 0.28));
+}
+
+.friend-ledger-tabs {
+  border-color: var(--friend-line);
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.68), rgba(224, 209, 174, 0.34)),
+    var(--friend-paper);
+}
+
+.friend-ledger-tabs button {
+  border-radius: 4px;
+  color: var(--friend-muted);
+  font-weight: 900;
+}
+
+.friend-ledger-tabs button[aria-selected="true"] {
+  background: linear-gradient(135deg, #a66d0d, #e5b835 48%, #c88614);
+  color: #1f1508;
+}
+
+.friend-ledger-search {
+  border: 1px solid var(--friend-line);
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.88), rgba(239, 231, 210, 0.72)),
+    var(--friend-paper);
+  color: var(--friend-ink);
+  font-weight: 700;
+  box-shadow: inset 0 1px 3px rgba(75, 45, 12, 0.08);
+}
+
+.friend-ledger-search::placeholder {
+  color: rgba(109, 98, 80, 0.72);
+}
+
+.friend-ledger-search:focus {
+  border-color: rgba(183, 122, 18, 0.58);
+  outline: none;
+}
+
+.friend-ledger-group {
+  margin-top: 0;
+}
+
+.friend-ledger-group .coc-section-group__header {
+  border-bottom: 1px solid rgba(151, 103, 31, 0.14);
+  padding-bottom: 0.9rem;
+}
+
+.friend-contact-card {
+  min-height: 10.5rem;
+  border-radius: 6px;
+}
+
+.friend-contact-card[data-tone="gold"] {
+  border-color: rgba(79, 143, 147, 0.42);
+}
+
+.friend-contact-card .rounded-full {
+  border-color: rgba(183, 122, 18, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 224, 0.72), rgba(232, 219, 187, 0.46)),
+    var(--friend-paper);
+}
+
+.friend-contact-card .text-\[var\(--coc-text-primary\)\],
+.friend-request-card .text-\[var\(--coc-text-primary\)\] {
+  color: var(--friend-ink);
+}
+
+.friend-contact-card .text-\[var\(--coc-text-secondary\)\],
+.friend-request-card .text-\[var\(--coc-text-secondary\)\],
+.friend-empty-panel {
+  color: var(--friend-muted);
+}
+
+.friend-request-card {
+  border-radius: 6px;
+}
+
+@media (min-width: 1600px) {
+  .friend-social-page.coc-page-shell {
+    width: min(100%, calc(100vw - 6rem));
+  }
+}
+
+@media (min-width: 2200px) {
+  .friend-social-page.coc-page-shell {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .friend-social-page.coc-page-shell {
+    width: 100%;
+    gap: 0.85rem;
+  }
+
+  .friend-social-page .coc-page-shell__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1rem 0.85rem 1rem 3.25rem;
+  }
+
+  .friend-social-page .coc-page-shell__header .coc-page-shell__intro {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .friend-social-page .coc-page-shell__title {
+    max-width: 100%;
+    font-size: 2.25rem;
+    line-height: 1.05;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: normal;
+  }
+
+  .friend-social-page .coc-page-shell__description {
+    max-width: 13rem;
+    line-height: 1.7;
+  }
+
+  .friend-social-page .coc-page-shell__actions,
+  .friend-social-page .coc-page-shell__actions > div,
+  .friend-social-page .coc-page-shell__actions button {
+    width: 100%;
+  }
+
+  .friend-social-page .coc-page-shell__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .friend-ledger-tabs {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

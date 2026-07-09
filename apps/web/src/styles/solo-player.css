@@ -1,0 +1,397 @@
+.solo-play-page {
+  --solo-paper: url('/ui-textures/room-v6-aged-parchment-white.webp');
+  --solo-copper: url('/ui-textures/oxidized-copper-dark-edge.webp');
+  --solo-stone: url('/ui-textures/dark-glazed-stone-dark-tool.webp');
+  --solo-ink: #201710;
+  --solo-muted: #6f614b;
+  --solo-line: rgba(151, 103, 31, 0.28);
+  --solo-gold: #c58b1c;
+  --solo-gold-strong: #8d5a0b;
+  --solo-blood: #8d2634;
+  --solo-ocean: #4f8e98;
+  background:
+    linear-gradient(180deg, rgba(8, 15, 18, 0.72), rgba(8, 10, 12, 0.90)),
+    var(--coc-texture-header-cold-mist);
+  background-size: auto, 980px 340px;
+}
+
+.solo-play-page[data-world="corrupted"] {
+  background:
+    radial-gradient(circle at 80% 18%, rgba(112, 57, 142, 0.22), transparent 22rem),
+    linear-gradient(180deg, rgba(21, 10, 26, 0.78), rgba(8, 8, 11, 0.92)),
+    var(--coc-texture-header-cold-mist);
+}
+
+.solo-play-topbar {
+  border-color: rgba(201, 151, 47, 0.24);
+  background:
+    linear-gradient(90deg, rgba(10, 21, 21, 0.92), rgba(28, 24, 18, 0.86)),
+    var(--solo-stone);
+  background-size: auto, 300px 300px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.solo-play-topbar__inner {
+  max-width: min(78rem, calc(100vw - 2rem));
+}
+
+.solo-play-back,
+.solo-inventory-trigger,
+.solo-history-drawer__toggle {
+  border: 1px solid rgba(201, 151, 47, 0.20);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.10), rgba(12, 10, 7, 0.28)),
+    rgba(0, 0, 0, 0.20);
+}
+
+.solo-play-vitals {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.solo-play-vital {
+  min-height: 2rem;
+  border: 1px solid rgba(212, 197, 168, 0.14);
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.88), rgba(231, 219, 191, 0.74)),
+    var(--solo-paper);
+  color: var(--solo-ink);
+  font-weight: 900;
+}
+
+.solo-play-vital[data-tone="hp"] svg {
+  color: var(--solo-blood);
+}
+
+.solo-play-vital[data-tone="san"],
+.solo-play-vital[data-tone="mp"] {
+  border-color: rgba(79, 142, 152, 0.30);
+}
+
+.solo-play-vital[data-tone="san"] svg,
+.solo-play-vital[data-tone="mp"] svg {
+  color: var(--solo-ocean);
+}
+
+.solo-play-vital[data-tone="corruption"] {
+  border-color: rgba(141, 38, 52, 0.34);
+}
+
+.solo-play-vital[data-tone="corruption"] svg {
+  color: var(--solo-blood);
+}
+
+.solo-play-main {
+  max-width: min(76rem, calc(100vw - 2rem));
+  padding-top: 1rem;
+}
+
+.solo-scene-frame {
+  position: relative;
+}
+
+.solo-scene-image {
+  border-color: rgba(201, 151, 47, 0.28);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(197, 139, 28, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(22, 25, 24, 0.94), rgba(8, 9, 10, 0.98)),
+    var(--solo-stone);
+  background-size: auto, auto, 360px 360px;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 236, 190, 0.10);
+}
+
+.solo-scene-image::after {
+  content: "";
+  position: absolute;
+  inset: 0.55rem;
+  border: 1px solid rgba(221, 170, 64, 0.16);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.solo-world-label {
+  width: fit-content;
+  border: 1px solid rgba(151, 103, 31, 0.22);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.82), rgba(231, 219, 191, 0.62)),
+    var(--solo-paper);
+  color: var(--solo-gold-strong);
+  padding: 0.26rem 0.7rem;
+  font-weight: 900;
+}
+
+.solo-dialog-box,
+.solo-check-card,
+.solo-npc-panel,
+.solo-clue-button,
+.solo-action-button,
+.solo-ending-panel,
+.solo-empty-action,
+.solo-history-drawer__panel,
+.solo-inventory-panel__drawer {
+  border-color: var(--solo-line);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.90), rgba(233, 222, 198, 0.82)),
+    var(--solo-paper);
+  background-size: auto, 420px 420px;
+  color: var(--solo-ink);
+  box-shadow:
+    0 14px 32px rgba(34, 21, 7, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.solo-dialog-box {
+  padding: 1.1rem 1.25rem;
+}
+
+.solo-dialog-box > div:nth-child(2) {
+  color: var(--solo-ink);
+  font-size: 0.94rem;
+  line-height: 1.9;
+}
+
+.solo-dialog-box > div:first-child {
+  color: var(--solo-gold-strong);
+}
+
+.solo-dialog-box > div:last-child {
+  border-left-color: rgba(141, 38, 52, 0.38);
+  color: var(--solo-muted);
+}
+
+.solo-dialog-box span.animate-pulse {
+  background: var(--solo-gold);
+}
+
+.solo-check-card[data-result="success"] {
+  border-color: rgba(79, 142, 152, 0.36);
+}
+
+.solo-check-card[data-result="failure"] {
+  border-color: rgba(141, 38, 52, 0.42);
+}
+
+.solo-check-card .text-slate-200,
+.solo-check-card .text-slate-300,
+.solo-check-card .text-slate-400,
+.solo-npc-panel .text-slate-200,
+.solo-npc-panel .text-slate-300,
+.solo-npc-panel .text-slate-400,
+.solo-npc-panel .text-slate-500 {
+  color: var(--solo-muted);
+}
+
+.solo-npc-panel .font-medium,
+.solo-check-card .font-medium {
+  color: var(--solo-ink);
+}
+
+.solo-choice-button,
+.solo-action-button,
+.solo-clue-button,
+.solo-history-row,
+.solo-inventory-item {
+  border-radius: 5px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.solo-choice-button,
+.solo-action-button,
+.solo-history-row,
+.solo-inventory-item {
+  border-color: rgba(151, 103, 31, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, 0.62), rgba(224, 209, 174, 0.36)),
+    var(--solo-paper);
+  color: var(--solo-ink);
+}
+
+.solo-choice-button:hover:not(:disabled),
+.solo-choice-button:focus-visible:not(:disabled),
+.solo-action-button:hover:not(:disabled),
+.solo-action-button:focus-visible:not(:disabled),
+.solo-clue-button:hover:not(:disabled),
+.solo-clue-button:focus-visible:not(:disabled),
+.solo-history-row:hover:not(:disabled),
+.solo-history-row:focus-visible:not(:disabled),
+.solo-inventory-item:hover,
+.solo-inventory-item:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(197, 139, 28, 0.52);
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 249, 224, 0.38),
+    0 8px 18px rgba(72, 48, 16, 0.12);
+}
+
+.solo-choice-button:disabled,
+.solo-action-button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.46);
+  opacity: 0.62;
+}
+
+.solo-clue-button[data-unlocked="true"] {
+  border-color: rgba(79, 142, 152, 0.36);
+  background:
+    linear-gradient(180deg, rgba(235, 249, 246, 0.72), rgba(202, 224, 218, 0.42)),
+    var(--solo-paper);
+  color: #27666c;
+}
+
+.solo-clue-button[data-unlocked="false"] {
+  border-color: rgba(197, 139, 28, 0.32);
+  background:
+    linear-gradient(180deg, rgba(255, 250, 230, 0.72), rgba(228, 211, 175, 0.44)),
+    var(--solo-paper);
+  color: var(--solo-gold-strong);
+}
+
+.solo-ending-panel,
+.solo-empty-action {
+  padding: 1.25rem;
+}
+
+.solo-inventory-trigger {
+  color: #f4e6c4;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.solo-inventory-trigger:hover,
+.solo-inventory-trigger:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(197, 139, 28, 0.44);
+  outline: none;
+}
+
+.solo-history-drawer__toggle {
+  color: #f4e6c4;
+}
+
+.solo-history-drawer__panel {
+  border-top-color: rgba(201, 151, 47, 0.26);
+}
+
+.solo-inventory-panel__scrim {
+  background:
+    radial-gradient(circle at 72% 22%, rgba(197, 139, 28, 0.12), transparent 22rem),
+    rgba(4, 4, 5, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.solo-inventory-panel__drawer {
+  border-left-color: rgba(201, 151, 47, 0.32);
+}
+
+.solo-inventory-panel__header {
+  border-bottom-color: rgba(151, 103, 31, 0.22);
+  color: var(--solo-ink);
+}
+
+.solo-inventory-panel__close {
+  color: var(--solo-muted);
+}
+
+.solo-inventory-empty {
+  border: 1px dashed rgba(151, 103, 31, 0.28);
+  border-radius: 6px;
+  color: var(--solo-muted);
+}
+
+.solo-inventory-item[data-selected="true"] {
+  border-color: rgba(197, 139, 28, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 244, 203, 0.78), rgba(229, 207, 160, 0.52)),
+    var(--solo-paper);
+}
+
+.solo-inventory-item .text-slate-200,
+.solo-inventory-item .text-slate-400 {
+  color: var(--solo-muted);
+}
+
+.solo-inventory-item .text-sm {
+  color: var(--solo-ink);
+  font-weight: 900;
+}
+
+.solo-inventory-use {
+  border: 1px solid rgba(79, 142, 152, 0.32);
+  background: linear-gradient(135deg, #357980, #6ab0ad);
+  color: #f7fff9;
+  font-weight: 900;
+}
+
+.solo-world-transition {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(197, 139, 28, 0.16), transparent 18rem),
+    rgba(4, 4, 5, 0.78);
+}
+
+.solo-world-transition[data-world="corrupted"] {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(141, 38, 52, 0.22), transparent 18rem),
+    rgba(15, 5, 12, 0.84);
+}
+
+@media (min-width: 1440px) {
+  .solo-play-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(23rem, 0.8fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .solo-scene-frame,
+  .solo-world-label,
+  .solo-check-card,
+  .solo-dialog-box {
+    grid-column: 1;
+  }
+
+  .solo-npc-panel,
+  .solo-action-stack {
+    grid-column: 2;
+  }
+
+  .solo-action-stack {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .solo-play-topbar__inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .solo-play-vitals {
+    justify-content: flex-start;
+  }
+
+  .solo-play-main {
+    max-width: 100%;
+    padding-inline: 0.8rem;
+  }
+
+  .solo-inventory-trigger {
+    right: 0.8rem;
+    top: 7.2rem;
+  }
+
+  .solo-dialog-box {
+    padding: 1rem;
+  }
+}

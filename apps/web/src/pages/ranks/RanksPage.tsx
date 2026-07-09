@@ -1,7 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, Sparkles, Crown, Info, Loader2 } from 'lucide-react';
+import { Sparkles, Crown, Info, Loader2 } from 'lucide-react';
 import { ExpBar } from '@components/ui/ExpBar';
 import { PageShell, Surface } from '@components/system';
 import { getRankLadderItems, getRankProgressSummary } from '@components/rank-title/rankTitleMeta';
@@ -108,32 +107,23 @@ export function RanksPage() {
     >
       <PageShell
         className="rank-title-page rank-page"
-        eyebrow="rank ladder"
+        eyebrow="RANK LADDER"
         title={
           <span className="flex items-center gap-3">
             <Crown className="text-[var(--coc-accent-gold)]" size={26} />
-            位阶体系
+            位阶
           </span>
         }
-        description="查看当前位阶、灵魂碎片进度和所有可达位阶。"
-        actions={
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
-          >
-            <ChevronLeft size={20} />
-            <span className="font-rune">返回</span>
-          </Link>
-        }
+        description="阶梯向上，也向海底延伸；越接近光，回声越像呼唤。"
       >
-        <Surface variant="solid" tone="gold" padding="lg" className="rank-altar-card">
+        <Surface variant="solid" tone="gold" material="archive" padding="lg" className="rank-altar-card">
           <div className="rank-altar-card__seal" style={{ '--rank-color': currentRank?.color || '#c9a227' } as CSSProperties}>
             <span>{currentRank?.icon || '👑'}</span>
             <strong>{currentRank?.level || 1}</strong>
           </div>
 
           <div className="rank-altar-card__body">
-            <div className="rank-altar-card__eyebrow">当前位阶</div>
+            <div className="rank-altar-card__eyebrow">CURRENT RANK</div>
             <h2 style={{ color: currentRank?.color || '#c9a227' }}>{currentRank?.name || '海岸漫步者'}</h2>
             <p>{currentRank?.description || '你站在悬崖边缘，脚下的海水拍打着礁石，远处有什么在呼唤。'}</p>
 
@@ -209,7 +199,7 @@ export function RanksPage() {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <Surface variant="solid" tone="gold" padding="lg" className="rank-detail-card">
+            <Surface variant="solid" tone="gold" material="archive" padding="lg" className="rank-detail-card">
               <div className="rank-detail-card__header">
                 <div className="rank-detail-card__title">
                   <span>{selectedRank.icon}</span>
@@ -261,7 +251,7 @@ export function RanksPage() {
             <h2>灵魂碎片来源</h2>
           </div>
 
-          <Surface variant="solid" padding="lg" className="rank-source-panel">
+          <Surface variant="solid" material="archive" padding="lg" className="rank-source-panel">
               <div className="rank-source-grid">
                 {EXP_SOURCES.map((source, i) => (
                   <motion.div 

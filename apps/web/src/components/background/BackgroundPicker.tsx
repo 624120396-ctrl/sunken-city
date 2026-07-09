@@ -28,15 +28,15 @@ export function BackgroundPicker({
   onSave,
 }: BackgroundPickerProps) {
   return (
-    <Surface variant="solid" padding="lg">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-[var(--coc-text-gold)]">
-        <ImageIcon className="h-5 w-5 text-[var(--coc-accent-gold)]" />
+    <Surface variant="solid" material="archive" padding="lg" className="profile-background-picker">
+      <h2>
+        <ImageIcon className="h-5 w-5" />
         全局背景
       </h2>
-      <p className="mb-4 text-sm leading-relaxed text-[var(--coc-text-secondary)]">
+      <p>
         每张背景都有独立可读性档位。背景负责氛围，页面 Surface 负责正文可读。
       </p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <div className="profile-background-picker__grid">
         {BACKGROUND_OPTIONS.map((bg) => {
           const selected = value === bg.id;
 
@@ -45,20 +45,20 @@ export function BackgroundPicker({
               key={bg.id}
               type="button"
               onClick={() => onChange(bg.id)}
-              className="coc-focus-ring relative overflow-hidden rounded-md border transition"
+              className="coc-focus-ring profile-background-option"
               style={{ borderColor: selected ? 'var(--coc-accent-gold)' : 'var(--coc-border-subtle)' }}
               aria-pressed={selected}
             >
-              <img src={bg.url} alt={bg.name} className="h-24 w-full object-cover" loading="lazy" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-left">
-                <span className="block text-xs font-medium text-white">{bg.name}</span>
-                <span className="mt-1 inline-flex rounded-full border border-white/20 bg-black/45 px-2 py-0.5 text-[10px] text-white/85">
+              <img src={bg.url} alt={bg.name} loading="lazy" />
+              <div className="profile-background-option__label">
+                <span>{bg.name}</span>
+                <small>
                   {profileLabels[bg.readabilityProfile]}
-                </span>
+                </small>
                 <span className="sr-only">{profileDescriptions[bg.readabilityProfile]}</span>
               </div>
               {selected && (
-                <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--coc-accent-gold)] text-black">
+                <div className="profile-background-option__check">
                   <Check size={14} />
                 </div>
               )}

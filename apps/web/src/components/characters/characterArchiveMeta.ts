@@ -83,8 +83,8 @@ function ratio(value: number, max: number): number {
 export function getCharacterVitals(character: CharacterVitalInput): CharacterVital[] {
   return [
     { key: 'hp', label: 'HP', value: character.hp, max: character.maxHp, tone: 'blood' },
-    { key: 'mp', label: 'MP', value: character.mp, max: character.maxMp, tone: 'ocean' },
-    { key: 'san', label: 'SAN', value: character.san, max: character.maxSan, tone: 'gold' },
+    { key: 'mp', label: 'MP', value: character.mp, max: character.maxMp, tone: 'gold' },
+    { key: 'san', label: 'SAN', value: character.san, max: character.maxSan, tone: 'ocean' },
   ];
 }
 

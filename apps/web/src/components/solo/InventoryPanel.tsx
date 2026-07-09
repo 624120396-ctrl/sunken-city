@@ -21,25 +21,25 @@ export function InventoryPanel({ open, onClose, items, onUse }: InventoryPanelPr
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex">
+    <div className="solo-inventory-panel fixed inset-0 z-40 flex">
       {/* 遮罩 */}
-      <div className="flex-1 bg-black/50" onClick={onClose} />
+      <div className="solo-inventory-panel__scrim flex-1 bg-black/50" onClick={onClose} />
 
       {/* 抽屉 */}
-      <div className="w-80 max-w-[80vw] h-full bg-slate-900/95 border-l border-white/10 backdrop-blur flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="solo-inventory-panel__drawer w-80 max-w-[80vw] h-full bg-slate-900/95 border-l border-white/10 backdrop-blur flex flex-col">
+        <div className="solo-inventory-panel__header flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
             <Package className="w-4 h-4" />
             物品栏
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10">
+          <button onClick={onClose} className="solo-inventory-panel__close p-1.5 rounded hover:bg-white/10">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-3 space-y-2">
+        <div className="solo-inventory-panel__body flex-1 overflow-auto p-3 space-y-2">
           {items.length === 0 && (
-            <div className="text-xs text-slate-500 text-center py-8">背包空空如也</div>
+            <div className="solo-inventory-empty text-xs text-slate-500 text-center py-8">背包空空如也</div>
           )}
           {items.map((item) => {
             const isSelected = selectedKey === item.key;
@@ -47,11 +47,12 @@ export function InventoryPanel({ open, onClose, items, onUse }: InventoryPanelPr
               <button
                 key={item.key}
                 onClick={() => setSelectedKey(isSelected ? null : item.key)}
-                className={`w-full text-left rounded-lg border px-3 py-2 transition ${
+                className={`solo-inventory-item w-full text-left rounded-lg border px-3 py-2 transition ${
                   isSelected
                     ? 'bg-amber-500/10 border-amber-500/30'
                     : 'bg-white/5 border-white/10 hover:bg-white/10'
                 }`}
+                data-selected={isSelected ? 'true' : 'false'}
               >
                 <div className="flex items-center gap-2 text-sm text-slate-200">
                   {item.type === 'consumable' ? (
@@ -71,7 +72,7 @@ export function InventoryPanel({ open, onClose, items, onUse }: InventoryPanelPr
                         e.stopPropagation();
                         onUse(item.key);
                       }}
-                      className="flex-1 px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                      className="solo-inventory-use flex-1 px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
                     >
                       使用
                     </button>

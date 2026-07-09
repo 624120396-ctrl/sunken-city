@@ -41,7 +41,7 @@ export function EconomyPageShell({
       description={description}
       actions={
         (meta || action) && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="economy-header-actions">
             {meta}
             {action}
           </div>

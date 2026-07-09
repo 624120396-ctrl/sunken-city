@@ -59,23 +59,24 @@ export function ShopPage() {
   return (
     <EconomyPageShell
       active="shop"
-      eyebrow="relic acquisition"
-      title="拉莱耶遗珍"
+      eyebrow="NAMELESS MARKET"
+      title="无名集市"
+      description="雾里的摊灯仍未熄灭，陌生的金属与低语在潮湿纸契上彼此凝视。"
       meta={
-        <div className="flex min-h-11 items-center justify-center gap-3 rounded-lg border border-[#3a3a3a]/45 bg-[#0f1016]/70 px-3 text-sm">
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Coins size={16} className="text-[#c9a227]" />
+        <div className="economy-wallet-summary">
+          <div>
+            <Coins size={16} />
             <span>{user?.coins ?? 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[#e8d4a0]">
-            <Sparkles size={16} className="text-purple-400" />
+          <div>
+            <Sparkles size={16} />
             <span>{user?.stardust ?? 0}</span>
           </div>
         </div>
       }
     >
       <div className="economy-shop space-y-5">
-      <ReadablePanel title="馆藏说明" eyebrow="archive notice" tone="gold">
+      <ReadablePanel title="拉莱耶遗珍" eyebrow="STALL NOTICE" tone="gold" material="archive" className="economy-ritual-notice">
         <p>并非每一件物品都应当留存于日光之下。</p>
         <p>
           本馆所陈，皆自深海古城打捞，或是神秘存在将不可名状之物凝固为可触的实物
@@ -86,7 +87,7 @@ export function ShopPage() {
       </ReadablePanel>
 
       {/* 分类过滤 */}
-      <Surface variant="panel" padding="md" className="economy-shop-filter">
+      <Surface variant="panel" material="archive" padding="md" className="economy-shop-filter">
         <div className="economy-shop-filter__label">
           <Filter size={16} />
           <span>摊位分类</span>
@@ -107,7 +108,7 @@ export function ShopPage() {
       <div className="economy-shop-grid">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <Surface key={i} variant="panel" padding="md" className="h-72 animate-pulse" />
+            <Surface key={i} variant="panel" material="archive" padding="md" className="h-72 animate-pulse" />
           ))
         ) : error ? (
           <div className="col-span-full text-center py-16 text-red-300">

@@ -277,9 +277,9 @@ export function FriendListPage() {
     return (
       <PageShell
         className="friend-social-page"
-        eyebrow="调查员社交台"
+        eyebrow="INVESTIGATOR CONTACTS"
         title="同行者"
-        description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
+        description="深水边缘亮起零星灯火，有些名字靠近时，比祈祷更像回应。"
       >
         <Surface variant="panel" tone="ocean" material="archive" padding="lg" className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--coc-accent-blood)] border-t-transparent" />
@@ -291,9 +291,9 @@ export function FriendListPage() {
   return (
     <PageShell
       className="friend-social-page"
-      eyebrow="调查员社交台"
+      eyebrow="INVESTIGATOR CONTACTS"
       title="同行者"
-      description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
+      description="深水边缘亮起零星灯火，有些名字靠近时，比祈祷更像回应。"
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" icon={<Mail size={18} />} onClick={() => navigate('/messages')}>
@@ -309,7 +309,7 @@ export function FriendListPage() {
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+            <div className="friend-ledger-stat">
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
                 <User size={14} />
                 联系人册
@@ -317,7 +317,7 @@ export function FriendListPage() {
               <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{friends.length}</div>
               <div className="mt-1 text-xs text-[var(--coc-text-muted)]">已同步调查员</div>
             </div>
-            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+            <div className="friend-ledger-stat">
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
                 <Radio size={14} />
                 同行状态
@@ -325,7 +325,7 @@ export function FriendListPage() {
               <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{onlineCount}</div>
               <div className="mt-1 text-xs text-[var(--coc-text-muted)]">在线，{roomActiveCount} 位在房间</div>
             </div>
-            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+            <div className="friend-ledger-stat">
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
                 <UserPlus size={14} />
                 待处理申请
@@ -340,6 +340,7 @@ export function FriendListPage() {
             ariaLabel="好友筛选"
             value={activeTab}
             onChange={(value) => setActiveTab(value as 'all' | 'online' | 'requests')}
+            className="friend-ledger-tabs"
             items={[
               { value: 'all', label: '联系人册', count: friends.length },
               { value: 'online', label: '同行状态', count: onlineCount },
@@ -355,7 +356,7 @@ export function FriendListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="搜索联系人昵称..."
-                className="coc-focus-ring h-12 w-full rounded-[var(--coc-radius-control)] border border-[var(--coc-border-subtle)] bg-[#071016]/85 pl-11 pr-4 text-sm text-[var(--coc-text-primary)] shadow-inner shadow-black/40 placeholder:text-[var(--coc-text-muted)] focus:border-[var(--coc-accent-gold)]/55"
+                className="friend-ledger-search coc-focus-ring h-12 w-full pl-11 pr-4 text-sm"
               />
             </div>
           ) : (
@@ -376,7 +377,7 @@ export function FriendListPage() {
               animate={false}
             />
           ) : (
-            <div className="coc-section-group mt-3">
+            <div className="friend-ledger-group coc-section-group mt-3">
               <div className="coc-section-group__header">
                 <div>
                   <div className="text-xs font-bold text-[var(--coc-accent-gold-strong)]">联系人册</div>
@@ -398,9 +399,10 @@ export function FriendListPage() {
                         key={friend.userId}
                         variant="panel"
                         tone={isOnline ? 'gold' : 'neutral'}
+                        material="archive"
                         padding="md"
                         interactive
-                        className="flex cursor-pointer flex-col gap-4 border-[var(--coc-border-subtle)]/80 bg-[#0b1218]/88"
+                        className="friend-contact-card flex cursor-pointer flex-col gap-4"
                         onClick={() => setSelectedFriend(friend)}
                       >
                         <div className="flex items-center gap-3">
@@ -470,7 +472,7 @@ export function FriendListPage() {
               <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">收到的待处理申请</h3>
               <div className="space-y-2">
                 {pendingReceived.map((req) => (
-                  <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <Surface key={req.id} variant="panel" material="archive" padding="md" className="friend-request-card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 font-bold">
                         {req.sender.avatarUrl ? (
@@ -517,7 +519,7 @@ export function FriendListPage() {
               <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">已发出的申请</h3>
               <div className="space-y-2">
                 {pendingSent.map((req) => (
-                  <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <Surface key={req.id} variant="panel" material="archive" padding="md" className="friend-request-card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/30 font-bold">
                         {req.receiver.avatarUrl ? (
@@ -547,7 +549,7 @@ export function FriendListPage() {
           )}
 
           {pendingReceived.length === 0 && pendingSent.length === 0 && (
-            <Surface variant="panel" padding="lg" className="py-12 text-center text-[var(--coc-text-secondary)]">
+            <Surface variant="panel" material="archive" padding="lg" className="friend-empty-panel py-12 text-center">
               暂无待处理申请
             </Surface>
           )}

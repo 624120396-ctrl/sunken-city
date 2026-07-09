@@ -79,6 +79,9 @@ export function CharacterListPage() {
   };
 
   const archiveSummary = getCharacterArchiveSummary({ characters, displayedId });
+  const displayedCharacter = characters.find((char) => char.id === displayedId) ?? null;
+  const dangerCount = archiveSummary.find((item) => item.key === 'endangered')?.value ?? 0;
+  const latestCharacter = [...characters].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0] ?? null;
 
   if (loading) {
     return (
@@ -92,17 +95,67 @@ export function CharacterListPage() {
     <PageShell
       className="character-archive-page"
       title="调查员名册"
-      eyebrow="investigator archive"
-      description="每一张卡都是一段不可删除的命运。名册优先展示状态、展示位与可行动入口。"
+      eyebrow="INVESTIGATOR ARCHIVE"
+      description="每一张卡都像被潮水带回的姓名，未曾沉寂，也不肯安睡。"
       actions={
         <Button variant="primary" onClick={() => navigate('/characters/new')} icon={<Plus size={18} />}>
           记录命运
         </Button>
       }
+      aside={
+        <div className="character-archive-aside">
+          <Surface variant="panel" material="archive" padding="md" className="character-archive-aside-card">
+            <div className="character-archive-aside-card__heading">
+              <Eye size={14} />
+              展示档案
+            </div>
+            <div className="character-archive-aside-card__body">
+              <strong>{displayedCharacter ? displayedCharacter.name : '尚未指定'}</strong>
+              <span>{displayedCharacter ? `${displayedCharacter.occupation} · ${displayedCharacter.age}岁` : '选定一名调查员后，将在个人档案中公开展示。'}</span>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-archive-aside-card">
+            <div className="character-archive-aside-card__heading">
+              <User size={14} />
+              名册状态
+            </div>
+            <div className="character-archive-aside-list">
+              <div className="coc-archive-subcard character-archive-aside-entry">
+                <span>登记调查员</span>
+                <strong>{characters.length}</strong>
+              </div>
+              <div className="coc-archive-subcard character-archive-aside-entry">
+                <span>危险状态</span>
+                <strong>{dangerCount}</strong>
+              </div>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-archive-aside-card">
+            <div className="character-archive-aside-card__heading">
+              <TrendingUp size={14} />
+              最近封存
+            </div>
+            <div className="character-archive-aside-card__body">
+              <strong>{latestCharacter ? latestCharacter.name : '暂无记录'}</strong>
+              <span>{latestCharacter ? '最近一次被档案馆翻阅的调查员。' : '创建第一份调查员档案后，这里会留下索引。'}</span>
+            </div>
+          </Surface>
+        </div>
+      }
     >
       <div className="character-archive-summary">
         {archiveSummary.map((item) => (
-          <Surface key={item.key} variant="panel" tone={item.tone} padding="sm" className="character-archive-summary__item">
+          <Surface
+            key={item.key}
+            variant="panel"
+            tone={item.tone}
+            material="archive"
+            padding="sm"
+            className="character-archive-summary__item"
+            data-summary={item.key}
+          >
             <span>{item.label}</span>
             <strong>{item.value}</strong>
           </Surface>
@@ -136,7 +189,7 @@ export function CharacterListPage() {
                 height="100%"
                 className="character-archive-card"
                 front={
-                  <div className="character-archive-card__face">
+                  <div className="character-archive-card__face" data-has-portrait={char.portraitUrl ? 'true' : 'false'}>
                     <div className="character-archive-card__portrait">
                       {char.portraitUrl ? (
                         <img src={char.portraitUrl} alt={char.name} />

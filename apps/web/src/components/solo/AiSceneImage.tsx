@@ -12,7 +12,7 @@ export function AiSceneImage({ src, alt = '场景图', fallbackPrompt }: AiScene
   const [error, setError] = useState(false);
 
   return (
-    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40">
+    <div className="solo-scene-image relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40">
       <AnimatePresence mode="wait">
         {!loaded && !error && (
           <motion.div

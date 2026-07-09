@@ -187,9 +187,9 @@ export function InventoryPage() {
   return (
     <EconomyPageShell
       active="inventory"
-      eyebrow="sealed inventory"
+      eyebrow="SEALED INVENTORY"
       title="背包"
-      description="集中管理道具、印记和遗物绑定。移动端保留清晰标签页，避免在物品管理时迷失。"
+      description="盐霜覆住旧纸与暗格，未命名之物仍在里面轻轻挪动。"
       meta={
         <div className="inventory-vault-summary">
           {vaultSummary.map((item) => (
@@ -203,7 +203,7 @@ export function InventoryPage() {
       }
     >
       <div className="inventory-vault space-y-4">
-      <Surface variant="panel" padding="sm" className="inventory-vault-tabs">
+      <Surface variant="panel" material="archive" padding="sm" className="inventory-vault-tabs">
         {vaultTabs.map((t) => (
           <button
             key={t.key}
@@ -219,7 +219,7 @@ export function InventoryPage() {
       </Surface>
 
       {tab === 'general' && (
-        <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="gold">
+        <Surface variant="solid" material="archive" padding="md" className="inventory-vault-panel" data-vault-tone="gold">
           <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
@@ -263,7 +263,7 @@ export function InventoryPage() {
       )}
 
       {tab === 'titles' && (
-        <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="ocean">
+        <Surface variant="solid" material="archive" padding="md" className="inventory-vault-panel" data-vault-tone="ocean">
           <div>
             {loading ? (
               <div className="py-10"><SkeletonCard className="h-32" /></div>
@@ -297,13 +297,13 @@ export function InventoryPage() {
 
       {tab === 'relics' && (
         <div className="space-y-4">
-          <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
+          <Surface variant="solid" material="archive" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
             <div>
               <h2 className="inventory-vault-heading">已绑定遗物（角色保险箱）</h2>
               {boundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !boundRelics || boundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-[#6b6558]">还没有遗物绑定到角色卡上</div>
+                <div className="inventory-vault-empty">还没有遗物绑定到角色卡上</div>
               ) : (
                 <div className="inventory-vault-list">
                   {boundRelics.map((r) => (
@@ -322,13 +322,13 @@ export function InventoryPage() {
             </div>
           </Surface>
 
-          <Surface variant="solid" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
+          <Surface variant="solid" material="archive" padding="md" className="inventory-vault-panel" data-vault-tone="blood">
             <div>
               <h2 className="inventory-vault-heading">未绑定遗物</h2>
               {unboundRelicsLoading ? (
                 <div className="py-6"><Skeleton className="h-20" /></div>
               ) : !unboundRelics || unboundRelics.length === 0 ? (
-                <div className="py-6 text-center text-sm text-[#6b6558]">暂无有可绑定的遗物</div>
+                <div className="inventory-vault-empty">暂无有可绑定的遗物</div>
               ) : (
                 <div className="inventory-vault-list">
                   {unboundRelics.map((r) => (
@@ -359,6 +359,7 @@ export function InventoryPage() {
         <div className="lootbox-reveal-overlay">
           <Surface
             variant="elevated"
+            material="relic"
             className="lootbox-reveal-card"
             data-tone={lootboxReveal.tone}
             data-flash={flash ? 'true' : 'false'}

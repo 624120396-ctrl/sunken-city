@@ -68,7 +68,7 @@ export function DiceHistoryPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="dice-history-archive max-w-4xl mx-auto">
       {/* 头部 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -98,7 +98,7 @@ export function DiceHistoryPage() {
       </div>
 
       {/* 统计 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="dice-history-archive__stats grid grid-cols-4 gap-4 mb-6">
         <div className="coc-card text-center">
           <div className="text-2xl font-bold">{rolls.length}</div>
           <div className="text-xs text-coc-text-muted">总次数</div>
@@ -131,7 +131,7 @@ export function DiceHistoryPage() {
             <p className="text-coc-text-secondary">暂无投骰记录</p>
           </div>
         ) : (
-          <div className="space-y-3">
+            <div className="dice-history-archive__list space-y-3">
             {filteredRolls.map((roll) => (
               <div key={roll.id} className="p-4 bg-coc-bg-tertiary rounded">
                 <div className="flex items-center justify-between mb-2">

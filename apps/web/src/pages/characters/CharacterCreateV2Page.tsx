@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Dice5, ChevronRight, ChevronLeft, User, Sparkles, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Dice5, ChevronRight, ChevronLeft, User, Sparkles, RefreshCw, BookOpen, ScrollText } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS, getDefaultSkills, resolveDynamicBases, getOccupationInfo, COC7E_OCCUPATIONS } from '@lib/coc7-data';
 import { calculateDerivedAttributes } from '@lib/coc-data';
@@ -295,11 +295,53 @@ export function CharacterCreateV2Page() {
   return (
     <PageShell
       title="创建调查员"
-      eyebrow="investigator intake"
-      description="按 COC7 规则完成属性、年龄、职业、技能和背景信息。创建流程以档案登记仪式呈现，规则控件保持原逻辑。"
+      eyebrow="INVESTIGATOR INTAKE"
+      description="新的名字在纸面下苏醒，城市于潮声中听见第一口呼吸。"
       className="character-create-page pb-20"
+      aside={
+        <div className="character-create-aside">
+          <Surface variant="panel" material="archive" padding="md" className="character-create-aside-card">
+            <div className="character-create-aside-card__heading">
+              <ScrollText size={14} />
+              登记进度
+            </div>
+            <div className="character-create-aside-card__body">
+              <strong>第 {step} / {totalSteps} 步</strong>
+              <span>{creationSteps.find((item) => item.active)?.label ?? '待登记'}</span>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-create-aside-card">
+            <div className="character-create-aside-card__heading">
+              <User size={14} />
+              调查员草案
+            </div>
+            <div className="character-create-aside-card__body">
+              <strong>{name.trim() || '姓名未写入'}</strong>
+              <span>{selectedOccupation?.name || '职业尚未封存'}{gender ? ` · ${gender}` : ''}</span>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-create-aside-card">
+            <div className="character-create-aside-card__heading">
+              <BookOpen size={14} />
+              规则账本
+            </div>
+            <div className="character-create-aside-grid">
+              <div className="coc-archive-subcard character-create-aside-entry">
+                <span>本职点</span>
+                <strong>{usedPoints.occ}/{skillPointsAvailable.occupation || '-'}</strong>
+              </div>
+              <div className="coc-archive-subcard character-create-aside-entry">
+                <span>兴趣点</span>
+                <strong>{usedPoints.interest}/{skillPointsAvailable.interest || '-'}</strong>
+              </div>
+            </div>
+          </Surface>
+        </div>
+      }
     >
-      <Surface variant="panel" padding="none" className="character-create-progress">
+      <Surface variant="panel" material="archive" padding="none" className="character-create-progress">
         <div className="character-create-progress__top">
           <button onClick={() => navigate('/characters')}>
             <ArrowLeft size={18} />
@@ -337,7 +379,7 @@ export function CharacterCreateV2Page() {
 
         {/* Step 1: Method */}
         {step === 1 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--method p-6">
             <h2 className="font-ritual text-xl mb-6 text-center">选择创建方式</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <button
@@ -349,7 +391,7 @@ export function CharacterCreateV2Page() {
                   setAgeApplied(false);
                   setEduEnhancements([]);
                 }}
-                className={`p-6 rounded-xl border text-left transition-all ${method === 'roll' ? 'border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
+                className={`character-create-option-card p-6 rounded-xl border text-left transition-all ${method === 'roll' ? 'is-active border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
                   <Dice5 className="text-[#a63848]" />
@@ -367,7 +409,7 @@ export function CharacterCreateV2Page() {
                   setAgeApplied(false);
                   setEduEnhancements([]);
                 }}
-                className={`p-6 rounded-xl border text-left transition-all ${method === 'pointbuy' ? 'border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
+                className={`character-create-option-card p-6 rounded-xl border text-left transition-all ${method === 'pointbuy' ? 'is-active border-[#a63848] bg-[#a63848]/10' : 'border-[#3a3a3a]/40 hover:border-coc-text-muted'}`}
               >
                 <div className="flex items-center gap-3 mb-2">
                   <Sparkles className="text-[#a63848]" />
@@ -381,7 +423,7 @@ export function CharacterCreateV2Page() {
 
         {/* Step 2: Attributes */}
         {step === 2 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--attributes p-6">
             <h2 className="font-ritual text-xl mb-4">{method === 'roll' ? '投骰生成属性' : '购点分配属性'}</h2>
 
             {method === 'roll' ? (
@@ -398,7 +440,7 @@ export function CharacterCreateV2Page() {
                   <div className="mt-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {Object.entries(ATTRIBUTE_LABELS).map(([key, label]) => (
-                        <div key={key} className="p-3 rounded bg-black/20 text-center">
+                        <div key={key} className="character-create-stat-card p-3 rounded bg-black/20 text-center">
                           <div className="text-xs text-[#6b6558]">{label}</div>
                           <div className="text-xl font-mono text-[#a63848]">{rawAttrs[key]}</div>
                         </div>
@@ -421,7 +463,7 @@ export function CharacterCreateV2Page() {
 
         {/* Step 3: Age */}
         {step === 3 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--age p-6">
             <h2 className="font-ritual text-xl mb-4">决定年龄</h2>
             <div className="flex items-center gap-4 mb-6">
               <span className="text-[#8b8375]">年龄</span>
@@ -441,7 +483,7 @@ export function CharacterCreateV2Page() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {Object.entries(ATTRIBUTE_LABELS).map(([key, label]) => (
-                    <div key={key} className="p-3 rounded bg-black/20 text-center">
+                    <div key={key} className="character-create-stat-card p-3 rounded bg-black/20 text-center">
                       <div className="text-xs text-[#6b6558]">{label}</div>
                       <div className="flex justify-center items-center gap-2">
                         <span className="text-sm text-[#6b6558]">{rawAttrs[key]}</span>
@@ -459,7 +501,7 @@ export function CharacterCreateV2Page() {
                   <span className="ml-2 text-2xl font-mono text-[#a63848]">{Object.values(finalAttrs).reduce((a, b) => a + b, 0)}</span>
                 </div>
 
-                <div className="p-3 rounded bg-black/20">
+                <div className="character-create-note-card p-3 rounded bg-black/20">
                   <div className="text-sm text-[#8b8375] mb-2">EDU 增强检定</div>
                   <div className="flex flex-wrap gap-2">
                     {eduEnhancements.map((e, i) => (
@@ -470,7 +512,7 @@ export function CharacterCreateV2Page() {
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-black/20">
+                <div className="character-create-note-card p-3 rounded bg-black/20">
                   <div className="text-sm text-[#8b8375]">幸运: <span className="text-[#e8d4a0] font-mono">{luck}</span></div>
                 </div>
               </div>
@@ -480,16 +522,16 @@ export function CharacterCreateV2Page() {
 
         {/* Step 4: Occupation */}
         {step === 4 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--occupation p-6">
             <h2 className="font-ritual text-xl mb-4">选择职业</h2>
             <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
               {COC7E_OCCUPATIONS.map((occ) => (
                 <button
                   key={occ.key}
                   onClick={() => handleSelectOccupation(occ.key)}
-                  className={`text-left p-4 rounded-lg border transition-all ${
+                  className={`character-create-occupation-card text-left p-4 rounded-lg border transition-all ${
                     occupationKey === occ.key
-                      ? 'border-[#a63848] bg-[#a63848]/10'
+                      ? 'is-active border-[#a63848] bg-[#a63848]/10'
                       : 'border-[#3a3a3a]/40 hover:border-coc-text-muted bg-black/20/50'
                   }`}
                 >
@@ -506,15 +548,15 @@ export function CharacterCreateV2Page() {
 
         {/* Step 5: Skills */}
         {step === 5 && selectedOccupation && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--skills p-6">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h2 className="font-ritual text-xl">分配技能点</h2>
               <div className="flex gap-3 text-sm">
-                <div className="px-3 py-1 rounded bg-black/20">
+                <div className="character-create-point-pill px-3 py-1 rounded bg-black/20">
                   本职: <span className={`font-mono ${usedPoints.occ > skillPointsAvailable.occupation ? 'text-coc-blood.glow' : 'text-coc-accent-red'}`}>{usedPoints.occ}</span>
                   <span className="text-[#6b6558]">/{skillPointsAvailable.occupation}</span>
                 </div>
-                <div className="px-3 py-1 rounded bg-black/20">
+                <div className="character-create-point-pill px-3 py-1 rounded bg-black/20">
                   兴趣: <span className={`font-mono ${usedPoints.interest > skillPointsAvailable.interest ? 'text-coc-blood.glow' : 'text-coc-accent-red'}`}>{usedPoints.interest}</span>
                   <span className="text-[#6b6558]">/{skillPointsAvailable.interest}</span>
                 </div>
@@ -557,7 +599,7 @@ export function CharacterCreateV2Page() {
                 const occDisabled = !canOcc || usedPoints.occ >= skillPointsAvailable.occupation;
                 const intDisabled = !canInt || usedPoints.interest >= skillPointsAvailable.interest;
                 return (
-                  <div key={key} className={`flex items-center justify-between p-2 rounded ${isCore ? 'bg-[#a63848]/10 border border-[#a63848]/30' : 'bg-black/20/50'}`}>
+                  <div key={key} className={`character-create-skill-row flex items-center justify-between p-2 rounded ${isCore ? 'is-core bg-[#a63848]/10 border border-[#a63848]/30' : 'bg-black/20/50'}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{skill.name}</span>
                       {isCore && <span className="text-[10px] px-1 rounded bg-[#a63848] text-white">本职</span>}
@@ -598,7 +640,7 @@ export function CharacterCreateV2Page() {
 
         {/* Step 6: Background */}
         {step === 6 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--background p-6">
             <h2 className="font-ritual text-xl mb-4">背景与基础信息</h2>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -658,10 +700,10 @@ export function CharacterCreateV2Page() {
 
         {/* Step 7: Preview */}
         {step === 7 && (
-          <div className="coc-card p-6">
+          <div className="coc-card character-create-stage character-create-stage--preview p-6">
             <h2 className="font-ritual text-xl mb-4">最终确认</h2>
             <div className="space-y-4">
-              <div className="p-4 rounded bg-black/20">
+              <div className="character-create-preview-card p-4 rounded bg-black/20">
                 <div className="flex items-center gap-3 mb-2">
                   <User className="text-[#a63848]" />
                   <div className="font-bold text-lg">{name}</div>
@@ -678,11 +720,11 @@ export function CharacterCreateV2Page() {
                 return (
                   <>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded bg-black/20">
+                      <div className="character-create-preview-card p-4 rounded bg-black/20">
                         <div className="text-sm text-[#8b8375] mb-2">战斗数值</div>
                         <div className="text-sm">HP {previewDerived.hp} · MP {previewDerived.mp} · SAN {previewDerived.san} · MOV {previewDerived.mov} · DB {previewDerived.db}</div>
                       </div>
-                      <div className="p-4 rounded bg-black/20">
+                      <div className="character-create-preview-card p-4 rounded bg-black/20">
                         <div className="text-sm text-[#8b8375] mb-2">资产</div>
                         <div className="text-sm">信用评级 {creditRating} · 现金/资产由后端计算</div>
                       </div>
@@ -691,7 +733,7 @@ export function CharacterCreateV2Page() {
                 );
               })()}
 
-              <div className="p-4 rounded bg-black/20 max-h-40 overflow-y-auto">
+              <div className="character-create-preview-card p-4 rounded bg-black/20 max-h-40 overflow-y-auto">
                 <div className="text-sm text-[#8b8375] mb-2">已分配技能 (显示值 {'>'} 0)</div>
                 <div className="flex flex-wrap gap-2 text-sm">
                   {Object.entries(currentSkills)
@@ -767,7 +809,7 @@ function PointBuyPanel({ rawAttrs, setRawAttrs }: { rawAttrs: Record<string, num
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {attrsList.map((key) => (
-          <div key={key} className="p-3 rounded bg-black/20">
+          <div key={key} className="character-create-stat-card p-3 rounded bg-black/20">
             <div className="flex justify-between text-sm text-[#8b8375] mb-1">
               <span>{ATTRIBUTE_LABELS[key]}</span>
               <span className="font-mono">{rawAttrs[key] || 50}</span>

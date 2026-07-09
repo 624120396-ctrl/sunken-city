@@ -1,11 +1,10 @@
-import { DoubleBezelCard } from '@components/ui/DoubleBezelCard';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Check, X } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Check, X, BookOpen, ScrollText, TrendingUp, User } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { COC7E_SKILLS } from '@lib/coc7-data';
 import { rollSkillGrowth } from '@lib/combat-data';
-import { Button, DataCard, PageShell, ReadablePanel } from '@components/system';
+import { Button, PageShell, Surface } from '@components/system';
 import { getCharacterGrowthSummary } from '@components/characters/characterArchiveMeta';
 
 interface SkillGrowth {
@@ -103,30 +102,79 @@ export function CharacterGrowthPage() {
   return (
     <PageShell
       className="character-growth-page"
-      title={`战后技能成长 - ${character.name}`}
-      eyebrow="skill growth"
-      description="选择本局成功使用过的技能，执行 COC7 成长检定并保存结果。"
+      title="战后成长"
+      eyebrow="SKILL GROWTH"
+      description="余烬尚温，命运在旧伤旁留下细小裂纹，等待下一次潮声。"
       actions={
         <Button variant="secondary" onClick={() => navigate(`/characters/${id}`)} icon={<ArrowLeft size={18} />}>
           返回档案
         </Button>
       }
+      aside={
+        <div className="character-growth-aside">
+          <Surface variant="panel" material="archive" padding="md" className="character-growth-aside-card">
+            <div className="character-growth-aside-card__heading">
+              <User size={14} />
+              调查员
+            </div>
+            <div className="character-growth-aside-card__body">
+              <strong>{character.name}</strong>
+              <span>{character.occupation || '职业未登记'} · #{String(character.displayId ?? 0).padStart(8, '0')}</span>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-growth-aside-card">
+            <div className="character-growth-aside-card__heading">
+              <TrendingUp size={14} />
+              成长账本
+            </div>
+            <div className="character-growth-aside-grid">
+              <div className="coc-archive-subcard character-growth-aside-entry">
+                <span>已选技能</span>
+                <strong>{selectedSkills.size}</strong>
+              </div>
+              <div className="coc-archive-subcard character-growth-aside-entry">
+                <span>检定结果</span>
+                <strong>{growthResults.length}</strong>
+              </div>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="character-growth-aside-card">
+            <div className="character-growth-aside-card__heading">
+              <BookOpen size={14} />
+              规则摘录
+            </div>
+            <div className="character-growth-aside-card__body">
+              <span>成长检定掷出大于当前技能值时成功，成功后提升 1D10 点。</span>
+            </div>
+          </Surface>
+        </div>
+      }
     >
 
-      <ReadablePanel title="使用说明" eyebrow="growth rules" className="character-growth-rules mb-6">
-        <div className="space-y-2">
+      <Surface variant="panel" material="archive" padding="md" className="character-growth-rules">
+        <div className="character-growth-section-title">
+          <ScrollText size={16} />
+          <span>成长规则</span>
+        </div>
+        <div className="character-growth-rules__body">
           <p>1. 选择本局游戏中<strong>成功使用过</strong>的技能</p>
           <p>2. 每个选中技能可以进行一次成长检定</p>
           <p>3. COC7成长规则：掷1D100，结果<strong>大于</strong>当前技能值则成长成功</p>
           <p>4. 成长成功时，技能提升1D10点</p>
         </div>
-      </ReadablePanel>
+      </Surface>
 
       <div className="character-growth-grid">
         {/* 技能选择 */}
-        <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
-          <h3 className="font-bold mb-4">选择成长技能 ({selectedSkills.size})</h3>
-          <div className="space-y-4 max-h-[500px] overflow-y-auto">
+        <Surface variant="panel" material="archive" padding="md" className="character-growth-panel character-growth-skill-panel">
+          <div className="character-growth-section-title">
+            <TrendingUp size={16} />
+            <span>选择成长技能</span>
+            <b>{selectedSkills.size}</b>
+          </div>
+          <div className="character-growth-skill-list">
             {(() => {
               const groups = COC7E_SKILLS.reduce((acc, skill) => {
                 acc[skill.category] = acc[skill.category] || [];
@@ -134,9 +182,9 @@ export function CharacterGrowthPage() {
                 return acc;
               }, {} as Record<string, typeof COC7E_SKILLS>);
               return Object.entries(groups).map(([category, skills]) => (
-                <div key={category}>
-                  <h4 className="text-sm font-bold text-[#c9a227] mb-2 capitalize">{category}</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                <section key={category} className="character-growth-skill-group">
+                  <h4>{category}</h4>
+                  <div className="character-growth-skill-group__grid">
                     {skills.map(skill => {
                       const currentValue = character.skills?.[skill.key] ?? skill.baseValue;
                       const isSelected = selectedSkills.has(skill.key);
@@ -147,28 +195,28 @@ export function CharacterGrowthPage() {
                           key={skill.key}
                           onClick={() => !hasResult && toggleSkill(skill.key)}
                           disabled={!!hasResult}
-                          className={`p-2 rounded text-left text-sm transition-colors ${
+                          className={`character-growth-skill-row ${
                             hasResult
                               ? hasResult.success
-                                ? 'bg-green-900/30 border border-green-500/50'
-                                : 'bg-red-900/30 border border-red-500/50'
+                                ? 'is-success'
+                                : 'is-failed'
                               : isSelected
-                              ? 'bg-[#a63848]/30 border border-[#a63848]'
-                              : 'bg-black/20 hover:bg-black/20/80'
+                              ? 'is-selected'
+                              : ''
                           }`}
                         >
-                          <div className="flex justify-between">
+                          <div className="character-growth-skill-row__top">
                             <span>{skill.name}</span>
-                            <span className="text-[#6b6558]">{currentValue}%</span>
+                            <b>{currentValue}%</b>
                           </div>
                           {hasResult && (
-                            <div className="text-xs mt-1">
+                            <div className="character-growth-skill-row__result">
                               {hasResult.success ? (
-                                <span className="text-green-400">
+                                <span data-tone="success">
                                   ↑ {hasResult.newValue}% (+{hasResult.newValue - hasResult.oldValue})
                                 </span>
                               ) : (
-                                <span className="text-red-400">未成长 ({hasResult.rollResult})</span>
+                                <span data-tone="failed">未成长 ({hasResult.rollResult})</span>
                               )}
                             </div>
                           )}
@@ -176,17 +224,20 @@ export function CharacterGrowthPage() {
                       );
                     })}
                   </div>
-                </div>
+                </section>
               ));
             })()}
           </div>
-        </DoubleBezelCard>
+        </Surface>
 
         {/* 成长结果 */}
-        <div className="space-y-4">
-          <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
-            <h3 className="font-bold mb-4">操作</h3>
-            <div className="space-y-3">
+        <div className="character-growth-side-stack">
+          <Surface variant="panel" material="archive" padding="md" className="character-growth-panel">
+            <div className="character-growth-section-title">
+              <ScrollText size={16} />
+              <span>检定操作</span>
+            </div>
+            <div className="character-growth-actions">
               <Button
                 onClick={rollAllGrowth}
                 disabled={selectedSkills.size === 0 || loading}
@@ -205,61 +256,67 @@ export function CharacterGrowthPage() {
                   className="w-full"
                   icon={saved ? <Check size={18} /> : <X size={18} />}
                 >
-                  {saved ? '已保存' : '保存成长结果'}
-                </Button>
+                {saved ? '已保存' : '保存成长结果'}
+              </Button>
               )}
             </div>
 
             {growthResults.length > 0 && (
-              <div className="mt-6">
-                <h4 className="font-bold mb-3">成长统计</h4>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="character-growth-summary">
+                <div className="character-growth-section-title character-growth-section-title--small">
+                  <span>成长统计</span>
+                </div>
+                <div className="character-growth-summary__grid">
                   {growthSummary.map((item) => (
-                    <DataCard
+                    <div
                       key={item.key}
-                      className={item.key === 'gained' ? 'col-span-2' : undefined}
-                      label={item.label}
-                      value={item.value}
-                      tone={item.tone}
-                    />
+                      className="coc-archive-subcard character-growth-summary-card"
+                      data-tone={item.tone}
+                      data-wide={item.key === 'gained' ? 'true' : 'false'}
+                    >
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
-          </DoubleBezelCard>
+          </Surface>
 
           {/* 详细结果 */}
           {growthResults.length > 0 && (
-            <DoubleBezelCard variant="gold" runeCorners className="character-growth-panel" innerClassName="p-4">
-              <h4 className="font-bold mb-3">详细结果</h4>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            <Surface variant="panel" material="archive" padding="md" className="character-growth-panel">
+              <div className="character-growth-section-title">
+                <BookOpen size={16} />
+                <span>详细结果</span>
+              </div>
+              <div className="character-growth-result-list">
                 {growthResults.map((result, idx) => (
                   <div
                     key={idx}
-                    className={`p-3 rounded flex items-center justify-between ${
-                      result.success ? 'bg-green-900/20' : 'bg-red-900/20'
-                    }`}
+                    className="coc-archive-subcard character-growth-result-row"
+                    data-result={result.success ? 'success' : 'failed'}
                   >
                     <div>
-                      <div className="font-medium">{result.skillName}</div>
-                      <div className="text-xs text-[#8b8375]">
+                      <div className="character-growth-result-row__name">{result.skillName}</div>
+                      <div className="character-growth-result-row__meta">
                         检定: {result.rollResult} vs {result.oldValue}%
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="character-growth-result-row__value">
                       {result.success ? (
                         <>
-                          <div className="text-green-400 font-bold">+{result.newValue - result.oldValue}</div>
-                          <div className="text-xs">{result.oldValue}% → {result.newValue}%</div>
+                          <strong>+{result.newValue - result.oldValue}</strong>
+                          <span>{result.oldValue}% → {result.newValue}%</span>
                         </>
                       ) : (
-                        <div className="text-red-400">未成长</div>
+                        <strong>未成长</strong>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </DoubleBezelCard>
+            </Surface>
           )}
         </div>
       </div>

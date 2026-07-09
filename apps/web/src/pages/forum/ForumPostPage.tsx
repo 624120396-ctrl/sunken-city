@@ -44,18 +44,8 @@ function Badge({
   children: React.ReactNode;
   variant?: 'pin' | 'essence' | 'bounty' | 'lock' | 'best' | 'default';
 }) {
-  const variants: Record<typeof variant, string> = {
-    pin: 'border-amber-400/60 text-amber-400',
-    essence: 'border-coc-accent-gold/60 text-coc-accent-gold',
-    bounty: 'border-amber-500/60 text-amber-500 bg-amber-500/10',
-    lock: 'border-coc-text-muted text-coc-text-muted',
-    best: 'border-amber-400/60 text-amber-400',
-    default: 'border-[#3a3a3a]/40 text-coc-text-muted',
-  };
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${variants[variant]}`}
-    >
+    <span className={`forum-badge forum-badge--${variant}`}>
       {children}
     </span>
   );
@@ -85,12 +75,12 @@ function AvatarWithFrame({
         <img
           src={avatarUrl}
           alt={nickname}
-          className="rounded-full object-cover border border-[#3a3a3a]/40 bg-black/20"
+          className="forum-avatar-image"
           style={{ width: size, height: size }}
         />
       ) : (
         <div
-          className="rounded-full bg-black/20 border border-[#3a3a3a]/40 flex items-center justify-center text-[#6b6558] font-bold"
+          className="forum-avatar-fallback"
           style={{ width: size, height: size }}
         >
           {nickname[0]?.toUpperCase()}
@@ -118,12 +108,12 @@ function ThreadMetric({
   label: string;
 }) {
   return (
-    <div className="rounded border border-[var(--coc-border-subtle)] bg-black/15 px-3 py-2">
-      <div className="flex items-center gap-2 text-[var(--coc-accent-gold)]">
+    <div className="forum-thread-metric">
+      <div className="forum-thread-metric__main">
         {icon}
-        <span className="text-lg font-bold tabular-nums text-[var(--coc-on-surface-primary)]">{value}</span>
+        <span>{value}</span>
       </div>
-      <div className="mt-1 text-xs text-[var(--coc-on-surface-muted)]">{label}</div>
+      <div className="forum-thread-metric__label">{label}</div>
     </div>
   );
 }
@@ -141,7 +131,7 @@ function PostAside({
 }) {
   return (
     <div className="coc-section-stack">
-      <Surface variant="solid" tone="gold" padding="md" className="space-y-4">
+      <Surface variant="solid" tone="gold" material="archive" padding="md" className="space-y-4 forum-aside-card">
         <div className="flex items-center gap-3">
           <AvatarWithFrame
             avatarUrl={post.author.avatarUrl}
@@ -167,7 +157,7 @@ function PostAside({
         </div>
       </Surface>
 
-      <Surface variant="panel" padding="md" className="space-y-3">
+      <Surface variant="panel" material="archive" padding="md" className="space-y-3 forum-aside-card">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ScrollText size={16} className="text-[var(--coc-accent-gold)]" />
           线程状态
@@ -216,7 +206,7 @@ function PostAside({
         )}
       </Surface>
 
-      <Surface variant="panel" padding="md" className="space-y-2">
+      <Surface variant="panel" material="archive" padding="md" className="space-y-2 forum-aside-card">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
           版务提示
@@ -379,9 +369,9 @@ export function ForumPostPage() {
 
   return (
     <PageShell
-      eyebrow="低语档案"
+      eyebrow="THREAD ARCHIVE"
       title={post?.title || '加载中...'}
-      description="原始记录、回声档案与版务标记会被安置在稳定可读层中。"
+      description="原始记录与回声同页显影，真伪像潮痕一样难以剥离。"
       actions={
         (isAuthor || canModeratePost) && (
           <button
@@ -408,7 +398,7 @@ export function ForumPostPage() {
       }
       className="forum-post-page"
     >
-      <Surface variant="panel" padding="sm" className="forum-thread-breadcrumb">
+      <Surface variant="panel" material="archive" padding="sm" className="forum-thread-breadcrumb">
         <Link
           to={post?.board.key ? `/forums/board/${post.board.key}` : '/forums'}
           className="coc-btn-secondary inline-flex min-h-[2.5rem] items-center justify-center p-2"
@@ -416,12 +406,12 @@ export function ForumPostPage() {
           <ArrowLeft size={18} />
         </Link>
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-[#6b6558]">
+          <div className="text-xs text-[var(--coc-on-surface-muted)]">
             {post ? (
               <>
-                <Link to="/forums" className="hover:text-[#e8d4a0]">旧日低语</Link>
+                <Link to="/forums" className="hover:text-[var(--coc-accent-gold-strong)]">旧日低语</Link>
                 <span className="mx-1">/</span>
-                <Link to={`/forums/board/${post.board.key}`} className="hover:text-[#e8d4a0]">{post.board.name}</Link>
+                <Link to={`/forums/board/${post.board.key}`} className="hover:text-[var(--coc-accent-gold-strong)]">{post.board.name}</Link>
               </>
             ) : (
               '旧日低语'
@@ -431,11 +421,11 @@ export function ForumPostPage() {
       </Surface>
 
       {loading || !post ? (
-        <div className="text-center py-12 text-[#6b6558]">加载中...</div>
+        <div className="forum-loading-state">加载中...</div>
       ) : (
         <div className="coc-section-stack">
           {/* 原始记录 */}
-          <Surface variant="solid" tone="gold" padding="lg" className="forum-thread-card space-y-4">
+          <Surface variant="solid" tone="gold" material="archive" padding="lg" className="forum-thread-card space-y-4">
             <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">原始记录</div>
             <div className="flex items-start gap-3">
               <AvatarWithFrame
@@ -450,7 +440,7 @@ export function ForumPostPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedProfileUser(post.author)}
-                      className="text-sm font-bold text-[#e8d4a0] hover:text-[#c9a227] transition-colors"
+                      className="forum-author-link"
                     >
                       {post.author.nickname}
                     </button>
@@ -473,12 +463,12 @@ export function ForumPostPage() {
                       <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>
                     )}
                   </div>
-                  <div className="text-xs text-[#6b6558] whitespace-nowrap">
+                  <div className="text-xs text-[var(--coc-on-surface-muted)] whitespace-nowrap">
                     {formatTimeAgo(post.createdAt)}
                     {post.updatedAt !== post.createdAt && ` · 编辑于 ${formatTimeAgo(post.updatedAt)}`}
                   </div>
                 </div>
-                <div className="text-xs text-[#6b6558] mt-0.5">
+                <div className="text-xs text-[var(--coc-on-surface-muted)] mt-0.5">
                   <span className="inline-flex items-center gap-1.5">
                     <UserRound size={13} />
                     {post.author.rankName || '未知位阶'}
@@ -516,16 +506,14 @@ export function ForumPostPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center gap-1.5 text-sm transition-colors ${
-                    post.hasLiked ? 'text-coc-accent-gold' : 'text-[#6b6558] hover:text-[#e8d4a0]'
-                  }`}
+                  className={`forum-inline-action ${post.hasLiked ? 'is-active' : ''}`}
                 >
                   <ThumbsUp size={16} /> {post.likeCount}
                 </button>
-                <span className="flex items-center gap-1.5 text-sm text-[#6b6558]">
+                <span className="forum-inline-action">
                   <Eye size={16} /> {post.viewCount}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-[#6b6558]">
+                <span className="forum-inline-action">
                   <MessageSquare size={16} /> {post.replyCount}
                 </span>
               </div>
@@ -537,7 +525,7 @@ export function ForumPostPage() {
                         setEditPostContent(post.content);
                         setEditingPost(true);
                       }}
-                      className="text-xs text-[#6b6558] hover:text-[#e8d4a0] flex items-center gap-1"
+                      className="forum-text-action"
                     >
                       <Pencil size={12} /> 编辑
                     </button>
@@ -558,7 +546,7 @@ export function ForumPostPage() {
             </div>
             <div className="coc-section-group__body">
               {post.replies.length === 0 ? (
-                <Surface variant="solid" padding="lg" className="text-center">
+                  <Surface variant="solid" material="archive" padding="lg" className="text-center">
                   <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">尚无回声</div>
                   <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">写下第一段回声，或继续观察这条低语。</p>
                 </Surface>
@@ -605,7 +593,7 @@ export function ForumPostPage() {
                 </h2>
               </div>
               <div className="coc-section-group__body">
-                <Surface variant="solid" padding="md" className="forum-reply-editor space-y-3">
+                <Surface variant="solid" material="archive" padding="md" className="forum-reply-editor space-y-3">
                   <RichTextEditor
                     value={replyContent}
                     onChange={setReplyContent}
@@ -679,6 +667,7 @@ function ReplyItem({
     <Surface
       variant="solid"
       tone={reply.isBestReply ? 'gold' : 'neutral'}
+      material="archive"
       padding="md"
       className={`forum-reply-card ${reply.isBestReply ? 'border-amber-500/40 relative overflow-hidden' : ''}`}
     >
@@ -701,9 +690,7 @@ function ReplyItem({
               <button
                 type="button"
                 onClick={onAuthorClick}
-                className={`text-sm font-bold hover:text-[#c9a227] transition-colors ${
-                  isLandlord ? 'text-amber-400' : 'text-coc-parchment'
-                }`}
+                className={`forum-author-link ${isLandlord ? 'is-landlord' : ''}`}
               >
                 {reply.author.nickname}
               </button>
@@ -711,12 +698,12 @@ function ReplyItem({
                 <Badge variant="pin"><Pin size={10} /> 原记录者</Badge>
               )}
             </div>
-            <div className="text-xs text-[#6b6558] whitespace-nowrap">
+            <div className="text-xs text-[var(--coc-on-surface-muted)] whitespace-nowrap">
               {formatTimeAgo(reply.createdAt)}
               {reply.updatedAt !== reply.createdAt && ` · 修订于 ${formatTimeAgo(reply.updatedAt)}`}
             </div>
           </div>
-          <div className="text-xs text-[#6b6558] mt-0.5">
+          <div className="text-xs text-[var(--coc-on-surface-muted)] mt-0.5">
             {reply.author.rankName || '未知位阶'}
             {reply.author.titleName && (
               <span style={{ color: reply.author.titleColor || '#a69b85' }}> · {reply.author.titleName}</span>
@@ -742,14 +729,14 @@ function ReplyItem({
           {!editing && (
             <div className="flex items-center gap-3 mt-2">
               {canMarkBest && !reply.isBestReply && (
-                <button onClick={onBest} className="text-xs text-amber-400 hover:text-amber-300">
+                <button onClick={onBest} className="forum-text-action is-gold">
                   记为最佳回声
                 </button>
               )}
               {canEdit && (
                 <button
                   onClick={() => onStartEdit(reply.content)}
-                  className="text-xs text-[#6b6558] hover:text-[#e8d4a0]"
+                  className="forum-text-action"
                 >
                   修订
                 </button>

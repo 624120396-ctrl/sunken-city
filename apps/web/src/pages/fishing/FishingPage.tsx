@@ -362,7 +362,7 @@ export function FishingPage() {
       className="blackwater-harbor-page"
       eyebrow="BLACKWATER HARBOR"
       title="黑水港"
-      description="在冷雾码头记录潮汐、监听咬钩、回收异物，并把每一次渔获封入港口账本。"
+      description="冷雾码头听见黑水翻身，钓线垂入不可命名的深处。"
       actions={
         <Surface variant="glass" material="archive" padding="sm" className="flex items-center gap-2 text-sm">
           <Fish size={16} className="text-[var(--coc-accent-gold)]" />

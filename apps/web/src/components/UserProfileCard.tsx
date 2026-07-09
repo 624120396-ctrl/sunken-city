@@ -78,16 +78,16 @@ function StatusBar({
       : 'text-coc-gold/70';
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
+    <div className={`profile-user-status profile-user-status--${color}`}>
+      <div className="profile-user-status__head flex items-center justify-between text-xs">
         <span className={`font-bold ${dimClass}`}>{label}</span>
-        <span className="text-coc-text-muted">
+        <span className="profile-user-status__value text-coc-text-muted">
           {current}/{max}
         </span>
       </div>
-      <div className="h-2 bg-coc-bg-primary rounded-full overflow-hidden border border-coc-border">
+      <div className="profile-user-status__bar h-2 bg-coc-bg-primary rounded-full overflow-hidden border border-coc-border">
         <div
-          className={`h-full ${colorClass} transition-all`}
+          className={`profile-user-status__fill h-full ${colorClass} transition-all`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -98,7 +98,7 @@ function StatusBar({
 function StatCell({ label, value, desc }: { label: string; value?: number; desc?: string }) {
   return (
     <div
-      className="text-center p-2 bg-coc-bg-primary/60 border border-coc-border rounded cursor-help hover:bg-coc-bg-primary transition-colors"
+      className="profile-user-stat-cell text-center p-2 bg-coc-bg-primary/60 border border-coc-border rounded cursor-help hover:bg-coc-bg-primary transition-colors"
       title={desc}
     >
       <div className="text-[10px] text-coc-text-muted tracking-wider">{label}</div>
@@ -110,7 +110,7 @@ function StatCell({ label, value, desc }: { label: string; value?: number; desc?
 function AvatarPlaceholder({ name, color }: { name: string; color?: string }) {
   return (
     <div
-      className="w-full h-full rounded-full flex items-center justify-center text-xl font-bold border-2 border-coc-border"
+      className="profile-user-avatar-placeholder w-full h-full rounded-full flex items-center justify-center text-xl font-bold border-2 border-coc-border"
       style={{
         background: color
           ? `linear-gradient(135deg, ${color}33 0%, ${color}11 100%)`
@@ -296,15 +296,15 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
   };
 
   return (
-    <div className="bg-coc-bg-tertiary rounded-xl border border-coc-border overflow-hidden max-w-md w-full">
+    <div className="profile-user-card bg-coc-bg-tertiary rounded-xl border border-coc-border overflow-hidden max-w-md w-full">
       <div className="h-1.5" style={{ backgroundColor: user.rankColor || '#6b6558' }} />
 
       {/* Tab 切换 */}
-      <div className="flex border-b border-coc-border">
+      <div className="profile-user-card__tabs flex border-b border-coc-border">
         <button
           type="button"
           onClick={() => setTab('character')}
-          className={`flex-1 pb-3 pt-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+          className={`profile-user-card__tab flex-1 pb-3 pt-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
             tab === 'character'
               ? 'text-coc-accent-gold border-b-2 border-coc-accent-gold'
               : 'text-coc-text-muted hover:text-coc-text-primary'
@@ -316,7 +316,7 @@ export function UserProfileCard({ user }: { user: UserProfile }) {
         <button
           type="button"
           onClick={() => setTab('user')}
-          className={`flex-1 pb-3 pt-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+          className={`profile-user-card__tab flex-1 pb-3 pt-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
             tab === 'user'
               ? 'text-coc-accent-gold border-b-2 border-coc-accent-gold'
               : 'text-coc-text-muted hover:text-coc-text-primary'

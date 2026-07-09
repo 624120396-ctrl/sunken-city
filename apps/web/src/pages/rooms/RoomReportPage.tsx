@@ -194,7 +194,7 @@ export function RoomReportPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="room-report-archive max-w-5xl mx-auto">
       {/* 头部 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -216,7 +216,7 @@ export function RoomReportPage() {
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="room-report-archive__stats grid grid-cols-4 gap-4 mb-6">
         <DoubleBezelCard variant="default" runeCorners innerClassName="p-4 text-center">
           <Clock size={20} className="mx-auto mb-2 text-coc-accent-gold" />
           <div className="text-2xl font-bold">{report.duration}</div>
@@ -240,7 +240,7 @@ export function RoomReportPage() {
       </div>
 
       {/* Tab导航 */}
-      <div className="flex gap-2 mb-6 border-b border-coc-border">
+      <div className="room-report-archive__tabs flex gap-2 mb-6 border-b border-coc-border">
         {[
           { id: 'overview', label: '概览', icon: FileText },
           { id: 'combat', label: '战斗记录', icon: Sword },

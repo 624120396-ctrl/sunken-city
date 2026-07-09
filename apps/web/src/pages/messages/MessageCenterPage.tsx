@@ -173,6 +173,7 @@ export function MessageCenterPage() {
   const selectedPartner = conversations.find((c) => c.partnerId === selectedPartnerId);
   const unreadNotificationCount = notifications.filter((n) => !n.isRead).length;
   const unreadMessageCount = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+  const totalUnreadCount = unreadNotificationCount + unreadMessageCount;
   const filteredNotifications =
     notificationLayer === 'all'
       ? notifications
@@ -218,17 +219,95 @@ export function MessageCenterPage() {
   return (
     <PageShell
       className="message-center-page"
-      eyebrow="调查员通信台"
+      eyebrow="MESSAGE ARCHIVE"
       title="消息中心"
-      description="把排期、申请、邀请、公告和私信拆成可读层级，重要信息不再沉进一条长列表。"
+      description="远处的钟声层层折返，未读之物在黑水下敲击门环。"
       actions={
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--coc-text-secondary)]">
-          <span className="rounded-full border border-[var(--coc-border-subtle)] bg-black/20 px-3 py-1">
-            未读通知 {unreadNotificationCount}
+        <div className="message-archive-ledger" aria-label="消息中心状态">
+          <span className="message-archive-ledger__chip" data-tone={totalUnreadCount > 0 ? 'gold' : 'quiet'}>
+            <Bell size={14} />
+            <b>{totalUnreadCount}</b>
+            <small>未读回声</small>
           </span>
-          <span className="rounded-full border border-[var(--coc-border-subtle)] bg-black/20 px-3 py-1">
-            未读私信 {unreadMessageCount}
+          <span className="message-archive-ledger__chip">
+            <Archive size={14} />
+            <b>{notifications.length}</b>
+            <small>通知档案</small>
           </span>
+          <span className="message-archive-ledger__chip">
+            <MessageSquare size={14} />
+            <b>{conversations.length}</b>
+            <small>私信线索</small>
+          </span>
+        </div>
+      }
+      aside={
+        <div className="message-archive-aside">
+          <Surface variant="panel" material="archive" padding="md" className="message-archive-aside-card">
+            <div className="message-archive-aside-card__heading">
+              <Bell size={14} />
+              收信状态
+            </div>
+            <div className="message-archive-aside-status">
+              <strong>{totalUnreadCount > 0 ? `${totalUnreadCount} 条未读回声` : '暂无未读回声'}</strong>
+              <span>
+                {totalUnreadCount > 0
+                  ? '排期、邀请、申请或私信仍在档案边缘发光。'
+                  : '所有可见消息都已归档。'}
+              </span>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="message-archive-aside-card">
+            <div className="message-archive-aside-card__heading">
+              <Archive size={14} />
+              档案分层
+            </div>
+            <div className="message-archive-aside-grid">
+              <button
+                type="button"
+                className="message-archive-aside-entry"
+                aria-pressed={activeTab === 'notifications'}
+                onClick={() => {
+                  setActiveTab('notifications');
+                  setSelectedPartnerId(null);
+                }}
+              >
+                <span>通知</span>
+                <b>{unreadNotificationCount}</b>
+              </button>
+              <button
+                type="button"
+                className="message-archive-aside-entry"
+                aria-pressed={activeTab === 'messages'}
+                onClick={() => setActiveTab('messages')}
+              >
+                <span>私信</span>
+                <b>{unreadMessageCount}</b>
+              </button>
+            </div>
+          </Surface>
+
+          <Surface variant="panel" material="archive" padding="md" className="message-archive-aside-card">
+            <div className="message-archive-aside-card__heading">
+              <CalendarClock size={14} />
+              通信简报
+            </div>
+            <div className="message-archive-brief">
+              <div className="message-archive-brief__line">
+                <span data-tone="gold" />
+                <p>调度层收纳排期、入团申请与房间公告。</p>
+              </div>
+              <div className="message-archive-brief__line">
+                <span data-tone="ocean" />
+                <p>社交层收纳同行者、旧日低语与提及回声。</p>
+              </div>
+              <div className="message-archive-brief__line">
+                <span data-tone="dream" />
+                <p>系统层收纳位阶、印记、商城与市政告示。</p>
+              </div>
+            </div>
+          </Surface>
         </div>
       }
     >
@@ -236,12 +315,12 @@ export function MessageCenterPage() {
         variant="panel"
         material="archive"
         padding="none"
-        className="overflow-hidden"
+        className="message-archive-workbench overflow-hidden"
       >
-        <div className="grid min-h-[min(72vh,44rem)] lg:grid-cols-[17rem_minmax(0,1fr)]">
-          <aside className="border-b border-[var(--coc-border-subtle)] bg-black/20 p-4 lg:border-b-0 lg:border-r">
-            <div className="flex items-center gap-3 border-b border-[var(--coc-border-subtle)] pb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-accent-gold)]">
+        <div className="message-archive-layout grid min-h-[min(72vh,44rem)] lg:grid-cols-[17rem_minmax(0,1fr)]">
+          <aside className="message-archive-nav border-b border-[var(--coc-border-subtle)] bg-black/20 p-4 lg:border-b-0 lg:border-r">
+            <div className="message-archive-nav__identity flex items-center gap-3 border-b border-[var(--coc-border-subtle)] pb-4">
+              <div className="message-archive-nav__seal flex h-10 w-10 items-center justify-center rounded-md border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-accent-gold)]">
                 <Archive size={18} />
               </div>
               <div className="min-w-0">
@@ -258,9 +337,9 @@ export function MessageCenterPage() {
                   setSelectedPartnerId(null);
                 }}
                 className={cn(
-                  'coc-focus-ring flex w-full items-center justify-between rounded-md px-3 py-3 text-left transition',
+                  'message-archive-tab coc-focus-ring flex w-full items-center justify-between rounded-md px-3 py-3 text-left transition',
                   activeTab === 'notifications'
-                    ? 'bg-[var(--coc-accent-gold)] text-[var(--coc-text-inverse)]'
+                    ? 'message-archive-tab--active bg-[var(--coc-accent-gold)] text-[var(--coc-text-inverse)]'
                     : 'text-[var(--coc-text-secondary)] hover:bg-white/[0.06] hover:text-[var(--coc-text-primary)]'
                 )}
               >
@@ -274,9 +353,9 @@ export function MessageCenterPage() {
                 type="button"
                 onClick={() => setActiveTab('messages')}
                 className={cn(
-                  'coc-focus-ring flex w-full items-center justify-between rounded-md px-3 py-3 text-left transition',
+                  'message-archive-tab coc-focus-ring flex w-full items-center justify-between rounded-md px-3 py-3 text-left transition',
                   activeTab === 'messages'
-                    ? 'bg-[var(--coc-accent-gold)] text-[var(--coc-text-inverse)]'
+                    ? 'message-archive-tab--active bg-[var(--coc-accent-gold)] text-[var(--coc-text-inverse)]'
                     : 'text-[var(--coc-text-secondary)] hover:bg-white/[0.06] hover:text-[var(--coc-text-primary)]'
                 )}
               >
@@ -301,9 +380,9 @@ export function MessageCenterPage() {
                       key={item.value}
                       onClick={() => setNotificationLayer(item.value)}
                       className={cn(
-                        'coc-focus-ring flex w-full items-start gap-3 rounded-md border px-3 py-3 text-left transition',
+                        'message-archive-layer-button coc-focus-ring flex w-full items-start gap-3 rounded-md border px-3 py-3 text-left transition',
                         selected
-                          ? 'border-[var(--coc-accent-gold)] bg-[var(--coc-accent-gold)]/15'
+                          ? 'message-archive-layer-button--active border-[var(--coc-accent-gold)] bg-[var(--coc-accent-gold)]/15'
                           : 'border-transparent hover:border-[var(--coc-border-subtle)] hover:bg-white/[0.05]'
                       )}
                     >
@@ -330,12 +409,12 @@ export function MessageCenterPage() {
             )}
           </aside>
 
-          <section className="flex min-h-0 flex-col">
+          <section className="message-archive-main flex min-h-0 flex-col">
             {activeTab === 'notifications' && (
               <>
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
+                <div className="message-archive-section-header flex flex-wrap items-center justify-between gap-3 border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
                   <div>
-                    <div className="text-base font-semibold text-[var(--coc-text-primary)]">
+                    <div className="message-archive-section-header__title text-base font-semibold text-[var(--coc-text-primary)]">
                       {layerOptions.find((item) => item.value === notificationLayer)?.label}通知
                     </div>
                     <div className="mt-1 text-xs text-[var(--coc-text-muted)]">
@@ -378,8 +457,8 @@ export function MessageCenterPage() {
                         <article
                           key={n.id}
                           className={cn(
-                            'group border-b border-[var(--coc-border-subtle)] px-4 py-4 transition last:border-0 hover:bg-white/[0.04]',
-                            !n.isRead && 'bg-[var(--coc-accent-gold)]/[0.07]'
+                            'message-archive-item group border-b border-[var(--coc-border-subtle)] px-4 py-4 transition last:border-0 hover:bg-white/[0.04]',
+                            !n.isRead && 'message-archive-item--unread bg-[var(--coc-accent-gold)]/[0.07]'
                           )}
                         >
                           <div className="flex items-start justify-between gap-4">
@@ -389,12 +468,12 @@ export function MessageCenterPage() {
                               onClick={() => handleNotifNavigate(n)}
                             >
                               <div className="flex flex-wrap items-center gap-2 text-xs">
-                                <span className="rounded border border-[var(--coc-border-subtle)] bg-black/20 px-2 py-0.5 text-[var(--coc-text-muted)]">
+                                <span className="message-archive-item__type rounded border border-[var(--coc-border-subtle)] bg-black/20 px-2 py-0.5 text-[var(--coc-text-muted)]">
                                   {getNotificationTypeLabel(n.type)}
                                 </span>
                                 <span className="text-[var(--coc-text-muted)]">{formatTimeAgo(n.createdAt)}</span>
                                 {!n.isRead && (
-                                  <span className="rounded-full bg-[var(--coc-accent-blood)] px-2 py-0.5 text-[10px] font-semibold text-white">
+                                  <span className="message-archive-item__unread rounded-full bg-[var(--coc-accent-blood)] px-2 py-0.5 text-[10px] font-semibold text-white">
                                     未读
                                   </span>
                                 )}
@@ -445,8 +524,8 @@ export function MessageCenterPage() {
 
             {activeTab === 'messages' && !selectedPartnerId && (
               <>
-                <div className="border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
-                  <div className="text-base font-semibold text-[var(--coc-text-primary)]">私信会话</div>
+                <div className="message-archive-section-header border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
+                  <div className="message-archive-section-header__title text-base font-semibold text-[var(--coc-text-primary)]">私信会话</div>
                   <div className="mt-1 text-xs text-[var(--coc-text-muted)]">调查员之间的直接联络。</div>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">
@@ -466,9 +545,9 @@ export function MessageCenterPage() {
                         type="button"
                         key={c.partnerId}
                         onClick={() => setSelectedPartnerId(c.partnerId)}
-                        className="coc-focus-ring flex w-full items-center gap-3 border-b border-[var(--coc-border-subtle)] px-4 py-4 text-left transition last:border-0 hover:bg-white/[0.04]"
+                        className="message-archive-conversation coc-focus-ring flex w-full items-center gap-3 border-b border-[var(--coc-border-subtle)] px-4 py-4 text-left transition last:border-0 hover:bg-white/[0.04]"
                       >
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-secondary)]">
+                        <div className="message-archive-avatar flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-secondary)]">
                           {c.partnerAvatarUrl ? (
                             <img src={c.partnerAvatarUrl} alt="" className="h-full w-full object-cover" />
                           ) : (
@@ -489,7 +568,7 @@ export function MessageCenterPage() {
                               {c.lastContent}
                             </span>
                             {c.unreadCount > 0 && (
-                              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--coc-accent-blood)] px-1.5 text-[10px] font-bold text-white">
+                              <span className="message-archive-item__unread flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--coc-accent-blood)] px-1.5 text-[10px] font-bold text-white">
                                 {c.unreadCount > 99 ? '99+' : c.unreadCount}
                               </span>
                             )}
@@ -504,7 +583,7 @@ export function MessageCenterPage() {
 
             {activeTab === 'messages' && selectedPartnerId && selectedPartner && (
               <>
-                <div className="flex items-center gap-3 border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
+                <div className="message-archive-section-header flex items-center gap-3 border-b border-[var(--coc-border-subtle)] bg-black/15 px-4 py-4">
                   <button
                     type="button"
                     onClick={() => setSelectedPartnerId(null)}
@@ -513,7 +592,7 @@ export function MessageCenterPage() {
                   >
                     <ChevronLeft size={18} />
                   </button>
-                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-secondary)]">
+                  <div className="message-archive-avatar flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-secondary)]">
                     {selectedPartner.partnerAvatarUrl ? (
                       <img src={selectedPartner.partnerAvatarUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -528,7 +607,7 @@ export function MessageCenterPage() {
                   </div>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+                <div className="message-archive-thread min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
                   {messagesLoading && messages.length === 0 ? (
                     <div className="py-8">
                       <Skeleton className="mx-auto h-12 w-3/4" />
@@ -545,10 +624,10 @@ export function MessageCenterPage() {
                         <div key={m.id} className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
                           <div
                             className={cn(
-                              'max-w-[min(72%,34rem)] rounded-lg border px-3 py-2 text-sm leading-6 shadow-sm',
+                              'message-archive-bubble max-w-[min(72%,34rem)] rounded-lg border px-3 py-2 text-sm leading-6 shadow-sm',
                               isMe
-                                ? 'border-[var(--coc-accent-gold)]/45 bg-[var(--coc-accent-gold)]/14 text-[var(--coc-text-primary)]'
-                                : 'border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-primary)]'
+                                ? 'message-archive-bubble--self border-[var(--coc-accent-gold)]/45 bg-[var(--coc-accent-gold)]/14 text-[var(--coc-text-primary)]'
+                                : 'message-archive-bubble--other border-[var(--coc-border-subtle)] bg-black/25 text-[var(--coc-text-primary)]'
                             )}
                           >
                             <div className="whitespace-pre-wrap break-words">{m.content}</div>
@@ -563,7 +642,7 @@ export function MessageCenterPage() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="flex items-center gap-2 border-t border-[var(--coc-border-subtle)] bg-black/15 px-4 py-3">
+                <div className="message-archive-composer flex items-center gap-2 border-t border-[var(--coc-border-subtle)] bg-black/15 px-4 py-3">
                   <input
                     type="text"
                     value={messageInput}

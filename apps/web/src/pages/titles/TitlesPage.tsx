@@ -1,8 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router-dom';
 import {
-  ChevronLeft, Award, Lock, Sparkles, Filter, Check, Loader2,
+  Award, Lock, Sparkles, Filter, Check, Loader2,
   Layers, Compass, Sword, Users, Waves, Star, HelpCircle, X
 } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
@@ -180,26 +179,17 @@ export function TitlesPage() {
     >
       <PageShell
         className="rank-title-page title-archive-page"
-        eyebrow="title archive"
+        eyebrow="SEAL ARCHIVE"
         title={
           <span className="flex items-center gap-3">
             <Award className="text-[var(--coc-accent-gold)]" size={26} />
-            印记图鉴
+            印记
           </span>
         }
-        description="查看已解锁印记、展示状态和筛选条件。"
-        actions={
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 text-[#6b6558] hover:text-[#c9a227] transition-colors"
-          >
-            <ChevronLeft size={20} />
-            <span className="font-rune">返回</span>
-          </Link>
-        }
+        description="旧印在盐霜下显影，佩戴者的名字被雾轻轻吞下。"
       >
         {/* 收集进度 */}
-        <Surface variant="solid" tone="gold" padding="lg" className="title-archive-hero">
+        <Surface variant="solid" tone="gold" material="archive" padding="lg" className="title-archive-hero">
             <div className="title-archive-hero__layout">
               <div className="title-archive-hero__seal">
                 <svg className="-rotate-90" viewBox="0 0 100 100">
@@ -233,7 +223,7 @@ export function TitlesPage() {
               </div>
               
               <div className="title-archive-hero__body">
-                <span className="rank-altar-card__eyebrow">drowned seal archive</span>
+                <span className="rank-altar-card__eyebrow">DROWNED SEAL ARCHIVE</span>
                 <h2>印记收集进度</h2>
                 <p>
                   已收集 <span className="text-[#c9a227] font-bold">{unlockedCount}</span> / {totalTitles} 个印记
@@ -267,7 +257,7 @@ export function TitlesPage() {
         </Surface>
 
         {/* 筛选器 */}
-        <Surface variant="panel" padding="md" className="title-filter-panel">
+        <Surface variant="panel" material="archive" padding="md" className="title-filter-panel">
           {/* 分类筛选 */}
           <div className="title-filter-row">
             <Filter size={16} className="text-[#6b6558] mr-2" />
@@ -375,7 +365,7 @@ export function TitlesPage() {
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <Surface variant="solid" tone="gold" padding="lg" className="title-detail-card">
+              <Surface variant="solid" tone="gold" material="archive" padding="lg" className="title-detail-card">
                 <div className="title-detail-card__header">
                   <div className="title-detail-card__title">
                     <span>{selectedTitle.icon}</span>

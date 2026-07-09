@@ -182,7 +182,7 @@ export function RoomListPage() {
             故事索引 / Story Gateway
           </span>
         }
-        description="选择正在进行的跑团，或用房间号直接进入。移动端优先保证快速入房和参团路径。"
+        description="雾门之后仍有故事燃烧，湿冷钥匙在看不见的锁孔旁等待。"
         actions={
           <>
             <Button variant="secondary" onClick={() => setShowJoinModal(true)} icon={<DoorOpen size={16} />}>

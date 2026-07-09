@@ -60,26 +60,26 @@ export function ForumNewPostPage() {
 
   return (
     <PageShell
-      eyebrow="旧日低语誊写台"
+      className="forum-new-post-page"
+      eyebrow="WHISPER SCRIPTORIUM"
       title="誊录一则低语"
-      description="选择要封入的分卷，写下密档标题与低语正文。编辑器内容流保持不变。"
-      contentClassName="max-w-3xl"
+      description="墨水尚未干透，低语已在纸背生根，等待被黑暗认领。"
     >
-      <Surface variant="panel" padding="sm" className="flex items-center gap-3">
+      <Surface variant="panel" material="archive" padding="sm" className="forum-compose-backbar flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="coc-btn-secondary min-h-11 min-w-11 p-2">
           <ArrowLeft size={18} />
         </button>
         <span className="text-sm text-[var(--coc-text-secondary)]">返回上一层档案</span>
       </Surface>
 
-      <Surface variant="solid" padding="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <Surface variant="solid" material="archive" padding="lg" className="forum-compose-card">
+      <form onSubmit={handleSubmit} className="forum-compose-form">
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">选择分卷</label>
+          <label className="forum-compose-label">选择分卷</label>
           <select
             value={boardKey}
             onChange={(e) => setBoardKey(e.target.value)}
-            className="min-h-11 w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-3 py-2 text-[#e8d4a0] focus:border-coc-gold focus:outline-none"
+            className="forum-compose-input"
           >
             {boards.map((b) => (
               <option key={b.key} value={b.key}>
@@ -90,19 +90,19 @@ export function ForumNewPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">密档标题</label>
+          <label className="forum-compose-label">密档标题</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={100}
             placeholder="给这则低语留下可追索的标题"
-            className="min-h-11 w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-3 py-2 text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
+            className="forum-compose-input"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">低语正文</label>
+          <label className="forum-compose-label">低语正文</label>
           <RichTextEditor
             value={content}
             onChange={setContent}
@@ -112,7 +112,7 @@ export function ForumNewPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">悬赏金额（锈蚀硬币，可选）</label>
+          <label className="forum-compose-label">悬赏金额（锈蚀硬币，可选）</label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <input
               type="number"
@@ -120,9 +120,9 @@ export function ForumNewPostPage() {
               max={user?.coins || 0}
               value={bounty}
               onChange={(e) => setBounty(Math.max(0, parseInt(e.target.value) || 0))}
-              className="min-h-11 w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-3 py-2 text-[#e8d4a0] focus:border-coc-gold focus:outline-none sm:w-36"
+              className="forum-compose-input sm:w-36"
             />
-            <span className="text-sm text-[#b0a898]">当前余额：{user?.coins || 0} 锈蚀硬币</span>
+            <span className="forum-compose-note">当前余额：{user?.coins || 0} 锈蚀硬币</span>
           </div>
           {bounty > 0 && (
             <p className="text-xs text-amber-400 mt-1">

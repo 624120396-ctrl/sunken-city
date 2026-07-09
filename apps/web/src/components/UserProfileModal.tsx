@@ -10,7 +10,7 @@ export interface UserProfileModalProps {
 export function UserProfileModal({ user, isOpen, onClose }: UserProfileModalProps) {
   if (!user) return null;
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="">
+    <Modal isOpen={isOpen} onClose={onClose} title="" className="profile-user-modal">
       <UserProfileCard user={user} />
     </Modal>
   );

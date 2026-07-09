@@ -25,7 +25,7 @@ export function StoryDialogBox({ text, speaker, subText, className = '' }: Story
 
   return (
     <div
-      className={`relative rounded-t-2xl rounded-br-2xl rounded-bl-md border border-white/10 bg-black/60 backdrop-blur px-5 py-4 ${className}`}
+      className={`solo-dialog-box relative rounded-t-2xl rounded-br-2xl rounded-bl-md border border-white/10 bg-black/60 backdrop-blur px-5 py-4 ${className}`}
     >
       {speaker && (
         <div className="text-xs font-semibold tracking-wider text-amber-400 mb-1">{speaker}</div>

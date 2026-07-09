@@ -72,7 +72,7 @@ export function SoloStartPage() {
       className="story-entry-page solo-entry-page"
       eyebrow="phantom scripts"
       title="单人剧本"
-      description="选择剧本与调查员，进入只属于你的离线叙事分支。"
+      description="无人署名的支线在雾里张开，脚步声先于你抵达门后。"
     >
       <div className="story-entry-layout">
         <section className="story-entry-section">

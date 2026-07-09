@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, LayoutGrid, School, Anchor, Moon, Flame, Landmark, MessageSquare } from 'lucide-react';
 import { getForumBoards, type ForumBoard } from '../../services/forum.service';
 import { useQuery } from '@tanstack/react-query';
-import { DataCard, PageShell } from '@components/system';
+import { PageShell, Surface } from '@components/system';
 
 const boardIconMap: Record<string, React.ElementType> = {
   lore: School,
@@ -32,17 +32,16 @@ export function ForumListPage() {
 
   return (
     <PageShell
+      className="forum-list-page"
       eyebrow="COMMUNITY ARCHIVE"
       title="旧日低语"
-      description="从这些低语卷宗进入不同的调查层。长文、证词与回声会被安置在更稳定的可读 Surface 中。"
+      description="纸页深处有无数低语相互靠近，像沉船舱壁后仍未止息的回声。"
       actions={
-        <DataCard
-          label="已启封分卷"
-          value={boards.length}
-          detail="低语卷宗"
-          icon={<LayoutGrid size={16} />}
-          tone="gold"
-        />
+        <Surface variant="solid" tone="gold" material="archive" padding="md" className="forum-index-summary">
+          <LayoutGrid size={18} />
+          <span>已启封分卷</span>
+          <strong>{boards.length}</strong>
+        </Surface>
       }
     >
 

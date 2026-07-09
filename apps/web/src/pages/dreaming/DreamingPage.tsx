@@ -194,7 +194,7 @@ export function DreamingPage() {
       className="dreaming-page-shell drowned-oracle-page"
       eyebrow="DREAM ORACLE"
       title="溺者之牌"
-      description="每夜入梦前，调查员在盐雾牌桌旁选择一张牌，翻开梦兆，并把回声归入档案。"
+      description="盐雾垂落牌桌，梦中的鳞光翻面时，夜色便记住了你的呼吸。"
       actions={
         <div className="coc-page-shell__resource-ledger" aria-label="调查员资源">
           <span className="coc-page-shell__resource-chip coc-page-shell__resource-chip--coin">
