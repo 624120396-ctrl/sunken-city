@@ -2135,6 +2135,15 @@
 }
 
 @media (min-width: 2200px) {
+  .character-archive-page.coc-page-shell {
+    width: 100%;
+  }
+
+  .character-archive-page[data-layout="with-aside"] .coc-page-shell__body {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+    gap: 1.75rem;
+  }
+
   .character-archive-grid {
     grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
     gap: 1.6rem;
