@@ -1,5 +1,28 @@
 import type { NotificationItem } from './notification.service';
 
+export type NotificationLayer = 'all' | 'coordination' | 'social' | 'system';
+
+const coordinationNotificationTypes = new Set<string>([
+  'room_invite',
+  'room_next_session',
+  'room_announcement',
+  'room_application_review',
+  'room_application_submitted',
+]);
+
+const socialNotificationTypes = new Set<string>([
+  'mention',
+  'reply',
+  'like',
+  'best_reply',
+  'friend_request',
+  'friend_accept',
+  'forum_reply',
+  'forum_mention',
+  'forum_like',
+  'forum_best_reply',
+]);
+
 export function getNotificationTypeLabel(type: NotificationItem['type'] | string) {
   switch (type) {
     case 'mention':
@@ -44,6 +67,38 @@ export function getNotificationTypeLabel(type: NotificationItem['type'] | string
       return '管理';
     default:
       return '系统';
+  }
+}
+
+export function getNotificationLayer(type: NotificationItem['type'] | string): Exclude<NotificationLayer, 'all'> {
+  if (coordinationNotificationTypes.has(type)) return 'coordination';
+  if (socialNotificationTypes.has(type)) return 'social';
+  return 'system';
+}
+
+export function getNotificationLayerLabel(layer: NotificationLayer) {
+  switch (layer) {
+    case 'coordination':
+      return '调度';
+    case 'social':
+      return '社交';
+    case 'system':
+      return '系统';
+    default:
+      return '全部';
+  }
+}
+
+export function getNotificationLayerDescription(layer: NotificationLayer) {
+  switch (layer) {
+    case 'coordination':
+      return '排期、申请、邀请';
+    case 'social':
+      return '好友、论坛、提及';
+    case 'system':
+      return '公告、位阶、印记';
+    default:
+      return '所有待读与归档';
   }
 }
 

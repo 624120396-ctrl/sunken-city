@@ -2,10 +2,10 @@ import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import type { CSSProperties } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, handleApiResponse } from '@lib/api';
-import { Sparkles, BookOpen, History, Coins, Gem, Eye, Moon, ScrollText, Wand2, Waves } from 'lucide-react';
+import { Sparkles, BookOpen, Coins, Gem, Eye, Moon, ScrollText, Wand2, Waves } from 'lucide-react';
 import { useAuthStore } from '@stores/auth.store';
 import { TiltCard } from '@components/ui/TiltCard';
-import { Button, PageShell, Surface, Tabs } from '@components/system';
+import { Button, PageShell, Surface } from '@components/system';
 import { getDreamingOraclePhase, getOracleCandidateSlots, getOracleRarityMeta } from '@components/dreaming/dreamingOracleMeta';
 import { getDreamArchiveCardMeta, getDreamArchiveSummary, getDreamHistoryMeta } from '@components/dreaming/dreamingArchiveMeta';
 import { getDreamReadingMeta } from '@components/dreaming/dreamingReadingMeta';
@@ -62,8 +62,8 @@ export function DreamingPage() {
       setCanDraw(data.canDraw);
       setTodayDraw(data.todayDraw);
     } catch (e: any) {
-      console.error('获取今日占卜失败:', e);
-      setError('获取今日占卜失败：' + e.message);
+      console.error('读取今日梦兆失败:', e);
+      setError('读取今日梦兆失败：' + e.message);
     }
   }, []);
 
@@ -189,63 +189,86 @@ export function DreamingPage() {
       hasBuff: Boolean(todayDraw.buff),
     })
     : null;
+  const oracleTopEntries = [
+    {
+      value: 'today',
+      label: '今日入梦',
+      valueText: oraclePhase.title,
+      detail: '确认今夜是否仍可踏入共享梦层。',
+      icon: Moon,
+      active: canDraw && !todayDraw,
+    },
+    {
+      value: 'collection',
+      label: '梦兆图鉴',
+      valueText: `${unlockedCount}/${collection.length || '-'}`,
+      detail: '已见过的牌面归入梦兆档案。',
+      icon: BookOpen,
+      active: unlockedCount > 0,
+    },
+    {
+      value: 'history',
+      label: '历史梦兆',
+      valueText: `${history.length} 条`,
+      detail: '保留每次入梦、牌位与解读深度。',
+      icon: ScrollText,
+      active: history.length > 0,
+    },
+  ] satisfies Array<{
+    value: 'today' | 'collection' | 'history';
+    label: string;
+    valueText: string;
+    detail: string;
+    icon: typeof Moon;
+    active: boolean;
+  }>;
 
   return (
     <PageShell
-      className="dreaming-page-shell"
+      className="dreaming-page-shell drowned-oracle-page"
       eyebrow="DREAM ORACLE"
-      title="溺者之牌"
-      description="每晚入睡后，调查员都会坠入共享梦境层。抽一张牌，看看深渊想对你说什么。"
+      title="溺者之牌仪式台"
+      description="每夜入梦前，调查员在盐雾牌桌旁选择一张牌，翻开梦兆，并把回声归入档案。"
       actions={
-        <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--coc-text-secondary)]">
-          <span className="inline-flex items-center gap-1 rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+        <div className="coc-page-shell__resource-ledger" aria-label="调查员资源">
+          <span className="coc-page-shell__resource-chip coc-page-shell__resource-chip--coin">
             <Coins size={14} className="text-[var(--coc-accent-gold)]" />
-            {user?.coins ?? 0}
+            <b>{user?.coins ?? 0}</b>
+            <small>锈蚀硬币</small>
           </span>
-          <span className="inline-flex items-center gap-1 rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
+          <span className="coc-page-shell__resource-chip coc-page-shell__resource-chip--stardust">
             <Gem size={14} className="text-purple-300" />
-            {user?.stardust ?? 0}
+            <b>{user?.stardust ?? 0}</b>
+            <small>虚银</small>
           </span>
         </div>
       }
     >
       <div className="coc-section-stack">
-        <Surface variant="panel" padding="md" className="relative overflow-hidden">
+        <Surface variant="panel" material="archive" padding="none" className="dream-oracle-status-strip">
           <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-purple-300/45 to-transparent" />
-          <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
-            <Tabs
-              ariaLabel="溺者之牌视图"
-              value={tab}
-              onChange={(value) => setTab(value as 'today' | 'collection' | 'history')}
-              items={[
-                { value: 'today', label: '今日占卜' },
-                { value: 'collection', label: '图鉴', count: unlockedCount },
-                { value: 'history', label: '历史', count: history.length },
-              ]}
-            />
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <Moon size={14} className="text-purple-300" />
-                  梦境状态
-                </div>
-                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{oraclePhase.title}</div>
-              </div>
-              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <BookOpen size={14} className="text-[var(--coc-accent-gold)]" />
-                  图鉴
-                </div>
-                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{unlockedCount}/{collection.length || '-'}</div>
-              </div>
-              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <History size={14} className="text-[var(--coc-accent-gold)]" />
-                  记录
-                </div>
-                <div className="mt-1 font-bold text-[var(--coc-text-primary)]">{history.length} 次占卜</div>
-              </div>
-            </div>
+          <div className="dream-oracle-entry-grid" role="tablist" aria-label="溺者之牌视图">
+            {oracleTopEntries.map((entry) => {
+              const Icon = entry.icon;
+              return (
+                <button
+                  key={entry.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === entry.value}
+                  data-active={entry.active ? 'true' : 'false'}
+                  className="dream-oracle-entry-card"
+                  onClick={() => setTab(entry.value)}
+                >
+                  <div className="dream-oracle-entry-card__label">
+                    <Icon size={14} />
+                    {entry.label}
+                  </div>
+                  <div className="dream-oracle-entry-card__value">{entry.valueText}</div>
+                  <p>{entry.detail}</p>
+                </button>
+              );
+            })}
           </div>
         </Surface>
 
@@ -257,7 +280,7 @@ export function DreamingPage() {
 
         {tab === 'today' && (
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
-            <Surface variant="elevated" tone="madness" padding="lg" className="relative overflow-hidden">
+            <Surface variant="elevated" tone="madness" material="archive" padding="lg" className="relative overflow-hidden">
               <div className={`oracle-stage oracle-stage--${oraclePhase.key} flex flex-col items-center justify-center`}>
                 <div className="oracle-card-ring" />
                 <div className="oracle-card-ring oracle-card-ring--inner" />
@@ -478,35 +501,39 @@ export function DreamingPage() {
             </Surface>
 
             <div className="space-y-4">
-            <Surface variant="panel" padding="md" className="relative overflow-hidden">
+            <Surface variant="panel" material="archive" padding="md" className="dream-oracle-brief-card">
               <div className="pointer-events-none absolute inset-y-4 left-0 w-px bg-purple-300/35" />
-              <div className="flex items-center gap-2 text-xs font-bold uppercase text-purple-200">
+              <div className="dream-oracle-brief-card__heading">
                 <Eye size={14} />
-                ORACLE BRIEF
+                RITUAL BRIEF
               </div>
-              <div className="mt-4 space-y-3 text-sm text-[var(--coc-text-secondary)]">
+              <div className="dream-oracle-brief-card__body">
                 <div className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-[var(--coc-accent-gold)]" />
-                  <span>普通解牌提供今日行动暗示，深度解牌会追加触须效应。</span>
+                  <span>选牌仪式会在盐雾中展开三张牌背，调查员只需触碰其中一张。</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-purple-300" />
-                  <span>牌面图鉴和历史记录会在完成占卜后同步刷新。</span>
+                  <span>翻牌解梦分为普通解牌与深度解牌，深度解牌会追加触须效应。</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[var(--coc-accent-ocean)]" />
+                  <span>梦兆图鉴和历史梦兆会在完成仪式后同步刷新。</span>
                 </div>
               </div>
             </Surface>
 
-            <Surface variant="panel" padding="md" className="grid gap-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
+            <Surface variant="panel" material="archive" padding="md" className="dream-oracle-brief-card grid gap-3">
+              <div className="dream-oracle-brief-card__heading">
                 <Coins size={14} />
-                COST LEDGER
+                解牌代价
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 p-3">
+                <div className="coc-archive-subcard p-3">
                   <div className="text-xs text-[var(--coc-text-muted)]">普通解牌</div>
                   <div className="mt-1 font-bold text-[var(--coc-text-primary)]">50 硬币</div>
                 </div>
-                <div className="rounded border border-[var(--coc-border-subtle)] bg-black/25 p-3">
+                <div className="coc-archive-subcard p-3">
                   <div className="text-xs text-[var(--coc-text-muted)]">深度解牌</div>
                   <div className="mt-1 font-bold text-[var(--coc-text-primary)]">10 虚银</div>
                 </div>
@@ -518,13 +545,13 @@ export function DreamingPage() {
 
         {tab === 'collection' && (
           <div className="dream-archive space-y-4">
-            <Surface variant="panel" padding="md" className="dream-archive-toolbar">
+            <Surface variant="panel" material="archive" padding="md" className="dream-archive-toolbar">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <BookOpen size={14} />
                   CARD ARCHIVE
                 </div>
-                <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">牌库以封印层级归档，未解锁牌面保持盐雾遮蔽。</p>
+                <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">梦兆图鉴以封印层级归档，未解锁牌面保持盐雾遮蔽。</p>
               </div>
               <div className="dream-archive-stats">
                 <span><strong>{archiveSummary.unlocked}</strong> 已归档</span>
@@ -588,15 +615,15 @@ export function DreamingPage() {
         {tab === 'history' && (
           <div className="dream-history space-y-3">
           {history.length > 0 && (
-            <Surface variant="panel" padding="md" className="dream-history-toolbar">
+            <Surface variant="panel" material="archive" padding="md" className="dream-history-toolbar">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <ScrollText size={14} />
                   DREAM LOG
                 </div>
-                <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">按最近占卜顺序记录牌面、方向和解读深度。</p>
+                <p className="mt-1 text-sm text-[var(--coc-text-secondary)]">历史梦兆按最近入梦顺序记录牌面、方向和解读深度。</p>
               </div>
-              <div className="hidden rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2 text-sm text-[var(--coc-text-secondary)] sm:block">
+              <div className="coc-archive-subcard hidden px-3 py-2 text-sm text-[var(--coc-text-secondary)] sm:block">
                 {history.length} 条
               </div>
             </Surface>
@@ -604,8 +631,8 @@ export function DreamingPage() {
           {history.length === 0 ? (
             <EmptyState
               icon={EmptyIcons.Dreams}
-              title="还没有任何梦境记录"
-              description="梦境是通往深层真理的门户。当你完成调查后，潜意识将在此显现……"
+              title="尚无历史梦兆"
+              description="完成一次入梦仪式后，牌面、方位与解读深度会在这里封存。"
               size="sm"
               animate={false}
             />
@@ -614,7 +641,7 @@ export function DreamingPage() {
             const meta = getDreamHistoryMeta(h);
             const cardRarity = collection.find((c) => c.key === h.cardKey)?.rarity || 'common';
             return (
-              <Surface key={h.id} variant="panel" padding="md" className="dream-history-entry" data-history-status={meta.statusTone}>
+              <Surface key={h.id} variant="panel" material="archive" padding="md" className="dream-history-entry" data-history-status={meta.statusTone}>
                 <div className="dream-history-entry__seal">{meta.seal}</div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

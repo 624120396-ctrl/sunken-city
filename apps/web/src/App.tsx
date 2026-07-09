@@ -60,6 +60,7 @@ const ForumBoardPage = lazyNamed(() => import('@pages/forum/ForumBoardPage'), 'F
 const ForumPostPage = lazyNamed(() => import('@pages/forum/ForumPostPage'), 'ForumPostPage');
 const ForumNewPostPage = lazyNamed(() => import('@pages/forum/ForumNewPostPage'), 'ForumNewPostPage');
 const FriendListPage = lazyNamed(() => import('@pages/friends/FriendListPage'), 'FriendListPage');
+const MessageCenterPage = lazyNamed(() => import('@pages/messages/MessageCenterPage'), 'MessageCenterPage');
 const FishingPage = lazyNamed(() => import('@pages/fishing/FishingPage'), 'FishingPage');
 const DreamingPage = lazyNamed(() => import('@pages/dreaming/DreamingPage'), 'DreamingPage');
 const SoloStartPage = lazyNamed(() => import('@pages/solo/SoloStartPage'), 'SoloStartPage');
@@ -132,6 +133,7 @@ function App() {
               <Route path="/forums/new" element={routeElement(ForumNewPostPage)} />
               <Route path="/forums/:postId" element={routeElement(ForumPostPage)} />
               <Route path="/friends" element={routeElement(FriendListPage)} />
+              <Route path="/messages" element={routeElement(MessageCenterPage)} />
               <Route path="/fishing" element={routeElement(FishingPage)} />
               <Route path="/dream" element={routeElement(DreamingPage)} />
               <Route path="/solo" element={routeElement(SoloStartPage)} />

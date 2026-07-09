@@ -1,6 +1,8 @@
 # 沉没之城前端系统 v2 Phase 1 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **2026-07-04 status:** This is a historical Phase 1 implementation plan. Keep it as implementation history and low-level component context, but do not copy its black translucent card examples into new UI work. Current visual direction is governed by `2026-07-04-sunken-city-luminous-archive-visual-upgrade.zh-CN.md`; image2 assets are governed by `2026-07-04-sunken-city-ui-asset-pipeline.zh-CN.md`.
 
 **Goal:** 建立沉没之城前端系统 v2 的第一阶段骨架，并以 Dashboard 作为首个样板页，同时保留现有数据、附件、路由和调查员卡片气质。
 

@@ -14,7 +14,8 @@
   --coc-surface-1: var(--coc-surface-panel);
   --coc-surface-2: var(--coc-surface-solid);
 
-  --coc-texture-archive-paper: url('/ui-textures/archive-paper-light-surface.webp');
+  --coc-texture-keeper-parchment: url('/ui-textures/room-v6-aged-parchment-white.webp');
+  --coc-texture-archive-paper: var(--coc-texture-keeper-parchment);
   --coc-texture-pale-limestone: url('/ui-textures/pale-limestone-balanced-panel.webp');
   --coc-texture-oxidized-copper: url('/ui-textures/oxidized-copper-dark-edge.webp');
   --coc-texture-sea-mist: url('/ui-textures/sea-mist-balanced-overlay.webp');

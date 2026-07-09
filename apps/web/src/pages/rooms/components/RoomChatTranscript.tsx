@@ -104,6 +104,7 @@ export function RoomChatTranscript({
       data-testid="room-message-list"
       className={cn(
         'room-message-list room-chat-v3 flex-1 overflow-y-auto min-h-0',
+        isMobile && !canUseKPTools && 'room-mobile-chat-bubbles',
         isMobile ? 'p-2 space-y-2' : 'p-4 space-y-3'
       )}
       staggerDelay={0.03}
@@ -173,7 +174,7 @@ export function RoomChatTranscript({
             return (
               <StaggerItem key={msg.id}>
                 <div className="room-chat-v3__system-wrap">
-                  <div className={cn('room-system-message room-chat-v3__system', isMobile ? 'px-2 py-2' : 'px-5 py-3')}>
+                  <div className={cn('room-system-message room-chat-v3__system', isMobile && !canUseKPTools && 'room-mobile-chat-bubbles__system', isMobile ? 'px-2 py-2' : 'px-5 py-3')}>
                     <span>{msg.content}</span>
                     <span className="room-chat-v3__system-time">
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -210,7 +211,7 @@ export function RoomChatTranscript({
                   )}
                 </div>
 
-                <div className={cn('room-message-bubble room-chat-v3__record', isMobile ? 'px-3 py-2' : 'px-4 py-3')}>
+                <div className={cn('room-message-bubble room-chat-v3__record', isMobile && !canUseKPTools && 'room-mobile-chat-bubbles__bubble', isMobile ? 'px-3 py-2' : 'px-4 py-3')}>
                   <div className="room-chat-v3__main">
                     <header className="room-chat-v3__record-header">
                       <span className="room-chat-v3__sender">

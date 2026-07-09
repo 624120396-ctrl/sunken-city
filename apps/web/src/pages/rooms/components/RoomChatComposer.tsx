@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import { ChevronDown, ChevronUp, Dice5, Send } from 'lucide-react';
+import { ChevronDown, ChevronUp, Dice5, Plus, Send } from 'lucide-react';
 import { MentionInput } from '@components/room/MentionInput';
 import { QuickPhrases } from '@components/room/QuickPhrases';
 import { cn } from '@lib/utils';
@@ -17,6 +17,7 @@ interface RoomChatComposerProps {
   hasSelectedCharacter: boolean;
   showMobileQuickRolls: boolean;
   setShowMobileQuickRolls: (visible: boolean | ((visible: boolean) => boolean)) => void;
+  onOpenMobileActionDrawer?: () => void;
   canUseKPTools: boolean;
   canSendPrivateMessage: boolean;
   sendTargetUserId: string;
@@ -37,6 +38,7 @@ export function RoomChatComposer({
   hasSelectedCharacter,
   showMobileQuickRolls,
   setShowMobileQuickRolls,
+  onOpenMobileActionDrawer,
   canUseKPTools,
   canSendPrivateMessage,
   sendTargetUserId,
@@ -55,6 +57,7 @@ export function RoomChatComposer({
       };
     });
   const hasPrivateTargets = canSendPrivateMessage && privateTargets.length > 0;
+  const showInlineTargetSelector = hasPrivateTargets && (!isMobile || canUseKPTools);
 
   const insertDiceCommand = () => {
     const trimmed = value.trim();
@@ -72,11 +75,11 @@ export function RoomChatComposer({
       className={cn(
         'room-chat-composer room-chat-composer-v3 flex-shrink-0',
         canUseKPTools ? 'room-chat-composer-v3--keeper' : 'room-chat-composer-v3--player',
-        hasPrivateTargets && 'room-chat-composer-v3--has-target',
+        showInlineTargetSelector && 'room-chat-composer-v3--has-target',
         isMobile ? 'p-2' : 'space-y-2 p-4'
       )}
     >
-      {(!isMobile || showChatTools) && (
+      {(!isMobile || (showChatTools && canUseKPTools)) && (
         <div
           data-testid="room-chat-tools-row"
           className={cn('room-chat-composer-v3__tools', isMobile && 'pb-1')}
@@ -116,25 +119,38 @@ export function RoomChatComposer({
           <button
             type="button"
             data-testid="room-chat-tools-toggle"
-            onClick={() => setShowChatTools(!showChatTools)}
-            className={cn('room-chat-composer-v3__icon-button', showChatTools && 'room-chat-composer-v3__icon-button--active')}
-            title={showChatTools ? '收起工具' : '展开工具'}
-            aria-label={showChatTools ? '收起聊天工具' : '展开聊天工具'}
+            onClick={() => {
+              if (onOpenMobileActionDrawer) {
+                onOpenMobileActionDrawer();
+                return;
+              }
+              setShowChatTools(!showChatTools);
+            }}
+            className="room-chat-composer-v3__icon-button room-mobile-chat-composer-plus"
+            title="打开房间工具"
+            aria-label="打开房间工具"
           >
-            {showChatTools ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            <Plus size={18} />
           </button>
         )}
-        {isMobile && hasSelectedCharacter && (
+        {isMobile && !canUseKPTools && (
           <button
             type="button"
             data-testid="room-mobile-quick-roll-toggle"
-            onClick={() => setShowMobileQuickRolls((visible) => !visible)}
-            className={cn('room-chat-composer-v3__icon-button', showMobileQuickRolls && 'room-chat-composer-v3__icon-button--active')}
-            title={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
-            aria-label={showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定'}
+            onClick={() => {
+              if (hasSelectedCharacter) {
+                setShowMobileQuickRolls((visible) => !visible);
+                return;
+              }
+              insertDiceCommand();
+            }}
+            className={cn('room-chat-composer-v3__icon-button room-mobile-chat-composer-dice', showMobileQuickRolls && 'room-chat-composer-v3__icon-button--active')}
+            title={hasSelectedCharacter ? (showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定') : '输入骰子指令'}
+            aria-label={hasSelectedCharacter ? (showMobileQuickRolls ? '收起快捷检定' : '展开快捷检定') : '输入骰子指令'}
             aria-expanded={showMobileQuickRolls}
+            disabled={!connected}
           >
-            <Dice5 size={16} />
+            <Dice5 size={18} />
           </button>
         )}
         {!isMobile && !canUseKPTools && (
@@ -150,7 +166,7 @@ export function RoomChatComposer({
             <span>投骰</span>
           </button>
         )}
-        {hasPrivateTargets && (
+        {showInlineTargetSelector && (
           <select
             className={cn('room-chat-composer-v3__target', sendTargetUserId !== 'public' && 'room-chat-composer-v3__target--private')}
             value={sendTargetUserId}

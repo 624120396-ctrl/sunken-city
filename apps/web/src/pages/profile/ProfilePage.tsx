@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package, Coins, Sparkles, Wand2 } from 'lucide-react';
+import { User, Lock, Save, Eye, EyeOff, Camera, ChevronLeft, Upload, X, Package, Coins, Sparkles, Wand2, Mail, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@stores/auth.store';
 import { apiFetch } from '@lib/api';
@@ -240,17 +240,25 @@ export function ProfilePage() {
 
   return (
     <PageShell
-      className="profile-page"
-      eyebrow="profile settings"
+      className="profile-page profile-investigator-dossier"
+      eyebrow="调查员档案"
       title={
         <span className="flex items-center gap-3">
           <User className="h-7 w-7 text-[var(--coc-accent-gold)]" />
-          个人档案
+          调查员档案
         </span>
       }
-      description="整理你的调查员身份、档案形象、论坛足迹、藏品展示与账户安全。"
+      description="整理公开身份、角色档案、论坛足迹、藏品展示与长期留存线索。"
       actions={
         <div className="profile-page__header-actions">
+          <Link to="/characters" className="profile-tool-button">
+            <BookOpen className="h-4 w-4" />
+            角色档案
+          </Link>
+          <Link to="/messages" className="profile-tool-button" data-tone="gold">
+            <Mail className="h-4 w-4" />
+            进入消息中心
+          </Link>
           {dossierStats.slice(0, 2).map((stat) => (
             <div key={stat.key} className="profile-currency-chip" data-tone={stat.tone}>
               {dossierStatIcons[stat.key]}
@@ -271,7 +279,7 @@ export function ProfilePage() {
         </Link>
       </Surface>
 
-      <Surface variant="solid" tone={roleBadge.tone} padding="lg" className="profile-identity-card">
+      <Surface variant="solid" tone={roleBadge.tone} material="archive" padding="lg" className="profile-identity-card">
         <div className="profile-identity-card__avatar">
           {avatarUrl ? (
             <img src={avatarUrl} alt="avatar" className="h-full w-full object-cover" />
@@ -302,8 +310,52 @@ export function ProfilePage() {
         </div>
       </Surface>
 
+      <Surface variant="panel" material="archive" padding="md" className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+              <User className="h-4 w-4" />
+              公开身份
+            </div>
+            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">
+              {user?.nickname || nickname || '未命名调查员'}
+            </div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              头像、昵称和展示印记会影响其他调查员看到你的第一眼。
+            </div>
+          </div>
+          <Link
+            to="/characters"
+            className="coc-focus-ring rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4 transition hover:border-[var(--coc-accent-gold)] hover:bg-white/[0.05]"
+          >
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+              <BookOpen className="h-4 w-4" />
+              角色档案
+            </div>
+            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">查看调查员角色</div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              角色、经历和公开展示将继续在角色页沉淀。
+            </div>
+          </Link>
+          <Link
+            to="/messages"
+            className="coc-focus-ring rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4 transition hover:border-[var(--coc-accent-gold)] hover:bg-white/[0.05]"
+          >
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+              <FileText className="h-4 w-4" />
+              长期留存
+            </div>
+            <div className="mt-2 text-sm font-semibold text-[var(--coc-text-primary)]">通知、私信与归档入口</div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              排期、申请、公告和社交消息从这里回到完整消息中心。
+            </div>
+          </Link>
+        </div>
+      </Surface>
+
       <div className="profile-layout-grid xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <Surface variant="solid" tone="gold" padding="lg" className="profile-form-card">
+        <Surface variant="solid" tone="gold" material="archive" padding="lg" className="profile-form-card">
           <div className="profile-section-heading">
             <Camera className="h-5 w-5" />
             <div>

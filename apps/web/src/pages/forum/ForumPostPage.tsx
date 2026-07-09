@@ -162,8 +162,8 @@ function PostAside({
         <div className="grid grid-cols-2 gap-3">
           <ThreadMetric icon={<Eye size={15} />} value={post.viewCount} label="阅览" />
           <ThreadMetric icon={<ThumbsUp size={15} />} value={post.likeCount} label="赞同" />
-          <ThreadMetric icon={<MessageSquare size={15} />} value={post.replyCount} label="回复" />
-          <ThreadMetric icon={<Clock3 size={15} />} value={formatTimeAgo(post.createdAt)} label="发布" />
+          <ThreadMetric icon={<MessageSquare size={15} />} value={post.replyCount} label="回声" />
+          <ThreadMetric icon={<Clock3 size={15} />} value={formatTimeAgo(post.createdAt)} label="誊录" />
         </div>
       </Surface>
 
@@ -190,7 +190,7 @@ function PostAside({
           )}
           {post.bountyCoin > 0 && <Badge variant="bounty">悬赏 {post.bountyCoin} 锈蚀硬币</Badge>}
           {!post.isPinned && !post.isEssence && !post.isLocked && post.bountyCoin <= 0 && (
-            <span className="text-sm text-[var(--coc-on-surface-muted)]">普通讨论</span>
+            <span className="text-sm text-[var(--coc-on-surface-muted)]">未标注低语</span>
           )}
         </div>
 
@@ -202,7 +202,7 @@ function PostAside({
               className="btn-v2 coc-btn-secondary flex min-h-[2.5rem] items-center justify-center gap-2 text-xs"
             >
               <Award size={14} />
-              {post.isEssence ? '取消精华' : '设为精华'}
+              {post.isEssence ? '移出典藏' : '列为典藏'}
             </button>
             <button
               type="button"
@@ -210,7 +210,7 @@ function PostAside({
               className="btn-v2 coc-btn-secondary flex min-h-[2.5rem] items-center justify-center gap-2 text-xs"
             >
               <Pin size={14} />
-              {post.isPinned ? '取消置顶' : '设为置顶'}
+              {post.isPinned ? '撤下告示' : '列为告示'}
             </button>
           </div>
         )}
@@ -222,7 +222,7 @@ function PostAside({
           版务提示
         </div>
         <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
-          回复与正文在稳定阅读层中显示；危险操作只在作者或版务权限下开放。
+          原始记录与回声在稳定阅读层中显示；危险操作只在作者或版务权限下开放。
         </p>
       </Surface>
     </div>
@@ -292,7 +292,7 @@ export function ForumPostPage() {
       setReplyContent('');
       await fetchPost();
     } catch (err) {
-      alert('回复失败');
+      alert('回声未能封存');
     } finally {
       setSubmitting(false);
     }
@@ -304,28 +304,28 @@ export function ForumPostPage() {
       await setBestReply(post.id, replyId);
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '设置失败');
+      alert(err.message || '标记未能写入');
     }
   };
 
   const handleDeletePost = async () => {
     if (!post) return;
-    if (!confirm('确定要删除这个帖子吗？')) return;
+    if (!confirm('确定要删除这则低语吗？此操作不可撤销。')) return;
     try {
       await deletePost(post.id);
       navigate('/forums');
     } catch (err: any) {
-      alert(err.message || '删除失败');
+      alert(err.message || '删除未能完成');
     }
   };
 
   const handleDeleteReply = async (replyId: string) => {
-    if (!confirm('确定要删除这条回复吗？')) return;
+    if (!confirm('确定要删除这段回声吗？此操作不可撤销。')) return;
     try {
       await deleteReply(replyId);
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '删除失败');
+      alert(err.message || '删除未能完成');
     }
   };
 
@@ -336,7 +336,7 @@ export function ForumPostPage() {
       setEditingPost(false);
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '编辑失败');
+      alert(err.message || '修订未能保存');
     }
   };
 
@@ -348,7 +348,7 @@ export function ForumPostPage() {
       setEditReplyContent('');
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '编辑失败');
+      alert(err.message || '修订未能保存');
     }
   };
 
@@ -358,7 +358,7 @@ export function ForumPostPage() {
       await toggleEssence(post.id);
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '操作失败');
+      alert(err.message || '标记未能写入');
     }
   };
 
@@ -368,7 +368,7 @@ export function ForumPostPage() {
       await togglePin(post.id);
       await fetchPost();
     } catch (err: any) {
-      alert(err.message || '操作失败');
+      alert(err.message || '标记未能写入');
     }
   };
 
@@ -379,16 +379,16 @@ export function ForumPostPage() {
 
   return (
     <PageShell
-      eyebrow="forum post"
+      eyebrow="低语档案"
       title={post?.title || '加载中...'}
-      description="正文、回复与版主操作。长文本区域使用稳定可读层。"
+      description="原始记录、回声档案与版务标记会被安置在稳定可读层中。"
       actions={
         (isAuthor || canModeratePost) && (
           <button
             type="button"
             onClick={handleDeletePost}
-            aria-label="删除帖子"
-            title="删除帖子"
+            aria-label="删除低语"
+            title="删除低语"
             className="btn-v2 inline-flex min-h-[2.5rem] items-center gap-2 rounded border border-[var(--coc-border-danger)] px-3 text-sm text-red-300 hover:text-red-200"
           >
             <Trash2 size={18} />
@@ -434,8 +434,9 @@ export function ForumPostPage() {
         <div className="text-center py-12 text-[#6b6558]">加载中...</div>
       ) : (
         <div className="coc-section-stack">
-          {/* 主贴 */}
+          {/* 原始记录 */}
           <Surface variant="solid" tone="gold" padding="lg" className="forum-thread-card space-y-4">
+            <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">原始记录</div>
             <div className="flex items-start gap-3">
               <AvatarWithFrame
                 avatarUrl={post.author.avatarUrl}
@@ -546,19 +547,19 @@ export function ForumPostPage() {
             </div>
           </Surface>
 
-          {/* 回复列表 */}
+          {/* 回声档案 */}
           <section className="coc-section-group">
             <div className="coc-section-group__header">
               <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
                 <MessageSquare size={15} className="text-[var(--coc-accent-gold)]" />
-                回声记录
+                回声档案
               </h2>
-              <span className="text-xs text-[var(--coc-on-surface-muted)]">{post.replies.length} 条回复</span>
+              <span className="text-xs text-[var(--coc-on-surface-muted)]">{post.replies.length} 段回声</span>
             </div>
             <div className="coc-section-group__body">
               {post.replies.length === 0 ? (
                 <Surface variant="solid" padding="lg" className="text-center">
-                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">还没有回复</div>
+                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">尚无回声</div>
                   <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">写下第一段回声，或继续观察这条低语。</p>
                 </Surface>
               ) : (
@@ -594,13 +595,13 @@ export function ForumPostPage() {
             </div>
           </section>
 
-          {/* 回复框 */}
+          {/* 誊写回声 */}
           {!post.isLocked && (
             <section className="coc-section-group">
               <div className="coc-section-group__header">
                 <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
                   <Pencil size={15} className="text-[var(--coc-accent-gold)]" />
-                  追加回复
+                  誊写回声
                 </h2>
               </div>
               <div className="coc-section-group__body">
@@ -608,7 +609,7 @@ export function ForumPostPage() {
                   <RichTextEditor
                     value={replyContent}
                     onChange={setReplyContent}
-                    placeholder="写下你的回复..."
+                    placeholder="将你听见的回声誊写在此..."
                     minHeight="160px"
                   />
                   <div className="flex justify-end">
@@ -617,7 +618,7 @@ export function ForumPostPage() {
                       disabled={submitting || !replyContent.trim()}
                       className="coc-btn-primary disabled:opacity-50"
                     >
-                      {submitting ? '发送中...' : '发送回复'}
+                      {submitting ? '封存中...' : '封存回声'}
                     </button>
                   </div>
                 </Surface>
@@ -683,7 +684,7 @@ function ReplyItem({
     >
       {reply.isBestReply && (
         <div className="absolute top-0 left-0 bg-amber-500 text-coc-abyss text-[10px] px-2 py-0.5 rounded-br flex items-center gap-1 font-bold">
-          <Award size={10} /> 最佳回复
+          <Award size={10} /> 最佳回声
         </div>
       )}
       <div className={`flex items-start gap-3 ${reply.isBestReply ? 'pt-5' : ''}`}>
@@ -707,12 +708,12 @@ function ReplyItem({
                 {reply.author.nickname}
               </button>
               {isLandlord && (
-                <Badge variant="pin"><Pin size={10} /> 楼主</Badge>
+                <Badge variant="pin"><Pin size={10} /> 原记录者</Badge>
               )}
             </div>
             <div className="text-xs text-[#6b6558] whitespace-nowrap">
               {formatTimeAgo(reply.createdAt)}
-              {reply.updatedAt !== reply.createdAt && ` · 编辑于 ${formatTimeAgo(reply.updatedAt)}`}
+              {reply.updatedAt !== reply.createdAt && ` · 修订于 ${formatTimeAgo(reply.updatedAt)}`}
             </div>
           </div>
           <div className="text-xs text-[#6b6558] mt-0.5">
@@ -730,7 +731,7 @@ function ReplyItem({
                 minHeight="120px"
               />
               <div className="flex items-center gap-2">
-                <button onClick={onSaveEdit} className="coc-btn-primary text-xs">保存</button>
+                <button onClick={onSaveEdit} className="coc-btn-primary text-xs">保存修订</button>
                 <button onClick={onCancelEdit} className="coc-btn-secondary text-xs">取消</button>
               </div>
             </div>
@@ -742,7 +743,7 @@ function ReplyItem({
             <div className="flex items-center gap-3 mt-2">
               {canMarkBest && !reply.isBestReply && (
                 <button onClick={onBest} className="text-xs text-amber-400 hover:text-amber-300">
-                  设为最佳回复
+                  记为最佳回声
                 </button>
               )}
               {canEdit && (
@@ -750,7 +751,7 @@ function ReplyItem({
                   onClick={() => onStartEdit(reply.content)}
                   className="text-xs text-[#6b6558] hover:text-[#e8d4a0]"
                 >
-                  编辑
+                  修订
                 </button>
               )}
               {canDelete && (

@@ -211,12 +211,12 @@ export function FishingPage() {
         method: 'POST',
         body: JSON.stringify({ logId }),
       });
-      setMessage('出售成功');
+      setMessage('已按港务价目封签出手');
       reset();
       fetchStatus();
       fetchLogs();
     } catch (e: any) {
-      setMessage(e.message || '出售失败');
+      setMessage(e.message || '出手失败');
     }
   };
 
@@ -322,14 +322,49 @@ export function FishingPage() {
     safe: tension >= 38 && tension <= 72 ? '稳定' : '警戒',
     snap: '绷断',
   };
+  const harborPhases = [
+    {
+      label: '潮汐等待',
+      value: stateLabel[state],
+      detail: '听潮、放线，等雾下的东西先开口。',
+      icon: Waves,
+      active: ['idle', 'casting', 'waiting'].includes(state),
+      tone: stateTone[state],
+    },
+    {
+      label: '咬钩警讯',
+      value: state === 'biting' ? '红灯已亮' : '静默监听',
+      detail: '只在短暂窗口内收线，血红只留给危险信号。',
+      icon: Anchor,
+      active: state === 'biting',
+      tone: state === 'biting' ? 'text-[var(--coc-accent-blood)]' : 'text-[var(--coc-text-primary)]',
+    },
+    {
+      label: '收竿结算',
+      value: state === 'reeling' ? tensionLabel[tensionZone] : state === 'result' ? '等待登记' : '尚未接触',
+      detail: '按住收线保持张力，过松或绷断都会让暗影脱逃。',
+      icon: Clock3,
+      active: state === 'reeling' || state === 'result',
+      tone: state === 'reeling' ? 'text-cyan-100' : 'text-[var(--coc-text-primary)]',
+    },
+    {
+      label: '渔获账本',
+      value: `${collectionPct.toFixed(1)}%`,
+      detail: `未封存 ${unsoldCount} 件，稀有记录 ${rareCount} 件。`,
+      icon: PackageOpen,
+      active: logs.length > 0,
+      tone: 'text-[var(--coc-accent-gold)]',
+    },
+  ];
 
   return (
     <PageShell
+      className="blackwater-harbor-page"
       eyebrow="BLACKWATER HARBOR"
-      title="黑水港 · 深渊垂钓"
-      description="在港口暗潮中抛下钓线，收集异物、出售钓获并记录今日次数。"
+      title="黑水港作业台"
+      description="在冷雾码头记录潮汐、监听咬钩、回收异物，并把每一次渔获封入港口账本。"
       actions={
-        <Surface variant="glass" padding="sm" className="flex items-center gap-2 text-sm">
+        <Surface variant="glass" material="archive" padding="sm" className="flex items-center gap-2 text-sm">
           <Fish size={16} className="text-[var(--coc-accent-gold)]" />
           <span className="text-[var(--coc-text-secondary)]">今日剩余</span>
           <span className="font-bold text-[var(--coc-accent-gold)]">{remaining}</span>
@@ -341,48 +376,40 @@ export function FishingPage() {
         <div className="space-y-4">
           <div className="coc-section-stack">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Surface variant="panel" padding="md" className="relative overflow-hidden">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <Waves size={14} className="text-cyan-200" />
-                  当前水况
-                </div>
-                <div className={`mt-2 font-bold ${stateTone[state]}`}>{stateLabel[state]}</div>
-              </Surface>
-              <Surface variant="panel" padding="md" className="relative overflow-hidden">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <Clock3 size={14} className="text-[var(--coc-accent-gold)]" />
-                  今日作业
-                </div>
-                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{usedCasts}/{status?.dailyLimit ?? '-'}</div>
-              </Surface>
-              <Surface variant="panel" padding="md" className="relative overflow-hidden">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <PackageOpen size={14} className="text-[var(--coc-accent-gold)]" />
-                  收集
-                </div>
-                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{collectionPct.toFixed(1)}%</div>
-              </Surface>
-              <Surface variant={status?.canFish ? 'panel' : 'danger'} padding="md" className="relative overflow-hidden">
-                <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
-                  <Anchor size={14} className="text-[var(--coc-accent-gold)]" />
-                  船坞许可
-                </div>
-                <div className="mt-2 font-bold text-[var(--coc-text-primary)]">{status?.canFish ? '可作业' : '已封港'}</div>
-              </Surface>
+              {harborPhases.map((phase) => {
+                const Icon = phase.icon;
+                return (
+                  <Surface
+                    key={phase.label}
+                    variant={phase.active ? 'elevated' : 'panel'}
+                    tone={phase.label === '咬钩警讯' && phase.active ? 'blood' : 'gold'}
+                    material="archive"
+                    padding="md"
+                    className="relative min-h-32 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-[var(--coc-text-muted)]">
+                      <Icon size={14} className={phase.label === '咬钩警讯' && phase.active ? 'text-[var(--coc-accent-blood)]' : 'text-[var(--coc-accent-gold)]'} />
+                      {phase.label}
+                    </div>
+                    <div className={`mt-2 font-bold ${phase.tone}`}>{phase.value}</div>
+                    <p className="mt-2 text-xs leading-relaxed text-[var(--coc-text-secondary)]">{phase.detail}</p>
+                  </Surface>
+                );
+              })}
             </div>
           </div>
 
-          <Surface variant="elevated" tone="ocean" padding="sm" className="overflow-hidden">
+          <Surface variant="elevated" tone="ocean" material="archive" padding="sm" className="overflow-hidden">
             <div className="flex flex-col gap-3 border-b border-[var(--coc-border-subtle)] px-3 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">
                   <Anchor size={14} />
                   HARBOR OPERATION
                 </div>
-                <div className="mt-1 text-sm text-[var(--coc-text-secondary)]">观测浮标、等待咬钩窗口，并在红色警示时收竿。</div>
+                <div className="mt-1 text-sm text-[var(--coc-text-secondary)]">观测浮标、等待咬钩窗口，并在血红警讯出现时收竿。</div>
               </div>
-              <div className="rounded border border-[var(--coc-border-subtle)] bg-black/30 px-3 py-2 text-sm text-[var(--coc-text-secondary)]">
-                剩余 <span className="font-bold text-[var(--coc-accent-gold)]">{remaining}</span> 次
+              <div className="coc-archive-subcard px-3 py-2 text-sm text-[var(--coc-text-secondary)]">
+                今日作业 <span className="font-bold text-[var(--coc-accent-gold)]">{usedCasts}/{status?.dailyLimit ?? '-'}</span>
               </div>
             </div>
             <div
@@ -495,7 +522,7 @@ export function FishingPage() {
         </div>
 
         <div className="fishing-ledger-column space-y-4">
-          <Surface variant="panel" tone="gold" padding="md" className="fishing-index-panel relative overflow-hidden">
+          <Surface variant="panel" tone="gold" material="archive" padding="md" className="fishing-index-panel relative overflow-hidden">
             <div className="fishing-ledger-ornament" />
             <div className="relative z-[1] flex items-center justify-between gap-3">
               <div>
@@ -503,7 +530,7 @@ export function FishingPage() {
                   <PackageOpen size={14} />
                   SALVAGE INDEX
                 </div>
-                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">港务图鉴</h3>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">渔获账本</h3>
               </div>
               <div className="fishing-index-panel__rank">{collectionPct.toFixed(0)}%</div>
             </div>
@@ -518,10 +545,10 @@ export function FishingPage() {
               <span>稀有 {rareCount}</span>
               <span>记录 {logs.length}</span>
             </div>
-            <p className="relative z-[1] mt-3 text-sm text-[var(--coc-text-secondary)]">港口账本已解锁 {collectionPct.toFixed(1)}%，可疑异物会进入封存序列。</p>
+            <p className="relative z-[1] mt-3 text-sm text-[var(--coc-text-secondary)]">渔获账本已解锁 {collectionPct.toFixed(1)}%，可疑异物会进入封存序列。</p>
           </Surface>
 
-          <Surface variant="panel" padding="md" className="fishing-ledger-panel relative overflow-hidden">
+          <Surface variant="panel" material="archive" padding="md" className="fishing-ledger-panel relative overflow-hidden">
             <div className="fishing-ledger-ornament" />
             <div className="relative z-[1] mb-4 flex items-center justify-between gap-3">
               <div>
@@ -529,7 +556,7 @@ export function FishingPage() {
                   <Fish size={14} />
                   CATCH LEDGER
                 </div>
-                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">港务账本</h3>
+                <h3 className="mt-1 font-bold text-[var(--coc-text-primary)]">可疑渔获</h3>
               </div>
               <span className="fishing-ledger-panel__counter">{logs.length} 条</span>
             </div>
@@ -571,7 +598,7 @@ export function FishingPage() {
                               onClick={() => handleSellLogId(log.id)}
                               className="h-9 px-3 text-xs"
                             >
-                              出售
+                              封存
                             </Button>
                           )}
                         </div>

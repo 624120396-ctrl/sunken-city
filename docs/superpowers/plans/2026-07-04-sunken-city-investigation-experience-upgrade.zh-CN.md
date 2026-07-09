@@ -4,9 +4,9 @@
 
 **Goal:** 围绕网络跑团最痛的环节，把《沉没之城》从“能聊天、能骰点的房间”升级为“团前准备、团中调查、团后回顾”三段式 CoC 调查工作台。
 
-**Architecture:** 本轮优先做不依赖官方规则书的产品能力：线索板、NPC 档案、场景系统、调查日志、KP 私密便签、上次回顾、当前目标和开团协作。AI 能力合并进总路线图，但作为独立迭代线执行：先建设档案和日志数据，再接低成本文本整理、Seedream 4.5 素材生成和公开摘要；语音大模型后置，只预留数据结构与开关。所有 AI 输出默认是草稿，必须经过权限过滤和人工确认后才能公开。后端沿用已上线的房间身份与生命周期契约，所有权限显示与写操作围绕 `myRole`、`myCapabilities`、`myBinding`、`lifecycle`，不新增规则裁定，不改 Socket 事件，不碰结团后角色成长。
+**Architecture:** 本轮优先做不依赖官方规则书的产品能力：线索板、NPC 档案、场景系统、调查日志、KP 私密便签、上次回顾、当前目标和开团协作。AI 能力合并进总路线图，但作为独立迭代线执行：先建设档案和日志数据，再接低成本文本整理、Seedream 4.5 素材生成和公开摘要；AI 语音大模型后置，只预留数据结构与开关。真人房间实时语音不属于 AI 能力，已转入后续独立专项 `房间实时语音频道 V1`，等待房间移动端专项和非房间全站 UI/UX 完成后启动。所有 AI 输出默认是草稿，必须经过权限过滤和人工确认后才能公开。后端沿用已上线的房间身份与生命周期契约，所有权限显示与写操作围绕 `myRole`、`myCapabilities`、`myBinding`、`lifecycle`，不新增规则裁定，不改 Socket 事件，不碰结团后角色成长。
 
-**Tech Stack:** React 18 + TypeScript + Vite + Tailwind CSS，Express + Prisma + SQLite + Socket.io，现有房间 capability contract，AI 接入层使用统一 `AiJob` / `AiAsset` / `AiUsageLedger` / provider adapter 抽象。语言模型优先接入 DeepSeek V4 / V4.1 Flash 与 Doubao-Seed-Character，图像模型接入 Seedream 4.5；语音大模型、TTS、STT 和实时语音只做后期预留。现有 UI system 由 UI/UX 专项会话负责。
+**Tech Stack:** React 18 + TypeScript + Vite + Tailwind CSS，Express + Prisma + SQLite + Socket.io，现有房间 capability contract，AI 接入层使用统一 `AiJob` / `AiAsset` / `AiUsageLedger` / provider adapter 抽象。语言模型优先接入 DeepSeek V4 / V4.1 Flash 与 Doubao-Seed-Character，图像模型接入 Seedream 4.5；AI 语音大模型、TTS、STT 只做后期预留。真人房间实时语音后续按 WebRTC + LiveKit + TURN/coturn 独立专项推进。现有 UI system 由 UI/UX 专项会话负责。
 
 ---
 
@@ -27,7 +27,8 @@
 - [Volcengine Doubao 模型列表](https://www.volcengine.com/docs/82379/1330310) / [Doubao 产品页](https://www.volcengine.com/product/doubao)：Doubao-Seed-Character 用于 NPC 口吻、角色化文本、招募文案、氛围描述和 KP 草稿润色，适合增强“像角色在说话”的 CoC 沉浸感。
 - [ByteDance Seedream 4.5](https://seed.bytedance.com/en/seedream4_5) / [BytePlus Image Generation API](https://docs.byteplus.com/en/docs/ModelArk/1541523)：图像模型接入 Seedream 4.5，用于 NPC 头像、场景图、报纸剪报、旧照片、调查 handout 和神秘符号。
 - 结构化输出作为通用工程原则：所有 AI 摘要、提取和公开答复都必须按预设 schema 返回，保留来源引用，并在公开前由 KP 人工确认。
-- 语音大模型、TTS、STT 和实时语音不进入第一轮 AI 实施，只预留能力位；后续等成本、模型质量和隐私同意机制明确后再启动。
+- AI 语音大模型、TTS、STT 不进入第一轮 AI 实施，只预留能力位；后续等成本、模型质量和隐私同意机制明确后再启动。
+- 真人房间实时语音不归 AI 线，按 `2026-07-08-room-realtime-voice-channel-v1.zh-CN.md` 独立规划。
 
 ### 0.1 报告复核结论
 
@@ -66,7 +67,7 @@ CoC 网络跑团最痛的不是“不会掷骰”，而是：
 - 大规模 E2E、深度 Playwright 或全站视觉回归。
 - AI 自动发布公开内容。
 - AI 读取或泄露 KP 私密便签、私密线索、私聊或未公开场景。
-- 第一轮接入语音大模型、TTS、STT 或实时语音代理。
+- 第一轮接入 AI 语音大模型、TTS、STT 或实时语音代理。
 - AI 克隆真人声音、冒充真实人物或生成无授权声音。
 - AI 绕过 KP 确认直接改房间状态、公开线索、结算、角色卡或用户数据。
 
@@ -234,7 +235,7 @@ CoC 网络跑团最痛的不是“不会掷骰”，而是：
 - 报纸剪报 / 旧照片 / 调查 handout 生成
 - 图像编辑和风格化
 - 神秘符号、档案印章、旧地图局部等视觉素材
-- 语音能力的数据结构、开关和审计预留
+- AI 语音能力的数据结构、开关和审计预留
 
 验收：
 
@@ -1396,7 +1397,7 @@ realtimeVoiceEnabled = false
 上次回顾 -> 回顾音频
 NPC 信件 -> 朗读音频
 语音转录 -> 可检索文字笔记
-实时语音助手 -> 后续独立评估
+AI 实时语音助手 -> 后续独立评估
 ```
 
 - [ ] **Step 3: 隐私和成本前置条件**
@@ -1504,7 +1505,7 @@ NPC 信件 -> 朗读音频
 - AI 输出必须保留来源引用或输入摘要。
 - AI 不能自动改房间生命周期、角色卡、结算、骰点或战斗状态。
 - AI 素材必须记录用途、提示词、可见性和审批状态。
-- 语音大模型、TTS、STT 和实时语音第一版不接入，只保留能力位。
+- AI 语音大模型、TTS、STT 和实时语音代理第一版不接入，只保留能力位。
 - 所有 AI 任务有用量记录和失败记录。
 
 ## 15. AI 风险控制
@@ -1581,7 +1582,7 @@ git diff --check
 - PL 能看到当前焦点，不再完全依赖聊天流判断现在该做什么。
 - AI 可以帮助 KP 生成线索、NPC、场景、回顾和当前目标草稿，但不会自动公开。
 - AI 可以生成 Seedream 4.5 图片素材，但默认私密、可审计、可丢弃。
-- 语音大模型、TTS、STT 和实时语音后期再做，首轮只保留数据结构、开关和审计位。
+- AI 语音大模型、TTS、STT 和实时语音代理后期再做，首轮只保留数据结构、开关和审计位。
 - AI 玩家摘要严格遵守可见性边界。
 - 不改现有房间生命周期、Socket、骰点和结算行为。
 - 不碰后台 admin。

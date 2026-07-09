@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Archive, ArrowLeft, Users, Crown, DoorOpen, Swords, FileText, History, User, ScrollText, Search, GitBranch, ChevronDown, ChevronUp, Dice5, BookOpen, PanelRightOpen } from 'lucide-react';
+import { Archive, ArrowLeft, Users, Crown, DoorOpen, Swords, FileText, History, User, ScrollText, Search, GitBranch, ChevronDown, ChevronUp, Dice5, BookOpen, PanelRightOpen, MoreHorizontal } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -14,8 +14,6 @@ import { MagneticButton } from '@components/ui/MagneticButton';
 // ===== 新增沉浸式体验组件 =====
 import { QuickRollBar } from '@components/room/QuickRollBar';
 import { KPDicePanel } from '@components/room/KPDicePanel';
-// ===== V2.1 新增 =====
-import { RoomStatusBar } from '@components/room/RoomStatusBar';
 import { KpLifecycleControls } from './components/KpLifecycleControls';
 import { RoomJoinGate } from './components/RoomJoinGate';
 import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
@@ -106,6 +104,24 @@ const RoomStatsPanel = lazy(() =>
   }))
 );
 
+function readCharacterJsonValue<T>(value: unknown, fallback: T): T {
+  if (!value) return fallback;
+  if (typeof value !== 'string') return value as T;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function readCharacterQuickSkills(character: any | null): string[] {
+  return readCharacterJsonValue<string[]>(character?.quickSkills, ['侦查', '聆听', '图书馆使用', '心理学', '话术']);
+}
+
+function readCharacterSkills(character: any | null): Record<string, number> {
+  return readCharacterJsonValue<Record<string, number>>(character?.skills, {});
+}
+
 export function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -166,7 +182,7 @@ export function RoomPage() {
   const [showMobileToolTray, setShowMobileToolTray] = useState(false);
   const [showMobileQuickRolls, setShowMobileQuickRolls] = useState(false);
   const [showDesktopCommandRail, setShowDesktopCommandRail] = useState(true);
-  const [showSceneBanner, setShowSceneBanner] = useState(true);
+  const [showSceneBanner, setShowSceneBanner] = useState(!isMobile);
   const [roomStats, setRoomStats] = useState({
     duration: 0,
     totalRolls: 0,
@@ -178,6 +194,8 @@ export function RoomPage() {
   const canUseKPTools = caps?.canUseKPTools ?? false;
   const canViewInvestigation = caps?.canViewPublicContent ?? false;
   const canSendPrivateMessage = caps?.canSendPrivateMessage ?? false;
+  const playerQuickSkills = readCharacterQuickSkills(selectedCharacter);
+  const playerCharacterSkills = readCharacterSkills(selectedCharacter);
 
   type FloatingToolPanel =
     | 'investigation'
@@ -198,6 +216,19 @@ export function RoomPage() {
     if (except !== 'gmKit') setShowGMKit(false);
     if (except !== 'subRooms') setShowSubRooms(false);
     if (except !== 'notes') setShowNotesPanel(false);
+  };
+
+  const closeMobileActionSurfaces = () => {
+    setShowMobileActionDrawer(false);
+    setShowMobileToolTray(false);
+    setShowMobileQuickRolls(false);
+  };
+
+  const toggleMobileActionDrawer = () => {
+    setShowMobileActionDrawer((visible) => {
+      if (visible) setShowMobileToolTray(false);
+      return !visible;
+    });
   };
 
   const setFloatingToolPanel = (
@@ -244,6 +275,7 @@ export function RoomPage() {
     if (isMobile && !roomLeftPanelCollapsed) {
       setRoomLeftPanelCollapsed(true);
     }
+    if (isMobile) setShowSceneBanner(false);
     setShowChatTools(!isMobile);
     if (!isMobile) setShowMobileQuickRolls(false);
   }, [isMobile]);
@@ -779,6 +811,7 @@ export function RoomPage() {
       : room?.myRole === 'OBSERVER'
         ? '观众'
         : '访客';
+  const mobileActiveMemberCount = room?.members?.filter(member => member.role !== 'OBSERVER').length ?? 0;
 
   if (loading) {
     return (
@@ -791,6 +824,8 @@ export function RoomPage() {
   return (
       <div
         data-testid="room-gameplay-shell"
+        data-mobile-mobile-first-room={isMobile ? 'true' : undefined}
+        data-mobile-room-role={isMobile ? (canUseKPTools ? 'keeper' : 'player') : undefined}
       className={cn("room-gameplay-shell room-visual-rebuild room-shell-v3 flex flex-col", isMobile ? "h-[calc(100dvh-1rem)]" : "h-[calc(100dvh-2.5rem)]")}
     >
       {/* 头部 */}
@@ -801,283 +836,153 @@ export function RoomPage() {
         className={cn(
           'room-gameplay-topbar relative z-50 flex items-center',
           isMobile
-            ? 'mb-2 w-full flex-col items-stretch gap-1.5'
+            ? 'room-mobile-chat-header mb-1 w-full'
             : 'mb-4 justify-between'
         )}
       >
         <div className={cn("flex items-center", isMobile ? "w-full gap-2" : "gap-4")}>
-          <Link
-            to="/rooms"
-            aria-label="返回房间列表"
-            className={cn(
-              "rounded border border-[#3a3a3a]/60 text-[#c9a227] hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10 transition-all",
-              isMobile ? "flex h-8 w-8 items-center justify-center p-0" : "p-2"
-            )}
-          >
-            <ArrowLeft size={20} />
-          </Link>
           {isMobile ? (
-            <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-baseline gap-1.5">
-                <span
-                  data-room-connection-indicator="true"
-                  data-status={connected ? 'connected' : 'disconnected'}
-                  aria-label={connected ? '房间已连接' : '房间未连接'}
-                  title={connected ? '已连接' : '未连接'}
-                />
-                <span data-room-mobile-title="true" className="truncate text-sm font-serif font-bold leading-tight text-[#c9a227]">{room?.name}</span>
-                <span data-room-mobile-id="true" className="shrink-0 text-[10px] leading-tight text-[#6b6558]">#{room?.roomId}</span>
+            <div className="room-mobile-chat-header__bar">
+              <Link
+                to="/rooms"
+                aria-label="返回房间列表"
+                className="room-mobile-chat-header__back"
+              >
+                <ArrowLeft size={21} />
+              </Link>
+              <div className="room-mobile-chat-header__title">
+                <div className="room-mobile-chat-header__title-row">
+                  <span
+                    className="room-mobile-chat-header__connection"
+                    data-status={connected ? 'connected' : 'disconnected'}
+                    aria-label={connected ? '房间已连接' : '房间未连接'}
+                    title={connected ? '已连接' : '未连接'}
+                  >
+                    <i aria-hidden="true" />
+                  </span>
+                  <strong>{room?.name || `房间 ${room?.roomId || roomId || ''}`}</strong>
+                </div>
+                <small data-room-mobile-title="true">
+                  <span>{mobileActiveMemberCount} 人</span>
+                  <span>{connected ? '在线' : '重连中'}</span>
+                  <span>#{room?.roomId || roomId}</span>
+                </small>
               </div>
-              <div data-room-mobile-scene="true" className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-none text-[#8b8375]">
-                {room?.currentScene ? (
-                  <>
-                    <span className="truncate">{room.currentScene.title}</span>
-                    {room.currentScene.atmosphere && (
-                      <span className="shrink-0 rounded bg-[#c9a227]/15 px-1 py-0.5 text-[#c9a227]">{room.currentScene.atmosphere}</span>
-                    )}
-                  </>
-                ) : room?.currentPhase ? (
-                  <span className="truncate">{room.currentPhase.title}</span>
-                ) : (
-                  <span className="italic">自由模式</span>
-                )}
-              </div>
+              <button
+                type="button"
+                data-testid="room-mobile-action-drawer-toggle"
+                className="room-mobile-chat-header__more"
+                aria-controls="room-mobile-tools-sheet"
+                aria-expanded={showMobileActionDrawer}
+                onClick={toggleMobileActionDrawer}
+              >
+                <MoreHorizontal size={22} />
+              </button>
             </div>
           ) : (
-            <div className="room-topnav-v4__brand">
-              <span className="room-topnav-v4__logo-mark">
-                <img src="/images/logo-sunken-gothic-cutout.png" alt="沉没之城" />
-              </span>
-            </div>
-          )}
-          {isMobile && (
-            <button
-              type="button"
-              data-testid="room-mobile-action-drawer-toggle"
-              aria-expanded={showMobileActionDrawer}
-              onClick={() => {
-                if (showMobileActionDrawer) setShowMobileToolTray(false);
-                setShowMobileActionDrawer((visible) => !visible);
-              }}
-              className="btn-v2 flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/75 px-2 text-xs text-[#e8d4a0]"
-            >
-              工具
-              {showMobileActionDrawer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-          )}
-        </div>
-
-        <div className="room-topnav-v4__desktop hidden md:grid">
-          <div className="room-topnav-v4__room">
-            <span className="room-topnav-v4__room-kicker">房间名</span>
-            <strong
-              data-room-title="true"
-              data-room-connection-status={connected ? 'connected' : 'disconnected'}
-              aria-label={connected ? '房间已连接' : '房间未连接'}
-              title={connected ? '已连接' : '未连接'}
-            >
-              {room?.name || `房间 ${room?.roomId || roomId || ''}`}
-            </strong>
-            <small>房间号：{room?.roomId || roomId}</small>
-          </div>
-
-          <div className="room-topnav-v4__phases">
-            {phaseSteps.map((phase) => (
-              <div
-                key={phase.label}
-                className={cn('room-topnav-v4__phase', phase.active && 'room-topnav-v4__phase--active')}
+            <>
+              <Link
+                to="/rooms"
+                aria-label="返回房间列表"
+                className="rounded border border-[#3a3a3a]/60 p-2 text-[#c9a227] transition-all hover:border-[#c9a227]/50 hover:bg-[#c9a227]/10"
               >
-                <span />
-                {phase.label}
+                <ArrowLeft size={20} />
+              </Link>
+              <div className="room-topnav-v4__brand">
+                <span className="room-topnav-v4__logo-mark">
+                  <img src="/images/logo-sunken-gothic-cutout.png" alt="沉没之城" />
+                </span>
               </div>
-            ))}
-          </div>
-
-          <div className="room-topnav-v4__actions">
-            <button type="button" className="room-topnav-v4__pill">
-              <Crown size={14} />
-              角色：{roleLabel}
-            </button>
-            <button type="button" className="room-topnav-v4__pill">
-              <Users size={14} />
-              观众：{room?.members?.filter(member => member.role === 'OBSERVER').length ?? 0} 人
-            </button>
-            <button onClick={handleLeaveRoom} className="room-topnav-v4__leave">
-              <DoorOpen size={14} />
-              离开
-            </button>
-            {caps?.canCloseRoom === true && (
-              <button onClick={handleCloseRoom} className="room-topnav-v4__danger">
-                关闭
-              </button>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
-        {isMobile && showMobileActionDrawer && (
-          <>
-            <div className="grid grid-cols-6 gap-1.5">
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="成员"
-                title="成员"
-                onClick={() => setShowMobileMembers(true)}
-                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+        {!isMobile && (
+          <div className="room-topnav-v4__desktop hidden md:grid">
+            <div className="room-topnav-v4__room">
+              <span className="room-topnav-v4__room-kicker">房间名</span>
+              <strong
+                data-room-title="true"
+                data-room-connection-status={connected ? 'connected' : 'disconnected'}
+                aria-label={connected ? '房间已连接' : '房间未连接'}
+                title={connected ? '已连接' : '未连接'}
               >
-                <Users size={18} />
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="角色"
-                title="角色"
-                onClick={openMyCharacter}
-                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-              >
-                <User size={18} />
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="掷骰"
-                title="掷骰"
-                onClick={() => {
-                  setActiveTab('chat');
-                  setShowChatTools(true);
-                }}
-                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-              >
-                <Dice5 size={18} />
-              </button>
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="线索"
-                title="线索"
-                onClick={() => openInvestigationDock('clues')}
-                className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-              >
-                <Search size={18} />
-              </button>
-              {canViewInvestigation && (
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  aria-label="调查档案"
-                  title="调查档案"
-                  onClick={() => openInvestigationDock('scenes')}
-                  className="btn-v2 flex min-h-11 items-center justify-center rounded-lg border border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
+                {room?.name || `房间 ${room?.roomId || roomId || ''}`}
+              </strong>
+              <small>房间号：{room?.roomId || roomId}</small>
+            </div>
+
+            <div className="room-topnav-v4__phases">
+              {phaseSteps.map((phase) => (
+                <div
+                  key={phase.label}
+                  className={cn('room-topnav-v4__phase', phase.active && 'room-topnav-v4__phase--active')}
                 >
-                  <Archive size={18} />
+                  <span />
+                  {phase.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="room-topnav-v4__actions">
+              <button type="button" className="room-topnav-v4__pill">
+                <Crown size={14} />
+                角色：{roleLabel}
+              </button>
+              <button type="button" className="room-topnav-v4__pill">
+                <Users size={14} />
+                观众：{room?.members?.filter(member => member.role === 'OBSERVER').length ?? 0} 人
+              </button>
+              <button onClick={handleLeaveRoom} className="room-topnav-v4__leave">
+                <DoorOpen size={14} />
+                离开
+              </button>
+              {caps?.canCloseRoom === true && (
+                <button onClick={handleCloseRoom} className="room-topnav-v4__danger">
+                  关闭
                 </button>
               )}
-              <button
-                type="button"
-                data-room-mobile-action="true"
-                aria-label="更多"
-                title="更多"
-                onClick={() => setShowMobileToolTray((v) => !v)}
-                className={cn(
-                  "btn-v2 flex min-h-11 items-center justify-center rounded-lg border",
-                  showMobileToolTray
-                    ? "border-[#c9a227]/70 bg-[#c9a227]/15 text-[#f3d77a]"
-                    : "border-[#3a3a3a]/60 bg-[#0f1016]/70 text-[#e8d4a0]"
-                )}
-              >
-                <ChevronDown size={18} />
-              </button>
             </div>
-
-            {showMobileToolTray && (
-              <div className="grid grid-cols-2 gap-2 border-t border-[#3a3a3a]/40 pt-2">
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={() => setActiveTab(activeTab === 'chat' ? 'combat' : 'chat')}
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <Swords size={15} />
-                  {activeTab === 'chat' ? '战斗视图' : '聊天视图'}
-                </button>
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={() => openInvestigationDock('npcs')}
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <User size={15} />
-                  NPC
-                </button>
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={() => setFloatingToolPanel('subRooms', showSubRooms, setShowSubRooms, true)}
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <GitBranch size={15} />
-                  子房间
-                </button>
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={() => setShowCombatTimeline(true)}
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <ScrollText size={15} />
-                  战斗记录
-                </button>
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={() => setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, true)}
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <BookOpen size={15} />
-                  笔记
-                </button>
-                <Link
-                  to={`/rooms/${roomId}/report`}
-                  data-room-mobile-action="true"
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <FileText size={15} />
-                  报告
-                </Link>
-                <Link
-                  to={`/rooms/${roomId}/dice-history`}
-                  data-room-mobile-action="true"
-                  className="btn-v2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-[#15151d]/80 px-2 text-xs text-[#b0a898]"
-                >
-                  <History size={15} />
-                  投骰历史
-                </Link>
-                <button
-                  type="button"
-                  data-room-mobile-action="true"
-                  onClick={handleLeaveRoom}
-                  className="btn-v2 col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#a63848]/40 bg-[#4a111a]/35 px-2 text-xs text-[#f1b7bd]"
-                >
-                  <DoorOpen size={15} />
-                  离开房间
-                </button>
-              </div>
-            )}
-          </>
+          </div>
         )}
+
       </Surface>
 
-      {/* ===== V2.1 新增：房间状态栏 ===== */}
-      {isMobile && (
-        <RoomStatusBar
-          currentPhase={room?.currentPhase || null}
-          currentScene={room?.currentScene || null}
-          phases={room?.phases}
-          isKP={canUseKPTools}
-        />
+      {isMobile && room && (
+        <section
+          data-testid="room-mobile-scene-card"
+          className="room-mobile-chat-meta-strip room-mobile-scene-card"
+          aria-expanded={showSceneBanner}
+        >
+          <button
+            type="button"
+            className="room-mobile-scene-card__summary"
+            onClick={() => setShowSceneBanner((visible) => !visible)}
+          >
+            <span>
+              <BookOpen size={15} />
+              当前场景
+            </span>
+            <strong>{room.currentScene?.title || room.currentPhase?.title || '自由模式'}</strong>
+            {showSceneBanner ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+          {showSceneBanner && (
+            <div className="room-mobile-scene-card__body">
+              <p>{sceneDesc || room.currentScene?.description || '当前还没有公开场景描述。'}</p>
+              <div className="room-mobile-scene-card__meta">
+                <span>{room.currentScene?.atmosphere || room.currentPhase?.title || '调查中'}</span>
+                {canUseKPTools && (
+                  <button type="button" onClick={() => openInvestigationDock('scenes')}>
+                    编辑场景
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
-      {room && (
+      {room && (!isMobile || canUseKPTools) && (
         <div className="room-gameplay-status-row mb-3 flex flex-wrap items-center gap-2">
           <RoomLifecycleBanner
             lifecycle={room.lifecycle}
@@ -1102,8 +1007,343 @@ export function RoomPage() {
         </Suspense>
       )}
 
+      {isMobile && canUseKPTools && (
+        <nav
+          className="room-mobile-bottom-dock room-mobile-bottom-dock--keeper"
+          aria-label="房间快捷操作"
+        >
+          <button
+            type="button"
+            data-room-mobile-dock-action="true"
+            data-room-mobile-kp-lite-action="true"
+            data-active={activeTab === 'chat' ? 'true' : 'false'}
+            onClick={() => {
+              closeMobileActionSurfaces();
+              setActiveTab('chat');
+            }}
+          >
+            <ScrollText size={17} />
+            <span>记录</span>
+          </button>
+          <button
+            type="button"
+            data-room-mobile-dock-action="true"
+            data-room-mobile-kp-lite-action="true"
+            onClick={() => {
+              closeMobileActionSurfaces();
+              setActiveTab('chat');
+              setShowKpDicePanel(true);
+            }}
+          >
+            <Dice5 size={17} />
+            <span>投骰</span>
+          </button>
+            <button
+              type="button"
+              data-room-mobile-dock-action="true"
+              data-room-mobile-kp-lite-action="true"
+              data-active={showMobileActionDrawer ? 'true' : 'false'}
+              aria-controls="room-mobile-tools-sheet"
+              aria-expanded={showMobileActionDrawer}
+              onClick={toggleMobileActionDrawer}
+            >
+              {showMobileActionDrawer ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+              <span>{canUseKPTools ? '工具' : '行动'}</span>
+            </button>
+        </nav>
+      )}
+
+      {isMobile && showMobileActionDrawer && (
+        <>
+          <button
+            type="button"
+            className="room-mobile-tools-backdrop"
+            aria-label="关闭房间工具抽屉"
+            onClick={closeMobileActionSurfaces}
+          />
+          <section
+            id="room-mobile-tools-sheet"
+            data-testid="room-mobile-tools-sheet"
+            className="room-mobile-tools-sheet"
+            aria-label={canUseKPTools ? '守密人工具抽屉' : '调查员工具抽屉'}
+          >
+            <header className="room-mobile-tools-sheet__header">
+              <div>
+                <span>{canUseKPTools ? 'KP' : '行动'}</span>
+                <h3>{canUseKPTools ? '守密人工具' : '调查员行动'}</h3>
+              </div>
+              <button
+                type="button"
+                aria-label="收起工具抽屉"
+                onClick={closeMobileActionSurfaces}
+              >
+                <ChevronDown size={18} />
+              </button>
+            </header>
+
+            {!canUseKPTools && (
+              <section className="room-mobile-tools-sheet__quick-rolls" aria-label="移动端常用检定">
+                <header>
+                  <span>常用检定</span>
+                  <b>{selectedCharacter ? selectedCharacter.name || '调查员' : '未绑定角色'}</b>
+                </header>
+                {selectedCharacter ? (
+                  <QuickRollBar
+                    quickSkills={playerQuickSkills}
+                    characterSkills={playerCharacterSkills}
+                    onRoll={(skillName, skillValue) => {
+                      handleRollDice(skillName, skillValue);
+                      setActiveTab('chat');
+                      closeMobileActionSurfaces();
+                    }}
+                    onUpdateQuickSkills={handleUpdateQuickSkills}
+                    isEditable
+                    compact
+                    desktopPageSize={5}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="room-mobile-tools-sheet__quick-rolls-empty"
+                    onClick={() => {
+                      openMyCharacter();
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <User size={15} />
+                    <span>选择角色后可进行常用检定</span>
+                  </button>
+                )}
+              </section>
+            )}
+
+            <div className={cn('room-mobile-tools-sheet__grid room-mobile-tools-sheet__primary', !canUseKPTools && 'room-mobile-tools-sheet__primary--player')}>
+              {canUseKPTools ? (
+                <>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-kp-lite-action="true"
+                    data-mobile-tool-id="members"
+                    onClick={() => {
+                      setShowMobileMembers(true);
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><Users size={20} /></span>
+                    <span>成员</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-kp-lite-action="true"
+                    data-mobile-tool-id="scene"
+                    onClick={() => {
+                      openInvestigationDock('scenes');
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><BookOpen size={20} /></span>
+                    <span>场景</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-kp-lite-action="true"
+                    data-mobile-tool-id="clues"
+                    onClick={() => {
+                      openInvestigationDock('clues');
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><Search size={20} /></span>
+                    <span>线索</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-kp-lite-action="true"
+                    data-mobile-tool-id="npc"
+                    onClick={() => {
+                      openInvestigationDock('npcs');
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><User size={20} /></span>
+                    <span>NPC</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="character"
+                    onClick={() => {
+                      openMyCharacter();
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><User size={20} /></span>
+                    <span>角色</span>
+                  </button>
+                  {canViewInvestigation && (
+                    <button
+                      type="button"
+                      className="room-mobile-tool-tile"
+                      data-room-mobile-action="true"
+                      data-room-mobile-pl-primary-action="true"
+                      data-mobile-tool-id="clues"
+                      onClick={() => {
+                        openInvestigationDock('clues');
+                        closeMobileActionSurfaces();
+                      }}
+                    >
+                      <span className="room-mobile-tool-tile__icon"><Search size={20} /></span>
+                      <span>线索</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="members"
+                    onClick={() => {
+                      setShowMobileMembers(true);
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><Users size={20} /></span>
+                    <span>成员</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="notes"
+                    onClick={() => {
+                      setFloatingToolPanel('notes', showNotesPanel, setShowNotesPanel, true);
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><BookOpen size={20} /></span>
+                    <span>笔记</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="subrooms"
+                    onClick={() => {
+                      setFloatingToolPanel('subRooms', showSubRooms, setShowSubRooms, true);
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><GitBranch size={20} /></span>
+                    <span>子房间</span>
+                  </button>
+                  {canViewInvestigation && (
+                    <button
+                      type="button"
+                      className="room-mobile-tool-tile"
+                      data-room-mobile-action="true"
+                      data-room-mobile-pl-primary-action="true"
+                      data-mobile-tool-id="archive"
+                      onClick={() => {
+                        openInvestigationDock('scenes');
+                        closeMobileActionSurfaces();
+                      }}
+                    >
+                      <span className="room-mobile-tool-tile__icon"><Archive size={20} /></span>
+                      <span>档案</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="more"
+                    aria-expanded={showMobileToolTray}
+                    onClick={() => setShowMobileToolTray((v) => !v)}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><ChevronDown size={20} /></span>
+                    <span>更多</span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {!canUseKPTools && showMobileToolTray && (
+              <div className="room-mobile-tools-sheet__grid room-mobile-tools-sheet__secondary">
+                <button
+                  type="button"
+                  className="room-mobile-tool-tile"
+                  data-room-mobile-action="true"
+                  data-mobile-tool-id="combat"
+                  onClick={() => {
+                    setActiveTab(activeTab === 'chat' ? 'combat' : 'chat');
+                    closeMobileActionSurfaces();
+                  }}
+                >
+                  <span className="room-mobile-tool-tile__icon"><Swords size={20} /></span>
+                  <span>{activeTab === 'chat' ? '战斗视图' : '聊天视图'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="room-mobile-tool-tile"
+                  data-room-mobile-action="true"
+                  data-mobile-tool-id="npc"
+                  onClick={() => {
+                    openInvestigationDock('npcs');
+                    closeMobileActionSurfaces();
+                  }}
+                >
+                  <span className="room-mobile-tool-tile__icon"><User size={20} /></span>
+                  <span>NPC</span>
+                </button>
+                <Link to={`/rooms/${roomId}/report`} className="room-mobile-tool-tile" data-room-mobile-action="true" data-mobile-tool-id="report" onClick={closeMobileActionSurfaces}>
+                  <span className="room-mobile-tool-tile__icon"><FileText size={20} /></span>
+                  <span>报告</span>
+                </Link>
+                <Link to={`/rooms/${roomId}/dice-history`} className="room-mobile-tool-tile" data-room-mobile-action="true" data-mobile-tool-id="dice-history" onClick={closeMobileActionSurfaces}>
+                  <span className="room-mobile-tool-tile__icon"><History size={20} /></span>
+                  <span>投骰历史</span>
+                </Link>
+                <button
+                  type="button"
+                  className="room-mobile-tool-tile"
+                  data-room-mobile-action="true"
+                  data-mobile-tool-id="combat-log"
+                  onClick={() => {
+                    setShowCombatTimeline(true);
+                    closeMobileActionSurfaces();
+                  }}
+                >
+                  <span className="room-mobile-tool-tile__icon"><ScrollText size={20} /></span>
+                  <span>战斗记录</span>
+                </button>
+                <button type="button" className="room-mobile-tool-tile" data-room-mobile-action="true" data-mobile-tool-id="leave" data-danger="true" onClick={handleLeaveRoom}>
+                  <span className="room-mobile-tool-tile__icon"><DoorOpen size={20} /></span>
+                  <span>离开房间</span>
+                </button>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
       {/* 主内容区 */}
-      <div className="room-gameplay-body flex-1 flex flex-row min-h-0 overflow-hidden">
+      <div className={cn("room-gameplay-body flex-1 flex flex-row min-h-0 overflow-hidden", isMobile && "room-mobile-information-panels")}>
         <div
           className={cn(
             "room-gameplay-content flex-1 flex min-h-0 overflow-hidden",
@@ -1135,6 +1375,7 @@ export function RoomPage() {
               setShowChatTools={setShowChatTools}
               showMobileQuickRolls={showMobileQuickRolls}
               setShowMobileQuickRolls={setShowMobileQuickRolls}
+              onOpenMobileActionDrawer={toggleMobileActionDrawer}
               canSendPrivateMessage={canSendPrivateMessage}
               sendTargetUserId={chatTargetUserId}
               onSendTargetChange={setChatTargetUserId}
@@ -1195,7 +1436,7 @@ export function RoomPage() {
         {/* 右侧：聊天/战斗区 */}
         <div className={cn(
           "room-stage room-stage-v3 flex-1 flex flex-col min-h-0 overflow-hidden",
-          isMobile ? "pl-0" : "pl-3"
+          isMobile ? "room-mobile-keeper-stage pl-0" : "pl-3"
         )}>
           {activeTab === 'chat' ? (
             <Surface
@@ -1239,6 +1480,7 @@ export function RoomPage() {
                   hasSelectedCharacter={!!selectedCharacter}
                   showMobileQuickRolls={showMobileQuickRolls}
                   setShowMobileQuickRolls={setShowMobileQuickRolls}
+                  onOpenMobileActionDrawer={toggleMobileActionDrawer}
                   canUseKPTools={canUseKPTools}
                   canSendPrivateMessage={canSendPrivateMessage}
                   sendTargetUserId={chatTargetUserId}
@@ -1266,22 +1508,8 @@ export function RoomPage() {
                 ) : selectedCharacter && (!isMobile || showMobileQuickRolls) && (
                   <div className="room-quick-roll-tray">
                     <QuickRollBar
-                      quickSkills={(() => {
-                        const qs = selectedCharacter.quickSkills
-                          ? typeof selectedCharacter.quickSkills === 'string'
-                            ? JSON.parse(selectedCharacter.quickSkills)
-                            : selectedCharacter.quickSkills
-                          : ['侦查', '聆听', '图书馆使用', '心理学', '话术'];
-                        return qs;
-                      })()}
-                      characterSkills={(() => {
-                        const skills = selectedCharacter.skills
-                          ? typeof selectedCharacter.skills === 'string'
-                            ? JSON.parse(selectedCharacter.skills)
-                            : selectedCharacter.skills
-                          : {};
-                        return skills;
-                      })()}
+                      quickSkills={playerQuickSkills}
+                      characterSkills={playerCharacterSkills}
                       onRoll={(skillName, skillValue) => {
                         handleRollDice(skillName, skillValue);
                         if (isMobile) setShowMobileQuickRolls(false);
@@ -1455,7 +1683,10 @@ export function RoomPage() {
           )}
       </div>
       {(showLogPanel || showSubRooms || showEventLog || showGMKit || showNpcPanel || showCluePanel || showNotesPanel) && (
-        <div className="room-side-tool-drawer" data-room-side-tool-drawer="true">
+        <div
+          className={cn('room-side-tool-drawer', isMobile && 'room-mobile-layer-panel')}
+          data-room-side-tool-drawer="true"
+        >
           {showLogPanel && (
             <Suspense fallback={null}>
               <RoomLogPanel

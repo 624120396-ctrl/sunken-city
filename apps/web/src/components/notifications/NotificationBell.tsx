@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, Trash2, X, ExternalLink } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  Trash2,
+  X,
+  ExternalLink,
+  Archive,
+  CalendarClock,
+  UserPlus,
+  Megaphone,
+  Mail,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   getNotifications,
@@ -8,11 +19,29 @@ import {
   deleteNotification,
   NotificationItem,
 } from '../../services/notification.service';
-import { getNotificationTargetPath, getNotificationTypeLabel } from '../../services/notification-meta';
-import { formatTimeAgo } from '../../lib/utils';
+import {
+  getNotificationLayer,
+  getNotificationLayerDescription,
+  getNotificationLayerLabel,
+  getNotificationTargetPath,
+  getNotificationTypeLabel,
+  NotificationLayer,
+} from '../../services/notification-meta';
+import { cn, formatTimeAgo } from '../../lib/utils';
+
+const layerOptions: Array<{
+  value: NotificationLayer;
+  icon: typeof Archive;
+}> = [
+  { value: 'all', icon: Archive },
+  { value: 'coordination', icon: CalendarClock },
+  { value: 'social', icon: UserPlus },
+  { value: 'system', icon: Megaphone },
+];
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const [notificationLayer, setNotificationLayer] = useState<NotificationLayer>('all');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [detailNotification, setDetailNotification] = useState<NotificationItem | null>(null);
@@ -80,6 +109,17 @@ export function NotificationBell() {
     setDetailNotification(n);
   };
 
+  const filteredNotifications =
+    notificationLayer === 'all'
+      ? notifications
+      : notifications.filter((n) => getNotificationLayer(n.type) === notificationLayer);
+  const layerCounts: Record<NotificationLayer, number> = {
+    all: notifications.length,
+    coordination: notifications.filter((n) => getNotificationLayer(n.type) === 'coordination').length,
+    social: notifications.filter((n) => getNotificationLayer(n.type) === 'social').length,
+    system: notifications.filter((n) => getNotificationLayer(n.type) === 'system').length,
+  };
+
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -96,12 +136,18 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="notification-dropdown-v2 absolute right-0 z-[80] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden">
+        <div className="notification-dropdown-v2 absolute right-0 z-[80] mt-2 w-[min(28rem,calc(100vw-1rem))] overflow-hidden">
           <div className="notification-dropdown-v2__header">
-            <span className="font-bold text-[var(--coc-on-surface-primary)]">通知</span>
+            <div className="min-w-0">
+              <span className="font-bold text-[var(--coc-on-surface-primary)]">通知台</span>
+              <div className="mt-0.5 text-[10px] text-[var(--coc-on-surface-muted)]">
+                调度 / 社交 / 系统
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               {unreadCount > 0 && (
                 <button
+                  type="button"
                   onClick={handleReadAll}
                   className="notification-dropdown-v2__utility"
                 >
@@ -110,21 +156,74 @@ export function NotificationBell() {
                 </button>
               )}
               <button
+                type="button"
+                onClick={() => {
+                  navigate('/messages');
+                  setOpen(false);
+                }}
+                className="notification-dropdown-v2__utility"
+              >
+                <Mail size={12} />
+                消息中心
+              </button>
+              <button
+                type="button"
                 onClick={() => setOpen(false)}
                 className="notification-dropdown-v2__close"
+                aria-label="关闭通知"
               >
                 <X size={14} />
               </button>
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-2 border-b border-[var(--coc-border-subtle)] bg-black/15 p-3 sm:grid-cols-4">
+            {layerOptions.map((item) => {
+              const Icon = item.icon;
+              const selected = notificationLayer === item.value;
+
+              return (
+                <button
+                  type="button"
+                  key={item.value}
+                  onClick={() => setNotificationLayer(item.value)}
+                  className={cn(
+                    'coc-focus-ring rounded-md border px-2 py-2 text-left transition',
+                    selected
+                      ? 'border-[var(--coc-accent-gold)] bg-[var(--coc-accent-gold)]/15'
+                      : 'border-transparent hover:border-[var(--coc-border-subtle)] hover:bg-white/[0.05]'
+                  )}
+                  title={getNotificationLayerDescription(item.value)}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--coc-on-surface-primary)]">
+                      <Icon
+                        size={13}
+                        className={selected ? 'text-[var(--coc-accent-gold)]' : 'text-[var(--coc-on-surface-muted)]'}
+                      />
+                      {getNotificationLayerLabel(item.value)}
+                    </span>
+                    <span className="text-[10px] text-[var(--coc-on-surface-muted)]">{layerCounts[item.value]}</span>
+                  </span>
+                  <span className="mt-1 block truncate text-[10px] text-[var(--coc-on-surface-muted)]">
+                    {getNotificationLayerDescription(item.value)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-[var(--coc-on-surface-muted)]">
-                暂无通知
+                暂无通知。新的排期、申请、邀请和公告会在这里出现。
+              </div>
+            ) : filteredNotifications.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-[var(--coc-on-surface-muted)]">
+                当前分层暂无通知。
               </div>
             ) : (
-              notifications.map((n) => (
+              filteredNotifications.map((n) => (
                 <div
                   key={n.id}
                   className={`notification-dropdown-v2__item ${n.isRead ? 'notification-dropdown-v2__item--read' : ''}`}
@@ -134,6 +233,9 @@ export function NotificationBell() {
                       <div className="flex items-center gap-2 text-xs">
                         <span className="notification-dropdown-v2__type">
                           {getNotificationTypeLabel(n.type)}
+                        </span>
+                        <span className="rounded border border-[var(--coc-border-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--coc-on-surface-muted)]">
+                          {getNotificationLayerLabel(getNotificationLayer(n.type))}
                         </span>
                         {!n.isRead && (
                           <span className="w-1.5 h-1.5 rounded-full bg-coc-accent-red" />
@@ -155,6 +257,7 @@ export function NotificationBell() {
                     <div className="flex flex-col items-end gap-2">
                       {hasLink(n) && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             goLink(n);
@@ -166,6 +269,7 @@ export function NotificationBell() {
                         </button>
                       )}
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(n.id);
@@ -201,16 +305,19 @@ export function NotificationBell() {
                 </span>
                 {hasLink(detailNotification) && (
                   <button
+                    type="button"
                     onClick={() => goLink(detailNotification)}
-                    className="text-xs text-coc-accent-red hover:underline flex items-center gap-1"
+                    className="text-xs text-[var(--coc-accent-gold)] hover:underline flex items-center gap-1"
                   >
                     前往 <ExternalLink size={10} />
                   </button>
                 )}
               </div>
               <button
+                type="button"
                 onClick={() => setDetailNotification(null)}
                 className="text-coc-text-muted hover:text-coc-parchment"
+                aria-label="关闭通知详情"
               >
                 <X size={18} />
               </button>
@@ -234,14 +341,16 @@ export function NotificationBell() {
 
             <div className="px-5 py-4 border-t border-coc-border shrink-0 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => handleDelete(detailNotification.id)}
                 className="px-4 py-2 rounded text-sm text-coc-text-muted hover:text-red-400 hover:bg-coc-bg-secondary transition-colors"
               >
                 删除
               </button>
               <button
+                type="button"
                 onClick={() => setDetailNotification(null)}
-                className="px-4 py-2 rounded text-sm bg-coc-accent-red text-white hover:bg-coc-blood.glow transition-colors"
+                className="px-4 py-2 rounded text-sm bg-[var(--coc-accent-gold)] text-[var(--coc-text-inverse)] hover:bg-[var(--coc-accent-gold-strong)] transition-colors"
               >
                 关闭
               </button>

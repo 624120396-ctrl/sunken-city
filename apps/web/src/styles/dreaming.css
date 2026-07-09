@@ -1,5 +1,141 @@
-.dreaming-page-shell {
-  padding-top: 2rem;
+.dream-oracle-status-strip.coc-surface-v2[data-material="archive"] {
+  overflow: hidden;
+  padding: 1rem;
+  border-color: rgba(154, 118, 55, 0.34);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.94), rgba(239, 231, 213, 0.70)),
+    var(--coc-texture-keeper-parchment) center / 420px 420px repeat;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 250, 232, 0.36),
+    0 1px 4px rgba(48, 37, 18, 0.08);
+}
+
+.dream-oracle-entry-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.dream-oracle-entry-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  min-height: 5.25rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(116, 89, 43, 0.20);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(255, 253, 244, 0.30), transparent 42%),
+    linear-gradient(180deg, rgba(255, 253, 246, 0.72), rgba(238, 230, 212, 0.58)),
+    var(--coc-texture-keeper-parchment);
+  background-size: auto, auto, cover;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 250, 232, 0.22),
+    inset 0 8px 14px rgba(91, 69, 34, 0.026),
+    inset 0 -8px 14px rgba(91, 69, 34, 0.036),
+    0 1px 3px rgba(52, 38, 18, 0.045);
+  color: rgba(62, 51, 34, 0.72);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.dream-oracle-entry-card:hover {
+  border-color: rgba(154, 111, 25, 0.42);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 250, 232, 0.26),
+    inset 0 8px 14px rgba(91, 69, 34, 0.026),
+    inset 0 -8px 14px rgba(91, 69, 34, 0.036),
+    0 8px 18px rgba(72, 48, 16, 0.08);
+}
+
+.dream-oracle-entry-card[aria-selected="true"] {
+  border-color: rgba(154, 111, 25, 0.48);
+  background:
+    radial-gradient(circle at 50% -12%, rgba(255, 245, 208, 0.42), transparent 42%),
+    linear-gradient(110deg, rgba(151, 96, 14, 0.98), rgba(240, 190, 76, 0.98) 42%, rgba(180, 117, 17, 0.98)),
+    var(--coc-texture-antique-gold-thread) !important;
+  background-size: auto, 230% 100%, 300px 200px;
+  color: #1b1208 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 249, 218, 0.30),
+    inset 0 -1px 0 rgba(92, 50, 4, 0.16),
+    0 8px 20px rgba(72, 48, 16, 0.10);
+}
+
+.dream-oracle-entry-card__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(62, 51, 34, 0.72);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.dream-oracle-entry-card__value {
+  color: var(--coc-on-light-primary);
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.dream-oracle-entry-card p {
+  margin: 0;
+  color: var(--coc-on-light-secondary);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.dream-oracle-entry-card[aria-selected="true"] .dream-oracle-entry-card__label,
+.dream-oracle-entry-card[aria-selected="true"] .dream-oracle-entry-card__value,
+.dream-oracle-entry-card[aria-selected="true"] p {
+  color: #4a2608;
+}
+
+.dream-oracle-brief-card.coc-surface-v2[data-material="archive"] {
+  border-color: rgba(154, 118, 55, 0.34);
+  background:
+    var(--coc-texture-keeper-parchment) center / 360px 360px repeat,
+    rgba(250, 246, 235, 0.84);
+  background-blend-mode: normal, normal;
+}
+
+.dream-oracle-brief-card__heading {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #a97c16;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.dream-oracle-brief-card__body {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.78rem;
+  color: #3e3322;
+  font-size: 0.9rem;
+  line-height: 1.7;
 }
 
 .oracle-stage {
@@ -637,6 +773,10 @@
 }
 
 @media (max-width: 767px) {
+  .dream-oracle-entry-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .oracle-stage {
     min-height: 34rem;
   }
@@ -715,6 +855,12 @@
 
 @media (min-width: 768px) {
   .dream-archive-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .dream-oracle-entry-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

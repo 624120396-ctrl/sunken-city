@@ -1,7 +1,7 @@
 import { EmptyState, EmptyIcons } from '@components/ui/EmptyState';
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserPlus, Trash2, Check, X, Search, BookOpen, User } from 'lucide-react';
+import { UserPlus, Trash2, Check, X, Search, BookOpen, User, Mail, Radio } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { useAuthStore } from '@stores/auth.store';
@@ -168,6 +168,8 @@ export function FriendListPage() {
 
   const pendingReceived = requests.filter((r) => r.receiverId === user?.id && r.status === 'pending');
   const pendingSent = requests.filter((r) => r.senderId === user?.id && r.status === 'pending');
+  const onlineCount = friends.filter((f) => onlineFriends.has(f.userId)).length;
+  const roomActiveCount = friends.filter((f) => friendRooms[f.userId]).length;
 
   const handleAddFriend = async () => {
     if (!targetNickname.trim()) return;
@@ -274,11 +276,12 @@ export function FriendListPage() {
   if (loading) {
     return (
       <PageShell
-        eyebrow="SOCIAL LEDGER"
-        title="我的好友"
-        description="同步跑团同伴、在线状态与房间入口。"
+        className="friend-social-page"
+        eyebrow="调查员社交台"
+        title="调查员社交"
+        description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
       >
-        <Surface variant="panel" tone="ocean" padding="lg" className="flex h-64 items-center justify-center">
+        <Surface variant="panel" tone="ocean" material="archive" padding="lg" className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--coc-accent-blood)] border-t-transparent" />
         </Surface>
       </PageShell>
@@ -287,26 +290,60 @@ export function FriendListPage() {
 
   return (
     <PageShell
-      eyebrow="SOCIAL LEDGER"
-      title="我的好友"
-      description="同步跑团同伴、在线状态与房间入口。"
+      className="friend-social-page"
+      eyebrow="调查员社交台"
+      title="调查员社交"
+      description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
       actions={
-        <Button variant="primary" icon={<UserPlus size={18} />} onClick={() => setShowAddModal(true)}>
-          添加好友
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" icon={<Mail size={18} />} onClick={() => navigate('/messages')}>
+            进入消息中心
+          </Button>
+          <Button variant="primary" icon={<UserPlus size={18} />} onClick={() => setShowAddModal(true)}>
+            添加联系人
+          </Button>
+        </div>
       }
     >
-      <Surface variant="panel" padding="md" className="relative overflow-hidden">
+      <Surface variant="panel" material="archive" padding="md" className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
-        <div className="grid gap-3 lg:grid-cols-[auto_minmax(18rem,34rem)_auto] lg:items-center">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+                <User size={14} />
+                联系人册
+              </div>
+              <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{friends.length}</div>
+              <div className="mt-1 text-xs text-[var(--coc-text-muted)]">已同步调查员</div>
+            </div>
+            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+                <Radio size={14} />
+                同行状态
+              </div>
+              <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{onlineCount}</div>
+              <div className="mt-1 text-xs text-[var(--coc-text-muted)]">在线，{roomActiveCount} 位在房间</div>
+            </div>
+            <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--coc-accent-gold-strong)]">
+                <UserPlus size={14} />
+                待处理申请
+              </div>
+              <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{pendingReceived.length}</div>
+              <div className="mt-1 text-xs text-[var(--coc-text-muted)]">需要你回应</div>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
           <Tabs
             ariaLabel="好友筛选"
             value={activeTab}
             onChange={(value) => setActiveTab(value as 'all' | 'online' | 'requests')}
             items={[
-              { value: 'all', label: '全部好友', count: friends.length },
-              { value: 'online', label: '在线', count: friends.filter((f) => onlineFriends.has(f.userId)).length },
-              { value: 'requests', label: '请求', count: pendingReceived.length },
+              { value: 'all', label: '联系人册', count: friends.length },
+              { value: 'online', label: '同行状态', count: onlineCount },
+              { value: 'requests', label: '待处理申请', count: pendingReceived.length },
             ]}
           />
 
@@ -317,17 +354,13 @@ export function FriendListPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="搜索好友昵称..."
+                placeholder="搜索联系人昵称..."
                 className="coc-focus-ring h-12 w-full rounded-[var(--coc-radius-control)] border border-[var(--coc-border-subtle)] bg-[#071016]/85 pl-11 pr-4 text-sm text-[var(--coc-text-primary)] shadow-inner shadow-black/40 placeholder:text-[var(--coc-text-muted)] focus:border-[var(--coc-accent-gold)]/55"
               />
             </div>
           ) : (
             <div className="hidden lg:block" />
           )}
-
-          <div className="flex items-center gap-2 justify-self-start rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-2 text-sm text-[var(--coc-text-secondary)] lg:justify-self-end">
-            <Users size={16} className="text-[var(--coc-accent-gold)]" />
-            <span>{friends.length} 位联络人</span>
           </div>
         </div>
       </Surface>
@@ -337,8 +370,8 @@ export function FriendListPage() {
           {filteredFriends.length === 0 ? (
             <EmptyState
               icon={EmptyIcons.Friends}
-              title={activeTab === 'online' ? '暂无在线好友' : search ? '未找到匹配的好友' : '暂无好友'}
-              description={search ? '尝试搜索其他关键词' : '快去添加好友，一起踏入深渊吧'}
+              title={activeTab === 'online' ? '暂无在线联系人' : search ? '未找到匹配的联系人' : '暂无联系人'}
+              description={search ? '尝试搜索其他关键词' : '添加常跑同伴，后续邀请和私信会更顺手。'}
               size="sm"
               animate={false}
             />
@@ -346,9 +379,9 @@ export function FriendListPage() {
             <div className="coc-section-group mt-3">
               <div className="coc-section-group__header">
                 <div>
-                  <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">CONTACT ROSTER</div>
+                  <div className="text-xs font-bold text-[var(--coc-accent-gold-strong)]">联系人册</div>
                   <div className="mt-1 text-sm text-[var(--coc-text-secondary)]">
-                    {activeTab === 'online' ? '当前在线联络人' : search ? '搜索结果' : '全部同步联络人'}
+                    {activeTab === 'online' ? '当前在线联系人' : search ? '搜索结果' : '全部同步联系人'}
                   </div>
                 </div>
                 <span className="rounded border border-[var(--coc-border-subtle)] bg-black/25 px-3 py-1 text-xs text-[var(--coc-text-secondary)]">
@@ -434,7 +467,7 @@ export function FriendListPage() {
         <div className="space-y-4">
           {pendingReceived.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">收到的好友请求</h3>
+              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">收到的待处理申请</h3>
               <div className="space-y-2">
                 {pendingReceived.map((req) => (
                   <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -481,7 +514,7 @@ export function FriendListPage() {
 
           {pendingSent.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">已发送的请求</h3>
+              <h3 className="mb-2 text-sm font-bold text-[var(--coc-text-secondary)]">已发出的申请</h3>
               <div className="space-y-2">
                 {pendingSent.map((req) => (
                   <Surface key={req.id} variant="panel" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -515,14 +548,14 @@ export function FriendListPage() {
 
           {pendingReceived.length === 0 && pendingSent.length === 0 && (
             <Surface variant="panel" padding="lg" className="py-12 text-center text-[var(--coc-text-secondary)]">
-              暂无待处理的好友请求
+              暂无待处理申请
             </Surface>
           )}
         </div>
       )}
 
-      {/* 添加好友弹窗 */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="添加好友">
+      {/* 添加联系人弹窗 */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="添加联系人">
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-[#8b8375] mb-1">对方昵称</label>
@@ -559,8 +592,8 @@ export function FriendListPage() {
         </div>
       </Modal>
 
-      {/* 好友资料卡弹窗 */}
-      <Modal isOpen={!!selectedFriend} onClose={() => setSelectedFriend(null)} title="好友资料">
+      {/* 联系人资料卡弹窗 */}
+      <Modal isOpen={!!selectedFriend} onClose={() => setSelectedFriend(null)} title="联系人档案">
         {selectedFriend && (
           <div className="space-y-4">
             <div className="flex items-center gap-4">

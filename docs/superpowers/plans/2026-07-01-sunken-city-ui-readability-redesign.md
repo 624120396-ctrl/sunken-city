@@ -1,11 +1,13 @@
 # Sunken City UI/UX Redesign Plan
 
-> **Companion document.** The authoritative plan is the Chinese version: `2026-07-01-sunken-city-ui-readability-redesign.zh-CN.md`. This English file mirrors the strategy for tools or collaborators that need English context.
+> **Companion document.** The authoritative readability baseline is the Chinese version: `2026-07-01-sunken-city-ui-readability-redesign.zh-CN.md`. As of 2026-07-04, the active visual direction is governed by `2026-07-04-sunken-city-luminous-archive-visual-upgrade.zh-CN.md`, and image2 asset generation is governed by `2026-07-04-sunken-city-ui-asset-pipeline.zh-CN.md`.
 
 **Date:** 2026-07-01  
 **Project:** Sunken City  
 **Status:** Frontend UI/UX v2 redesign planning  
 **Goal:** Replace the current global-dark-veil dependency with a full readability system that supports user-selectable bright and dark backgrounds while preserving all data, uploads, room logic, character cards, dice records, and deployment safety rules.
+
+**2026-07-04 update:** Do not execute this plan as the sole page migration order. First build the brighter material system: image2 texture asset specs, texture tokens, and materialized Surfaces. Then use this document as the readability and responsive baseline while migrating pages.
 
 ## Method Sources
 
@@ -14,7 +16,7 @@ This plan applies four requested design/tooling sources:
 | Source | Role | Output |
 | --- | --- | --- |
 | `product-design` | Product brief, user journeys, acceptance framing | Separate PC/KP and mobile/PL priorities; make room chat and dice records the mobile core |
-| `creative-production` | Visual identity direction | Luminous occult archive: deep-sea mist, readable smoked glass, restrained gold ritual accents, non-black Cthulhu atmosphere |
+| `creative-production` | Visual identity direction | Brighter luminous occult archive: deep-sea mist, luminous archive paper, pale wet limestone, oxidized copper trim, restrained gold ritual accents, non-black Cthulhu atmosphere |
 | `superpowers` | Engineering execution structure | Phased implementation, independent commits, rollback points, screenshot-based checks, no deep tests unless requested |
 | `ui-ux-pro-max` | UI/UX system constraints | Background profiles, surface tokens, responsive layouts, drawer behavior, dense PC controls, readable mobile gameplay |
 
@@ -53,18 +55,21 @@ Mobile should not be treated as a shrunken PC interface. It should optimize the 
 
 ## Visual Direction
 
-Target language: **luminous occult archive**.
+Target language: **brighter luminous occult archive**.
 
 Use:
 
-- deep-sea cold mist
-- readable smoked glass
-- polished obsidian panels
-- parchment-compatible surfaces
+- deep-sea daylight mist
+- luminous archive paper
+- pale wet limestone surfaces
+- oxidized copper trim
+- dark glazed stone only for secondary tool areas
 - restrained gold highlights
 - selective blood-red warning and forbidden-ritual accents
 - crisp icon-first controls
 - compact mobile drawers
+
+Avoid making black transparent glass the default surface. Generated image2 textures must be text-safe, low-contrast, named, compressed, and referenced through CSS tokens rather than directly from pages.
 
 Color ratio guidance:
 

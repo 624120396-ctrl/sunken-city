@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, X, Home, Store,
   Users, Fish, Sparkles, Crown, Landmark,
-  Map, HelpCircle, LayoutGrid, Trophy, Scroll, BookOpen,
+  LayoutGrid, Trophy, Scroll, BookOpen,
   Compass, Mail,
 } from 'lucide-react';
 
@@ -16,8 +16,8 @@ interface CommandItem {
 }
 
 const COMMANDS: CommandItem[] = [
-  { id: 'dashboard', label: 'Dashboard', path: '/', icon: Home, keywords: ['主页', '首页', '仪表盘', 'dash'] },
-  { id: 'rooms', label: '房间大厅', path: '/rooms', icon: Landmark, keywords: ['房间', '大厅', '跑团', 'room'] },
+  { id: 'dashboard', label: '首页', path: '/', icon: Home, keywords: ['主页', '首页', '仪表盘', 'dash'] },
+  { id: 'rooms', label: '故事书', path: '/rooms', icon: Landmark, keywords: ['故事书', '房间', '大厅', '跑团', 'room'] },
   { id: 'solo', label: '幻影脚本', path: '/solo', icon: Scroll, keywords: ['单人', 'solo', '剧本', '故事'] },
   { id: 'scenarios', label: '剧本列表', path: '/scenarios', icon: BookOpen, keywords: ['剧本', 'scenario', '模组'] },
   { id: 'nameless-market', label: '无名集市', path: '/shop', icon: Store, keywords: ['无名集市', '商店', '背包', '市场', '购买', '交易', '遗物', '道具', 'inventory', 'market', 'shop'] },
@@ -25,12 +25,10 @@ const COMMANDS: CommandItem[] = [
   { id: 'dream', label: '溺者之牌', path: '/dream', icon: Sparkles, keywords: ['梦境', '占卜', 'dream', '每日', '溺者'] },
   { id: 'friends', label: '好友', path: '/friends', icon: Users, keywords: ['好友', '朋友', 'friend', '社交'] },
   { id: 'messages', label: '消息中心', path: '/messages', icon: Mail, keywords: ['消息', '私信', '通知', 'message'] },
-  { id: 'forum', label: '论坛', path: '/forums', icon: LayoutGrid, keywords: ['论坛', '社区', '讨论', 'forum'] },
-  { id: 'titles', label: '称号', path: '/titles', icon: Trophy, keywords: ['称号', '头衔', 'title', '成就'] },
-  { id: 'ranks', label: '等级', path: '/ranks', icon: Crown, keywords: ['等级', ' rank', '段位', '经验'] },
-  { id: 'world', label: '世界地图', path: '/world', icon: Map, keywords: ['地图', '世界', 'world', '探索'] },
+  { id: 'forum', label: '旧日低语', path: '/forums', icon: LayoutGrid, keywords: ['旧日低语', '论坛', '社区', '讨论', 'forum'] },
+  { id: 'titles', label: '印记', path: '/titles', icon: Trophy, keywords: ['印记', '称号', '头衔', 'title', '成就'] },
+  { id: 'ranks', label: '位阶', path: '/ranks', icon: Crown, keywords: ['位阶', '等级', 'rank', '段位', '经验'] },
   { id: 'profile', label: '个人资料', path: '/profile', icon: Compass, keywords: ['资料', '档案', 'profile', '设置'] },
-  { id: 'help', label: '帮助', path: '/help', icon: HelpCircle, keywords: ['帮助', '指南', 'help', '教程'] },
 ];
 
 export function CommandPalette() {

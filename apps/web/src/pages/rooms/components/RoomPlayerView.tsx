@@ -1,9 +1,11 @@
-import type { FormEvent, RefObject } from 'react';
+import { useState, type FormEvent, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Archive,
   BookOpen,
   Brain,
+  ChevronDown,
+  ChevronUp,
   Dice5,
   Eye,
   FileText,
@@ -57,6 +59,7 @@ interface RoomPlayerViewProps {
   setShowChatTools: (visible: boolean | ((visible: boolean) => boolean)) => void;
   showMobileQuickRolls: boolean;
   setShowMobileQuickRolls: (visible: boolean | ((visible: boolean) => boolean)) => void;
+  onOpenMobileActionDrawer: () => void;
   canSendPrivateMessage: boolean;
   sendTargetUserId: string;
   onSendTargetChange: (value: string) => void;
@@ -159,6 +162,7 @@ export function RoomPlayerView({
   setShowChatTools,
   showMobileQuickRolls,
   setShowMobileQuickRolls,
+  onOpenMobileActionDrawer,
   canSendPrivateMessage,
   sendTargetUserId,
   onSendTargetChange,
@@ -188,10 +192,37 @@ export function RoomPlayerView({
   const latestDice = [...messages].reverse().find((message) => message.type === 'dice' && message.rollData?.rollResult !== undefined);
   const party = members.filter((member) => member.role !== 'OBSERVER');
   const phaseTitle = splitPhaseTitle(room.currentPhase?.title);
+  const [mobileOpenLayer, setMobileOpenLayer] = useState<'dossier' | 'board' | null>(null);
+  const isDossierOpen = !isMobile || mobileOpenLayer === 'dossier';
+  const isBoardOpen = !isMobile || mobileOpenLayer === 'board';
 
   return (
-    <div className="room-player-view" data-testid="room-player-view">
-      <aside className="room-player-dossier" aria-label="我的调查员档案">
+    <div
+      className={cn('room-player-view', isMobile && 'room-player-mobile-info-stack')}
+      data-testid="room-player-view"
+    >
+      {!isMobile && (
+      <aside
+        className={cn('room-player-dossier', isMobile && 'room-player-mobile-layer-card')}
+        data-mobile-expanded={isDossierOpen ? 'true' : 'false'}
+        aria-label="我的调查员档案"
+      >
+        {isMobile && (
+          <button
+            type="button"
+            className="room-player-mobile-layer-summary"
+            aria-expanded={isDossierOpen}
+            onClick={() => setMobileOpenLayer((layer) => (layer === 'dossier' ? null : 'dossier'))}
+          >
+            <span>
+              <User size={15} />
+              调查员档案
+            </span>
+            <b>{myCharacter?.name || myMember?.nickname || '未绑定角色'}</b>
+            {isDossierOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+        )}
+        <div className="room-player-mobile-layer-content">
         <section className="room-player-card room-player-identity">
           <div className="room-player-identity__portrait">
             {myMember?.avatarUrl || myCharacter?.avatarUrl ? (
@@ -282,7 +313,9 @@ export function RoomPlayerView({
             })}
           </div>
         </section>
+        </div>
       </aside>
+      )}
 
       <main className="room-player-stage">
         <Surface
@@ -301,6 +334,47 @@ export function RoomPlayerView({
                   isCollapsed={!showSceneBanner}
                   onToggleCollapsed={onToggleSceneBanner}
                 />
+              )}
+              {isMobile && (
+                <section className="room-player-mobile-status-strip" aria-label="调查员快速状态">
+                  <button
+                    type="button"
+                    className="room-player-mobile-status-strip__identity"
+                    onClick={onOpenCharacter}
+                  >
+                    <span className="room-player-mobile-status-strip__avatar">
+                      {myMember?.avatarUrl || myCharacter?.avatarUrl ? (
+                        <img src={myMember?.avatarUrl || myCharacter?.avatarUrl} alt="" />
+                      ) : (
+                        <User size={15} />
+                      )}
+                    </span>
+                    <span>
+                      <b>{myCharacter?.name || myMember?.nickname || '未绑定角色'}</b>
+                      <small>{myCharacter?.occupation || roleText(myMember || { role: 'OBSERVER' } as RoomGameplayMember)}</small>
+                    </span>
+                  </button>
+
+                  <div className="room-player-mobile-status-strip__vitals" aria-label="生命迹象">
+                    <span data-vital="hp">
+                      <Heart size={12} />
+                      <b>HP</b>
+                      <strong>{statValue(myCharacter?.hp, myCharacter?.maxHp)}</strong>
+                    </span>
+                    <span data-vital="san">
+                      <Brain size={12} />
+                      <b>SAN</b>
+                      <strong>{statValue(myCharacter?.san, myCharacter?.maxSan)}</strong>
+                    </span>
+                  </div>
+
+                  <div className="room-player-mobile-status-strip__roll" data-result-tone={diceTone(latestDice?.rollData?.successLevel)}>
+                    <Dice5 size={13} />
+                    <span>{latestDice?.rollData?.targetName || '检定'}</span>
+                    <b>{latestDice?.rollData ? `${latestDice.rollData.rollResult}` : '暂无'}</b>
+                  </div>
+
+                </section>
               )}
               <RoomChatTranscript
                 messages={messages}
@@ -326,6 +400,7 @@ export function RoomPlayerView({
                   hasSelectedCharacter={!!myCharacter}
                   showMobileQuickRolls={showMobileQuickRolls}
                   setShowMobileQuickRolls={setShowMobileQuickRolls}
+                  onOpenMobileActionDrawer={onOpenMobileActionDrawer}
                   canUseKPTools={false}
                   canSendPrivateMessage={canSendPrivateMessage}
                   sendTargetUserId={sendTargetUserId}
@@ -377,7 +452,28 @@ export function RoomPlayerView({
         </Surface>
       </main>
 
-      <aside className="room-player-board" aria-label="调查板">
+      {!isMobile && (
+      <aside
+        className={cn('room-player-board', isMobile && 'room-player-mobile-layer-card')}
+        data-mobile-expanded={isBoardOpen ? 'true' : 'false'}
+        aria-label="调查板"
+      >
+        {isMobile && (
+          <button
+            type="button"
+            className="room-player-mobile-layer-summary"
+            aria-expanded={isBoardOpen}
+            onClick={() => setMobileOpenLayer((layer) => (layer === 'board' ? null : 'board'))}
+          >
+            <span>
+              <Archive size={15} />
+              调查板
+            </span>
+            <b>{clues.length} 条线索 · {latestDice?.rollData ? `${latestDice.rollData.rollResult}` : '暂无检定'}</b>
+            {isBoardOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+        )}
+        <div className="room-player-mobile-layer-content">
         <section className="room-player-board__hero" aria-label="调查员案板">
           <div className="room-player-board__hero-meta" aria-label="当前调查状态">
             <small className="room-player-board__phase-title">
@@ -491,7 +587,9 @@ export function RoomPlayerView({
             <b>{latestDice?.rollData ? `${latestDice.rollData.rollResult}` : '暂无'}</b>
           </div>
         </section>
+        </div>
       </aside>
+      )}
     </div>
   );
 }

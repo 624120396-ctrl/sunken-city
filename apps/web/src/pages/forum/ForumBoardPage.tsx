@@ -209,7 +209,7 @@ function ModeratorSeat({
   roleTitle: string;
 }) {
   return (
-    <Tooltip content={`${roleTitle} — 该版块的管理者`}>
+    <Tooltip content={`${roleTitle} - 该分卷的执印者`}>
       <div className="forum-moderator-seat" role="listitem">
         <div className="forum-moderator-seat__sigil" aria-hidden="true">
           <Crown size={18} />
@@ -264,7 +264,7 @@ export function ForumBoardPage() {
   const moderators = modData?.moderators || [];
 
   const boardName = boards.find((b) => b.key === boardKey)?.name || boardKey;
-  const boardDescription = boards.find((b) => b.key === boardKey)?.description || '版块主题、置顶、精华与最近回复。';
+  const boardDescription = boards.find((b) => b.key === boardKey)?.description || '本卷收纳置顶告示、典藏记录与最近回声。';
   const BoardIcon = boardIconMap[boardKey || ''] || LayoutGrid;
   const visibleThreadCount = pinnedPosts.length + essencePosts.length + posts.length;
 
@@ -289,14 +289,14 @@ export function ForumBoardPage() {
             <LayoutGrid size={20} />
           </span>
           <div>
-            <div className="text-xs font-bold uppercase text-[var(--coc-accent-gold-strong)]">board overview</div>
-            <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">版块概览</div>
+            <div className="text-xs font-bold text-[var(--coc-accent-gold-strong)]">旧日低语分卷</div>
+            <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">卷宗概览</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Metric icon={<LayoutGrid size={14} />} value={pagination.total} label="主题" />
-          <Metric icon={<Pin size={14} />} value={pinnedPosts.length} label="置顶" />
-          <Metric icon={<Award size={14} />} value={essencePosts.length} label="精华" />
+          <Metric icon={<LayoutGrid size={14} />} value={pagination.total} label="低语" />
+          <Metric icon={<Pin size={14} />} value={pinnedPosts.length} label="告示" />
+          <Metric icon={<Award size={14} />} value={essencePosts.length} label="典藏" />
           <Metric icon={<MessageSquare size={14} />} value={visibleThreadCount} label="本页" />
         </div>
       </Surface>
@@ -304,12 +304,12 @@ export function ForumBoardPage() {
       <Surface variant="panel" padding="md" className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ShieldCheck size={16} className="text-[var(--coc-accent-gold)]" />
-          版务席位
+          执印席位
         </div>
         <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
-          这里显示本版的执印者。置顶、精华与秩序维护由席位成员负责。
+          这里显示本卷的执印者。告示、典藏与秩序维护由席位成员负责。
         </p>
-        <div className="grid gap-3" role="list" aria-label="版主与管理员席位">
+        <div className="grid gap-3" role="list" aria-label="执印者与管理员席位">
           {moderators.length > 0 ? (
             moderators.map((mod, index) => (
               <ModeratorSeat
@@ -318,7 +318,7 @@ export function ForumBoardPage() {
                 roleTitle={
                   index === 0 && mod.nickname === '管理员'
                     ? '首席管理员'
-                    : BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'
+                    : BOARD_MODERATOR_TITLES[boardKey || ''] || '执印者'
                 }
               />
             ))
@@ -329,7 +329,7 @@ export function ForumBoardPage() {
               </div>
               <div>
                 <div className="forum-moderator-seat__role">
-                  {BOARD_MODERATOR_TITLES[boardKey || ''] || '版主'}
+                  {BOARD_MODERATOR_TITLES[boardKey || ''] || '执印者'}
                 </div>
                 <div className="forum-moderator-seat__name">席位虚位以待</div>
               </div>
@@ -341,10 +341,10 @@ export function ForumBoardPage() {
       <Surface variant="panel" padding="md" className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--coc-on-surface-primary)]">
           <ScrollText size={16} className="text-[var(--coc-accent-gold)]" />
-          版块守则
+          分卷守则
         </div>
         <p className="text-sm leading-6 text-[var(--coc-on-surface-secondary)]">
-          置顶与精华优先显示；普通帖子按当前排序规则排列。讨论秩序优先于装饰效果。
+          市政告示与典藏记录优先显影；其余低语按当前排序规则归列。秩序优先于装饰效果。
         </p>
       </Surface>
     </div>
@@ -352,7 +352,7 @@ export function ForumBoardPage() {
 
   return (
     <PageShell
-      eyebrow="forum board"
+      eyebrow="旧日低语分卷"
       title={
         <span className="flex items-center gap-2">
           <BoardIcon size={24} className="text-[var(--coc-accent-gold)]" />
@@ -363,7 +363,7 @@ export function ForumBoardPage() {
       actions={
         <Link to={`/forums/new?board=${boardKey}`} className="btn-v2 coc-btn-primary flex items-center gap-2">
           <Plus size={16} />
-          发布主题
+          誊录低语
         </Link>
       }
       aside={aside}
@@ -382,7 +382,7 @@ export function ForumBoardPage() {
             <span className="text-[var(--coc-on-surface-muted)]">/</span>
             <span className="flex min-w-0 items-center gap-1.5 text-[var(--coc-on-surface-muted)]">
               <LayoutGrid size={15} className="shrink-0 text-[var(--coc-accent-gold)]" />
-              <span className="truncate">当前版块</span>
+              <span className="truncate">当前分卷</span>
             </span>
           </div>
 
@@ -396,7 +396,7 @@ export function ForumBoardPage() {
                   : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
               }`}
             >
-              最后回复
+              最近回声
             </button>
             <button
               type="button"
@@ -407,7 +407,7 @@ export function ForumBoardPage() {
                   : 'border-[var(--coc-border-subtle)] text-[var(--coc-on-surface-primary)] hover:border-[var(--coc-accent-gold)]'
               }`}
             >
-              最新发布
+              最新誊录
             </button>
           </div>
         </Surface>
@@ -440,18 +440,18 @@ export function ForumBoardPage() {
             <ThreadSection title="所有低语" icon={<MessageSquare size={15} />}>
               {posts.length === 0 && pinnedPosts.length === 0 && essencePosts.length === 0 ? (
                 <Surface variant="solid" padding="lg" className="forum-empty-state text-center">
-                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">该版块暂无帖子</div>
-                  <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">来发布第一条记录吧。</p>
+                  <div className="text-base font-bold text-[var(--coc-on-surface-primary)]">本卷尚无低语</div>
+                  <p className="mt-2 text-sm text-[var(--coc-on-surface-secondary)]">可以将第一段不安的记录封入此处。</p>
                   <Link
                     to={`/forums/new?board=${boardKey}`}
                     className="btn-v2 coc-btn-primary mt-4 inline-flex items-center justify-center gap-2"
                   >
                     <Plus size={15} />
-                    发布主题
+                    誊录低语
                   </Link>
                 </Surface>
               ) : posts.length === 0 ? (
-                <div className="py-5 text-center text-sm text-[var(--coc-on-surface-muted)]">没有更多帖子了</div>
+                <div className="py-5 text-center text-sm text-[var(--coc-on-surface-muted)]">没有更多封存卷宗了</div>
               ) : (
                 posts.map((post) => <PostRow key={post.id} post={post} />)
               )}

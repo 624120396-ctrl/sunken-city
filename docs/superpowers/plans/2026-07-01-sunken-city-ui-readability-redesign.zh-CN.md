@@ -1,12 +1,14 @@
-# 沉没之城 UI/UX 全面升级实施方案
+# 沉没之城 UI/UX 可读性基础实施方案
 
-> **执行要求：** 本文档是后续前端升级的中文主方案。实施时推荐使用 `superpowers:subagent-driven-development` 或 `superpowers:executing-plans` 逐阶段推进。每一阶段都必须形成独立提交、可截图验收、可回滚。除非用户主动要求，不进行深度测试。
+> **执行要求：** 本文档现在作为前端 UI/UX 的可读性基础边界。后续视觉主方向以 `2026-07-04-sunken-city-luminous-archive-visual-upgrade.zh-CN.md` 为准；image2 资产生产与入库以 `2026-07-04-sunken-city-ui-asset-pipeline.zh-CN.md` 为准。实施时推荐使用 `superpowers:subagent-driven-development` 或 `superpowers:executing-plans` 逐阶段推进。每一阶段都必须形成独立提交、可截图验收、可回滚。除非用户主动要求，不进行深度测试。
 
 **版本日期：** 2026-07-01  
 **项目：** 沉没之城 / Sunken City  
 **当前阶段：** 前端 UI/UX v2 重构中  
 **核心问题：** 旧界面依赖全局暗色遮罩保证可读性；当背景允许用户选择明亮/暗色风格后，页面可读性、层级和视觉一致性同时失效。  
 **核心策略：** 背景层只负责氛围，Surface 层负责可读性，页面壳负责信息结构，组件系统负责一致交互。
+
+**2026-07-04 更新：** 用户已确认“更明亮的深海秘仪档案馆”视觉稿作为后续迭代方向。执行顺序从“先做可读性系统再迁移页面”调整为“先做官方内置 image2 纹理资产与材质化 Surface，再迁移页面”。本文件保留背景档位、权限边界、移动端优先级和轻量验收规则，不再单独决定页面迁移顺序。
 
 ---
 
@@ -17,7 +19,7 @@
 | 来源 | 在本文档中的作用 | 落地结果 |
 | --- | --- | --- |
 | `product-design` | 定义产品目标、关键用户、核心旅程与可验收体验 | PC/KP 与移动端/PL 分层；房间聊天与骰点优先；页面按任务流重排 |
-| `creative-production` | 建立视觉路线与氛围关键词 | “发光的秘仪档案馆”：深海冷雾、可读烟熏玻璃、克制金色仪式感、非纯黑克苏鲁 |
+| `creative-production` | 建立视觉路线与氛围关键词 | “更明亮的深海秘仪档案馆”：深海冷雾、明亮档案纸、浅色湿石、氧化铜边框、克制金色仪式感、非纯黑克苏鲁 |
 | `superpowers` | 将设计判断转化为可执行工程计划 | 分阶段、可提交、可回滚、可截图验收；禁止无授权深度测试 |
 | `ui-ux-pro-max` | 约束响应式、可读性、控件密度与交互细节 | 背景档位、Surface 系统、移动端抽屉、PC 沉浸控制台、按钮和卡片规格 |
 
@@ -61,7 +63,7 @@
 关键词：
 
 - 深海冷雾
-- 可读烟熏玻璃
+- 明亮档案纸与浅色湿石 Surface
 - 克制金色仪式感
 - 适量血红警示与禁忌感
 - 非纯黑克苏鲁
@@ -626,16 +628,24 @@ PC 端目标：
 
 ## 11. 立即执行建议
 
-建议下一步直接执行 **Phase 1 + Phase 2**。
+2026-07-04 后，下一步不再建议直接执行旧 **Phase 1 + Phase 2**。
+
+新的执行顺序：
+
+1. 先执行 `2026-07-04-sunken-city-ui-asset-pipeline.zh-CN.md`：定义资产规格卡，使用 Codex 官方内置 image2 生成候选纹理，筛选并处理可入库素材。
+2. 再执行 `2026-07-04-sunken-city-luminous-archive-visual-upgrade.zh-CN.md` 的 Phase 0 + Phase 1：建立明亮材质化 Surface、纹理 token 和组件 API。
+3. 然后再回到本文的页面迁移路线，把故事书、无名集市、首页、调查员、论坛和房间页逐步迁移到新 Surface 系统。
 
 理由：
 
-- Phase 1 解决根因：背景档位和 Surface 可读性系统。
-- Phase 2 解决当前截图最明显的问题：故事书和无名集市。
-- 两个阶段一起执行，能避免新旧系统长期并存带来的继续返工。
+- 旧 Phase 1 解决“可读性”，但不能单独解决“AI 味”和“黑色透明卡片”问题。
+- 新 Phase 0 / Phase 1 先解决材质、纹理、明亮度和 Surface 语义，能避免页面迁移后再返工。
+- 页面迁移必须建立在新材质系统上，否则会继续产生逐页补丁。
 
 建议提交顺序：
 
-1. `feat: add readable ui surface system`
-2. `feat: migrate gateway and economy surfaces`
-3. 部署到服务器，给用户截图与线上地址确认。
+1. `docs: define sunken city ui asset pipeline`
+2. `feat: add luminous archive material tokens`
+3. `feat: migrate first visual sample page`
+
+部署仍非本 UI/UX 规划阶段默认事项；除非用户明确要求，本会话原则上不部署。

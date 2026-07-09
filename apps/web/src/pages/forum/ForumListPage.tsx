@@ -33,13 +33,13 @@ export function ForumListPage() {
   return (
     <PageShell
       eyebrow="community archive"
-      title="旧日低语"
-      description="选择版块，进入你的讨论领域。长文、记录和回复会使用更稳的可读 Surface。"
+      title="旧日低语档案"
+      description="从这些低语卷宗进入不同的调查层。长文、证词与回声会被安置在更稳定的可读 Surface 中。"
       actions={
         <DataCard
-          label="开放版块"
+          label="已启封分卷"
           value={boards.length}
-          detail="论坛索引"
+          detail="低语卷宗"
           icon={<LayoutGrid size={16} />}
           tone="gold"
         />
@@ -60,7 +60,7 @@ export function ForumListPage() {
               key={b.key}
               to={`/forums/board/${b.key}`}
               className="forum-board-index-card group"
-              aria-label={`进入${b.name}版块`}
+              aria-label={`进入${b.name}分卷`}
             >
               <article className="forum-board-index-card__inner">
                 <div className="forum-board-index-card__seal" aria-hidden="true">
@@ -82,7 +82,7 @@ export function ForumListPage() {
                   <div className="forum-board-index-card__footer">
                     <span className="forum-board-index-card__stat">
                       <MessageSquare size={14} />
-                      {b.postCount} 主题
+                      {b.postCount} 则低语
                     </span>
                     <span className="forum-board-index-card__cta">
                       进入档案
@@ -106,8 +106,8 @@ export function ForumListPage() {
       ) : boards.length === 0 ? (
         <EmptyState
           icon={EmptyIcons.Clue}
-          title="暂无可用版块"
-          description="论坛版块尚未开放，敬请期待。"
+          title="暂无已启封分卷"
+          description="未启封的档案仍在深处沉睡。"
           size="md"
           animate={false}
         />

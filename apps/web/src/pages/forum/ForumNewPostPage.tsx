@@ -29,7 +29,7 @@ export function ForumNewPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!boardKey || !title.trim() || !content.trim()) {
-      alert('请选择版块并填写标题和内容');
+      alert('请选择分卷，并写下密档标题与低语正文');
       return;
     }
     if ((user?.coins || 0) < bounty) {
@@ -46,13 +46,13 @@ export function ForumNewPostPage() {
         bountyCoin: bounty > 0 ? bounty : undefined,
       });
       if (res.reward) {
-        alert(`发布成功！获得奖励：灵魂碎片 +${res.reward.rewardExp}，锈蚀硬币 +${res.reward.rewardCoin}`);
+        alert(`低语已封入档案。获得奖励：灵魂碎片 +${res.reward.rewardExp}，锈蚀硬币 +${res.reward.rewardCoin}`);
       } else {
-        alert('发布成功！');
+        alert('低语已封入档案。');
       }
       navigate(`/forums/${res.post.id}`);
     } catch (err: any) {
-      alert(err.message || '发布失败');
+      alert(err.message || '低语未能封入档案');
     } finally {
       setLoading(false);
     }
@@ -60,22 +60,22 @@ export function ForumNewPostPage() {
 
   return (
     <PageShell
-      eyebrow="forum editor"
-      title="发布主题"
-      description="选择版块、标题和正文。编辑器内容流保持不变。"
+      eyebrow="旧日低语誊写台"
+      title="誊录一则低语"
+      description="选择要封入的分卷，写下密档标题与低语正文。编辑器内容流保持不变。"
       contentClassName="max-w-3xl"
     >
       <Surface variant="panel" padding="sm" className="flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="coc-btn-secondary min-h-11 min-w-11 p-2">
           <ArrowLeft size={18} />
         </button>
-        <span className="text-sm text-[var(--coc-text-secondary)]">返回上一页</span>
+        <span className="text-sm text-[var(--coc-text-secondary)]">返回上一层档案</span>
       </Surface>
 
       <Surface variant="solid" padding="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">选择版块</label>
+          <label className="block text-sm text-[#b0a898] mb-1">选择分卷</label>
           <select
             value={boardKey}
             onChange={(e) => setBoardKey(e.target.value)}
@@ -90,23 +90,23 @@ export function ForumNewPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">标题</label>
+          <label className="block text-sm text-[#b0a898] mb-1">密档标题</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={100}
-            placeholder="请输入标题"
+            placeholder="给这则低语留下可追索的标题"
             className="min-h-11 w-full bg-[#1a1a1a] border border-[#3a3a3a]/40 rounded px-3 py-2 text-[#e8d4a0] placeholder:text-[#6b6558] focus:border-coc-gold focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-[#b0a898] mb-1">内容</label>
+          <label className="block text-sm text-[#b0a898] mb-1">低语正文</label>
           <RichTextEditor
             value={content}
             onChange={setContent}
-            placeholder="写下你想分享的内容..."
+            placeholder="写下你从雾中听见、或不愿再独自保存的内容..."
             minHeight="240px"
           />
         </div>
@@ -126,7 +126,7 @@ export function ForumNewPostPage() {
           </div>
           {bounty > 0 && (
             <p className="text-xs text-amber-400 mt-1">
-              最佳回复者将获得 {bounty} 锈蚀硬币悬赏。
+              被选为最佳回声者将获得 {bounty} 锈蚀硬币悬赏。
             </p>
           )}
         </div>
@@ -144,7 +144,7 @@ export function ForumNewPostPage() {
             disabled={loading}
             className="coc-btn-primary min-h-11 disabled:opacity-50"
           >
-            {loading ? '发布中...' : '发布主题'}
+            {loading ? '封存中...' : '封入档案'}
           </button>
         </div>
       </form>

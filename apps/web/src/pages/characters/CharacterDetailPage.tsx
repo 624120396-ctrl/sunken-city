@@ -343,6 +343,8 @@ export function CharacterDetailPage() {
   const tabs = getCharacterDossierTabs(activeTab);
   const vitals = getCharacterVitals(character);
   const condition = getCharacterCondition(character);
+  const reportCount = roomHistory.filter((entry) => entry.report).length;
+  const finishedRunCount = roomHistory.filter((entry) => entry.lifecycle === 'FINISHED').length;
 
   const cooldownText = portraitQuota?.inCooldown && portraitQuota.nextAvailableAt
     ? new Date(portraitQuota.nextAvailableAt).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -350,20 +352,20 @@ export function CharacterDetailPage() {
 
   return (
     <PageShell
-      className="character-detail-page"
-      title="调查员档案"
-      eyebrow="investigator dossier"
-      description="查看属性、技能、战斗配置和背景档案。保留原有角色数据解析、导出、删除和形象生成流程。"
+      className="character-detail-page character-public-dossier"
+      title="调查员卷宗"
+      eyebrow="密斯卡托尼克式个案记录"
+      description="一份尚未完全可信的调查记录：身份、能力、公开经历与报告归档会在此处被谨慎保存。"
     >
       {/* ===== 焦点图顶部：角色卡 Hero ===== */}
-      <Surface variant="page" tone="gold" padding="lg" className="character-detail-hero">
+      <Surface variant="page" tone="gold" material="archive" padding="lg" className="character-detail-hero">
         <div className="character-detail-portrait">
           {character.portraitUrl ? (
             <img src={character.portraitUrl} alt={character.name} />
           ) : (
             <div className="character-detail-portrait__placeholder">
               <User size={54} />
-              <span>暂无形象</span>
+              <span>无肖像记录</span>
             </div>
           )}
         </div>
@@ -371,7 +373,7 @@ export function CharacterDetailPage() {
         <div className="character-detail-hero__body">
           <Link to="/characters" className="character-detail-backlink">
             <ArrowLeft size={16} />
-            返回名册
+            返回调查员名册
           </Link>
 
           <div className="character-detail-titleblock">
@@ -415,7 +417,7 @@ export function CharacterDetailPage() {
             )}
             <button onClick={handleExport}>
               <Download size={14} />
-              导出
+              导出卷宗
             </button>
             <button onClick={handleDelete} data-tone="blood">
               <Trash2 size={14} />
@@ -425,13 +427,40 @@ export function CharacterDetailPage() {
         </div>
       </Surface>
 
+      <Surface variant="panel" material="archive" padding="md" className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-[var(--coc-accent-gold)]/45 to-transparent" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+            <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">公开经历</div>
+            <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{roomHistory.length}</div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              这名调查员被记录在案的跑团经历。
+            </div>
+          </div>
+          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+            <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">报告归档</div>
+            <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{reportCount}</div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              可追溯的调查报告与事件摘要。
+            </div>
+          </div>
+          <div className="rounded-md border border-[var(--coc-border-subtle)] bg-black/20 p-4">
+            <div className="text-xs font-semibold text-[var(--coc-accent-gold-strong)]">结案记号</div>
+            <div className="mt-2 text-2xl font-bold text-[var(--coc-text-primary)]">{finishedRunCount}</div>
+            <div className="mt-1 text-xs leading-5 text-[var(--coc-text-muted)]">
+              已结团记录会保留最终状态，但不在此处改写成长规则。
+            </div>
+          </div>
+        </div>
+      </Surface>
+
       <Surface variant="panel" material="archive" padding="md" className="character-room-history mb-4">
         <div className="character-room-history__title">
           <BookOpen size={16} />
-          房间经历
+          房间经历卷宗
         </div>
         {roomHistory.length === 0 ? (
-          <p className="character-room-history__empty">暂无已记录的跑团经历。</p>
+          <p className="character-room-history__empty">尚无已记录的跑团经历。空白页有时也是档案的一部分。</p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {roomHistory.slice(0, 4).map((entry) => (
@@ -445,7 +474,7 @@ export function CharacterDetailPage() {
                   </div>
                   {entry.report && (
                     <Link to={entry.report.link} className="character-room-history-card__link">
-                      报告
+                      阅读调查报告
                     </Link>
                   )}
                 </div>
@@ -454,7 +483,7 @@ export function CharacterDetailPage() {
                 )}
                 {entry.settlement && (
                   <div className="character-room-history-card__settlement">
-                    结局：{outcomeLabels[entry.settlement.outcome] || entry.settlement.outcome}
+                    结案记号：{outcomeLabels[entry.settlement.outcome] || entry.settlement.outcome}
                     {entry.settlement.sanFinal !== null ? ` · SAN ${entry.settlement.sanFinal}` : ''}
                     {entry.settlement.hpFinal !== null ? ` · HP ${entry.settlement.hpFinal}` : ''}
                   </div>
