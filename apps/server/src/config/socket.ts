@@ -437,9 +437,10 @@ export function setupSocketHandlers(io: SocketIOServer) {
       // 加入个人房间，用于接收实时通知和私信
       socket.join(`user:${socket.user.userId}`);
 
-      // 广播在线人数更新
-      const online = await getOnlineUsers();
-      io.emit('online:update', online);
+      // 不阻塞后续 room:join 等监听注册，避免客户端刚连上就发入房事件时被错过。
+      getOnlineUsers()
+        .then((online) => io.emit('online:update', online))
+        .catch((error) => logger.error('在线人数更新失败:', error));
     }
 
     // 客户端可以主动请求当前在线列表

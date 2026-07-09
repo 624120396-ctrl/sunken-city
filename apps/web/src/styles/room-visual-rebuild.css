@@ -4882,6 +4882,65 @@
   }
 }
 
+.room-visual-rebuild .room-gameplay-status-row {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 2.35rem !important;
+  margin: 0.55rem 0.82rem 0 !important;
+  padding: 0.38rem 0.52rem !important;
+  border: 1px solid rgba(211, 176, 91, 0.28) !important;
+  border-radius: 5px !important;
+  background:
+    linear-gradient(90deg, rgba(244, 232, 198, 0.78), rgba(236, 225, 197, 0.54)),
+    var(--room-v6-paper, url('/ui-textures/room-v6-aged-parchment-white.webp')) center / 280px 280px repeat !important;
+  background-blend-mode: normal, multiply !important;
+  color: #3a2b16 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 251, 232, 0.34),
+    0 2px 5px rgba(28, 19, 10, 0.10) !important;
+}
+
+.room-visual-rebuild .room-gameplay-status-row .room-lifecycle-banner {
+  min-height: 1.7rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 0.35rem !important;
+  color: #60451f !important;
+  box-shadow: none !important;
+}
+
+.room-visual-rebuild .room-gameplay-status-row .room-lifecycle-banner span {
+  color: inherit !important;
+}
+
+.room-visual-rebuild .room-gameplay-status-row .room-lifecycle-banner > span:first-child span:last-child {
+  color: #8a611f !important;
+  font-weight: 900 !important;
+}
+
+.room-visual-rebuild .room-gameplay-status-row button {
+  min-height: 1.72rem !important;
+  border: 1px solid rgba(146, 104, 38, 0.28) !important;
+  border-radius: 4px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 225, 0.70), rgba(222, 198, 145, 0.28)),
+    rgba(255, 252, 238, 0.30) !important;
+  color: #6f4610 !important;
+  font-family: "Source Han Serif SC", "Noto Serif SC", serif !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+  padding: 0 0.72rem !important;
+  box-shadow: none !important;
+}
+
+.room-visual-rebuild .room-gameplay-status-row button:hover:not(:disabled) {
+  border-color: rgba(174, 123, 30, 0.50) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 239, 186, 0.82), rgba(218, 173, 70, 0.34)),
+    rgba(255, 252, 238, 0.34) !important;
+  color: #4d2c08 !important;
+}
+
 /* V6.1 detail polish: rail transparency, keeper list lines, separated command composer. */
 @media (min-width: 768px) {
   .room-visual-rebuild .room-member-rail {

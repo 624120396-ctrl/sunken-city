@@ -982,7 +982,7 @@ export function RoomPage() {
         </section>
       )}
 
-      {room && (!isMobile || canUseKPTools) && (
+      {room && canUseKPTools && (
         <div className="room-gameplay-status-row mb-3 flex flex-wrap items-center gap-2">
           <RoomLifecycleBanner
             lifecycle={room.lifecycle}

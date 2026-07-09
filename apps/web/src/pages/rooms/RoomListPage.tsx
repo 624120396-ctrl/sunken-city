@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BookOpen,
-  CalendarClock,
   Compass,
   Crown,
   DoorOpen,
@@ -14,17 +13,15 @@ import {
   PlayCircle,
   Plus,
   Search,
-  Shield,
-  Sparkles,
-  UserPlus,
   UserRound,
-  Users,
   type LucideIcon,
 } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { Modal } from '@components/ui/Modal';
 import { EmptyIcons, EmptyState } from '@components/ui/EmptyState';
-import { ActionCard, Button, DataCard, PageShell, ReadablePanel, Surface } from '@components/system';
+import { Button, DataCard, PageShell, ReadablePanel, Surface } from '@components/system';
+import { RoomListRecruitmentEntry } from './components/RoomListRecruitmentEntry';
+import { RoomListStoryCard } from './components/RoomListStoryCard';
 import { getRoomListOverview, getRoomReportArchive } from '@/services/room-overview.service';
 import type { RoomListOverviewItem, RoomReportArchiveItem } from '@/types/room-overview-contract';
 import {
@@ -35,8 +32,6 @@ import {
   isRoomObserver,
   isRoomParticipant,
   normalizeRoomListItem,
-  roomLifecycleLabels,
-  roomRoleCompactLabels,
   type RoomListItem,
   type RoomListItemResponse,
 } from '@/types/room-contract';
@@ -77,37 +72,8 @@ function roomMatchesFilter(room: RoomListItem, filter: RoomFilter) {
   }
 }
 
-function getRoomCardTone(room: RoomListItem) {
-  if (isRoomHost(room.myRole)) return 'gold';
-  if (isRoomParticipant(room.myRole)) return 'ocean';
-  if (isClosedLifecycle(room.lifecycle)) return 'blood';
-  return 'neutral';
-}
-
-function getRoomCardIcon(room: RoomListItem) {
-  if (isRoomHost(room.myRole)) return <Crown size={16} />;
-  if (isRoomParticipant(room.myRole)) return <UserRound size={16} />;
-  if (isRoomObserver(room.myRole)) return <Eye size={16} />;
-  return <BookOpen size={16} />;
-}
-
 function getVisibleMemberCount(room: RoomListItem) {
   return room.activeMemberCount ?? room.memberCount;
-}
-
-function formatNextSession(value?: string | null, timezone = 'Asia/Shanghai') {
-  if (!value) return null;
-  try {
-    return new Intl.DateTimeFormat('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: timezone,
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
 }
 
 export function RoomListPage() {
@@ -196,12 +162,6 @@ export function RoomListPage() {
     return new Map(roomSummaries.map((summary) => [summary.roomId, summary]));
   }, [roomSummaries]);
 
-  const recruitmentSummaries = useMemo(() => {
-    return roomSummaries
-      .filter((summary) => summary.recruitment.status === 'OPEN' || summary.recruitment.status === 'PAUSED')
-      .slice(0, 4);
-  }, [roomSummaries]);
-
   const canJoin = normalizeRoomId(joinRoomId).length > 0;
 
   if (loading) {
@@ -266,36 +226,7 @@ export function RoomListPage() {
               </form>
             </ReadablePanel>
 
-            <Surface variant="panel" material="archive" padding="md" className="room-library-index-card">
-              <div className="room-library-index-title">
-                <UserPlus size={16} className="text-[var(--coc-accent-gold)]" />
-                招募公告
-              </div>
-              {recruitmentSummaries.length === 0 ? (
-                <p className="mt-2 text-sm text-[var(--coc-text-muted)]">暂无公开招募中的房间。</p>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  {recruitmentSummaries.map((summary) => (
-                    <button
-                      key={summary.roomId}
-                      type="button"
-                      onClick={() => navigate(`/rooms/${summary.roomId}`)}
-                      className="room-library-recruitment-card"
-                      data-status={summary.recruitment.status.toLowerCase()}
-                    >
-                      <div className="room-library-recruitment-card__topline">
-                        <span>{summary.recruitment.status === 'OPEN' ? '招募中' : '暂停招募'}</span>
-                        {summary.recruitment.newcomerFriendly && <span>新手友好</span>}
-                      </div>
-                      <div className="room-library-recruitment-card__title">{summary.name}</div>
-                      <div className="room-library-recruitment-card__summary">
-                        {summary.recruitment.headline || '查看房间招募资料与参团说明。'}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </Surface>
+            <RoomListRecruitmentEntry />
 
             <Surface variant="panel" material="limestone" padding="md" className="room-library-index-card">
               <div className="room-library-index-title">
@@ -402,79 +333,12 @@ export function RoomListPage() {
             <div className="room-library-grid">
               {filteredRooms.map((room) => {
                 const summary = roomSummaryById.get(room.roomId);
-                const nextSessionText = formatNextSession(
-                  summary?.nextSession?.scheduledAt,
-                  summary?.nextSession?.timezone
-                );
-                const kpTodoCount = summary?.kpTodo
-                  ? summary.kpTodo.pendingApplications + summary.kpTodo.pendingInvitations + summary.kpTodo.pendingAttendance
-                  : 0;
-
                 return (
-                  <ActionCard
+                  <RoomListStoryCard
                     key={room.id}
-                    data-testid="room-card"
-                    role="button"
-                    tabIndex={0}
-                    title={room.name}
-                    eyebrow={
-                      <span className="inline-flex items-center gap-1">
-                        <Hash size={12} />
-                        {room.roomId}
-                      </span>
-                    }
-                    icon={getRoomCardIcon(room)}
-                    description={room.description || '尚未留下公开简介。故事的门已经开启，等待调查员踏入。'}
-                    tone={getRoomCardTone(room)}
-                    material="archive"
-                    meta={
-                      <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="inline-flex items-center gap-1">
-                          <Sparkles size={13} />
-                          {roomLifecycleLabels[room.lifecycle]}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Shield size={13} />
-                          {roomRoleCompactLabels[room.myRole]}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Users size={13} />
-                          {getVisibleMemberCount(room)}
-                          {typeof room.observerCount === 'number' && room.observerCount > 0
-                            ? ` · 观察 ${room.observerCount}`
-                            : ''}
-                        </span>
-                        {nextSessionText && (
-                          <span className="inline-flex items-center gap-1">
-                            <CalendarClock size={13} />
-                            {nextSessionText}
-                          </span>
-                        )}
-                        {summary?.recruitment.status === 'OPEN' && (
-                          <span className="inline-flex items-center gap-1">
-                            <DoorOpen size={13} />
-                            招募中
-                          </span>
-                        )}
-                        {kpTodoCount > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Hourglass size={13} />
-                            待办 {kpTodoCount}
-                          </span>
-                        )}
-                      </span>
-                    }
-                    actions={
-                      <span className="flex items-center gap-1 text-sm font-medium text-[var(--coc-accent-gold-strong)]">
-                        进入房间
-                        <ArrowRight size={15} />
-                      </span>
-                    }
-                    onClick={() => navigate(`/rooms/${room.roomId}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') navigate(`/rooms/${room.roomId}`);
-                    }}
-                    className="room-library-card h-full"
+                    room={room}
+                    summary={summary}
+                    onOpen={(roomId) => navigate(`/rooms/${roomId}`)}
                   />
                 );
               })}
