@@ -278,7 +278,7 @@ export function FriendListPage() {
       <PageShell
         className="friend-social-page"
         eyebrow="调查员社交台"
-        title="调查员社交"
+        title="同行者"
         description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
       >
         <Surface variant="panel" tone="ocean" material="archive" padding="lg" className="flex h-64 items-center justify-center">
@@ -292,7 +292,7 @@ export function FriendListPage() {
     <PageShell
       className="friend-social-page"
       eyebrow="调查员社交台"
-      title="调查员社交"
+      title="同行者"
       description="联系人、邀请、申请和同行状态会在这里汇总成一份可读档案。"
       actions={
         <div className="flex flex-wrap gap-2">

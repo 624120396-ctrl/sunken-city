@@ -361,7 +361,7 @@ export function FishingPage() {
     <PageShell
       className="blackwater-harbor-page"
       eyebrow="BLACKWATER HARBOR"
-      title="黑水港作业台"
+      title="黑水港"
       description="在冷雾码头记录潮汐、监听咬钩、回收异物，并把每一次渔获封入港口账本。"
       actions={
         <Surface variant="glass" material="archive" padding="sm" className="flex items-center gap-2 text-sm">

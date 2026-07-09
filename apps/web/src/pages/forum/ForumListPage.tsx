@@ -32,8 +32,8 @@ export function ForumListPage() {
 
   return (
     <PageShell
-      eyebrow="community archive"
-      title="旧日低语档案"
+      eyebrow="COMMUNITY ARCHIVE"
+      title="旧日低语"
       description="从这些低语卷宗进入不同的调查层。长文、证词与回声会被安置在更稳定的可读 Surface 中。"
       actions={
         <DataCard
