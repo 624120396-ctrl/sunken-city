@@ -1,9 +1,17 @@
+.drowned-oracle-page {
+  --dream-player-paper: url('/ui-textures/room-v6-aged-parchment-white.webp');
+  --dream-player-ink: #20170e;
+  --dream-player-muted: rgba(62, 51, 34, 0.68);
+  --dream-player-line: rgba(132, 102, 49, 0.26);
+  --dream-player-gold: #a97c16;
+}
+
 .dream-oracle-status-strip.coc-surface-v2[data-material="archive"] {
   overflow: hidden;
-  padding: 1rem;
+  padding: 0.72rem;
   border-color: rgba(154, 118, 55, 0.34);
   background:
-    linear-gradient(180deg, rgba(255, 252, 243, 0.94), rgba(239, 231, 213, 0.70)),
+    linear-gradient(180deg, rgba(255, 252, 243, 0.96), rgba(239, 231, 213, 0.74)),
     var(--coc-texture-keeper-parchment) center / 420px 420px repeat;
   box-shadow:
     inset 0 0 0 1px rgba(255, 250, 232, 0.36),
@@ -15,20 +23,19 @@
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.62rem;
 }
 
 .dream-oracle-entry-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  display: flex;
-  min-height: 5.25rem;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.85rem;
+  display: grid;
+  grid-template-rows: auto auto;
+  min-height: 4.35rem;
+  align-content: center;
+  gap: 0.28rem;
+  padding: 0.75rem 0.85rem;
   border: 1px solid rgba(116, 89, 43, 0.20);
   border-radius: 6px;
   background:
@@ -80,13 +87,18 @@
   align-items: center;
   gap: 0.4rem;
   color: rgba(62, 51, 34, 0.72);
-  font-size: 0.78rem;
+  min-width: 0;
+  font-size: 0.8rem;
   font-weight: 900;
+}
+
+.dream-oracle-entry-card__label svg {
+  flex: 0 0 auto;
 }
 
 .dream-oracle-entry-card__value {
   color: var(--coc-on-light-primary);
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1.15;
 }
@@ -105,12 +117,44 @@
   color: #4a2608;
 }
 
+.dream-oracle-stage-layout {
+  display: grid;
+  min-width: 0;
+}
+
+.dream-oracle-aside {
+  display: grid;
+  gap: 1rem;
+  color: var(--dream-player-ink);
+}
+
 .dream-oracle-brief-card.coc-surface-v2[data-material="archive"] {
-  border-color: rgba(154, 118, 55, 0.34);
+  border-color: rgba(154, 118, 55, 0.38);
   background:
-    var(--coc-texture-keeper-parchment) center / 360px 360px repeat,
-    rgba(250, 246, 235, 0.84);
+    linear-gradient(180deg, rgba(255, 252, 243, 0.94), rgba(239, 231, 213, 0.70)),
+    var(--dream-player-paper) center / 420px 420px repeat;
   background-blend-mode: normal, normal;
+}
+
+.dream-oracle-aside-card.coc-surface-v2[data-material="archive"] {
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 250, 232, 0.36),
+    0 1px 4px rgba(48, 37, 18, 0.08);
+}
+
+.dream-oracle-aside-card .coc-archive-subcard {
+  border: 1px solid var(--dream-player-line);
+  background:
+    var(--dream-player-paper) center / 360px 360px repeat,
+    rgba(250, 246, 235, 0.78);
+  background-blend-mode: normal, normal;
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 232, 0.22);
+  transform: none;
+}
+
+.dream-oracle-aside-card .coc-archive-subcard::before {
+  display: none;
 }
 
 .dream-oracle-brief-card__heading {
@@ -127,15 +171,100 @@
   text-transform: uppercase;
 }
 
+.dream-oracle-aside-status {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--dream-player-muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.dream-oracle-aside-status-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dream-oracle-aside-status-button[aria-pressed="true"] strong,
+.dream-oracle-aside-status-button:hover strong {
+  color: var(--dream-player-gold);
+}
+
+.dream-oracle-aside-status strong {
+  color: var(--dream-player-ink);
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-size: 1.22rem;
+  line-height: 1.25;
+}
+
+.dream-oracle-aside-grid {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.dream-oracle-aside-entry {
+  width: 100%;
+  min-height: 4.45rem;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.dream-oracle-aside-entry:hover,
+.dream-oracle-aside-entry[aria-pressed="true"] {
+  border-color: rgba(169, 124, 22, 0.62);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 224, 0.72), rgba(239, 226, 191, 0.62)),
+    var(--dream-player-paper) center / 360px 360px repeat;
+}
+
 .dream-oracle-brief-card__body {
   position: relative;
   z-index: 1;
   margin-top: 1rem;
   display: grid;
   gap: 0.78rem;
-  color: #3e3322;
+  color: var(--dream-player-ink);
   font-size: 0.9rem;
   line-height: 1.7;
+}
+
+.dream-oracle-brief-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.dream-oracle-brief-line__mark {
+  flex: 0 0 auto;
+  margin-top: 0.6rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(154, 118, 55, 0.08);
+}
+
+.dream-oracle-brief-line__mark--gold {
+  background: var(--coc-accent-gold);
+}
+
+.dream-oracle-brief-line__mark--dream {
+  background: #b78cff;
+}
+
+.dream-oracle-brief-line__mark--ocean {
+  background: var(--coc-accent-ocean);
 }
 
 .oracle-stage {
@@ -236,6 +365,64 @@
 
 .oracle-ready {
   padding-top: 3.5rem;
+}
+
+.oracle-ready-copy {
+  color: rgba(246, 224, 166, 0.82);
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-weight: 700;
+  text-shadow:
+    0 1px 0 rgba(5, 8, 12, 0.72),
+    0 0 18px rgba(201, 162, 39, 0.16);
+}
+
+.oracle-dream-trigger {
+  --glow-color: rgb(217, 176, 255);
+  --glow-spread-color: rgba(191, 123, 255, 0.781);
+  --enhanced-glow-color: rgb(231, 206, 255);
+  --btn-color: rgb(100, 61, 136);
+  border: .25em solid var(--glow-color);
+  padding: 1em 3em;
+  color: var(--glow-color);
+  font-size: 15px;
+  font-weight: bold;
+  background-color: var(--btn-color);
+  border-radius: 1em;
+  outline: none;
+  box-shadow: 0 0 1em .25em var(--glow-color),
+         0 0 4em 1em var(--glow-spread-color),
+         inset 0 0 .75em .25em var(--glow-color);
+  text-shadow: 0 0 .5em var(--glow-color);
+  position: relative;
+  transition: all 0.3s;
+}
+
+.oracle-dream-trigger::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--glow-spread-color);
+  filter: blur(2em);
+  opacity: .7;
+  transform: perspective(1.5em) rotateX(35deg) scale(1, .6);
+}
+
+.oracle-dream-trigger:hover {
+  color: var(--btn-color);
+  background-color: var(--glow-color);
+  box-shadow: 0 0 1em .25em var(--glow-color),
+         0 0 4em 2em var(--glow-spread-color),
+         inset 0 0 .75em .25em var(--glow-color);
+}
+
+.oracle-dream-trigger:active {
+  box-shadow: 0 0 0.6em .25em var(--glow-color),
+         0 0 2.5em 2em var(--glow-spread-color),
+         inset 0 0 .5em .25em var(--glow-color);
 }
 
 .oracle-ready-icon {
