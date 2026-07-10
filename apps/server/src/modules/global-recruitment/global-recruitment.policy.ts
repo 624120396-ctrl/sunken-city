@@ -41,3 +41,17 @@ export function normalizeGlobalRecruitmentTags(tags: string[] | undefined, max =
 
   return normalized;
 }
+
+export function shouldCreateGlobalRecruitmentRoomInvitation(input: {
+  sourceType: string;
+  roomId?: string | null;
+  nextResponseStatus: string;
+}) {
+  return input.sourceType === 'INTERNAL_ROOM'
+    && Boolean(input.roomId)
+    && input.nextResponseStatus === 'ACCEPTED';
+}
+
+export function requiresRoomForInternalGlobalRecruitment(sourceType: string, roomPublicId?: string | null) {
+  return sourceType !== 'INTERNAL_ROOM' || Boolean(roomPublicId?.trim());
+}

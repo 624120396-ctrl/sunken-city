@@ -1,5 +1,6 @@
 import { apiFetch, handleApiResponse } from '@lib/api';
 import type {
+  AdminGlobalRecruitmentReportView,
   GlobalRecruitmentPostPayload,
   GlobalRecruitmentPostView,
   GlobalRecruitmentReportPayload,
@@ -82,4 +83,20 @@ export async function reportGlobalRecruitment(postId: string, payload: GlobalRec
     method: 'POST',
     body: JSON.stringify(payload),
   }).then(res => handleApiResponse<{ reportId: string }>(res));
+}
+
+export async function listAdminGlobalRecruitmentReports(status: 'OPEN' | 'RESOLVED' | 'DISMISSED' | 'ALL' = 'OPEN') {
+  const data = await apiFetch(`/admin/recruitments/reports?status=${status}`)
+    .then(res => handleApiResponse<{ reports: AdminGlobalRecruitmentReportView[] }>(res));
+  return data.reports;
+}
+
+export async function reviewAdminGlobalRecruitmentReport(
+  reportId: string,
+  payload: { status: 'RESOLVED' | 'DISMISSED'; closePost?: boolean }
+) {
+  return apiFetch(`/admin/recruitments/reports/${encodeURIComponent(reportId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  }).then(res => handleApiResponse<{ reportId: string; status: string }>(res));
 }

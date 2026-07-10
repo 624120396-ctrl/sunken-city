@@ -70,7 +70,7 @@ const faqs = [
   },
   {
     question: '遇到骚扰或不安全招募怎么办？',
-    answer: '在招募板对应条目点击举报，写明原因。V1 会记录举报；更完整的审核后台需要后续单独实现。',
+    answer: '在招募板对应条目点击举报，写明原因。管理员会在招募举报审核中处理记录，并可关闭存在风险的公共招募。',
   },
   {
     question: '我需要帮助或反馈问题，去哪里？',
@@ -144,7 +144,7 @@ export function AboutHelpPage() {
       <section className="about-help-section">
         <div className="about-help-section-heading">
           <h2>更新情况</h2>
-          <p>版本信息来自前端单一维护源 `release-notes.ts`，后续更新只需改这里。</p>
+          <p>版本号来自仓库根目录 VERSION，更新记录来自 CHANGELOG.md；发布时由构建自动带入本页。</p>
         </div>
         <div className="about-help-release-list">
           {releaseNotes.map(note => (

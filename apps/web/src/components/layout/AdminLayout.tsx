@@ -14,6 +14,7 @@ import {
   Landmark,
   Gem,
   Sparkles,
+  ShieldAlert,
 } from 'lucide-react';
 import { Link, useLocation, Navigate } from 'react-router-dom';
 
@@ -41,6 +42,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/shop', label: '商店管理', icon: ShoppingBag },
     { path: '/admin/relic-market', label: '遗物与市场', icon: Gem },
     { path: '/admin/dream-cards', label: '溺者之牌', icon: Sparkles },
+    { path: '/admin/recruitment-reports', label: '招募举报', icon: ShieldAlert },
     { path: '/admin/settings', label: '系统设置', icon: Settings },
   ];
 

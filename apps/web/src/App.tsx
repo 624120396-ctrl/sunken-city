@@ -29,6 +29,7 @@ import { AdminShopPage } from '@pages/admin/AdminShopPage';
 import { AdminBoardModeratorsPage } from '@pages/admin/AdminBoardModeratorsPage';
 import { AdminRelicMarketPage } from '@pages/admin/AdminRelicMarketPage';
 import { AdminDreamCardPage } from '@pages/admin/AdminDreamCardPage';
+import { AdminRecruitmentReportsPage } from '@pages/admin/AdminRecruitmentReportsPage';
 
 import { PageSkeleton } from '@components/ui/Skeleton';
 
@@ -109,6 +110,7 @@ function App() {
       <Route path="/admin/board-moderators" element={<AdminLayout><AdminBoardModeratorsPage /></AdminLayout>} />
       <Route path="/admin/relic-market" element={<AdminLayout><AdminRelicMarketPage /></AdminLayout>} />
       <Route path="/admin/dream-cards" element={<AdminLayout><AdminDreamCardPage /></AdminLayout>} />
+      <Route path="/admin/recruitment-reports" element={<AdminLayout><AdminRecruitmentReportsPage /></AdminLayout>} />
 
       {/* 主站路由 */}
       <Route path="*" element={

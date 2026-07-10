@@ -1,30 +1,27 @@
-export const productVersion = '1.3.0';
+declare const __SUNKEN_CITY_VERSION__: string;
+declare const __SUNKEN_CITY_CHANGELOG__: string;
 
-export const releaseNotes = [
-  {
-    version: '1.3.0',
-    date: '2026-07-10',
-    title: '全站招募板与新手帮助',
-    items: [
-      '新增独立公共招募板，支持站内房间与外部活动并列发布。',
-      '新增关于与帮助页面，梳理注册、角色、找团、房间准备、聊天骰点与结团报告路径。',
-      '当前仍冻结官方规则书自动化、真实 AI 与结团后角色成长。',
-    ],
-  },
-  {
-    version: '1.2.0',
-    date: '2026-04-04',
-    title: '位阶觉醒',
-    items: [
-      '上线位阶、印记、经验值与用户展示印记。',
-      '补充位阶/印记管理能力。',
-      '继续保留核心跑团房间、角色卡、投骰与报告系统。',
-    ],
-  },
-  {
-    version: '1.0.0',
-    date: '2026-04-04',
-    title: '初始版本',
-    items: ['上线注册登录、调查员角色卡、跑团房间、投骰、基础管理后台。'],
-  },
-];
+export const productVersion = __SUNKEN_CITY_VERSION__;
+
+function parseReleaseNotes(changelog: string) {
+  return changelog
+    .split(/^## \[/m)
+    .slice(1)
+    .map(section => {
+      const [header, ...body] = section.split('\n');
+      const versionMatch = header.match(/^(\d+\.\d+\.\d+)\]\s*-\s*(\d{4}-\d{2}-\d{2})/);
+      if (!versionMatch) return null;
+
+      const content = body.join('\n');
+      const title = content.match(/^### .*?版本代号[:：]\s*(.+)$/m)?.[1]?.trim() || '版本更新';
+      const items = [...content.matchAll(/^- \*\*(.+?)\*\*[:：]\s*(.+)$/gm)]
+        .slice(0, 4)
+        .map(match => `${match[1]}：${match[2]}`);
+
+      return { version: versionMatch[1], date: versionMatch[2], title, items };
+    })
+    .filter((note): note is { version: string; date: string; title: string; items: string[] } => Boolean(note))
+    .slice(0, 3);
+}
+
+export const releaseNotes = parseReleaseNotes(__SUNKEN_CITY_CHANGELOG__);

@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+
+const repositoryRoot = path.resolve(__dirname, '../..');
+const productVersion = fs.readFileSync(path.join(repositoryRoot, 'VERSION'), 'utf8').trim();
+const changelog = fs.readFileSync(path.join(repositoryRoot, 'CHANGELOG.md'), 'utf8');
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __SUNKEN_CITY_VERSION__: JSON.stringify(productVersion),
+    __SUNKEN_CITY_CHANGELOG__: JSON.stringify(changelog),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -3,11 +3,15 @@ import { z } from 'zod';
 import { prisma } from '../../config/database';
 import { AppError } from '../../middleware/error';
 import { createNotification } from '../notifications/notifications.service';
+import { requireRoomCapability } from '../rooms/room-auth';
+import { buildRoomInvitationNotification, tryNotifyRoomUser } from '../rooms/room-notifications.service';
 import {
   canManageGlobalRecruitmentPost,
   canViewGlobalRecruitmentContact,
   getEffectiveGlobalRecruitmentStatus,
   normalizeGlobalRecruitmentTags,
+  requiresRoomForInternalGlobalRecruitment,
+  shouldCreateGlobalRecruitmentRoomInvitation,
 } from './global-recruitment.policy';
 
 const postSchema = z.object({
@@ -48,6 +52,11 @@ const reportSchema = z.object({
   note: z.string().trim().max(800).optional(),
 });
 
+const adminReportReviewSchema = z.object({
+  status: z.enum(['RESOLVED', 'DISMISSED']),
+  closePost: z.boolean().optional(),
+});
+
 function parseTags(raw: string): string[] {
   try {
     const parsed = JSON.parse(raw);
@@ -57,13 +66,14 @@ function parseTags(raw: string): string[] {
   }
 }
 
-async function resolveRoomDbId(roomPublicId?: string | null) {
+async function resolveRoomDbId(roomPublicId?: string | null, managerId?: string) {
   if (!roomPublicId) return null;
   const room = await prisma.room.findUnique({
     where: { roomId: roomPublicId },
     select: { id: true, roomId: true, name: true },
   });
   if (!room) throw new AppError('ROOM_NOT_FOUND', '绑定的房间不存在', 404);
+  if (managerId) await requireRoomCapability(room.roomId, managerId, 'canManageMembers');
   return room.id;
 }
 
@@ -204,12 +214,15 @@ export async function createGlobalRecruitment(req: Request, res: Response, next:
     const userId = req.user?.userId;
     if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
     const payload = postSchema.parse(req.body);
+    if (!requiresRoomForInternalGlobalRecruitment(payload.sourceType ?? 'EXTERNAL_EVENT', payload.roomPublicId)) {
+      throw new AppError('ROOM_REQUIRED', '站内房间招募必须绑定房间短 ID', 400);
+    }
     const minPlayers = payload.playerCountMin ?? 3;
     const maxPlayers = payload.playerCountMax ?? 4;
     if (minPlayers > maxPlayers) throw new AppError('INVALID_PLAYER_COUNT', '最少人数不能大于最多人数', 400);
 
     const roomDbId = payload.sourceType === 'INTERNAL_ROOM'
-      ? await resolveRoomDbId(payload.roomPublicId)
+      ? await resolveRoomDbId(payload.roomPublicId, userId)
       : null;
 
     const post = await prisma.globalRecruitmentPost.create({
@@ -253,12 +266,15 @@ export async function updateGlobalRecruitment(req: Request, res: Response, next:
     }
 
     const payload = postPatchSchema.parse(req.body);
+    if (!requiresRoomForInternalGlobalRecruitment(payload.sourceType ?? existing.sourceType, payload.roomPublicId ?? existing.roomId)) {
+      throw new AppError('ROOM_REQUIRED', '站内房间招募必须绑定房间短 ID', 400);
+    }
     const nextMin = payload.playerCountMin ?? existing.playerCountMin;
     const nextMax = payload.playerCountMax ?? existing.playerCountMax;
     if (nextMin > nextMax) throw new AppError('INVALID_PLAYER_COUNT', '最少人数不能大于最多人数', 400);
 
     const roomDbId = payload.sourceType === 'INTERNAL_ROOM'
-      ? await resolveRoomDbId(payload.roomPublicId)
+      ? await resolveRoomDbId(payload.roomPublicId, userId)
       : payload.sourceType === 'EXTERNAL_EVENT'
       ? null
       : undefined;
@@ -358,6 +374,64 @@ export async function updateGlobalRecruitmentResponse(req: Request, res: Respons
       throw new AppError('FORBIDDEN', '报名者只能撤回自己的报名', 403);
     }
 
+    if (response.status !== 'ACCEPTED' && shouldCreateGlobalRecruitmentRoomInvitation({
+      sourceType: response.post.sourceType,
+      roomId: response.post.roomId,
+      nextResponseStatus: payload.status,
+    })) {
+      const room = await prisma.room.findUnique({
+        where: { id: response.post.roomId! },
+        select: {
+          id: true,
+          roomId: true,
+          name: true,
+          creatorId: true,
+          members: { select: { userId: true, leftAt: true } },
+        },
+      });
+      if (!room) throw new AppError('ROOM_NOT_FOUND', '关联房间不存在', 404);
+
+      const roomAuth = await requireRoomCapability(room.roomId, userId, 'canManageMembers');
+      const activeMember = roomAuth.room.members.find(member => member.userId === response.userId && !member.leftAt);
+      if (activeMember || roomAuth.room.creatorId === response.userId) {
+        throw new AppError('ALREADY_ROOM_MEMBER', '报名者已经是关联房间成员', 400);
+      }
+
+      const invitation = await prisma.roomInvitation.upsert({
+        where: { roomId_inviteeId: { roomId: room.id, inviteeId: response.userId } },
+        create: {
+          roomId: room.id,
+          inviterId: userId,
+          inviteeId: response.userId,
+          role: 'PLAYER',
+          status: 'PENDING',
+          message: `你在招募板报名的「${response.post.title}」已获接纳。`,
+        },
+        update: {
+          inviterId: userId,
+          role: 'PLAYER',
+          status: 'PENDING',
+          message: `你在招募板报名的「${response.post.title}」已获接纳。`,
+          respondedAt: null,
+        },
+        include: { inviter: { select: { nickname: true, email: true } } },
+      });
+
+      const io = req.app.get('io') as import('socket.io').Server | undefined;
+      await tryNotifyRoomUser({
+        prisma,
+        io,
+        userId: response.userId,
+        notification: buildRoomInvitationNotification({
+          roomTitle: room.name,
+          roomId: room.roomId,
+          inviterName: invitation.inviter?.nickname || invitation.inviter?.email || 'KP',
+          role: invitation.role,
+          message: invitation.message,
+        }),
+      });
+    }
+
     const saved = await prisma.globalRecruitmentResponse.update({
       where: { id: response.id },
       data: { status: payload.status },
@@ -388,6 +462,69 @@ export async function reportGlobalRecruitment(req: Request, res: Response, next:
     });
 
     res.status(201).json({ success: true, data: { reportId: report.id } });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listGlobalRecruitmentReports(req: Request, res: Response, next: NextFunction) {
+  try {
+    const status = typeof req.query.status === 'string' ? req.query.status : 'OPEN';
+    const reports = await prisma.globalRecruitmentReport.findMany({
+      where: status === 'ALL' ? {} : { status },
+      include: {
+        post: { include: { author: { select: { nickname: true, email: true } } } },
+        reporter: { select: { nickname: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        reports: reports.map(report => ({
+          id: report.id,
+          reason: report.reason,
+          note: report.note,
+          status: report.status,
+          createdAt: report.createdAt.toISOString(),
+          updatedAt: report.updatedAt.toISOString(),
+          reporterName: report.reporter.nickname || report.reporter.email || '举报人',
+          post: {
+            id: report.post.id,
+            title: report.post.title,
+            status: getEffectiveGlobalRecruitmentStatus(report.post.status, report.post.expiresAt),
+            authorName: report.post.author.nickname || report.post.author.email || '发起人',
+          },
+        })),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function reviewGlobalRecruitmentReport(req: Request, res: Response, next: NextFunction) {
+  try {
+    const payload = adminReportReviewSchema.parse(req.body);
+    const report = await prisma.globalRecruitmentReport.findUnique({ where: { id: req.params.reportId } });
+    if (!report) throw new AppError('GLOBAL_RECRUITMENT_REPORT_NOT_FOUND', '举报记录不存在', 404);
+
+    const [saved] = await prisma.$transaction([
+      prisma.globalRecruitmentReport.update({
+        where: { id: report.id },
+        data: { status: payload.status },
+      }),
+      ...(payload.closePost ? [
+        prisma.globalRecruitmentPost.update({
+          where: { id: report.postId },
+          data: { status: 'CLOSED', closedAt: new Date() },
+        }),
+      ] : []),
+    ]);
+
+    res.json({ success: true, data: { reportId: saved.id, status: saved.status } });
   } catch (error) {
     next(error);
   }

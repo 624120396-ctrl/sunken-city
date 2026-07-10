@@ -5,6 +5,8 @@ import {
   canViewGlobalRecruitmentContact,
   getEffectiveGlobalRecruitmentStatus,
   normalizeGlobalRecruitmentTags,
+  requiresRoomForInternalGlobalRecruitment,
+  shouldCreateGlobalRecruitmentRoomInvitation,
 } from '../src/modules/global-recruitment/global-recruitment.policy';
 
 test('global recruitment status turns open expired posts into expired', () => {
@@ -37,4 +39,37 @@ test('global recruitment tags are trimmed, deduplicated, and capped', () => {
   const tags = normalizeGlobalRecruitmentTags([' CoC7 ', '线上', '', 'CoC7', '长团']);
 
   assert.deepEqual(tags, ['CoC7', '线上', '长团']);
+});
+
+test('accepted responses create room invitations only for linked internal rooms', () => {
+  assert.equal(
+    shouldCreateGlobalRecruitmentRoomInvitation({
+      sourceType: 'INTERNAL_ROOM',
+      roomId: 'room-db-id',
+      nextResponseStatus: 'ACCEPTED',
+    }),
+    true
+  );
+  assert.equal(
+    shouldCreateGlobalRecruitmentRoomInvitation({
+      sourceType: 'EXTERNAL_EVENT',
+      roomId: null,
+      nextResponseStatus: 'ACCEPTED',
+    }),
+    false
+  );
+  assert.equal(
+    shouldCreateGlobalRecruitmentRoomInvitation({
+      sourceType: 'INTERNAL_ROOM',
+      roomId: 'room-db-id',
+      nextResponseStatus: 'DECLINED',
+    }),
+    false
+  );
+});
+
+test('internal room recruitment requires an explicit room binding', () => {
+  assert.equal(requiresRoomForInternalGlobalRecruitment('INTERNAL_ROOM', 'SC-112233'), true);
+  assert.equal(requiresRoomForInternalGlobalRecruitment('INTERNAL_ROOM', ''), false);
+  assert.equal(requiresRoomForInternalGlobalRecruitment('EXTERNAL_EVENT', ''), true);
 });

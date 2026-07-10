@@ -3,6 +3,7 @@ export type GlobalRecruitmentStatus = 'OPEN' | 'CLOSED' | 'EXPIRED';
 export type GlobalRecruitmentContactVisibility = 'PUBLIC' | 'LOGGED_IN' | 'RESPONDERS';
 export type GlobalRecruitmentResponseStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WITHDRAWN';
 export type GlobalRecruitmentReportReason = 'HARASSMENT' | 'SPAM' | 'MISLEADING' | 'UNSAFE' | 'OTHER';
+export type GlobalRecruitmentReportStatus = 'OPEN' | 'RESOLVED' | 'DISMISSED';
 
 export interface GlobalRecruitmentResponseView {
   id: string;
@@ -77,4 +78,20 @@ export interface GlobalRecruitmentResponsePayload {
 export interface GlobalRecruitmentReportPayload {
   reason: GlobalRecruitmentReportReason;
   note?: string;
+}
+
+export interface AdminGlobalRecruitmentReportView {
+  id: string;
+  reason: GlobalRecruitmentReportReason;
+  note: string;
+  status: GlobalRecruitmentReportStatus;
+  createdAt: string;
+  updatedAt: string;
+  reporterName: string;
+  post: {
+    id: string;
+    title: string;
+    status: GlobalRecruitmentStatus;
+    authorName: string;
+  };
 }
