@@ -628,7 +628,14 @@ Create `docs/superpowers/research/vtt-architecture/05-sunken-city-architecture-p
 Run:
 
 ```powershell
-$patterns = @('TB' + 'D', 'TO' + 'DO', '待' + '补', '稍' + '后', '未' + '定', 'place' + 'holder')
+$patterns = @(
+  ('TB' + 'D'),
+  ('TO' + 'DO'),
+  ('待' + '补'),
+  ('稍' + '后'),
+  ('未' + '定'),
+  ('place' + 'holder')
+)
 rg -n ($patterns -join '|') "C:\Users\29102\Documents\沉没之城\docs\superpowers\research\vtt-architecture"
 ```
 

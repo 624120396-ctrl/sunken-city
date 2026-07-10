@@ -34,7 +34,7 @@
 - `.svg`：只作为图标候选进入索引；直接渲染前必须净化或栅格化，避免脚本、外链、事件属性和嵌入内容风险。
 - 压缩包：不属于第一阶段默认扫描目标。除非用户明确要求并进入隔离目录，否则不自动解压，也不让压缩包内容参与正常索引。
 
-## 建议的 Asset
+## 建议的 ImportedAsset
 
 ```typescript
 export interface ImportedAsset {
@@ -228,7 +228,7 @@ flowchart LR
 - 每个 manifest 的解析状态：`parsed`、`malformed`、`unsupported`、`unsafe`.
 - 每个候选资产的审核状态：`pendingReview`、`approvedPrivate`、`rejected`、`needsLicenseNote`。
 
-失败项不影响其他文件继续入库；KP 可以先使用通过审核的私有资产，稍后再处理异常文件。
+失败项不影响其他文件继续入库；KP 可以先使用通过审核的私有资产，后续再处理异常文件。
 
 ## 后续阶段前置条件
 

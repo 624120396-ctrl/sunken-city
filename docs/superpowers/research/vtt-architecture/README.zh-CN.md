@@ -32,9 +32,14 @@
 
 ## 术语约定
 
+- `RuleSystemManifest`：规则系统清单，声明规则 id、版本、文档类型、能力、入口和可选内容包。
+- `RuleContentPackManifest`：规则内容包清单，绑定规则系统并声明版本、内容类型和私有访问边界。
+- `SceneAssetPreset`：可复用场景素材预设，引用背景、氛围和叠层资产，并携带默认对象草稿。
 - `SceneObjectDraft`：预设或导入阶段的 marker/token/note/fog 草稿对象。
 - `SceneObject`：如果后续实现需要通用对象层，用于持久化 generic marker/note/fog 对象。
+- `TokenAsset`：可复用 Token 视觉素材记录，引用底层 `ImportedAsset`，不等同于领域实体或场景摆放。
 - `SceneTokenInstance`：token 专用摆放实例，绑定 `TokenAsset` 和可选领域实体。
+- `ImportedAsset`：本地或私有导入后的统一媒体索引记录，承载来源、文件 metadata、hash 和 licenseNote。
 
 精确 schema 字段、relations、API 返回形状保持后续实现阶段再定，本研究只固定命名边界和职责分层。
 
