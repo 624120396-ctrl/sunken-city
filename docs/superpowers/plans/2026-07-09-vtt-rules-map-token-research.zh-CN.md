@@ -44,31 +44,23 @@
 
 **Create:**
 
-- `docs/superpowers/research/vtt-architecture/README.zh-CN.md`  
-  研究总入口，记录研究对象、源码路径、阶段结论、后续阅读顺序。
+- `docs/superpowers/research/vtt-architecture/README.zh-CN.md`：研究总入口，记录研究对象、源码路径、阶段结论、后续阅读顺序。
+- `docs/superpowers/research/vtt-architecture/01-rule-extension.zh-CN.md`：规则拓展研究报告，聚焦 Foundry DND5E 的系统包、模块包、Hooks、CONFIG、Compendium、flags。
+- `docs/superpowers/research/vtt-architecture/02-map-scene.zh-CN.md`：地图/场景研究报告，聚焦 Scene、地图背景、动态地图、场景对象、点位、雾区、权限层。
+- `docs/superpowers/research/vtt-architecture/03-token-asset.zh-CN.md`：Token/资产研究报告，聚焦 Token 与 Actor/NPC、Token 实例、动态 Token、状态标记、可见性。
+- `docs/superpowers/research/vtt-architecture/04-resource-pack-import.zh-CN.md`：FVTT/Roll20 资源包导入研究报告，聚焦本地扫描、分类、缩略图、私有访问和场景预设生成。
+- `docs/superpowers/research/vtt-architecture/05-sunken-city-architecture-proposal.zh-CN.md`：《沉没之城》映射方案，给出 RuleSystemManifest、SceneAssetPreset、SceneObject、TokenAsset、SceneTokenInstance 草案。
 
-- `docs/superpowers/research/vtt-architecture/01-rule-extension.zh-CN.md`  
-  规则拓展研究报告，聚焦 Foundry DND5E 的系统包、模块包、Hooks、CONFIG、Compendium、flags。
-
-- `docs/superpowers/research/vtt-architecture/02-map-scene.zh-CN.md`  
-  地图/场景研究报告，聚焦 Scene、地图背景、动态地图、场景对象、点位、雾区、权限层。
-
-- `docs/superpowers/research/vtt-architecture/03-token-asset.zh-CN.md`  
-  Token/资产研究报告，聚焦 Token 与 Actor/NPC、Token 实例、动态 Token、状态标记、可见性。
-
-- `docs/superpowers/research/vtt-architecture/04-resource-pack-import.zh-CN.md`  
-  FVTT/Roll20 资源包导入研究报告，聚焦本地扫描、分类、缩略图、私有访问和场景预设生成。
-
-- `docs/superpowers/research/vtt-architecture/05-sunken-city-architecture-proposal.zh-CN.md`  
-  《沉没之城》映射方案，给出 RuleSystemManifest、SceneAssetPreset、SceneObject、TokenAsset、SceneTokenInstance 草案。
-
-**Local research clones, not committed:**
+**First-round local research clones, not committed:**
 
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\dnd5e`
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\planarally`
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\owlbear-sdk`
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\owlbear-dynamic-fog`
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\abovevtt`
+
+**Deferred sampling path, not created by this plan:**
+
 - `C:\Users\29102\Documents\沉没之城\.codex-run\vtt-research\maptool`
 
 ---
@@ -505,7 +497,7 @@ Create `docs/superpowers/research/vtt-architecture/04-resource-pack-import.zh-CN
 | FVTT manifest | `module.json`, `system.json`, `world.json` | `foundry-package` |
 | Roll20 资源包 | folder + filename conventions | `roll20-pack` |
 
-## 建议的 Asset
+## 建议的 ImportedAsset
 
 ```typescript
 export interface ImportedAsset {

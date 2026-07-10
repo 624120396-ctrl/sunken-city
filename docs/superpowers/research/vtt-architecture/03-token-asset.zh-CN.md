@@ -200,4 +200,3 @@ Token/资产在《沉没之城》的目标不是 DND tactical automation，而�
 | AboveVTT built-in tokens | `.codex-run/vtt-research/abovevtt/built-in-tokens.js` | `1-9`, `73-130` | 内置素材目录包含 folderPath、image、alternativeImages 等概念 |
 | AboveVTT alternative images | `.codex-run/vtt-research/abovevtt/TokensPanel.js` | `1840-1902`, `2573-2622` | catalog item 可有 alternative images；My Token 可保存 statBlock 引用和 tokenOptions |
 | AboveVTT monster conversion | `.codex-run/vtt-research/abovevtt/TokensPanel.js` | `1353-1425`, `5024-5088`, `5109-5362` | monster/open5e 数据会转换 HP、AC、size、senses、movement 等规则字段 |
-
