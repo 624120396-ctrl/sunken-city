@@ -1,4 +1,5 @@
 import { Megaphone, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Surface } from '@components/system';
 
 interface RoomListRecruitmentEntryProps {
@@ -6,7 +7,16 @@ interface RoomListRecruitmentEntryProps {
 }
 
 export function RoomListRecruitmentEntry({ onOpenRecruitmentHub }: RoomListRecruitmentEntryProps) {
-  const enabled = typeof onOpenRecruitmentHub === 'function';
+  const navigate = useNavigate();
+
+  const handleOpenRecruitmentHub = () => {
+    if (onOpenRecruitmentHub) {
+      onOpenRecruitmentHub();
+      return;
+    }
+
+    navigate('/recruitments');
+  };
 
   return (
     <Surface variant="panel" material="archive" padding="md" className="room-library-recruitment-entry">
@@ -23,17 +33,16 @@ export function RoomListRecruitmentEntry({ onOpenRecruitmentHub }: RoomListRecru
         </div>
       </div>
       <p className="room-library-recruitment-entry__copy">
-        未来可发布站内、站外、线下等任意形式的跑团招募。当前故事书仅保留入口，不再把招募当作房间附属列表。
+        发布或浏览站内、站外、线下等任意形式的跑团招募。故事书只保留入口，不再把招募当作房间附属列表。
       </p>
       <Button
         type="button"
         variant="secondary"
-        disabled={!enabled}
-        onClick={onOpenRecruitmentHub}
+        onClick={handleOpenRecruitmentHub}
         className="room-library-recruitment-entry__action"
         icon={<ArrowRight size={15} />}
       >
-        {enabled ? '进入招募版' : '招募版规划中'}
+        进入招募版
       </Button>
     </Surface>
   );
