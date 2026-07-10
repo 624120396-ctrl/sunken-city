@@ -160,11 +160,22 @@ migrate() {
   require_root
   [ -n "$commit_arg" ] || die "--commit is required"
   local release_dir
+  local database_url
   release_dir="$(release_dir_for "$commit_arg")"
   [ -d "$release_dir" ] || die "release not found: $release_dir"
 
   backup_file "$DATA_ROOT/dev.db" "dev.db.pre-migrate"
-  (cd "$release_dir/apps/server" && DATABASE_URL="$(grep '^DATABASE_URL=' "$ENV_FILE" | cut -d= -f2-)" npx prisma migrate deploy --schema prisma/schema.prisma)
+  database_url="$(cd "$release_dir/apps/server" && ENV_FILE="$ENV_FILE" node -e '
+    const fs = require("fs");
+    const dotenv = require("dotenv");
+    const parsed = dotenv.parse(fs.readFileSync(process.env.ENV_FILE));
+    if (!parsed.DATABASE_URL) {
+      console.error("DATABASE_URL is missing from the persistent env file");
+      process.exit(1);
+    }
+    process.stdout.write(parsed.DATABASE_URL);
+  ')"
+  (cd "$release_dir/apps/server" && DATABASE_URL="$database_url" npx prisma migrate deploy --schema prisma/schema.prisma)
   log "migration deployed for commit=$commit_arg"
 }
 
