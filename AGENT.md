@@ -2,6 +2,14 @@
 
 > 规范来源：2026-05-30 基于 Agentic Coding 最佳实践制定
 
+## 当前本机仓库
+
+自 2026-07-10 起，唯一的本机开发主仓库为 `Y:\sunkencity`。
+
+- `C:\Users\29102\Documents\沉没之城` 仅保留为迁移回退副本，未经明确安排不得继续在两个目录中并行写入。
+- 需要隔离开发时，从 `Y:\sunkencity` 创建新的 Git worktree；旧目录下的 `.worktrees` 不随本次迁移继承。
+- 历史交接和研究文档中出现的 C 盘路径反映的是当时环境，无需为此批量改写。
+
 ---
 
 ## 铁律：后端修改禁止在服务器直接执行
@@ -26,7 +34,7 @@ Agent-Limitation: 已知局限或后续TODO"
 git push origin develop
 
 # 4. 服务器拉取并重启
-ssh root@43.254.167.183 "cd /opt/coc-platform && git pull && pm2 restart coc-server"
+ssh root@64.90.30.232 "cd /opt/coc-platform && git pull && pm2 restart coc-server"
 ```
 
 **前端部署**：本地 build → rsync dist → SSH 调用 deploy.sh（详见 TOOLS.md 部署规则）
