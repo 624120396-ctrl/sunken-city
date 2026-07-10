@@ -11,6 +11,10 @@ DEPLOY_LOG=${DEPLOY_LOG:-$DATA_ROOT/deploy.log}
 NGINX_SITE=${NGINX_SITE:-/etc/nginx/sites-enabled/sunken-city}
 ENV_FILE=${ENV_FILE:-$DATA_ROOT/env/server.env}
 UPLOADS_DIR=${UPLOADS_DIR:-$DATA_ROOT/uploads}
+HEALTH_MAX_ATTEMPTS=${HEALTH_MAX_ATTEMPTS:-10}
+HEALTH_RETRY_INTERVAL_SECONDS=${HEALTH_RETRY_INTERVAL_SECONDS:-1}
+HEALTH_READY_TIMEOUT_SECONDS=${HEALTH_READY_TIMEOUT_SECONDS:-20}
+HEALTH_REQUEST_TIMEOUT_SECONDS=${HEALTH_REQUEST_TIMEOUT_SECONDS:-3}
 
 usage() {
   cat <<'USAGE'
@@ -248,8 +252,29 @@ activate_commit() {
   release_dir="$(release_dir_for "$commit_arg")"
   [ -d "$release_dir" ] || die "release not found: $release_dir"
 
+  local previous_current=""
+  local previous_current_is_link=no
+  local activation_backup_dir
+  activation_backup_dir="$DATA_ROOT/backups/release-channel/$(date -u '+%Y%m%dT%H%M%SZ')"
+
+  if [ -L "$CURRENT_LINK" ]; then
+    previous_current="$(readlink -f "$CURRENT_LINK")"
+    [ -d "$previous_current" ] || die "current release pointer is broken: $CURRENT_LINK"
+    previous_current_is_link=yes
+  elif [ -e "$CURRENT_LINK" ]; then
+    die "current release pointer exists but is not a symlink: $CURRENT_LINK"
+  fi
+
   ensure_persistent_inputs
-  backup_file "/root/.pm2/dump.pm2" "pm2-dump.pm2"
+  mkdir -p "$activation_backup_dir"
+  if [ -f /root/.pm2/dump.pm2 ]; then
+    cp -a /root/.pm2/dump.pm2 "$activation_backup_dir/pm2-dump.pm2"
+    log "backup /root/.pm2/dump.pm2 -> $activation_backup_dir/pm2-dump.pm2"
+  fi
+  if [ -e "$NGINX_SITE" ]; then
+    cp -a "$NGINX_SITE" "$activation_backup_dir/nginx-site"
+    log "backup $NGINX_SITE -> $activation_backup_dir/nginx-site"
+  fi
 
   ln -sfn "$release_dir" "$CURRENT_LINK"
   write_nginx_release_site "$CURRENT_LINK/apps/server/public"
@@ -258,14 +283,77 @@ activate_commit() {
   pm2 delete "$PM2_NAME" >/dev/null 2>&1 || true
   (cd "$CURRENT_LINK/apps/server" && pm2 start dist/index.js --name "$PM2_NAME" --update-env)
   pm2 save
-  health
+  if ! health; then
+    rollback_failed_activation "$previous_current" "$previous_current_is_link" "$activation_backup_dir"
+    die "activation health check failed; rollback attempted from $activation_backup_dir"
+  fi
   log "activated release commit=$commit_arg dir=$release_dir"
 }
 
+rollback_failed_activation() {
+  local previous_current="$1"
+  local previous_current_is_link="$2"
+  local activation_backup_dir="$3"
+  local restore_dir="$LEGACY_ROOT"
+
+  log "activation health failed; restoring prior application release"
+  pm2 delete "$PM2_NAME" >/dev/null 2>&1 || true
+
+  if [ "$previous_current_is_link" = yes ]; then
+    ln -sfn "$previous_current" "$CURRENT_LINK"
+    restore_dir="$previous_current"
+  else
+    rm -f "$CURRENT_LINK"
+  fi
+
+  if [ -f "$activation_backup_dir/nginx-site" ]; then
+    cp -a "$activation_backup_dir/nginx-site" "$NGINX_SITE"
+    nginx -s reload || log "rollback warning: nginx reload failed"
+  else
+    log "rollback warning: nginx backup missing"
+  fi
+
+  if [ -f "$restore_dir/apps/server/dist/index.js" ]; then
+    (cd "$restore_dir/apps/server" && pm2 start dist/index.js --name "$PM2_NAME" --update-env) || \
+      log "rollback warning: failed to restart $restore_dir"
+  else
+    log "rollback warning: server entry missing in $restore_dir"
+  fi
+  pm2 save || log "rollback warning: pm2 save failed"
+
+  if health; then
+    log "rollback health check passed"
+  else
+    log "rollback health check failed"
+  fi
+}
+
 health() {
-  curl -fsS --max-time 5 "http://127.0.0.1:$SERVICE_PORT/health"
-  echo
-  pm2 describe "$PM2_NAME" >/dev/null
+  local deadline=$((SECONDS + HEALTH_READY_TIMEOUT_SECONDS))
+  local attempt remaining request_timeout sleep_seconds
+
+  for ((attempt = 1; attempt <= HEALTH_MAX_ATTEMPTS; attempt += 1)); do
+    remaining=$((deadline - SECONDS))
+    [ "$remaining" -gt 0 ] || break
+    request_timeout=$HEALTH_REQUEST_TIMEOUT_SECONDS
+    [ "$request_timeout" -le "$remaining" ] || request_timeout=$remaining
+
+    if curl -fsS --max-time "$request_timeout" "http://127.0.0.1:$SERVICE_PORT/health"; then
+      echo
+      pm2 describe "$PM2_NAME" >/dev/null
+      return 0
+    fi
+
+    [ "$attempt" -lt "$HEALTH_MAX_ATTEMPTS" ] || break
+    remaining=$((deadline - SECONDS))
+    [ "$remaining" -gt 0 ] || break
+    sleep_seconds=$HEALTH_RETRY_INTERVAL_SECONDS
+    [ "$sleep_seconds" -le "$remaining" ] || sleep_seconds=$remaining
+    [ "$sleep_seconds" -gt 0 ] && sleep "$sleep_seconds"
+  done
+
+  echo "ERROR: backend health did not become ready after $HEALTH_MAX_ATTEMPTS attempts or ${HEALTH_READY_TIMEOUT_SECONDS}s" >&2
+  return 1
 }
 
 voice_readiness() {
