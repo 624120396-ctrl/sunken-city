@@ -6,7 +6,7 @@
 
 第一轮决策是：把“VTT 能力”做成当前房间调查体验的可选视觉层，而不是新建一个取代房间日志、线索板、NPC 档案、调查坞和移动/桌面边界的战棋平台。KP 的核心工作流应是先把本地/私有素材包扫描成可审核索引，再选择背景、点位和 Token 绑定到 `RoomScene` 或调查场景，最后把已授权、已公开的视觉投影下发给 PL。PL 看到的是当前调查场景、公开点位、公开 NPC/Token 和摘要；KP 额外看到私密点位、KP 备注、未公开素材和审核状态。
 
-当前工程已经具备房间、角色、骰点、叙事场景、调查线索/NPC/场景、日志、KP 私密便签与能力门禁，但没有生产级的素材目录、`TokenAsset`、场景对象实例、资源包只读导入器或 `RuleSystemManifest`/registry 模型。因此本方案只给出概念边界和开发拆分；精确 Prisma 字段、API 契约、权限裁剪和前端组件形态应进入后续实现计划。
+当前工程已经具备房间、角色、骰点、叙事场景、调查线索/NPC/场景、日志、KP 私密便签与能力门禁，但没有生产级的素材目录、`TokenAsset`、`SceneObject` / `SceneTokenInstance` 场景对象层、资源包只读导入器或 `RuleSystemManifest`/registry 模型。因此本方案只给出概念边界和开发拆分；精确 Prisma 字段、API 契约、权限裁剪和前端组件形态应进入后续实现计划。
 
 ## 用户与 KP 工作流
 
@@ -28,7 +28,7 @@ flowchart LR
   D --> E["SceneAssetPreset 草稿"]
   D --> F["TokenAsset 候选"]
   E --> G["绑定到 RoomScene / InvestigationScene"]
-  F --> H["SceneTokenInstance / 点位对象"]
+  F --> H["SceneTokenInstance / SceneObject"]
   G --> I["服务端能力裁剪"]
   H --> I
   I --> J["PL 授权投影"]
@@ -61,7 +61,7 @@ MVP 的产品定义是“COC 调查场景板”。第一版必须围绕私有资
 | 现有模型/组件 | 保留权威 | 可选扩展 | 原因 |
 | --- | --- | --- | --- |
 | `Room` | 房间身份、成员、当前阶段/场景、调查对象、日志与能力边界继续权威 | 未来可通过可选字段/关系指向默认场景视觉层或规则启用策略 | `Room` 已关联 `RoomScene`、`ScenePreset`、`RoomEventLog`、调查线索/NPC/场景、KP 便签等，不需要被 VTT 场景替换 |
-| `RoomScene` | 叙事场景继续是房间内“当前场景”的基础对象 | 可选绑定背景资产、场景对象集合、坐标模式、视觉预设 | 现有字段只有 title/description/atmosphere/imageUrl/musicUrl/status，适合作为视觉层挂点但不足以承载资产目录和对象实例 |
+| `RoomScene` | 叙事场景继续是房间内“当前场景”的基础对象；现有必需 `roomId`、`phaseId`、`sortOrder` 和关联关系继续保留 | 可选绑定背景资产、`SceneObject` / `SceneTokenInstance` 集合、坐标模式、视觉预设 | `title` / `description` / `atmosphere` / `imageUrl` / `musicUrl` / `status` 是本轮最相关的叙事/视觉字段子集，但 `RoomScene` 还承担房间、阶段、排序和关联约束，不能被简化成纯视觉表 |
 | `InvestigationScene` | 调查地点/场景的公开摘要、KP 备注、氛围、imageUrl、当前状态继续可用 | 可与 `RoomScene` 视觉层互相引用，或作为 marker payload 的业务对象 | 它已经有 publicSummary、keeperNotes、imageUrl、isCurrent，不应被地图对象复制正文 |
 | `InvestigationClue` | 线索内容、状态、visibility、NPC/scene 引用继续权威 | marker 只引用 clueId，并显示公开标题/摘要 | 现有 clue 支持 KP_ONLY/PUBLIC 与 reveal 流程；地图点位不能绕过此权限 |
 | `InvestigationNpc` | NPC 公开档案、KP notes、状态和 visibility 继续权威 | `TokenAsset` 可提供头像之外的 token/立绘/状态变体 | NPC 不是 Token；Token 只是视觉表现 |
@@ -110,8 +110,9 @@ MVP 的产品定义是“COC 调查场景板”。第一版必须围绕私有资
 概念实体：
 
 - `SceneAssetPreset`：可复用预设，来自 KP 手工创建或资源包草稿。
-- `SceneObjectDraft`：marker/token/note/fog 的预设对象。
-- `SceneObjectInstance`：运行时对象实例，绑定到 `RoomScene` 或 `InvestigationScene`。
+- `SceneObjectDraft`：preset/import 阶段的 marker/token/note/fog 草稿对象。
+- `SceneObject`：如果后续实现需要 generic object 层，用于持久化 marker/note/fog 对象，并绑定到 `RoomScene` 或 `InvestigationScene`。
+- `SceneTokenInstance`：token 专用摆放实例，绑定 `TokenAsset`，并可选绑定 character、`investigationNpc`、`roomNpc` 或 `custom`。
 - `coordinateMode`：归一化坐标或背景像素坐标，具体方案留待实现决策。
 
 ### 4. 房间运行投影

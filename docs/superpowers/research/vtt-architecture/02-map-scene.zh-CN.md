@@ -57,7 +57,7 @@ Owlbear dynamic-fog 是一个扩展，不是 Owlbear core 源码。本报告只�
 
 ### background 与 menu 入口
 
-扩展 manifest 只声明 `background_url`，背景入口初始化 CanvasKit、等待 `OBR.onReady()`，注册 light context menu、line mode、door mode、reconciler 和 overlay。menu 入口是单独的 React/MUI 页面，通过 context menu embed 打开灯光设置面板。
+扩展 manifest 通过 `background_url` 声明 background 入口，同时还包含扩展名称、版本、action 等其他 metadata。背景入口初始化 CanvasKit、等待 `OBR.onReady()`，注册 light context menu、line mode、door mode、reconciler 和 overlay。menu 入口是单独的 React/MUI 页面，通过 context menu embed 打开灯光设置面板。
 
 这个拆分对《沉没之城》的启发是：轻量地图工具可以把“主场景层”和“对象设置面板”拆开。第一阶段不需要把所有地图编辑功能塞进房间主界面；KP 可以通过小型场景编辑面板维护背景、点位、Token、雾区和备注。
 

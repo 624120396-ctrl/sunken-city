@@ -18,6 +18,10 @@
 | Owlbear dynamic-fog | `.codex-run/vtt-research/owlbear-dynamic-fog` | `55e22b7` | `LICENSE`，GPL-3.0 文本 | 墙、门、光源、动态雾区 | 示例代码不复制；brief 未写 GPL，后续引用需继续隔离 |
 | AboveVTT | `.codex-run/vtt-research/abovevtt` | `4957c0d` | `LICENSE`，AGPL-3.0 文本 | 外部内容库、地图、Token 整合 | AGPL，严禁直接复制进项目 |
 
+## 交付摘要
+
+本研究包给出了规则拓展、地图/场景、Token/资产、资源包导入和《沉没之城》映射方案。后续建议先开发素材资产库 V1 和场景背景/点位 V1，再开发 Token 绑定和规则系统 registry。
+
 ## 阶段产物
 
 - `01-rule-extension.zh-CN.md`
@@ -26,10 +30,18 @@
 - `04-resource-pack-import.zh-CN.md`
 - `05-sunken-city-architecture-proposal.zh-CN.md`
 
+## 术语约定
+
+- `SceneObjectDraft`：预设或导入阶段的 marker/token/note/fog 草稿对象。
+- `SceneObject`：如果后续实现需要通用对象层，用于持久化 generic marker/note/fog 对象。
+- `SceneTokenInstance`：token 专用摆放实例，绑定 `TokenAsset` 和可选领域实体。
+
+精确 schema 字段、relations、API 返回形状保持后续实现阶段再定，本研究只固定命名边界和职责分层。
+
+## 证据路径说明
+
+各报告中的 `.codex-run/vtt-research/...` 证据路径，都是相对于当前执行检出根目录的本地相对路径；本轮 active checkout root 是 `C:\Users\29102\Documents\沉没之城\.worktrees\vtt-architecture-research\`。这些源码克隆属于本地忽略目录，不随 Git 提交；换到其他 checkout 或 worktree 继续研究时，必须在对应检出根目录下重新创建。
+
 ## 当前边界
 
 不研究完整 3D VTT、语音、视频、商业市场、完整战棋自动化。动态光照、墙体视线、复杂碰撞只做产品取舍研究，不进入第一轮实现。
-
-## 交付摘要
-
-Task 1 已建立研究工作区源码索引，后续任务可直接按上表进入对应仓库与许可证边界继续研究。
