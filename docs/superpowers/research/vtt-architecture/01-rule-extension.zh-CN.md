@@ -165,7 +165,7 @@ DND5E 的 pack flags 可验证 `sourceBook`、`types`、`sorting`、`display`。
 | 文档类型 | `.codex-run/vtt-research/dnd5e/system.json` | `26` | `documentTypes` 使用 Foundry 文档名组织 Actor、Item 等类型 |
 | 内容包 | `.codex-run/vtt-research/dnd5e/system.json` | `168` | packs 数组组织 Actor、Item、JournalEntry、RollTable 等内容 |
 | pack flags | `.codex-run/vtt-research/dnd5e/system.json` | `176-236`, `331-333`, `423-427` | `sourceBook`、`types`、`sorting`、`display` 可由源码验证 |
-| system flags | `.codex-run/vtt-research/dnd5e/system.json` | `591-604` | `flags.dnd5e.sourceBooks`、迁移版本和 hot reload 配置 |
+| system flags | `.codex-run/vtt-research/dnd5e/system.json` | `598-609` | `flags.dnd5e.sourceBooks`、迁移版本和 hot reload 配置 |
 | init hook | `.codex-run/vtt-research/dnd5e/dnd5e.mjs` | `57` | `Hooks.once("init")` 是系统注册主入口 |
 | CONFIG 替换 | `.codex-run/vtt-research/dnd5e/dnd5e.mjs` | `62-95`, `125-134` | 文档类、骰子类、UI 类、数据模型挂入 Foundry CONFIG |
 | spell list / module data | `.codex-run/vtt-research/dnd5e/dnd5e.mjs` | `118-122` | 内置 spell lists 注册后扫描模块 manifest 数据 |
@@ -178,4 +178,4 @@ DND5E 的 pack flags 可验证 `sourceBook`、`types`、`sorting`、`display`。
 | registry ready | `.codex-run/vtt-research/dnd5e/module/registry.mjs` | `253-260`, `440-474` | registry 可延迟到 ready 后初始化 |
 | DND5E 配置集中 | `.codex-run/vtt-research/dnd5e/module/config.mjs` | `62`, `165`, `3223`, `3619`, `3805`, `4409`, `4460`, `4918` | abilities、skills、spell lists、conditions、status、activity、advancement、sourceBooks |
 | settings / migration setting | `.codex-run/vtt-research/dnd5e/module/settings.mjs` | `74-83`, `715-718`, `731-740` | 注册 world 迁移版本、缓存 world settings、延迟设置 |
-| world migration | `.codex-run/vtt-research/dnd5e/module/migration.mjs` | `10`, `192`, `200-211` | 迁移 world documents / packs，并写回 systemMigrationVersion |
+| world migration | `.codex-run/vtt-research/dnd5e/module/migration.mjs` | `10`, `36-93`, `137-192`, `204-211`, `229-281` | 迁移 world actors/items/scenes、筛选并迁移 compendium packs，并写回 systemMigrationVersion |
