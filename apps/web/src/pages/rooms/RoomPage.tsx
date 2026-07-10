@@ -15,6 +15,7 @@ import { MagneticButton } from '@components/ui/MagneticButton';
 import { QuickRollBar } from '@components/room/QuickRollBar';
 import { KPDicePanel } from '@components/room/KPDicePanel';
 import { KpLifecycleControls } from './components/KpLifecycleControls';
+import { RoomVoicePanel } from './components/RoomVoicePanel';
 import { RoomJoinGate } from './components/RoomJoinGate';
 import { RoomLifecycleBanner } from './components/RoomLifecycleBanner';
 import { RoomParticipantRail } from './components/RoomParticipantRail';
@@ -1081,6 +1082,8 @@ export function RoomPage() {
               </button>
             </header>
 
+            <RoomVoicePanel roomId={roomId || ''} compact className="room-mobile-tools-sheet__voice" />
+
             {!canUseKPTools && (
               <section className="room-mobile-tools-sheet__quick-rolls" aria-label="移动端常用检定">
                 <header>
@@ -1666,6 +1669,7 @@ export function RoomPage() {
               onOpenKpDicePanel={() => setShowKpDicePanel(true)}
               onOpenInvestigationTab={openInvestigationDock}
               onRequestClose={() => setShowDesktopCommandRail(false)}
+              voicePanel={<RoomVoicePanel roomId={roomId || ''} />}
             />
           </Suspense>
         ) : !isMobile ? (

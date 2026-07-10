@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Archive,
@@ -64,6 +65,7 @@ interface RoomCommandRailProps {
   onOpenKpDicePanel?: () => void;
   onOpenInvestigationTab?: (tab: InvestigationTab) => void;
   onRequestClose?: () => void;
+  voicePanel?: ReactNode;
 }
 
 function memberRole(member: RoomGameplayMember) {
@@ -106,6 +108,7 @@ export function RoomCommandRail({
   onOpenKpDicePanel,
   onOpenInvestigationTab,
   onRequestClose,
+  voicePanel,
 }: RoomCommandRailProps) {
   const openSceneTool = () => {
     if (onOpenInvestigationTab) {
@@ -208,6 +211,12 @@ export function RoomCommandRail({
           </button>
         </div>
       </header>
+
+      {voicePanel && (
+        <section className="room-command-rail__section room-command-rail__section--voice">
+          {voicePanel}
+        </section>
+      )}
 
       <nav className="room-command-rail__nav" aria-label="房间工具">
         {navItems.map((item) => (

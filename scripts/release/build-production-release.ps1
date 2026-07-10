@@ -61,6 +61,13 @@ try {
   Invoke-ReleaseStep -Label "git archive" -Script { git archive --format=tar "--output=$ArchivePath" $ResolvedCommit }
   Invoke-ReleaseStep -Label "tar extract source" -Script { tar -xf $ArchivePath -C $SourceRoot }
 
+  $ServerReleaseScript = Join-Path $SourceRoot "scripts\release\server-release.sh"
+  if (Test-Path $ServerReleaseScript) {
+    $ScriptText = [System.IO.File]::ReadAllText($ServerReleaseScript) -replace "`r`n", "`n"
+    $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($ServerReleaseScript, $ScriptText, $Utf8NoBom)
+  }
+
   Write-Host "== Add build artifacts =="
   Copy-Item -Recurse -Force (Join-Path $RepoRoot "apps\server\dist") (Join-Path $SourceRoot "apps\server\dist")
 

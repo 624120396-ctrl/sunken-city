@@ -4343,6 +4343,138 @@
   }
 }
 
+.room-visual-rebuild .room-voice-panel {
+  display: grid;
+  gap: 0.72rem;
+  min-width: 0;
+  border: 1px solid rgba(91, 167, 179, 0.22);
+  border-radius: 8px;
+  background: rgba(5, 18, 24, 0.45);
+  color: rgba(244, 232, 198, 0.9);
+  padding: 0.78rem;
+}
+
+.room-visual-rebuild .room-voice-panel__header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.62rem;
+}
+
+.room-visual-rebuild .room-voice-panel__icon {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(91, 167, 179, 0.32);
+  border-radius: 8px;
+  background: rgba(91, 167, 179, 0.12);
+  color: #9dd7dc;
+}
+
+.room-visual-rebuild .room-voice-panel__header b,
+.room-visual-rebuild .room-voice-session__meta b {
+  display: block;
+  color: rgba(255, 235, 184, 0.96);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.room-visual-rebuild .room-voice-panel__header small,
+.room-visual-rebuild .room-voice-session__meta span {
+  display: block;
+  color: rgba(201, 222, 217, 0.66);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.room-visual-rebuild .room-voice-panel__body,
+.room-visual-rebuild .room-voice-session {
+  display: grid;
+  gap: 0.62rem;
+  min-width: 0;
+}
+
+.room-visual-rebuild .room-voice-panel__body p,
+.room-visual-rebuild .room-voice-panel__error {
+  margin: 0;
+  color: rgba(220, 218, 200, 0.78);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.room-visual-rebuild .room-voice-panel__body button,
+.room-visual-rebuild .room-voice-session__actions button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.18rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(246, 207, 114, 0.24);
+  border-radius: 8px;
+  background: rgba(246, 207, 114, 0.11);
+  color: rgba(255, 238, 190, 0.94);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.room-visual-rebuild .room-voice-panel__body button:disabled,
+.room-visual-rebuild .room-voice-session__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.room-visual-rebuild .room-voice-session__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.room-visual-rebuild .room-voice-session__speaking {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.42rem;
+  color: rgba(201, 222, 217, 0.72);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.room-visual-rebuild .room-voice-session__speaking[data-speaking="true"] {
+  color: #9dd7dc;
+}
+
+.room-visual-rebuild .room-voice-session__speaking span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-visual-rebuild .room-voice-session__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.room-visual-rebuild .room-voice-panel__error {
+  color: #f1b7bd;
+}
+
+.room-visual-rebuild .room-voice-panel--compact {
+  gap: 0.58rem;
+  padding: 0.68rem;
+}
+
+.room-visual-rebuild .room-mobile-tools-sheet__voice {
+  margin-bottom: 0.65rem;
+}
+
 /* ===== PL visual version: investigator-first room layout ===== */
 .room-visual-rebuild .room-player-view {
   --room-player-paper: url('/ui-textures/room-v6-aged-parchment-white.webp');
