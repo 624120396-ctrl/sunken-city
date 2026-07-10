@@ -61,6 +61,8 @@ const ForumPostPage = lazyNamed(() => import('@pages/forum/ForumPostPage'), 'For
 const ForumNewPostPage = lazyNamed(() => import('@pages/forum/ForumNewPostPage'), 'ForumNewPostPage');
 const FriendListPage = lazyNamed(() => import('@pages/friends/FriendListPage'), 'FriendListPage');
 const MessageCenterPage = lazyNamed(() => import('@pages/messages/MessageCenterPage'), 'MessageCenterPage');
+const GlobalRecruitmentBoardPage = lazyNamed(() => import('@pages/recruitments/GlobalRecruitmentBoardPage'), 'GlobalRecruitmentBoardPage');
+const AboutHelpPage = lazyNamed(() => import('@pages/help/AboutHelpPage'), 'AboutHelpPage');
 const FishingPage = lazyNamed(() => import('@pages/fishing/FishingPage'), 'FishingPage');
 const DreamingPage = lazyNamed(() => import('@pages/dreaming/DreamingPage'), 'DreamingPage');
 const SoloStartPage = lazyNamed(() => import('@pages/solo/SoloStartPage'), 'SoloStartPage');
@@ -134,6 +136,8 @@ function App() {
               <Route path="/forums/:postId" element={routeElement(ForumPostPage)} />
               <Route path="/friends" element={routeElement(FriendListPage)} />
               <Route path="/messages" element={routeElement(MessageCenterPage)} />
+              <Route path="/recruitments" element={routeElement(GlobalRecruitmentBoardPage)} />
+              <Route path="/help" element={routeElement(AboutHelpPage)} />
               <Route path="/fishing" element={routeElement(FishingPage)} />
               <Route path="/dream" element={routeElement(DreamingPage)} />
               <Route path="/solo" element={routeElement(SoloStartPage)} />

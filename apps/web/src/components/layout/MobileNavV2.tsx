@@ -1,12 +1,14 @@
-import { BookOpen, Home, MessageSquare, User } from 'lucide-react';
+import { BookOpen, ClipboardList, HelpCircle, Home, MessageSquare, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@lib/utils';
 
 const items = [
   { path: '/rooms', label: '房间', icon: BookOpen },
+  { path: '/recruitments', label: '招募', icon: ClipboardList },
   { path: '/', label: '首页', icon: Home },
   { path: '/characters', label: '调查员', icon: User },
   { path: '/forums', label: '低语', icon: MessageSquare },
+  { path: '/help', label: '帮助', icon: HelpCircle },
   { path: '/profile', label: '我的', icon: User },
 ];
 

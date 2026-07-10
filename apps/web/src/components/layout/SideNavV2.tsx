@@ -1,8 +1,10 @@
 import {
   BookOpen,
+  ClipboardList,
   ChevronLeft,
   ChevronRight,
   Fish,
+  HelpCircle,
   Home,
   Mail,
   MessageSquare,
@@ -26,12 +28,14 @@ const navItems: SideNavItem[] = [
   { path: '/', label: '首页', icon: Home },
   { path: '/characters', label: '调查员', icon: User },
   { path: '/rooms', label: '故事书', icon: BookOpen },
+  { path: '/recruitments', label: '招募板', icon: ClipboardList },
   { path: '/friends', label: '好友', icon: Users },
   { path: '/messages', label: '消息中心', icon: Mail },
   { path: '/fishing', label: '黑水港', icon: Fish },
   { path: '/dream', label: '溺者之牌', icon: Moon },
   { path: '/shop', label: '无名集市', icon: Store, activePaths: ['/shop', '/inventory', '/market'] },
   { path: '/forums', label: '旧日低语', icon: MessageSquare },
+  { path: '/help', label: '关于与帮助', icon: HelpCircle },
 ];
 
 interface SideNavV2Props {

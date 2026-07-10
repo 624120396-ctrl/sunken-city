@@ -30,6 +30,7 @@ import investigationBoardRoutes from './modules/rooms/investigation-board.routes
 import roomCoordinationRoutes from './modules/rooms/room-coordination.routes';
 import roomCommunicationRoutes from './modules/rooms/room-communication.routes';
 import roomRecruitmentRoutes from './modules/rooms/room-recruitment.routes';
+import globalRecruitmentRoutes from './modules/global-recruitment/global-recruitment.routes';
 import roomAiRoutes from './modules/rooms/room-ai.routes';
 import roomOverviewRoutes from './modules/rooms/room-overview.routes';
 import aiDoubaoRoutes from './modules/rooms/ai-doubao.routes';
@@ -116,6 +117,7 @@ app.use('/api/rooms', investigationBoardRoutes);
 app.use('/api/rooms', roomCoordinationRoutes);
 app.use('/api/rooms', roomCommunicationRoutes);
 app.use('/api/rooms', roomRecruitmentRoutes);
+app.use('/api', globalRecruitmentRoutes);
 app.use('/api/rooms', roomAiRoutes);
 app.use('/api/rooms', roomOverviewRoutes);
 app.use('/api/rooms', aiDoubaoRoutes);

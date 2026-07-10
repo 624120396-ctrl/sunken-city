@@ -1,0 +1,283 @@
+.about-help-page {
+  --help-paper: url('/ui-textures/room-v6-aged-parchment-white.webp');
+  --help-ink: #20170e;
+  --help-muted: rgba(67, 54, 36, 0.72);
+  --help-line: rgba(139, 99, 38, 0.26);
+  --help-gold: #a87312;
+  --help-green: #2f766f;
+  width: min(100%, calc(100vw - 4rem));
+  max-width: none;
+  color: var(--help-ink);
+}
+
+.about-help-version {
+  min-width: 8rem;
+  border: 1px solid rgba(232, 212, 160, 0.24);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(13, 24, 23, 0.94), rgba(30, 32, 24, 0.9)),
+    radial-gradient(circle at 78% 0%, rgba(201, 162, 39, 0.2), transparent 62%);
+  padding: 0.65rem 0.8rem;
+  color: #f3e7ce;
+}
+
+.about-help-version span,
+.about-help-version b {
+  display: block;
+}
+
+.about-help-version span {
+  color: rgba(243, 231, 206, 0.7);
+  font-size: 0.72rem;
+}
+
+.about-help-version b {
+  margin-top: 0.2rem;
+  font-size: 1.1rem;
+}
+
+.about-help-aside,
+.about-help-section,
+.about-help-release-list,
+.about-help-faq-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.about-help-card.coc-surface-v2[data-material="archive"],
+.about-help-intro.coc-surface-v2[data-material="archive"],
+.about-help-step.coc-surface-v2[data-material="archive"],
+.about-help-release.coc-surface-v2[data-material="archive"],
+.about-help-faq.coc-surface-v2[data-material="archive"],
+.about-help-footer.coc-surface-v2[data-material="archive"] {
+  --coc-text-primary: var(--help-ink);
+  --coc-text-secondary: var(--help-muted);
+  --coc-text-muted: rgba(72, 61, 43, 0.58);
+  --coc-border-subtle: var(--help-line);
+  border-color: rgba(154, 118, 55, 0.36);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.95), rgba(239, 231, 213, 0.78)),
+    var(--help-paper) center / 430px 430px repeat;
+  box-shadow:
+    0 12px 26px rgba(31, 22, 9, 0.1),
+    inset 0 0 0 1px rgba(255, 250, 232, 0.38);
+}
+
+.about-help-card h2,
+.about-help-faq h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--help-gold);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.about-help-card p,
+.about-help-card li,
+.about-help-intro p,
+.about-help-step p,
+.about-help-faq p,
+.about-help-footer p {
+  color: var(--help-muted);
+  font-size: 0.94rem;
+  line-height: 1.76;
+}
+
+.about-help-card p,
+.about-help-card ul {
+  margin-top: 0.7rem;
+}
+
+.about-help-card ul,
+.about-help-release ul {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.about-help-card li {
+  padding-left: 0.2rem;
+}
+
+.about-help-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.about-help-intro h2,
+.about-help-footer h2 {
+  color: var(--help-ink);
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-size: clamp(1.25rem, 1.4vw, 1.75rem);
+}
+
+.about-help-intro p {
+  margin-top: 0.65rem;
+  max-width: 86ch;
+}
+
+.about-help-intro-actions {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 9rem;
+}
+
+.about-help-intro-actions a,
+.about-help-step a {
+  min-height: 2.4rem;
+  border: 1px solid rgba(168, 115, 18, 0.45);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ddb23b, #b9790c);
+  color: #211506;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.about-help-section-heading h2 {
+  color: #f2e1bc;
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-size: clamp(1.22rem, 1.3vw, 1.65rem);
+}
+
+.about-help-section-heading p {
+  margin-top: 0.25rem;
+  color: rgba(239, 226, 191, 0.78);
+  font-size: 0.92rem;
+}
+
+.about-help-step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+
+.about-help-step {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  min-height: 15rem;
+}
+
+.about-help-step__icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(168, 115, 18, 0.34);
+  border-radius: 6px;
+  background: rgba(255, 248, 224, 0.58);
+  color: var(--help-gold);
+}
+
+.about-help-step h3,
+.about-help-release__head b {
+  color: var(--help-ink);
+  font-family: "Noto Serif SC", "Songti SC", serif;
+}
+
+.about-help-step h3 {
+  font-size: 1.08rem;
+}
+
+.about-help-step a {
+  width: fit-content;
+  margin-top: auto;
+}
+
+.about-help-release__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.55rem;
+  border-bottom: 1px solid var(--help-line);
+  padding-bottom: 0.65rem;
+}
+
+.about-help-release__head span {
+  color: var(--help-gold);
+  font-weight: 900;
+}
+
+.about-help-release__head small {
+  color: var(--help-muted);
+}
+
+.about-help-release ul {
+  margin-top: 0.75rem;
+}
+
+.about-help-release li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: var(--help-muted);
+  line-height: 1.65;
+}
+
+.about-help-release li svg {
+  margin-top: 0.26rem;
+  color: var(--help-green);
+  flex: 0 0 auto;
+}
+
+.about-help-faq h3 {
+  font-size: 0.95rem;
+}
+
+.about-help-faq p {
+  margin-top: 0.55rem;
+}
+
+.about-help-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.about-help-footer > svg {
+  color: var(--help-gold);
+  flex: 0 0 auto;
+}
+
+@media (min-width: 1600px) {
+  .about-help-page {
+    width: min(100%, calc(100vw - 6rem));
+  }
+}
+
+@media (min-width: 2200px) {
+  .about-help-page {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .about-help-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .about-help-intro-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .about-help-page {
+    width: 100%;
+  }
+
+  .about-help-intro-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .about-help-footer {
+    flex-direction: column;
+  }
+}

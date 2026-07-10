@@ -8,6 +8,7 @@ const coordinationNotificationTypes = new Set<string>([
   'room_announcement',
   'room_application_review',
   'room_application_submitted',
+  'global_recruitment_response',
 ]);
 
 const socialNotificationTypes = new Set<string>([
@@ -47,6 +48,8 @@ export function getNotificationTypeLabel(type: NotificationItem['type'] | string
       return '申请结果';
     case 'room_application_submitted':
       return '入团申请';
+    case 'global_recruitment_response':
+      return '招募报名';
     case 'forum_reply':
       return '论坛回复';
     case 'forum_mention':
@@ -92,7 +95,7 @@ export function getNotificationLayerLabel(layer: NotificationLayer) {
 export function getNotificationLayerDescription(layer: NotificationLayer) {
   switch (layer) {
     case 'coordination':
-      return '排期、申请、邀请';
+      return '排期、申请、邀请、招募';
     case 'social':
       return '好友、论坛、提及';
     case 'system':

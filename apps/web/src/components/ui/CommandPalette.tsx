@@ -4,7 +4,7 @@ import {
   Search, X, Home, Store,
   Users, Fish, Sparkles, Crown, Landmark,
   LayoutGrid, Trophy, Scroll, BookOpen,
-  Compass, Mail,
+  Compass, Mail, ClipboardList, HelpCircle,
 } from 'lucide-react';
 
 interface CommandItem {
@@ -18,6 +18,7 @@ interface CommandItem {
 const COMMANDS: CommandItem[] = [
   { id: 'dashboard', label: '首页', path: '/', icon: Home, keywords: ['主页', '首页', '仪表盘', 'dash'] },
   { id: 'rooms', label: '故事书', path: '/rooms', icon: Landmark, keywords: ['故事书', '房间', '大厅', '跑团', 'room'] },
+  { id: 'recruitments', label: '招募板', path: '/recruitments', icon: ClipboardList, keywords: ['招募', '找团', '报名', '跑团', 'recruitment'] },
   { id: 'solo', label: '幻影脚本', path: '/solo', icon: Scroll, keywords: ['单人', 'solo', '剧本', '故事'] },
   { id: 'scenarios', label: '剧本列表', path: '/scenarios', icon: BookOpen, keywords: ['剧本', 'scenario', '模组'] },
   { id: 'nameless-market', label: '无名集市', path: '/shop', icon: Store, keywords: ['无名集市', '商店', '背包', '市场', '购买', '交易', '遗物', '道具', 'inventory', 'market', 'shop'] },
@@ -29,6 +30,7 @@ const COMMANDS: CommandItem[] = [
   { id: 'titles', label: '印记', path: '/titles', icon: Trophy, keywords: ['印记', '称号', '头衔', 'title', '成就'] },
   { id: 'ranks', label: '位阶', path: '/ranks', icon: Crown, keywords: ['位阶', '等级', 'rank', '段位', '经验'] },
   { id: 'profile', label: '个人资料', path: '/profile', icon: Compass, keywords: ['资料', '档案', 'profile', '设置'] },
+  { id: 'help', label: '关于与帮助', path: '/help', icon: HelpCircle, keywords: ['帮助', '关于', '新手', '版本', 'faq', 'help'] },
 ];
 
 export function CommandPalette() {
