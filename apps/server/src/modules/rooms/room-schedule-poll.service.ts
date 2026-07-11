@@ -63,6 +63,9 @@ function assertPollEditable(poll: { status: string; closesAt: Date | null }) {
   if (poll.status !== 'OPEN') {
     throw new AppError('SCHEDULE_POLL_NOT_OPEN', '该排期投票已结束', 409);
   }
+  if (poll.closesAt && poll.closesAt <= new Date()) {
+    throw new AppError('SCHEDULE_POLL_VOTING_CLOSED', '该排期投票已截止，不能通过普通编辑重新开放', 409);
+  }
 }
 
 function isPrismaWriteConflict(error: unknown) {
@@ -189,7 +192,7 @@ export async function createRoomSchedulePoll(req: Request, res: Response, next: 
 
     res.status(201).json({ poll: mapPoll(poll, participantIds(auth.room), userId) });
   } catch (error) {
-    next(error);
+    next(scheduleWriteError(error));
   }
 }
 

@@ -18,6 +18,7 @@ import type {
   RoomScheduleVoteStatus,
 } from '@/types/room-coordination-contract';
 import { fromZonedDateTimeInput, toZonedDateTimeInput } from './room-schedule-time';
+import { canEditSchedulePoll } from './room-schedule-summary';
 
 interface RoomSchedulePollPanelProps {
   roomId: string;
@@ -287,7 +288,7 @@ export function RoomSchedulePollPanel({ roomId, canManage }: RoomSchedulePollPan
           ))}
           <div className="flex flex-wrap gap-2 pt-1">
             {canVote && <button type="button" disabled={busy || answeredCount === 0} onClick={() => void submitVotes()} className="inline-flex items-center gap-1 rounded bg-[#4db8b8] px-2 py-1 text-xs text-black"><Save size={13} /> 提交回复</button>}
-            {canManage && <button type="button" disabled={busy} onClick={() => editPoll(openPoll)} className="rounded border border-[#3a3a3a] px-2 py-1 text-xs text-[#e8d4a0]">编辑</button>}
+            {canEditSchedulePoll(canManage, openPoll.isVotingClosed) && <button type="button" disabled={busy} onClick={() => editPoll(openPoll)} className="rounded border border-[#3a3a3a] px-2 py-1 text-xs text-[#e8d4a0]">编辑</button>}
             {canManage && !openPoll.isVotingClosed && <button type="button" disabled={busy} onClick={() => void run(() => closeRoomSchedulePoll(roomId, openPoll.id))} className="rounded border border-[#3a3a3a] px-2 py-1 text-xs text-[#e8d4a0]">截止投票</button>}
             {canManage && !openPoll.isVotingClosed && <button type="button" disabled={busy} onClick={() => void run(async () => { const result = await remindRoomSchedulePollPending(roomId, openPoll.id); return result; }, '已提醒待回复成员')} className="inline-flex items-center gap-1 rounded border border-[#3a3a3a] px-2 py-1 text-xs text-[#e8d4a0]"><Bell size={13} /> 提醒</button>}
             {canManage && <button type="button" disabled={busy} onClick={() => void run(() => cancelRoomSchedulePoll(roomId, openPoll.id))} className="rounded border border-[#a63848]/60 px-2 py-1 text-xs text-[#e9a8b0]">取消排期</button>}

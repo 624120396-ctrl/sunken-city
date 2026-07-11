@@ -3,6 +3,7 @@ import { CalendarClock, ClipboardList, RefreshCw, Search, UsersRound } from 'luc
 import { Surface } from '@components/system';
 import { getRoomOperationsOverview } from '@/services/room-overview.service';
 import type { RoomOperationsOverview } from '@/types/room-overview-contract';
+import { buildRoomOperationsScheduleCopy } from './room-schedule-summary';
 
 interface RoomOperationsOverviewPanelProps {
   roomId: string;
@@ -117,6 +118,11 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
   const nextSession = overview.coordination?.nextSession ?? null;
   const schedulePoll = overview.coordination?.schedulePoll ?? null;
   const attendance = overview.coordination?.attendanceSummary ?? {};
+  const scheduleCopy = buildRoomOperationsScheduleCopy({
+    nextSessionLabel: formatTime(nextSession?.scheduledAt ?? null, nextSession?.timezone ?? 'Asia/Shanghai'),
+    attendance,
+    schedulePoll,
+  });
   const launchTodos = overview.launchReadiness?.items.filter(item => item.status === 'TODO').slice(0, 3) ?? [];
 
   return (
@@ -165,18 +171,18 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
             下次开团
           </div>
           <div className="room-operations-card__value">
-            {schedulePoll
-              ? `${schedulePoll.candidateCount} 个候选，${schedulePoll.pendingMemberCount} 人待回复`
-              : formatTime(nextSession?.scheduledAt ?? null, nextSession?.timezone ?? 'Asia/Shanghai')}
+            {scheduleCopy.primaryValue}
           </div>
           <div className="room-operations-card__meta">
-            {schedulePoll
-              ? schedulePoll.closesAt
-                ? `截止 ${formatTime(schedulePoll.closesAt, schedulePoll.timezone)}`
-                : '进行中的排期投票'
-              : `可参加 ${attendance.AVAILABLE ?? 0} / 请假 ${attendance.LEAVE ?? 0} / 待确认 ${attendance.PENDING ?? 0}`}
+            {scheduleCopy.attendanceMeta}
           </div>
-          {(schedulePoll?.title || nextSession?.title) && <p className="room-operations-card__note">{schedulePoll?.title || nextSession?.title}</p>}
+          {nextSession?.title && <p className="room-operations-card__note">{nextSession.title}</p>}
+          {schedulePoll && (
+            <p className="room-operations-card__note">
+              {scheduleCopy.pollSupplement} · {schedulePoll.title}
+              {schedulePoll.closesAt ? ` · 截止 ${formatTime(schedulePoll.closesAt, schedulePoll.timezone)}` : ''}
+            </p>
+          )}
         </div>
 
         <div className="room-operations-card">

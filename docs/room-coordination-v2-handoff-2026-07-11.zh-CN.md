@@ -75,6 +75,14 @@
 
 已规划并执行的边界仅包括新增纯逻辑、权限能力、通知/ICS、前端摘要测试，Prisma validate/generate，server/web typecheck 和必要 build；未执行全站 E2E、深度 Playwright、全量视觉回归或生产写入冒烟。
 
+### 2026-07-11 独立审计修正
+
+- 已截止或到期但仍为 `OPEN` 的 poll，服务端普通 update 返回 409；前端不再显示“编辑”。本轮没有增加 reopen 操作。
+- `RoomOperationsOverviewPanel` 的“下次开团”始终以正式 `RoomNextSession` 和正式出席统计为主信息；进行中 poll 仅作为候选数、待回复数和截止时间副信息。
+- `createRoomSchedulePoll` 与其他事务写入口一致，将 Prisma `P2034` 映射为 409。
+- 新增 `apps/server/scripts/room-schedule-poll.service.test.ts`，使用临时 SQLite 副本和真实 Prisma/handler 路径覆盖：非成员 403、管理能力、候选归属、截止后 update/vote 409、最终化事务重置正式出席、并发 create/finalize、P2034 映射、ICS 成员鉴权。
+- 新增前端行为断言，覆盖截止后不可普通编辑，以及运营摘要不以 schedule poll 覆盖正式场次。
+
 已知限制：
 
 - 没有后台定时任务；到期后由接口判定不可投票，通知依赖 KP 手动提醒。
