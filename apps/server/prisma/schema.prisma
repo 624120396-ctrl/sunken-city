@@ -58,6 +58,8 @@ model User {
   roomSettlements RoomSettlement[]
   roomAttendanceConfirmations RoomAttendanceConfirmation[]
   roomAnnouncements RoomAnnouncement[]
+  createdSchedulePolls RoomSchedulePoll[] @relation("RoomSchedulePollCreatedBy")
+  roomScheduleVotes RoomScheduleVote[]
   roomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationApplicant")
   reviewedRoomJoinApplications RoomJoinApplication[] @relation("RoomJoinApplicationReviewer")
   sentRoomInvitations RoomInvitation[] @relation("RoomInvitationInviter")
@@ -246,6 +248,7 @@ model Room {
   nextSession RoomNextSession?
   attendanceConfirmations RoomAttendanceConfirmation[]
   roomAnnouncements RoomAnnouncement[]
+  schedulePolls RoomSchedulePoll[]
   communicationState RoomCommunicationState?
   actionQueueItems RoomActionQueueItem[]
   recruitmentProfile RoomRecruitmentProfile?
@@ -513,6 +516,63 @@ model RoomAttendanceConfirmation {
 
   @@unique([roomId, userId])
   @@index([roomId, status])
+}
+
+model RoomSchedulePoll {
+  id                String   @id @default(uuid())
+  roomId            String
+  title             String   @default("")
+  note              String   @default("")
+  timezone          String   @default("Asia/Shanghai")
+  status            String   @default("OPEN")
+  closesAt          DateTime?
+  finalizedOptionId String?
+  createdById       String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  room              Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy         User     @relation("RoomSchedulePollCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  options           RoomScheduleOption[]
+  finalizedOption   RoomScheduleOption? @relation("FinalizedScheduleOption", fields: [finalizedOptionId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, status])
+  @@index([createdById])
+  @@index([closesAt])
+}
+
+model RoomScheduleOption {
+  id        String   @id @default(uuid())
+  pollId    String
+  startsAt  DateTime
+  endsAt    DateTime
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  poll      RoomSchedulePoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  finalizedByPolls RoomSchedulePoll[] @relation("FinalizedScheduleOption")
+  votes     RoomScheduleVote[]
+
+  @@index([pollId, position])
+  @@index([startsAt])
+}
+
+model RoomScheduleVote {
+  id        String   @id @default(uuid())
+  optionId  String
+  userId    String
+  status    String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  option    RoomScheduleOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@index([userId])
+  @@index([optionId, status])
 }
 
 model RoomAnnouncement {

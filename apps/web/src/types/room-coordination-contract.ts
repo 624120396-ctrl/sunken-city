@@ -60,3 +60,49 @@ export interface RoomCoordinationView {
   myAttendance: RoomAttendanceView | null;
   canManageCoordination: boolean;
 }
+
+export type RoomScheduleVoteStatus = 'AVAILABLE' | 'TENTATIVE' | 'UNAVAILABLE';
+export type RoomSchedulePollStatus = 'OPEN' | 'FINALIZED' | 'CANCELLED';
+
+export interface RoomScheduleOptionView {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  position: number;
+  summary: Record<RoomScheduleVoteStatus | 'PENDING', number>;
+  recommendationRank: number;
+  isRecommended: boolean;
+  myVote: null | {
+    status: RoomScheduleVoteStatus;
+    note: string;
+  };
+}
+
+export interface RoomSchedulePollView {
+  id: string;
+  title: string;
+  note: string;
+  timezone: string;
+  status: RoomSchedulePollStatus;
+  closesAt: string | null;
+  finalizedOptionId: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  isVotingClosed: boolean;
+  options: RoomScheduleOptionView[];
+}
+
+export interface RoomSchedulePollPayload {
+  title?: string;
+  note?: string;
+  timezone?: string;
+  closesAt?: string | null;
+  options: Array<{ id?: string; startsAt: string; endsAt: string }>;
+}
+
+export interface RoomSchedulePollListView {
+  polls: RoomSchedulePollView[];
+  canManageSchedulePoll: boolean;
+  hasDownloadableNextSession: boolean;
+}

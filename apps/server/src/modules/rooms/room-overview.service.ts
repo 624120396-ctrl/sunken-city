@@ -3,6 +3,7 @@ import { prisma } from '../../config/database';
 import { buildRoomAuthView } from './room-view';
 import { requireRoomCapability } from './room-auth';
 import { buildRoomLaunchReadiness } from './room-launch-readiness.service';
+import { buildOptionSummaries, collectPendingScheduleMemberIds, sortScheduleOptions } from './room-schedule-poll.logic';
 
 function parseArray(raw: string | null | undefined): unknown[] {
   if (!raw) return [];
@@ -46,6 +47,7 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       sessionPrep,
       pendingApplicationsCount,
       pendingInvitationsCount,
+      openSchedulePoll,
     ] = await Promise.all([
       prisma.roomCurrentFocus.findUnique({ where: { roomId: auth.room.id } }),
       prisma.investigationClue.groupBy({
@@ -108,6 +110,11 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       canUseKpTools
         ? prisma.roomInvitation.count({ where: { roomId: auth.room.id, status: 'PENDING' } })
         : Promise.resolve(0),
+      prisma.roomSchedulePoll.findFirst({
+        where: { roomId: auth.room.id, status: 'OPEN' },
+        include: { options: { include: { votes: true }, orderBy: { position: 'asc' } } },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
     const activeAttendance = activeMembers.map(member => {
@@ -131,6 +138,11 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
       .map(member => ({ userId: member.userId, characterId: member.characterId }));
     const waitingQueue = queue.filter(item => item.status === 'WAITING');
     const activeQueue = queue.filter(item => item.status === 'ACTIVE');
+    const scheduleMemberIds = [...new Set([auth.room.creatorId, ...activeMembers.map(member => member.userId)])];
+    const scheduleVotes = openSchedulePoll?.options.flatMap(option => option.votes) ?? [];
+    const rankedScheduleOptions = openSchedulePoll
+      ? sortScheduleOptions(buildOptionSummaries(openSchedulePoll.options, scheduleVotes as any, scheduleMemberIds))
+      : [];
 
     res.json({
       role: auth.role,
@@ -159,6 +171,23 @@ export async function getRoomOperationsOverview(req: Request, res: Response, nex
         kpPrivateNoteCount: canUseKpTools ? kpPrivateNotesCount : undefined,
       },
       coordination: {
+        schedulePoll: openSchedulePoll
+          ? {
+              id: openSchedulePoll.id,
+              title: openSchedulePoll.title,
+              timezone: openSchedulePoll.timezone,
+              closesAt: openSchedulePoll.closesAt?.toISOString() ?? null,
+              candidateCount: openSchedulePoll.options.length,
+              pendingMemberCount: collectPendingScheduleMemberIds(
+                scheduleMemberIds,
+                openSchedulePoll.options.map(option => option.id),
+                scheduleVotes as any
+              ).length,
+              recommendedStartsAt: rankedScheduleOptions[0]?.startsAt ?? null,
+              recommendedEndsAt: rankedScheduleOptions[0]?.endsAt ?? null,
+              isVotingClosed: Boolean(openSchedulePoll.closesAt && openSchedulePoll.closesAt <= new Date()),
+            }
+          : null,
         nextSession: nextSession
           ? {
               scheduledAt: nextSession.scheduledAt?.toISOString() ?? null,
@@ -275,6 +304,27 @@ export async function getRoomListOverview(req: Request, res: Response, next: Nex
         invitations: {
           select: { status: true },
         },
+        schedulePolls: {
+          where: { status: 'OPEN' },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            title: true,
+            timezone: true,
+            closesAt: true,
+            options: {
+              orderBy: { position: 'asc' },
+              select: {
+                id: true,
+                startsAt: true,
+                endsAt: true,
+                position: true,
+                votes: { select: { optionId: true, userId: true, status: true } },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -296,6 +346,9 @@ export async function getRoomListOverview(req: Request, res: Response, next: Nex
           }),
           { PENDING: 0, AVAILABLE: 0, LEAVE: 0, TENTATIVE: 0 }
         );
+        const openSchedulePoll = room.schedulePolls[0] ?? null;
+        const scheduleMemberIds = [...new Set([room.creatorId, ...activeMembers.map(item => item.userId)])];
+        const scheduleVotes = openSchedulePoll?.options.flatMap(option => option.votes) ?? [];
 
         return {
           roomId: room.roomId,
@@ -312,6 +365,21 @@ export async function getRoomListOverview(req: Request, res: Response, next: Nex
               }
             : null,
           attendanceSummary,
+          schedulePoll: roomAuthView.myCapabilities.canViewPublicContent && openSchedulePoll
+            ? {
+                id: openSchedulePoll.id,
+                title: openSchedulePoll.title,
+                timezone: openSchedulePoll.timezone,
+                closesAt: openSchedulePoll.closesAt?.toISOString() ?? null,
+                candidateCount: openSchedulePoll.options.length,
+                pendingMemberCount: collectPendingScheduleMemberIds(
+                  scheduleMemberIds,
+                  openSchedulePoll.options.map(option => option.id),
+                  scheduleVotes as any
+                ).length,
+                isVotingClosed: Boolean(openSchedulePoll.closesAt && openSchedulePoll.closesAt <= new Date()),
+              }
+            : null,
           recruitment: {
             status: room.recruitmentProfile?.status ?? 'CLOSED',
             headline: room.recruitmentProfile?.headline ?? '',

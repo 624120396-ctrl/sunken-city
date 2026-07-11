@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Archive, ArrowLeft, Users, Crown, DoorOpen, Swords, FileText, History, User, ScrollText, Search, GitBranch, ChevronDown, ChevronUp, Dice5, BookOpen, PanelRightOpen, MoreHorizontal } from 'lucide-react';
+import { Archive, ArrowLeft, Users, Crown, DoorOpen, Swords, FileText, History, User, ScrollText, Search, GitBranch, ChevronDown, ChevronUp, Dice5, BookOpen, CalendarClock, PanelRightOpen, MoreHorizontal } from 'lucide-react';
 import { apiFetch, handleApiResponse } from '@lib/api';
 import { cn } from '@lib/utils';
 import { useAuthStore } from '@stores/auth.store';
@@ -1128,6 +1128,20 @@ export function RoomPage() {
                     className="room-mobile-tool-tile"
                     data-room-mobile-action="true"
                     data-room-mobile-kp-lite-action="true"
+                    data-mobile-tool-id="schedule"
+                    onClick={() => {
+                      openInvestigationDock('prep');
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><CalendarClock size={20} /></span>
+                    <span>排期</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-kp-lite-action="true"
                     data-mobile-tool-id="members"
                     onClick={() => {
                       setShowMobileMembers(true);
@@ -1182,6 +1196,20 @@ export function RoomPage() {
                 </>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    className="room-mobile-tool-tile"
+                    data-room-mobile-action="true"
+                    data-room-mobile-pl-primary-action="true"
+                    data-mobile-tool-id="schedule"
+                    onClick={() => {
+                      openInvestigationDock('prep');
+                      closeMobileActionSurfaces();
+                    }}
+                  >
+                    <span className="room-mobile-tool-tile__icon"><CalendarClock size={20} /></span>
+                    <span>排期</span>
+                  </button>
                   <button
                     type="button"
                     className="room-mobile-tool-tile"

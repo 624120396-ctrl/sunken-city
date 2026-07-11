@@ -4,6 +4,7 @@ import {
   Archive,
   Bell,
   BookOpen,
+  CalendarClock,
   Dice5,
   Eye,
   FileText,
@@ -167,6 +168,7 @@ export function RoomCommandRail({
   ];
 
   const quickItems: RoomCommandItem[] = [
+    { label: '开团排期', icon: CalendarClock, active: showInvestigationDock, onClick: () => onOpenInvestigationTab?.('prep') },
     { label: '公告', icon: Megaphone, active: showEventLog, onClick: () => setShowEventLog((value) => !value) },
     {
       label: '投掷骰子',

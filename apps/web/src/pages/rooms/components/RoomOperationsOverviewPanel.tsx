@@ -27,6 +27,7 @@ function normalizeOverview(value: Partial<RoomOperationsOverview> | null | undef
       kpPrivateNoteCount: value.investigation?.kpPrivateNoteCount ?? 0,
     },
     coordination: {
+      schedulePoll: value.coordination?.schedulePoll ?? null,
       nextSession: value.coordination?.nextSession ?? null,
       attendanceSummary: value.coordination?.attendanceSummary ?? {},
       activeMemberCount: value.coordination?.activeMemberCount ?? 0,
@@ -114,6 +115,7 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
   if (!overview) return null;
 
   const nextSession = overview.coordination?.nextSession ?? null;
+  const schedulePoll = overview.coordination?.schedulePoll ?? null;
   const attendance = overview.coordination?.attendanceSummary ?? {};
   const launchTodos = overview.launchReadiness?.items.filter(item => item.status === 'TODO').slice(0, 3) ?? [];
 
@@ -163,12 +165,18 @@ export function RoomOperationsOverviewPanel({ roomId }: RoomOperationsOverviewPa
             下次开团
           </div>
           <div className="room-operations-card__value">
-            {formatTime(nextSession?.scheduledAt ?? null, nextSession?.timezone ?? 'Asia/Shanghai')}
+            {schedulePoll
+              ? `${schedulePoll.candidateCount} 个候选，${schedulePoll.pendingMemberCount} 人待回复`
+              : formatTime(nextSession?.scheduledAt ?? null, nextSession?.timezone ?? 'Asia/Shanghai')}
           </div>
           <div className="room-operations-card__meta">
-            可参加 {attendance.AVAILABLE ?? 0} / 请假 {attendance.LEAVE ?? 0} / 待确认 {attendance.PENDING ?? 0}
+            {schedulePoll
+              ? schedulePoll.closesAt
+                ? `截止 ${formatTime(schedulePoll.closesAt, schedulePoll.timezone)}`
+                : '进行中的排期投票'
+              : `可参加 ${attendance.AVAILABLE ?? 0} / 请假 ${attendance.LEAVE ?? 0} / 待确认 ${attendance.PENDING ?? 0}`}
           </div>
-          {nextSession?.title && <p className="room-operations-card__note">{nextSession.title}</p>}
+          {(schedulePoll?.title || nextSession?.title) && <p className="room-operations-card__note">{schedulePoll?.title || nextSession?.title}</p>}
         </div>
 
         <div className="room-operations-card">

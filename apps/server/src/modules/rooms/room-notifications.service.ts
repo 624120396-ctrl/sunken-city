@@ -44,6 +44,23 @@ function formatSessionDate(date: Date | null) {
   return date ? date.toISOString().slice(0, 10) : '时间待定';
 }
 
+function formatScheduleDate(date: Date, timezone: string) {
+  try {
+    return new Intl.DateTimeFormat('zh-CN', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZoneName: 'short',
+    }).format(date);
+  } catch {
+    return date.toISOString();
+  }
+}
+
 export function buildNextSessionNotification(input: {
   roomTitle?: string | null;
   roomId: string;
@@ -82,6 +99,51 @@ export function buildAnnouncementNotification(input: {
     type: 'room_announcement',
     title: `${roomTitle(input.roomTitle)}：${title}`,
     content: input.content,
+    link: roomLink(input.roomId),
+  };
+}
+
+export function buildSchedulePollFinalizedNotification(input: {
+  roomTitle?: string | null;
+  roomId: string;
+  pollTitle: string;
+  startsAt: Date;
+  timezone: string;
+  isReschedule?: boolean;
+}): RoomNotificationPayload {
+  return {
+    type: 'room_schedule_poll_finalized',
+    title: `${roomTitle(input.roomTitle)}：跑团时间${input.isReschedule ? '已改期' : '已确定'}`,
+    content: `${input.pollTitle || '排期投票'}已收口为 ${formatScheduleDate(input.startsAt, input.timezone)}。请进入房间完成正式确认；排期投票不等同出席确认。`,
+    link: roomLink(input.roomId),
+  };
+}
+
+export function buildSchedulePollCancelledNotification(input: {
+  roomTitle?: string | null;
+  roomId: string;
+  pollTitle: string;
+}): RoomNotificationPayload {
+  return {
+    type: 'room_schedule_poll_cancelled',
+    title: `${roomTitle(input.roomTitle)}：排期投票已取消`,
+    content: `${input.pollTitle || '本次排期投票'}已由 KP 取消，请留意后续安排。`,
+    link: roomLink(input.roomId),
+  };
+}
+
+export function buildSchedulePollReminderNotification(input: {
+  roomTitle?: string | null;
+  roomId: string;
+  pollTitle: string;
+  closesAt: Date | null;
+  timezone: string;
+}): RoomNotificationPayload {
+  const deadline = input.closesAt ? `，截止时间为 ${formatScheduleDate(input.closesAt, input.timezone)}` : '';
+  return {
+    type: 'room_schedule_poll_reminder',
+    title: `${roomTitle(input.roomTitle)}：请回复排期投票`,
+    content: `你尚未提交「${input.pollTitle || '开团时间投票'}」${deadline}。请进入房间标记各候选时间。`,
     link: roomLink(input.roomId),
   };
 }

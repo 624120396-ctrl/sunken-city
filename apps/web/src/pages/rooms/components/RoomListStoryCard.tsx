@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { RoomListOverviewItem } from '@/types/room-overview-contract';
+import { formatSchedulePollBadge } from './room-schedule-summary';
 import {
   isActiveLifecycle,
   isClosedLifecycle,
@@ -147,6 +148,14 @@ export function RoomListStoryCard({ room, summary, onOpen }: RoomListStoryCardPr
         {nextSessionText && (
           <Badge tone="copper" icon={<CalendarClock size={13} />}>
             {nextSessionText}
+          </Badge>
+        )}
+        {summary?.schedulePoll && (
+          <Badge tone="ocean" icon={<CalendarClock size={13} />}>
+            {formatSchedulePollBadge(summary.schedulePoll)}
+            {summary.schedulePoll.closesAt
+              ? ` · 截 ${formatNextSession(summary.schedulePoll.closesAt, summary.schedulePoll.timezone)}`
+              : ''}
           </Badge>
         )}
         {openRecruitment && (

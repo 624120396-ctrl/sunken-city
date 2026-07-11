@@ -9,6 +9,7 @@ import { KpPrivateNotesPanel } from './KpPrivateNotesPanel';
 import { NpcArchivePanel } from './NpcArchivePanel';
 import { ScenePanel } from './ScenePanel';
 import { SessionPrepPanel } from './SessionPrepPanel';
+import { RoomSchedulePollPanel } from './RoomSchedulePollPanel';
 
 export type InvestigationTab = 'focus' | 'prep' | 'clues' | 'npcs' | 'scenes' | 'timeline' | 'kpNotes';
 
@@ -86,7 +87,15 @@ export function InvestigationDock({ roomId, capabilities, isOpen, onClose, activ
 
         <div className="investigation-dock-body">
           {resolvedTab === 'focus' && <CurrentFocusPanel roomId={roomId} canManage={capabilities.canUseKPTools} />}
-          {resolvedTab === 'prep' && <SessionPrepPanel roomId={roomId} canManage={capabilities.canUseKPTools} />}
+          {resolvedTab === 'prep' && (
+            <div className="space-y-5">
+              <RoomSchedulePollPanel
+                roomId={roomId}
+                canManage={capabilities.canUseKPTools || capabilities.canManageMembers}
+              />
+              <SessionPrepPanel roomId={roomId} canManage={capabilities.canUseKPTools} />
+            </div>
+          )}
           {resolvedTab === 'clues' && <ClueBoardPanel roomId={roomId} canManage={capabilities.canManageClues} />}
           {resolvedTab === 'npcs' && <NpcArchivePanel roomId={roomId} canManage={capabilities.canManageNpcs} />}
           {resolvedTab === 'scenes' && <ScenePanel roomId={roomId} canManage={capabilities.canManageScene} />}

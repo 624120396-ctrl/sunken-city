@@ -25,6 +25,7 @@ export interface RoomOperationsOverview {
     kpPrivateNoteCount?: number;
   };
   coordination: {
+    schedulePoll: null | RoomSchedulePollSummary;
     nextSession: null | {
       scheduledAt: string | null;
       timezone: string;
@@ -89,6 +90,7 @@ export interface RoomListOverviewItem {
     status: string;
   };
   attendanceSummary: Record<string, number>;
+  schedulePoll: null | RoomSchedulePollSummary;
   recruitment: {
     status: string;
     headline: string;
@@ -99,6 +101,18 @@ export interface RoomListOverviewItem {
     pendingInvitations: number;
     pendingAttendance: number;
   };
+}
+
+export interface RoomSchedulePollSummary {
+  id: string;
+  title: string;
+  timezone: string;
+  closesAt: string | null;
+  candidateCount: number;
+  pendingMemberCount: number;
+  recommendedStartsAt?: string | null;
+  recommendedEndsAt?: string | null;
+  isVotingClosed: boolean;
 }
 
 export interface RoomReportArchiveItem {
