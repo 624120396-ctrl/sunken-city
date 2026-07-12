@@ -1,8 +1,8 @@
 import type { StageActorProjection, StageZone } from '../../../../shared/stage/stage-contract';
 
 export type StageViewport = 'desktop' | 'mobile';
-export type StageLayoutActor = StageActorProjection & { preferredZone: StageZone };
-export type StageLayout = { foreground: StageLayoutActor[]; background: StageActorProjection[] };
+export type StageLayoutActor<T extends StageActorProjection = StageActorProjection> = T & { preferredZone: StageZone };
+export type StageLayout<T extends StageActorProjection = StageActorProjection> = { foreground: StageLayoutActor<T>[]; background: T[] };
 
 const zones: Exclude<StageZone, 'backstage'>[] = ['far-left', 'left', 'center', 'right', 'far-right'];
 
@@ -13,11 +13,11 @@ function nearestFree(preferred: StageZone, occupied: Set<StageZone>) {
   )[0];
 }
 
-export function resolveStageLayout(actors: StageActorProjection[], viewport: StageViewport): StageLayout {
+export function resolveStageLayout<T extends StageActorProjection>(actors: T[], viewport: StageViewport): StageLayout<T> {
   const cap = viewport === 'mobile' ? 3 : 6;
   const occupied = new Set<StageZone>();
-  const foreground: StageLayoutActor[] = [];
-  const background: StageActorProjection[] = [];
+  const foreground: StageLayoutActor<T>[] = [];
+  const background: T[] = [];
   for (const actor of actors.filter((entry) => entry.entered && entry.zone !== 'backstage')) {
     const freeZone = foreground.length < cap ? nearestFree(actor.zone, occupied) : undefined;
     if (foreground.length >= cap) {
