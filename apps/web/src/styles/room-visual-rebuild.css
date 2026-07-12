@@ -4471,6 +4471,10 @@
   padding: 0.68rem;
 }
 
+.room-visual-rebuild .room-player-board__voice {
+  margin-bottom: 0.18rem;
+}
+
 .room-visual-rebuild .room-mobile-tools-sheet__voice {
   margin-bottom: 0.65rem;
 }

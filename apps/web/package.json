@@ -25,6 +25,7 @@
     "test:rank-title-display": "node --test --experimental-strip-types scripts/rank-title-display.test.ts",
     "test:story-entry": "node --test --experimental-strip-types scripts/story-entry.test.ts",
     "test:auth-portal": "node --test --experimental-strip-types scripts/auth-portal.test.ts",
+    "test:room-voice": "node --test --experimental-strip-types scripts/room-voice-panel.test.ts scripts/room-voice-entry.test.ts scripts/room-voice-stage-integration.test.ts",
     "test:stage": "tsx --test src/features/room-stage/stage-channel-controller.test.ts src/features/room-stage/stage-composer.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },

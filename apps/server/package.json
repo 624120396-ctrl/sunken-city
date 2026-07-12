@@ -14,6 +14,7 @@
     "db:studio": "prisma studio",
     "check:room-migration": "node scripts/check-room-migration.js",
     "test:room-system": "node scripts/room-system-smoke.js",
+    "test:room-voice": "tsx --test scripts/room-voice-access.test.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",

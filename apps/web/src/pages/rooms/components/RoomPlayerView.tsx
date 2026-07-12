@@ -24,6 +24,7 @@ import { cn } from '@lib/utils';
 import { RoomChatComposer } from './RoomChatComposer';
 import { RoomChatTranscript } from './RoomChatTranscript';
 import { RoomSceneBanner } from './RoomSceneBanner';
+import { RoomVoicePanel } from './RoomVoicePanel';
 import { RoomStageShell } from '../../../features/room-stage/RoomStageShell';
 import type {
   RoomChatMessage,
@@ -487,6 +488,8 @@ export function RoomPlayerView({
             </small>
           </div>
         </section>
+
+        <RoomVoicePanel roomId={roomId} compact className="room-player-board__voice" />
 
         <section className="room-player-board__action-panel">
           <header>

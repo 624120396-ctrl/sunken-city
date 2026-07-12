@@ -4,7 +4,7 @@ import {
   resolveRoomVoiceConnectionLabel,
   resolveRoomVoiceFallback,
   summarizeRoomVoiceParticipants,
-} from '../src/pages/rooms/components/RoomVoicePanel';
+} from '../src/pages/rooms/components/roomVoiceMeta.ts';
 
 test('room voice panel keeps unavailable voice as a text fallback state', () => {
   const fallback = resolveRoomVoiceFallback(new Error('房间语音服务尚未完成部署配置'));

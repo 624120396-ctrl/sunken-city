@@ -1700,7 +1700,7 @@ export function RoomPage() {
               onOpenKpDicePanel={() => setShowKpDicePanel(true)}
               onOpenInvestigationTab={openInvestigationDock}
               onRequestClose={() => setShowDesktopCommandRail(false)}
-              voicePanel={<RoomVoicePanel roomId={roomId || ''} />}
+              voicePanel={canUseKPTools ? <RoomVoicePanel roomId={roomId || ''} /> : undefined}
             />
           </Suspense>
         ) : !isMobile ? (
