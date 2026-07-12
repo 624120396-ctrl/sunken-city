@@ -1,4 +1,10 @@
-export const STAGE_CONTRACT_VERSION = 'stage.d1a.v1' as const;
+/**
+ * Shared Stage D1-A public contract.
+ *
+ * This file is the only D1-B integration surface.  It intentionally contains
+ * no Prisma model, room service, or untrimmed room-state types.
+ */
+export const STAGE_CONTRACT_VERSION = 'stage.d1a.v1.1' as const;
 
 export const STAGE_SOCKET_EVENTS = {
   JOIN_CHANNEL: 'stage:channel:join',
@@ -18,7 +24,18 @@ export const STAGE_REST_ENDPOINTS = {
   ASSET_PROXY: 'GET /api/rooms/:roomId/stage/assets/:assetId/proxy',
 } as const;
 
+/** Validation limits are public so clients can prevent invalid submissions. */
+export const STAGE_COMMAND_LIMITS = {
+  ID_MAX_LENGTH: 128,
+  SCENE_TITLE_MAX_LENGTH: 120,
+  SCENE_DESCRIPTION_MAX_LENGTH: 2_000,
+  ACTION_MAX_LENGTH: 80,
+  EXPRESSION_MAX_LENGTH: 80,
+  MESSAGE_DRAFT_MAX_LENGTH: 2_000,
+} as const;
+
 export type StageChannelKind = 'MAIN_ROOM' | 'SUB_ROOM' | 'PRIVATE_THREAD';
+export type StageChannelStatus = 'ACTIVE' | 'DISABLED';
 export type StageViewerKind = 'KP' | 'PLAYER' | 'OBSERVER';
 export type StageActorKind = 'PLAYER_CHARACTER' | 'NPC' | 'TEMPORARY';
 export type StageVisibility = 'PUBLIC' | 'KP_ONLY' | 'PRIVATE_TARGETS';
@@ -66,6 +83,25 @@ export interface StageChannelRef {
   parentChannelId?: string;
 }
 
+export type StageChannelScope =
+  | { type: 'ROOM' }
+  | { type: 'SUB_ROOM'; subRoomId: string }
+  | { type: 'PRIVATE_THREAD'; privateThreadId: string };
+
+export interface StageChannelDisplay {
+  label: string;
+  description?: string;
+}
+
+/** A channel already access-filtered for the current member. */
+export interface StageChannelProjection {
+  channel: StageChannelRef;
+  status: StageChannelStatus;
+  revision: number;
+  scope: StageChannelScope;
+  display: StageChannelDisplay;
+}
+
 export interface StageViewerProjection {
   userId: string;
   kind: StageViewerKind;
@@ -78,6 +114,20 @@ export interface StageCapabilitiesProjection {
   canManageStage: boolean;
   canManageStageAssets: boolean;
   canExportStageReplay: boolean;
+}
+
+/** Complete status payload returned by the stage status endpoint. */
+export interface StageStatusProjection {
+  contractVersion: typeof STAGE_CONTRACT_VERSION;
+  /** Whether the room/global feature switches permit stage traffic. */
+  stageEnabled: boolean;
+  /** Compatibility read-model: stageEnabled plus the member's canUseStage. */
+  enabled: boolean;
+  roomStageEnabled: boolean;
+  globalEnabled: boolean;
+  viewer: StageViewerProjection;
+  capabilities: StageCapabilitiesProjection;
+  channels: StageChannelProjection[];
 }
 
 export interface StageAssetRef {
@@ -133,48 +183,165 @@ export interface StageSnapshot {
   projection: StageProjection;
 }
 
-export interface StageCommandEnvelope<TPayload = unknown> {
+export interface StageActorEnterPayload {
+  actorId: string;
+  zone: StageZone;
+  expression?: string;
+  action?: string;
+}
+
+export interface StageActorExitPayload {
+  actorId: string;
+}
+
+export interface StageActorPerformPayload {
+  actorId: string;
+  action: string;
+  expression?: string;
+}
+
+export interface StageSceneSetPayload {
+  title: string;
+  description?: string;
+  backgroundAssetId?: string;
+  bgmAssetId?: string;
+  ambienceAssetId?: string;
+  themePackId?: string;
+}
+
+export interface StageSceneClearPayload {
+  clear: 'SCENE';
+}
+
+/** Channel transitions are deliberate no-payload commands. */
+export type StageChannelEnablePayload = Record<never, never>;
+export type StageChannelDisablePayload = Record<never, never>;
+
+export interface StageMessageDraft {
+  content: string;
+  targetUserId?: string;
+  mode: 'PUBLIC' | 'PRIVATE';
+}
+
+interface StageCommandBase<TType extends StageCommandType, TPayload> {
   contractVersion: typeof STAGE_CONTRACT_VERSION;
   commandId: string;
   channelId: string;
   expectedRevision: number;
-  commandType: StageCommandType;
+  commandType: TType;
   payload: TPayload;
-  messageDraft?: {
-    content: string;
-    targetUserId?: string;
-    mode: 'PUBLIC' | 'PRIVATE';
-  };
+  messageDraft?: StageMessageDraft;
 }
 
-export interface StageCommandAck {
-  contractVersion: typeof STAGE_CONTRACT_VERSION;
-  commandId: string;
-  channelId: string;
-  accepted: boolean;
-  revision: number;
-  error?: {
-    code: StageErrorCode;
-    message: string;
-    latestRevision?: number;
-  };
-}
+export type StageCommandEnvelope =
+  | StageCommandBase<'ACTOR_ENTER', StageActorEnterPayload>
+  | StageCommandBase<'ACTOR_EXIT', StageActorExitPayload>
+  | StageCommandBase<'ACTOR_PERFORM', StageActorPerformPayload>
+  | StageCommandBase<'SCENE_SET', StageSceneSetPayload>
+  | StageCommandBase<'SCENE_CLEAR', StageSceneClearPayload>
+  | StageCommandBase<'CHANNEL_ENABLE', StageChannelEnablePayload>
+  | StageCommandBase<'CHANNEL_DISABLE', StageChannelDisablePayload>;
 
-export interface StageEventSource {
-  contractVersion: typeof STAGE_CONTRACT_VERSION;
+export type StageEvent = {
   eventId: string;
   channelId: string;
   commandId: string;
-  eventType: StageCommandType;
   beforeRevision: number;
   afterRevision: number;
   operatorUserId?: string;
   roomMessageId?: string;
   visibility: StageVisibility;
   targetUserIds: string[];
-  payload: unknown;
   createdAt: string;
+} & ({ eventType: 'ACTOR_ENTER'; payload: StageActorEnterPayload }
+  | { eventType: 'ACTOR_EXIT'; payload: StageActorExitPayload }
+  | { eventType: 'ACTOR_PERFORM'; payload: StageActorPerformPayload }
+  | { eventType: 'SCENE_SET'; payload: StageSceneSetPayload }
+  | { eventType: 'SCENE_CLEAR'; payload: StageSceneClearPayload }
+  | { eventType: 'CHANNEL_ENABLE'; payload: StageChannelEnablePayload }
+  | { eventType: 'CHANNEL_DISABLE'; payload: StageChannelDisablePayload });
+
+export type StageEventSource = StageEvent & {
+  contractVersion: typeof STAGE_CONTRACT_VERSION;
+};
+
+export type StageCommandRecovery = {
+  type: 'AUTHORITATIVE_SNAPSHOT';
+  snapshot: StageSnapshot;
+} | {
+  type: 'REFETCH_SNAPSHOT';
+  snapshotUrl: string;
+};
+
+export type StageCommandAck =
+  | {
+      contractVersion: typeof STAGE_CONTRACT_VERSION;
+      accepted: true;
+      outcome: 'APPLIED';
+      commandId: string;
+      channelId: string;
+      revision: number;
+    }
+  | {
+      contractVersion: typeof STAGE_CONTRACT_VERSION;
+      accepted: true;
+      outcome: 'REPLAYED';
+      commandId: string;
+      channelId: string;
+      revision: number;
+    }
+  | {
+      contractVersion: typeof STAGE_CONTRACT_VERSION;
+      accepted: false;
+      outcome: 'REJECTED';
+      commandId: string;
+      channelId: string;
+      revision: number;
+      error: StageErrorPayload;
+    }
+  | {
+      contractVersion: typeof STAGE_CONTRACT_VERSION;
+      accepted: false;
+      outcome: 'CONFLICT';
+      commandId: string;
+      channelId: string;
+      revision: number;
+      error: StageErrorPayload & { code: 'STAGE_REVISION_CONFLICT'; latestRevision: number };
+      recovery: StageCommandRecovery;
+    };
+
+export interface StageErrorPayload {
+  code: StageErrorCode;
+  message: string;
+  latestRevision?: number;
 }
+
+export type StageRestResponse<TData> = { success: true; data: TData };
+export type StageRestErrorResponse = { success: false; error: StageErrorPayload };
+export type StageRestPayload<TData> = StageRestResponse<TData> | StageRestErrorResponse;
+
+export type StageStatusResponse = StageRestPayload<StageStatusProjection>;
+export type StageSnapshotResponse = StageRestPayload<StageSnapshot>;
+export type StageSwitchResponse = StageRestPayload<Pick<StageStatusProjection, 'contractVersion' | 'stageEnabled' | 'roomStageEnabled' | 'globalEnabled' | 'capabilities' | 'channels'>>;
+export type StageAssetProxyResponse = StageRestPayload<StageAssetRef>;
+
+export interface StageSocketJoinChannelPayload {
+  roomId: string;
+  channelId: string;
+}
+
+export interface StageSocketLeaveChannelPayload {
+  channelId: string;
+}
+
+export interface StageSocketCommandPayload {
+  roomId: string;
+  envelope: StageCommandEnvelope;
+}
+
+export type StageSocketSnapshotPayload = StageSnapshot;
+export type StageSocketEventPayload = StageEventSource;
+export type StageSocketErrorPayload = StageErrorPayload;
 
 export interface StageReplaySource {
   contractVersion: typeof STAGE_CONTRACT_VERSION;
