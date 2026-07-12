@@ -9,6 +9,11 @@ export function stageActorBindingScopeKey(input: { userId: string; characterId: 
   return `binding:${input.userId}:${input.characterId}`;
 }
 
+/** A KP director is a TEMPORARY actor owned by the KP, never a fake Character. */
+export function stageKpDirectorScopeKey(input: { userId: string }) {
+  return `director:${input.userId}`;
+}
+
 type StageActorProjection = {
   actorId: string;
   actorKind: string;

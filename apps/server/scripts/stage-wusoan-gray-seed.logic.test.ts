@@ -23,6 +23,12 @@ test('WUSOAN gray seed validates an idempotent complete active KP/PL plan', () =
   assert.equal(first.pl.characterId, second.pl.characterId);
 });
 
+test('WUSOAN gray seed allows an active KP without a character while still requiring the PL binding', () => {
+  const kpWithoutCharacter = { ...input(), room: { ...input().room, members: [{ ...members[0], characterId: null }, members[1]] } };
+  assert.doesNotThrow(() => validateWusoanGraySeedPlan(kpWithoutCharacter));
+  assert.throws(() => validateWusoanGraySeedPlan({ ...input(), room: { ...input().room, members: [members[0], { ...members[1], characterId: null }] } }), /bound character/);
+});
+
 test('WUSOAN gray seed rejects another room, missing or departed PL, and wrong player role', () => {
   assert.throws(() => validateWusoanGraySeedPlan({ ...input(), room: { ...input().room, roomId: 'OTHER' } }), /WUSOAN/);
   assert.throws(() => validateWusoanGraySeedPlan({ ...input(), room: { ...input().room, members: [members[0]] } }), /active PLAYER/);

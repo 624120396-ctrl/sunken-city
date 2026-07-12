@@ -27,7 +27,6 @@ export function validateWusoanGraySeedPlan(input: {
   const pl = active.get(input.plUserId);
   if (!kp || (kp.role !== 'KP' && input.room.creatorId !== kp.userId)) throw new Error('KP must be an active KP room member');
   if (!pl || pl.role !== 'PLAYER' || !pl.characterId) throw new Error('PL must be an active PLAYER with a bound character');
-  if (!kp.characterId) throw new Error('KP must be an active member with a bound character');
 
   const required = [
     ['background', input.assetIds.background, 'BACKGROUND', input.kpUserId],
