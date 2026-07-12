@@ -1596,6 +1596,7 @@ model StageSnapshot {
 model StageActorState {
   id                String   @id @default(uuid())
   channelId         String
+  scopeKey          String
   actorKind         String
   ownerUserId       String?
   characterId       String?
@@ -1612,6 +1613,7 @@ model StageActorState {
 
   channel           StageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
+  @@unique([channelId, scopeKey])
   @@index([channelId, ownerUserId])
   @@index([channelId, characterId])
 }

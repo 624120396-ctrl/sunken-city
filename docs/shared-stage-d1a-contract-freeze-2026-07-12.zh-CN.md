@@ -97,7 +97,7 @@ Socket 名称仍固定为：
 
 这是有意的冻结修订，不是前端临时兼容层：D1-B 必须升级到 `stage.d1a.v1.1`，不能发送 v1.0 envelope，也不能继续假设 Socket snapshot 为 pending 标记。
 
-数据库迁移 `20260712103000_stage_contract_v1_1` 为 `StageChannel` 增加 `participantUserIds`（JSON 字符串，默认 `[]`）。`20260712113000_stage_runtime_integrity` 则补上非空 `scopeKey`，修复 SQLite 对 nullable composite unique 不约束多个 MAIN_ROOM 的问题；现存重复主轨道被保留为 `legacy-main:<id>`，不会再被投影为当前主舞台。现存私密轨道在回填参与者前只会对具备 `canManageStage` 的 KP 可见；这是一项保守访问控制，不会把私密轨道泄露给普通成员。
+数据库迁移 `20260712103000_stage_contract_v1_1` 为 `StageChannel` 增加 `participantUserIds`（JSON 字符串，默认 `[]`）。`20260712113000_stage_runtime_integrity` 则补上非空 `scopeKey`，修复 SQLite 对 nullable composite unique 不约束多个 MAIN_ROOM 的问题；现存重复主轨道被保留为 `legacy-main:<id>`，不会再被投影为当前主舞台。`20260712120000_stage_actor_binding_scope` 为绑定角色 actor 增加非空 scopeKey；同一 channel、用户与角色只保留按 `updatedAt`（再按 id）最新的一条，旧重复运行态删除。StageEvent 的 `actorId` 与 StageSnapshot 内的 actor 标识均非外键，历史事件和快照保持原始可回放数据。现存私密轨道在回填参与者前只会对具备 `canManageStage` 的 KP 可见；这是一项保守访问控制，不会把私密轨道泄露给普通成员。
 
 素材 `proxyUrl` 只可由受权的短期投递服务生成（`STAGE_ASSET_DELIVERY_BASE_URL` 与 `STAGE_ASSET_DELIVERY_SECRET`）；未配置时服务端返回冻结错误，不会用 API 自指 URL 或 storage key 伪装为素材地址。
 

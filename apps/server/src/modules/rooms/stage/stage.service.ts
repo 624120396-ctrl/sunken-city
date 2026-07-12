@@ -2,6 +2,7 @@ import { prisma } from '../../../config/database';
 import { AppError } from '../../../middleware/error';
 import { requireRoomCapability } from '../room-auth';
 import { authorizeStageActorCommand, authorizeStageChannelAccess } from './stage-auth';
+import { ensureBoundStageActor } from './stage-actors';
 import { buildStageStatus, canAcceptStageCommands, isStageAccessEnabled, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
 import { buildStageEventAudience, buildStageEventTargetUserIds, buildStageMessageMeta, canExecuteStageChannelCommand, nextStageRevision } from './stage-events';
 import { authorizeStageAssetRead, issueStageAssetDeliveryUrl } from './stage-assets';
@@ -57,20 +58,10 @@ function requireStageEnabled(auth: { room: { stageEnabled?: boolean | null } }) 
   }
 }
 
-async function ensureBoundStageActor(input: { channelId: string; member?: { userId: string; characterId?: string | null } | null }) {
-  if (!input.member?.characterId) return null;
-  const existing = await (prisma as any).stageActorState.findFirst({ where: { channelId: input.channelId, ownerUserId: input.member.userId, characterId: input.member.characterId } });
-  if (existing) return existing;
-  return (prisma as any).stageActorState.create({ data: {
-    channelId: input.channelId, actorKind: 'PLAYER_CHARACTER', ownerUserId: input.member.userId,
-    characterId: input.member.characterId, zone: 'center', entered: false, visibility: 'PUBLIC', stateJson: '{}', updatedAt: new Date(),
-  } });
-}
-
-async function stageActorProjection(states: any[]) {
+async function stageActorProjection(states: any[], client: any = prisma) {
   const characterIds = states.map((state) => state.characterId).filter((id): id is string => typeof id === 'string');
-  const characters = characterIds.length ? await prisma.character.findMany({ where: { id: { in: characterIds } }, select: { id: true, name: true } }) : [];
-  const names = new Map(characters.map((character) => [character.id, character.name]));
+  const characters = characterIds.length ? await client.character.findMany({ where: { id: { in: characterIds } }, select: { id: true, name: true } }) : [];
+  const names = new Map(characters.map((character: { id: string; name: string }) => [character.id, character.name]));
   return states.map((state) => ({
     actorId: state.id, actorKind: state.actorKind, ...(state.ownerUserId ? { ownerUserId: state.ownerUserId } : {}),
     ...(state.characterId ? { characterId: state.characterId } : {}), name: names.get(state.characterId) ?? state.temporaryName ?? '舞台角色',
@@ -250,7 +241,7 @@ export async function getStageSnapshot(input: { roomId: string; channelId: strin
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
   requireStageEnabled(auth);
   const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: input.channelId });
-  await ensureBoundStageActor({ channelId: channel.id, member: auth.member });
+  await ensureBoundStageActor({ client: prisma as any, channelId: channel.id, member: auth.member });
   const snapshot = await (prisma as any).stageSnapshot.findFirst({ where: { channelId: channel.id }, orderBy: { revision: 'desc' } });
   if (!snapshot) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
   const parsed = JSON.parse(snapshot.projectionJson);
@@ -338,7 +329,6 @@ export async function handleStageCommand(input: { roomId: string; userId: string
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
   requireStageEnabled(auth);
   const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: envelope.channelId });
-  const ownSeed = await ensureBoundStageActor({ channelId: channel.id, member: auth.member });
   if (['SCENE_SET', 'SCENE_CLEAR', 'CHANNEL_ENABLE', 'CHANNEL_DISABLE'].includes(envelope.commandType) && !auth.capabilities.canManageStage) {
     throw new AppError('STAGE_FORBIDDEN', '只有 KP 可以调整场景或轨道状态', 403);
   }
@@ -350,6 +340,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
     if (replayed) return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'REPLAYED' as const, commandId: envelope.commandId, channelId: envelope.channelId, revision: replayed.afterRevision };
     const currentChannel = await (tx as any).stageChannel.findUnique({ where: { id: channel.id } }) as StageChannelRecord | null;
     if (!currentChannel) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
+    const ownSeed = await ensureBoundStageActor({ client: tx as any, channelId: channel.id, member: auth.member });
     if (!canExecuteStageChannelCommand({ status: currentChannel.status, commandType: envelope.commandType, canManageStage: auth.capabilities.canManageStage }) || !canAcceptStageCommands({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean((auth.room as any).stageEnabled) })) {
       return rejectedAck({ commandId: envelope.commandId, channelId: envelope.channelId, revision: currentChannel.revision, code: 'STAGE_DISABLED', message: '舞台当前未启用' });
     }
@@ -366,7 +357,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       serverTime: new Date().toISOString(), viewer: stageViewer({ userId: input.userId, role: auth.role }),
       capabilities: auth.capabilities, scene: { title: '共享舞台' }, actors: [], assetRefs: [],
     };
-    if (ownSeed) previousProjection.actors = mergeStageActors(previousProjection.actors ?? [], await stageActorProjection([ownSeed]));
+    if (ownSeed) previousProjection.actors = mergeStageActors(previousProjection.actors ?? [], await stageActorProjection([ownSeed], tx));
     const kpUserIds = [...new Set([
       auth.room.creatorId,
       ...auth.room.members.filter((member: { leftAt: Date | null; role: string }) => !member.leftAt && member.role === 'KP').map((member: { userId: string }) => member.userId),
