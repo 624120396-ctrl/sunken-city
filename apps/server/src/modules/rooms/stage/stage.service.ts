@@ -3,7 +3,7 @@ import { AppError } from '../../../middleware/error';
 import { requireRoomCapability } from '../room-auth';
 import { authorizeStageActorCommand, authorizeStageChannelAccess } from './stage-auth';
 import { buildStageStatus, canAcceptStageCommands, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
-import { buildStageEventTargetUserIds, buildStageMessageMeta, nextStageRevision } from './stage-events';
+import { buildStageEventAudience, buildStageEventTargetUserIds, buildStageMessageMeta, canExecuteStageChannelCommand, nextStageRevision } from './stage-events';
 import { authorizeStageAssetRead, issueStageAssetDeliveryUrl } from './stage-assets';
 import { applyStageCommandToProjection, canViewerSeeActor, trimStageAssetRefs } from './stage-projection';
 import { validateStageCommandEnvelope } from './stage-validation';
@@ -230,6 +230,7 @@ export async function getStageSnapshot(input: { roomId: string; channelId: strin
   const visibleAssets = trimStageAssetRefs({
     viewerUserId: input.userId ?? '',
     viewerCanManageStage: auth.capabilities.canManageStage,
+    roomUserIds: auth.room.members.filter((member: { leftAt: Date | null }) => !member.leftAt).map((member: { userId: string }) => member.userId),
     assets: assets.map((asset: any) => ({
       assetId: asset.id, kind: asset.kind, version: asset.version, visibility: asset.visibility,
       allowedUserIds: parseTargetUserIds(asset.metadataJson),
@@ -310,7 +311,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
     if (replayed) return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'REPLAYED' as const, commandId: envelope.commandId, channelId: envelope.channelId, revision: replayed.afterRevision };
     const currentChannel = await (tx as any).stageChannel.findUnique({ where: { id: channel.id } }) as StageChannelRecord | null;
     if (!currentChannel) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
-    if (currentChannel.status === 'DISABLED' || !canAcceptStageCommands({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean((auth.room as any).stageEnabled) })) {
+    if (!canExecuteStageChannelCommand({ status: currentChannel.status, commandType: envelope.commandType, canManageStage: auth.capabilities.canManageStage }) || !canAcceptStageCommands({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean((auth.room as any).stageEnabled) })) {
       return rejectedAck({ commandId: envelope.commandId, channelId: envelope.channelId, revision: currentChannel.revision, code: 'STAGE_DISABLED', message: '舞台当前未启用' });
     }
     const revision = nextStageRevision({ currentRevision: currentChannel.revision, expectedRevision: envelope.expectedRevision });
@@ -326,15 +327,28 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       serverTime: new Date().toISOString(), viewer: stageViewer({ userId: input.userId, role: auth.role }),
       capabilities: auth.capabilities, scene: { title: '共享舞台' }, actors: [], assetRefs: [],
     };
+    const kpUserIds = [...new Set([
+      auth.room.creatorId,
+      ...auth.room.members.filter((member: { leftAt: Date | null; role: string }) => !member.leftAt && member.role === 'KP').map((member: { userId: string }) => member.userId),
+    ])];
+    let eventAudience = envelope.messageDraft?.mode === 'PRIVATE'
+      ? buildStageEventAudience({ visibility: 'PRIVATE_TARGETS', targetUserIds: buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }), kpUserIds: [] })
+      : buildStageEventAudience({ visibility: 'PUBLIC', targetUserIds: [], kpUserIds: [] });
     if (envelope.commandType.startsWith('ACTOR_')) {
       const actor = previousProjection.actors?.find((item: { actorId: string }) => item.actorId === envelope.payload.actorId);
       const actorAccess = actor && authorizeStageActorCommand({ actorKind: actor.actorKind, ownerUserId: actor.ownerUserId, userId: input.userId, capabilities: auth.capabilities });
       if (!actorAccess?.allowed) throw new AppError('STAGE_ACTOR_FORBIDDEN', '演员不存在或无权操作', 403);
+      eventAudience = buildStageEventAudience({
+        visibility: actor.visibility,
+        targetUserIds: parseTargetUserIds(JSON.stringify(actor.targetUserIds ?? [])),
+        kpUserIds,
+      });
     }
     const updated = await (tx as any).stageChannel.updateMany({
       where: { id: currentChannel.id, revision: envelope.expectedRevision },
       data: {
         revision: revision.afterRevision,
+        ...(envelope.commandType === 'CHANNEL_ENABLE' ? { status: 'ACTIVE' } : {}),
         ...(envelope.commandType === 'CHANNEL_DISABLE' ? { status: 'DISABLED' } : {}),
       },
     });
@@ -354,8 +368,8 @@ export async function handleStageCommand(input: { roomId: string; userId: string
     } }) : null;
     await (tx as any).stageEvent.create({ data: {
       channelId: envelope.channelId, roomId: auth.room.id, commandId: envelope.commandId, eventType: envelope.commandType, contractVersion: STAGE_CONTRACT_VERSION,
-      roomMessageId: savedMessage?.id, operatorUserId: input.userId, visibility: envelope.messageDraft?.mode === 'PRIVATE' ? 'PRIVATE_TARGETS' : 'PUBLIC',
-      targetUserIds: JSON.stringify(envelope.messageDraft?.mode === 'PRIVATE' ? buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }) : []),
+      roomMessageId: savedMessage?.id, operatorUserId: input.userId, visibility: eventAudience.visibility,
+      targetUserIds: JSON.stringify(eventAudience.targetUserIds),
       beforeRevision: revision.beforeRevision, afterRevision: revision.afterRevision, payload: JSON.stringify(envelope.payload),
     } });
     await (tx as any).stageSnapshot.create({ data: {

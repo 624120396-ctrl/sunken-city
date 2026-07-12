@@ -19,11 +19,13 @@ export function trimStageAssetRefs<T extends {
   assets: T[];
   viewerUserId: string;
   viewerCanManageStage: boolean;
+  roomUserIds?: string[];
 }) {
   return input.assets
     .filter((asset) => (
       asset.visibility === 'PUBLIC' ||
       input.viewerCanManageStage ||
+      (asset.visibility === 'PRIVATE_ROOM' && (input.roomUserIds ?? []).includes(input.viewerUserId)) ||
       (asset.allowedUserIds ?? []).includes(input.viewerUserId)
     ))
     .map(({ storageKey: _storageKey, allowedUserIds: _allowedUserIds, ...safe }) => safe);

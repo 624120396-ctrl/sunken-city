@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   buildStageCommandDisabledResult,
   buildStageEventPayload,
+  buildStageEventAudience,
   buildStageEventTargetUserIds,
   buildStageMessageMeta,
+  canExecuteStageChannelCommand,
   nextStageRevision,
 } from '../src/modules/rooms/stage/stage-events.ts';
 import { buildStageStatus, canAcceptStageCommands } from '../src/modules/rooms/stage/stage-flags.ts';
@@ -106,6 +108,25 @@ test('stage message metadata links room message to stage command without changin
 test('private stage event targets always include both the recipient and operator', () => {
   assert.deepEqual(buildStageEventTargetUserIds({ operatorUserId: 'kp-1', targetUserId: 'pl-1' }), ['kp-1', 'pl-1']);
   assert.deepEqual(buildStageEventTargetUserIds({ operatorUserId: 'pl-1', targetUserId: 'pl-1' }), ['pl-1']);
+});
+
+test('hidden actor event audience retains actor visibility and includes KP viewers', () => {
+  assert.deepEqual(buildStageEventAudience({
+    visibility: 'KP_ONLY',
+    targetUserIds: [],
+    kpUserIds: ['kp-1', 'kp-2'],
+  }), { visibility: 'KP_ONLY', targetUserIds: ['kp-1', 'kp-2'] });
+  assert.deepEqual(buildStageEventAudience({
+    visibility: 'PRIVATE_TARGETS',
+    targetUserIds: ['pl-1'],
+    kpUserIds: ['kp-1'],
+  }), { visibility: 'PRIVATE_TARGETS', targetUserIds: ['pl-1', 'kp-1'] });
+});
+
+test('only a managing KP can re-enable a disabled channel', () => {
+  assert.equal(canExecuteStageChannelCommand({ status: 'DISABLED', commandType: 'ACTOR_PERFORM', canManageStage: true }), false);
+  assert.equal(canExecuteStageChannelCommand({ status: 'DISABLED', commandType: 'CHANNEL_ENABLE', canManageStage: false }), false);
+  assert.equal(canExecuteStageChannelCommand({ status: 'DISABLED', commandType: 'CHANNEL_ENABLE', canManageStage: true }), true);
 });
 
 test('stage command validator accepts only the frozen discriminated payload for each command', () => {

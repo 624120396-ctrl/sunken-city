@@ -3,6 +3,14 @@ import type { AuthenticatedSocket } from '../../../config/socket';
 import { STAGE_SOCKET_EVENTS } from '../../../generated/stage-socket-events';
 import { getStageEventForCommand, getStageSnapshot, handleStageCommand } from './stage.service';
 
+export function emitStageEvent(io: Pick<Server, 'to'>, event: { channelId: string; visibility: string; targetUserIds: string[] }) {
+  if (event.visibility !== 'PUBLIC') {
+    for (const userId of event.targetUserIds) io.to(`stage:${event.channelId}:user:${userId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
+    return;
+  }
+  io.to(`stage:${event.channelId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
+}
+
 export function setupStageGateway(io: Server) {
   io.on('connection', (socket: AuthenticatedSocket) => {
     socket.on(STAGE_SOCKET_EVENTS.JOIN_CHANNEL, async (data: { roomId: string; channelId: string }) => {
@@ -41,11 +49,7 @@ export function setupStageGateway(io: Server) {
         socket.emit(STAGE_SOCKET_EVENTS.COMMAND_ACK, ack);
         if (ack.accepted && ack.outcome === 'APPLIED') {
           const event = await getStageEventForCommand({ channelId: ack.channelId, commandId: ack.commandId });
-          if (event?.visibility === 'PRIVATE_TARGETS') {
-            for (const userId of event.targetUserIds) io.to(`stage:${ack.channelId}:user:${userId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
-          } else if (event) {
-            io.to(`stage:${ack.channelId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
-          }
+          if (event) emitStageEvent(io, event);
         }
       } catch (error) {
         const appError = error as { code?: string; message?: string };

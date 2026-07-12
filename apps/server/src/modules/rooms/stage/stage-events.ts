@@ -69,6 +69,24 @@ export function buildStageEventTargetUserIds(input: { operatorUserId: string; ta
   return [...new Set([input.operatorUserId, input.targetUserId].filter((userId): userId is string => Boolean(userId)))];
 }
 
+export function buildStageEventAudience(input: {
+  visibility: 'PUBLIC' | 'KP_ONLY' | 'PRIVATE_TARGETS';
+  targetUserIds: string[];
+  kpUserIds: string[];
+}) {
+  if (input.visibility === 'PUBLIC') return { visibility: 'PUBLIC' as const, targetUserIds: [] };
+  if (input.visibility === 'KP_ONLY') return { visibility: 'KP_ONLY' as const, targetUserIds: [...new Set(input.kpUserIds)] };
+  return { visibility: 'PRIVATE_TARGETS' as const, targetUserIds: [...new Set([...input.targetUserIds, ...input.kpUserIds])] };
+}
+
+export function canExecuteStageChannelCommand(input: {
+  status: 'ACTIVE' | 'DISABLED';
+  commandType: string;
+  canManageStage: boolean;
+}) {
+  return input.status === 'ACTIVE' || (input.commandType === 'CHANNEL_ENABLE' && input.canManageStage);
+}
+
 export async function appendStageEvent(input: {
   tx: {
     stageEvent: {

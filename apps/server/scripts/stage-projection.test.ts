@@ -30,6 +30,19 @@ test('stage projection never returns storage keys in asset refs', () => {
   assert.equal('storageKey' in refs[0], false);
 });
 
+test('stage projection keeps private-room assets for active room members', () => {
+  const refs = trimStageAssetRefs({
+    viewerUserId: 'pl1',
+    viewerCanManageStage: false,
+    roomUserIds: ['pl1'],
+    assets: [
+      { visibility: 'PRIVATE_ROOM', proxyUrl: '/delivery/a1', storageKey: 'private/a1.png' },
+      { visibility: 'PRIVATE_ROOM', proxyUrl: '/delivery/a2', storageKey: 'private/a2.png' },
+    ],
+  });
+  assert.equal(refs.length, 2);
+});
+
 test('stage snapshot serializer keeps contract version channel revision and projection together', () => {
   const snapshot = serializeStageSnapshot({
     contractVersion: 'stage.d1a.v1.1',
