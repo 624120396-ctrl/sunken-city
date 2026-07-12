@@ -7,6 +7,7 @@ import '@livekit/components-styles';
 import App from './App';
 import './styles/index.css';
 import './styles/fishing.css';
+import './styles/room-stage.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

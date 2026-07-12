@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type RefObject } from 'react';
+import type { Socket } from 'socket.io-client';
 import { Link } from 'react-router-dom';
 import {
   Archive,
@@ -23,6 +24,7 @@ import { cn } from '@lib/utils';
 import { RoomChatComposer } from './RoomChatComposer';
 import { RoomChatTranscript } from './RoomChatTranscript';
 import { RoomSceneBanner } from './RoomSceneBanner';
+import { RoomStageShell } from '../../../features/room-stage/RoomStageShell';
 import type {
   RoomChatMessage,
   RoomCombatState,
@@ -47,6 +49,7 @@ interface RoomPlayerViewProps {
   inputMessage: string;
   setInputMessage: (value: string) => void;
   connected: boolean;
+  socketRef: RefObject<Socket | null>;
   isMobile: boolean;
   activeTab: 'chat' | 'combat';
   setActiveTab: (tab: 'chat' | 'combat') => void;
@@ -150,6 +153,7 @@ export function RoomPlayerView({
   inputMessage,
   setInputMessage,
   connected,
+  socketRef,
   isMobile,
   activeTab,
   setActiveTab,
@@ -376,6 +380,7 @@ export function RoomPlayerView({
 
                 </section>
               )}
+              <RoomStageShell roomId={roomId} socketRef={socketRef} connected={connected} isMobile={isMobile} />
               <RoomChatTranscript
                 messages={messages}
                 members={members}
