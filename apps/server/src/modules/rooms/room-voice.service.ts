@@ -99,6 +99,7 @@ export async function assertRoomVoiceCapacity(input: {
   config?: RoomVoiceRuntimeConfig;
   env?: NodeJS.ProcessEnv;
   roomName: string;
+  participantIdentity: string;
   client?: RoomVoiceParticipantClient;
 }) {
   const env = input.env ?? process.env;
@@ -107,24 +108,42 @@ export async function assertRoomVoiceCapacity(input: {
     throw new RoomVoiceCapacityError('VOICE_CAPACITY_CHECK_FAILED', 503, '无法确认房间语音容量，请稍后重试');
   }
 
-  let participants: unknown[];
+  let participantIdentities: string[];
   try {
     const client = input.client ?? new RoomServiceClient(
       buildLiveKitServiceUrl(config.serverUrl),
       env.LIVEKIT_API_KEY,
       env.LIVEKIT_API_SECRET,
     );
-    participants = await client.listParticipants(input.roomName);
+    const participants = await client.listParticipants(input.roomName);
+    const identities = new Set<string>();
+    participantIdentities = participants.map((participant) => {
+      const identity = typeof participant === 'object' && participant !== null
+        ? (participant as { identity?: unknown }).identity
+        : null;
+      if (typeof identity !== 'string' || !identity || identities.has(identity)) {
+        throw new Error('LiveKit returned invalid participant identities');
+      }
+      identities.add(identity);
+      return identity;
+    });
   } catch {
     throw new RoomVoiceCapacityError('VOICE_CAPACITY_CHECK_FAILED', 503, '无法确认房间语音容量，请稍后重试');
   }
 
-  if (participants.length >= config.maxParticipants) {
+  const includesRequester = participantIdentities.includes(input.participantIdentity);
+  const otherParticipantCount = participantIdentities.filter(
+    (identity) => identity !== input.participantIdentity,
+  ).length;
+
+  if (otherParticipantCount >= config.maxParticipants) {
     throw new RoomVoiceCapacityError('VOICE_ROOM_FULL', 409, `房间语音已达到 ${config.maxParticipants} 人上限`);
   }
 
   return {
-    participantCount: participants.length,
+    participantCount: participantIdentities.length,
+    otherParticipantCount,
+    includesRequester,
     maxParticipants: config.maxParticipants,
   };
 }
@@ -184,6 +203,7 @@ export async function createRoomVoiceToken(input: {
   roomMemberId?: string | null;
   capabilities: RoomCapabilities;
   observerCanSpeak: boolean;
+  participant?: RoomVoiceParticipant;
 }) {
   const env = input.env ?? process.env;
   const config = buildRoomVoiceRuntimeConfig(env);
@@ -192,7 +212,7 @@ export async function createRoomVoiceToken(input: {
   }
 
   const roomName = buildLiveKitRoomName(input.roomId);
-  const participant = buildRoomVoiceParticipant(input);
+  const participant = input.participant ?? buildRoomVoiceParticipant(input);
   const grant = buildRoomVoiceGrant({
     roomName,
     role: input.role,

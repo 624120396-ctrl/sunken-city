@@ -6,6 +6,7 @@ import { buildRoomAuthView } from './room-view';
 import {
   assertRoomVoiceCapacity,
   buildLiveKitRoomName,
+  buildRoomVoiceParticipant,
   buildRoomVoiceRuntimeConfig,
   createRoomVoiceToken,
   isRoomVoiceLifecycleAllowed,
@@ -106,6 +107,13 @@ router.get('/:roomId/voice/token', authMiddleware, async (req: AuthRequest, res,
     if (!userId) throw new AppError('UNAUTHORIZED', '请先登录', 401);
 
     const { member, auth, nickname } = await getRoomVoiceAuth(req.params.roomId, userId);
+    const participant = buildRoomVoiceParticipant({
+      roomId: req.params.roomId,
+      userId,
+      nickname,
+      role: auth.myRole,
+      roomMemberId: member?.id ?? null,
+    });
     const config = buildRoomVoiceRuntimeConfig();
     if (!config.enabled) {
       throw new AppError('VOICE_NOT_CONFIGURED', '房间语音服务尚未完成部署配置', 503, {
@@ -117,6 +125,7 @@ router.get('/:roomId/voice/token', authMiddleware, async (req: AuthRequest, res,
       await assertRoomVoiceCapacity({
         config,
         roomName: buildLiveKitRoomName(req.params.roomId),
+        participantIdentity: participant.identity,
       });
     } catch (error) {
       if (error instanceof RoomVoiceCapacityError) {
@@ -135,6 +144,7 @@ router.get('/:roomId/voice/token', authMiddleware, async (req: AuthRequest, res,
       roomMemberId: member?.id ?? null,
       capabilities: auth.myCapabilities,
       observerCanSpeak: observerCanSpeak(),
+      participant,
     });
 
     res.json({

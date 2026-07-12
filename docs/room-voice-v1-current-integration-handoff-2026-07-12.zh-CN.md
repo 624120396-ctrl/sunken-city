@@ -25,9 +25,9 @@
 
 ## 容量与失败策略
 
-- token 签发前使用 `RoomServiceClient.listParticipants(roomName)` 检查 LiveKit 当前人数。
-- 当前人数达到 `ROOM_VOICE_MAX_PARTICIPANTS` 时拒绝签发 `VOICE_ROOM_FULL`（409）。
-- 查询失败、服务 URL 无法构造或配置不完整时拒绝签发 `VOICE_CAPACITY_CHECK_FAILED`（503）；不会绕过容量检查发 token。
+- token 签发前先构造与 JWT 一致的 participant identity，再使用 `RoomServiceClient.listParticipants(roomName)` 检查 LiveKit 当前人数。
+- 列表中 exact identity 与当前请求者一致的既有席位不重复计入上限，因此满房成员刷新 token 或断线重连可继续签发；陌生 identity 满房时拒绝 `VOICE_ROOM_FULL`（409）。
+- LiveKit 返回缺失或重复 identity、查询失败、服务 URL 无法构造或配置不完整时拒绝签发 `VOICE_CAPACITY_CHECK_FAILED`（503）；不会绕过容量检查发 token。
 - 该检查是 token 签发时的查询后近似上限：并发请求之间无法形成跨 LiveKit 与应用数据库的原子锁。发布后应监控该错误码与 LiveKit 房间人数，不应宣称为绝对并发硬锁。
 
 ## 验证与发布前置
