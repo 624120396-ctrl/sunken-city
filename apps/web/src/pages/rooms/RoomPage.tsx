@@ -24,6 +24,7 @@ import { RoomChatTranscript } from './components/RoomChatTranscript';
 import { RoomKeeperRollDock } from './components/RoomKeeperRollDock';
 import { RoomPlayerView } from './components/RoomPlayerView';
 import { RoomSceneBanner } from './components/RoomSceneBanner';
+import { RoomStageShell } from '../../features/room-stage/RoomStageShell';
 import type {
   RoomChatMessage,
   RoomCombatState,
@@ -1394,6 +1395,7 @@ export function RoomPage() {
               inputMessage={inputMessage}
               setInputMessage={setInputMessage}
               connected={connected}
+              socketRef={socket}
               isMobile={isMobile}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -1485,6 +1487,7 @@ export function RoomPage() {
                   onToggleCollapsed={() => setShowSceneBanner((visible) => !visible)}
                 />
               )}
+              <RoomStageShell roomId={roomId || ''} socketRef={socket} connected={connected} isMobile={isMobile} />
 
               <RoomChatTranscript
                 messages={messages}

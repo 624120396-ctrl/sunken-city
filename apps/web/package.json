@@ -46,6 +46,7 @@
     "livekit-client": "^2.20.1",
     "lucide-react": "^0.298.0",
     "motion": "^12.40.0",
+    "pixi.js": "^8.19.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
@@ -57,6 +58,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@types/three": "^0.184.1",
