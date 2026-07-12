@@ -1628,6 +1628,7 @@ model StageAsset {
   mimeType        String
   size            Int
   hash            String
+  importKey       String?
   storageKey      String
   proxyStorageKey String?
   width           Int?
@@ -1642,6 +1643,7 @@ model StageAsset {
 
   @@index([roomId, kind, createdAt])
   @@index([hash])
+  @@unique([roomId, importKey])
 }
 
 model PortraitPack {
