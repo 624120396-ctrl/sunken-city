@@ -12,6 +12,18 @@ export function authorizeStageAssetRead(input: {
   return false;
 }
 
+export function createStageAssetDeliverySignature(input: {
+  assetId: string;
+  version: number;
+  viewerUserId: string;
+  expiresAt: number;
+  secret: string;
+}) {
+  return createHmac('sha256', input.secret)
+    .update(`${input.assetId}:${input.version}:${input.viewerUserId}:${input.expiresAt}`)
+    .digest('hex');
+}
+
 /**
  * Creates an expiring URL for a separately configured private asset delivery
  * service. The application never returns a storage key and cannot fall back to
@@ -29,9 +41,13 @@ export function issueStageAssetDeliveryUrl(input: {
   const secret = input.secret ?? process.env.STAGE_ASSET_DELIVERY_SECRET;
   if (!baseUrl || !secret) return null;
   const expiresAt = Math.floor((input.nowMs ?? Date.now()) / 1_000) + 300;
-  const signature = createHmac('sha256', secret)
-    .update(`${input.assetId}:${input.version}:${input.viewerUserId}:${expiresAt}`)
-    .digest('hex');
+  const signature = createStageAssetDeliverySignature({
+    assetId: input.assetId,
+    version: input.version,
+    viewerUserId: input.viewerUserId,
+    expiresAt,
+    secret,
+  });
   const url = new URL(`${baseUrl.replace(/\/$/, '')}/${encodeURIComponent(input.assetId)}`);
   url.searchParams.set('v', String(input.version));
   url.searchParams.set('e', String(expiresAt));

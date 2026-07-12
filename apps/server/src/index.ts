@@ -35,6 +35,7 @@ import roomAiRoutes from './modules/rooms/room-ai.routes';
 import roomVoiceRoutes from './modules/rooms/room-voice.routes';
 import roomOverviewRoutes from './modules/rooms/room-overview.routes';
 import stageRoutes from './modules/rooms/stage/stage.routes';
+import stageAssetDeliveryRoutes from './modules/rooms/stage/stage-asset-delivery.routes';
 import { setupStageGateway } from './modules/rooms/stage/stage.gateway';
 import aiDoubaoRoutes from './modules/rooms/ai-doubao.routes';
 import aiDeepseekRoutes from './modules/rooms/ai-deepseek.routes';
@@ -82,7 +83,10 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
 }));
-app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
+app.use(morgan('combined', {
+  stream: { write: (msg) => logger.info(msg.trim()) },
+  skip: (req) => req.path.startsWith('/api/stage-assets/delivery/'),
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'public')));
@@ -125,6 +129,7 @@ app.use('/api/rooms', roomAiRoutes);
 app.use('/api/rooms', roomVoiceRoutes);
 app.use('/api/rooms', roomOverviewRoutes);
 app.use('/api/rooms', stageRoutes);
+app.use('/api/stage-assets', stageAssetDeliveryRoutes);
 app.use('/api/rooms', aiDoubaoRoutes);
 app.use('/api/rooms', aiDeepseekRoutes);
 app.use('/api/dice', diceRoutes);
