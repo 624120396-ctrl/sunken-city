@@ -119,9 +119,10 @@ run_migrate_resolution() {
   if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL='file:/opt/coc-platform-data/dev.db' DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" CURRENT_LINK="$current_link" LEGACY_ROOT="$legacy_root" ENV_FILE="$env_file" bash "$release_script" migrate --commit "$commit" 2>&1); then
     fail "migrate resolution failed for $name: $migration_output"
   fi
-  resolved_dir=$(<"$tmp_dir/npx-cwd")
-  if [ "$resolved_dir" != "$expected_dir/apps/server" ]; then
-    fail "migrate resolution selected $resolved_dir instead of $expected_dir/apps/server for $name"
+  resolved_dir="$(readlink -f "$(<"$tmp_dir/npx-cwd")")"
+  expected_real_dir="$(readlink -f "$expected_dir/apps/server")"
+  if [ "$resolved_dir" != "$expected_real_dir" ]; then
+    fail "migrate resolution selected $resolved_dir instead of $expected_real_dir for $name"
   fi
 }
 
