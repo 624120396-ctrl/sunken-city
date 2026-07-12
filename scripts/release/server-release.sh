@@ -213,7 +213,8 @@ prepare() {
   [ -f "$archive_arg" ] || die "archive not found: $archive_arg"
 
   local release_dir
-  release_dir="$(release_dir_for "$commit_arg")"
+  [[ "$commit_arg" =~ ^[0-9a-f]{7,40}$ ]] || die "invalid commit id: $commit_arg"
+  release_dir="$RELEASE_ROOT/$commit_arg"
   [ ! -e "$release_dir" ] || die "release already exists: $release_dir"
 
   ensure_persistent_inputs

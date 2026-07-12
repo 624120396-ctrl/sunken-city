@@ -49,7 +49,13 @@ if [[ "$*" == *"prisma migrate deploy"* ]]; then
   echo "DATABASE_URL did not match dotenv parsing semantics" >&2
   exit 42
 fi
+if [[ "$*" == *"prisma generate"* ]]; then
+  exit 0
+fi
 exit 1'
+
+write_fake "$fake_bin/npm" '#!/usr/bin/env bash
+exit 0'
 
 write_fake "$fake_bin/ps" '#!/usr/bin/env bash
 if [[ "$*" == *args* ]]; then
@@ -112,6 +118,23 @@ run_migrate_case() {
 run_migrate_case "unquoted value" 'DATABASE_URL=file:/opt/coc-platform-data/dev.db' 'file:/opt/coc-platform-data/dev.db'
 run_migrate_case "double-quoted value" 'DATABASE_URL="file:/opt/coc-platform-data/dev.db"' 'file:/opt/coc-platform-data/dev.db'
 run_migrate_case "surrounding whitespace" 'DATABASE_URL=  file:/opt/coc-platform-data/dev.db  ' 'file:/opt/coc-platform-data/dev.db'
+
+prepare_commit=decafed
+prepare_data="$tmp_dir/prepare-data"
+prepare_env="$tmp_dir/prepare.env"
+prepare_archive_root="$tmp_dir/prepare-source"
+prepare_archive="$tmp_dir/prepare.tar.gz"
+mkdir -p "$prepare_data/uploads" "$prepare_archive_root/apps/server/dist" "$prepare_archive_root/apps/server/public"
+touch "$prepare_archive_root/apps/server/dist/index.js" "$prepare_archive_root/apps/server/public/index.html"
+printf '{"commit":"%s"}\n' "$prepare_commit" > "$prepare_archive_root/release-manifest.json"
+tar -czf "$prepare_archive" -C "$prepare_archive_root" .
+printf '%s\n' 'DATABASE_URL=file:/opt/coc-platform-data/dev.db' > "$prepare_env"
+if ! PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$prepare_data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$prepare_env" UPLOADS_DIR="$prepare_data/uploads" LEGACY_ROOT="$tmp_dir/legacy-missing" bash "$release_script" prepare --commit "$prepare_commit" --archive "$prepare_archive" >/dev/null 2>&1; then
+  fail "prepare did not create a new release directory for an unseen commit"
+fi
+if [ ! -f "$tmp_dir/releases/$prepare_commit/apps/server/dist/index.js" ]; then
+  fail "prepare did not extract the server artifact into the new release directory"
+fi
 
 make_release() {
   local dir="$1"
