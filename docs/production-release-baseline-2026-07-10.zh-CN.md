@@ -119,6 +119,8 @@ bash /path/to/server-release.sh activate --commit <commit>
 bash /path/to/server-release.sh rollback --commit <previous-good-commit>
 ```
 
+`<previous-good-commit>` 可使用 prepared release 的目录短 SHA、唯一 SHA 前缀，或该 release manifest 中的完整 SHA。脚本会依序解析精确目录、唯一前缀、manifest 完整 SHA，并在受控发布目录外再检查当前指针与 legacy checkout；任何多重匹配都会拒绝执行，绝不猜测回滚目标。当前生产若目录为 `de9dc9c5c0e4`、manifest 记录完整 SHA，可安全使用任一对应形式；操作记录优先保存完整 SHA。
+
 数据库注意：
 
 - 若本次只包含可兼容迁移，通常回滚应用即可。

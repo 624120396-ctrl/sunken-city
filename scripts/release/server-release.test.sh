@@ -40,11 +40,30 @@ printf "0\n"'
 write_fake "$fake_bin/npx" '#!/usr/bin/env bash
 set -euo pipefail
 if [[ "$*" == *"prisma migrate deploy"* ]]; then
+  printf "%s\n" "$PWD" > "$TEST_STATE_DIR/npx-cwd"
   if [ "${DATABASE_URL:-}" = "${EXPECTED_DATABASE_URL:-}" ]; then exit 0; fi
   echo "DATABASE_URL did not match dotenv parsing semantics" >&2
   exit 42
 fi
 exit 1'
+
+write_fake "$fake_bin/ps" '#!/usr/bin/env bash
+if [[ "$*" == *args* ]]; then
+  printf "42 livekit-server --api-secret=process-secret-must-not-appear\n43 turnserver\n"
+else
+  printf "42 livekit-server\n43 turnserver\n"
+fi'
+
+write_fake "$fake_bin/ss" '#!/usr/bin/env bash
+printf "LISTEN 0 0 *:7880 *:*\nLISTEN 0 0 *:7881 *:*\nLISTEN 0 0 *:3478 *:*\nLISTEN 0 0 *:5349 *:*\n"'
+
+write_fake "$fake_bin/nginx" '#!/usr/bin/env bash
+if [[ "$*" == *-T* ]]; then
+  printf "livekit proxy credential=nginx-secret-must-not-appear\n"
+fi'
+
+write_fake "$fake_bin/find" '#!/usr/bin/env bash
+printf "livekit.example.test\n"'
 
 if ! PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" TEST_CURL_SUCCEEDS_ON=2 HEALTH_RETRY_DELAY_SECONDS=0 HEALTH_MAX_ATTEMPTS=2 HEALTH_READY_TIMEOUT_SECONDS=5 bash "$release_script" health >/dev/null 2>&1; then
   fail "health command did not retry a transient startup failure"
@@ -71,7 +90,7 @@ run_migrate_case() {
   printf '%s\n' "$line" > "$env_file"
 
   local migration_output
-  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" EXPECTED_DATABASE_URL="$expected" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abcdef1 2>&1); then
+  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL="$expected" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abcdef1 2>&1); then
     fail "migrate command did not preserve dotenv semantics for $name: $migration_output"
   fi
 }
@@ -80,4 +99,88 @@ run_migrate_case "unquoted value" 'DATABASE_URL=file:/opt/coc-platform-data/dev.
 run_migrate_case "double-quoted value" 'DATABASE_URL="file:/opt/coc-platform-data/dev.db"' 'file:/opt/coc-platform-data/dev.db'
 run_migrate_case "surrounding whitespace" 'DATABASE_URL=  file:/opt/coc-platform-data/dev.db  ' 'file:/opt/coc-platform-data/dev.db'
 
-echo "PASS: release health retry and DATABASE_URL parsing"
+make_release() {
+  local dir="$1"
+  local manifest_commit="$2"
+  mkdir -p "$dir/apps/server"
+  printf '{"commit":"%s"}\n' "$manifest_commit" > "$dir/release-manifest.json"
+}
+
+run_migrate_resolution() {
+  local name="$1"
+  local commit="$2"
+  local expected_dir="$3"
+  local current_link="${4:-$tmp_dir/current}"
+  local legacy_root="${5:-$tmp_dir/legacy-missing}"
+  local migration_output
+
+  rm -f "$tmp_dir/npx-cwd"
+  printf '%s\n' 'DATABASE_URL=file:/opt/coc-platform-data/dev.db' > "$env_file"
+  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL='file:/opt/coc-platform-data/dev.db' DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" CURRENT_LINK="$current_link" LEGACY_ROOT="$legacy_root" ENV_FILE="$env_file" bash "$release_script" migrate --commit "$commit" 2>&1); then
+    fail "migrate resolution failed for $name: $migration_output"
+  fi
+  resolved_dir=$(<"$tmp_dir/npx-cwd")
+  if [ "$resolved_dir" != "$expected_dir/apps/server" ]; then
+    fail "migrate resolution selected $resolved_dir instead of $expected_dir/apps/server for $name"
+  fi
+}
+
+full_current_commit=de9dc9c5c0e49b527a31c5f178a32fce48b2d1ce
+short_current_dir="$tmp_dir/releases/de9dc9c5c0e4"
+make_release "$short_current_dir" "$full_current_commit"
+run_migrate_resolution "full SHA resolves to short release directory" "$full_current_commit" "$short_current_dir"
+
+run_migrate_resolution "short SHA resolves to exact directory" abcdef1 "$tmp_dir/releases/abcdef1"
+
+manifest_only_dir="$tmp_dir/releases/release-manifest-only"
+make_release "$manifest_only_dir" "$full_current_commit"
+rm -rf "$short_current_dir"
+run_migrate_resolution "full SHA resolves through manifest" "$full_current_commit" "$manifest_only_dir"
+
+make_release "$tmp_dir/releases/abc1234a" abc1234aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+make_release "$tmp_dir/releases/abc1234b" abc1234bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+if PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abc1234 >/dev/null 2>&1; then
+  fail "ambiguous release prefix unexpectedly resolved"
+fi
+ambiguous_output=$(PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abc1234 2>&1 || true)
+if [[ "$ambiguous_output" != *"ambiguous release commit"* ]]; then
+  fail "ambiguous release prefix did not fail closed: $ambiguous_output"
+fi
+
+no_match_output=$(PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit fedcba9 2>&1 || true)
+if [[ "$no_match_output" != *"could not resolve release commit"* ]]; then
+  fail "no-match release commit did not report a safe resolution failure: $no_match_output"
+fi
+
+rm -rf "$manifest_only_dir"
+current_only_dir="$tmp_dir/current-only"
+make_release "$current_only_dir" "$full_current_commit"
+ln -s "$current_only_dir" "$tmp_dir/current"
+run_migrate_resolution "current pointer fallback" "$full_current_commit" "$tmp_dir/current" "$tmp_dir/current"
+
+legacy_root="$tmp_dir/legacy"
+mkdir -p "$legacy_root/apps/server"
+git init -q "$legacy_root"
+git -C "$legacy_root" config user.email test@example.invalid
+git -C "$legacy_root" config user.name release-test
+touch "$legacy_root/apps/server/index.js"
+git -C "$legacy_root" add .
+git -C "$legacy_root" commit -qm legacy
+legacy_commit=$(git -C "$legacy_root" rev-parse HEAD)
+run_migrate_resolution "legacy checkout fallback" "$legacy_commit" "$legacy_root" "$tmp_dir/current-missing" "$legacy_root"
+
+voice_env="$tmp_dir/voice.env"
+cat > "$voice_env" <<'EOF'
+LIVEKIT_URL=wss://voice.example.test
+LIVEKIT_API_KEY=key-present
+LIVEKIT_API_SECRET=secret-must-not-appear
+LIVEKIT_TOKEN_TTL_SECONDS=3600
+ROOM_VOICE_MAX_PARTICIPANTS=8
+ROOM_VOICE_OBSERVER_CAN_SPEAK=false
+EOF
+voice_output=$(PATH="$fake_bin:$PATH" ENV_FILE="$voice_env" bash "$release_script" voice-readiness 2>&1) || fail "voice-readiness dispatcher rejected the read-only command: $voice_output"
+if [[ "$voice_output" == *"secret-must-not-appear"* || "$voice_output" == *"process-secret-must-not-appear"* || "$voice_output" == *"nginx-secret-must-not-appear"* ]]; then
+  fail "voice-readiness leaked a secret value"
+fi
+
+echo "PASS: release health, migration resolution, and voice-readiness dispatch"

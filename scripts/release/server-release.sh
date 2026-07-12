@@ -53,7 +53,7 @@ archive_arg=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    inspect|prepare|migrate|activate|rollback|health)
+    inspect|prepare|migrate|activate|rollback|health|voice-readiness)
       command_name="$1"
       shift
       ;;
@@ -80,8 +80,86 @@ command_name=${command_name:-}
 
 release_dir_for() {
   local commit="$1"
+  local path name manifest manifest_commit current_dir legacy_head
+  local -a matches=()
   [[ "$commit" =~ ^[0-9a-f]{7,40}$ ]] || die "invalid commit id: $commit"
-  printf '%s/%s' "$RELEASE_ROOT" "$commit"
+
+  if [ -d "$RELEASE_ROOT/$commit" ]; then
+    printf '%s' "$RELEASE_ROOT/$commit"
+    return 0
+  fi
+
+  for path in "$RELEASE_ROOT"/*; do
+    [ -d "$path" ] || continue
+    name="${path##*/}"
+    [[ "$name" =~ ^[0-9a-f]{7,40}$ ]] || continue
+    if [[ "$name" == "$commit"* || "$commit" == "$name"* ]]; then
+      matches+=("$path")
+    fi
+  done
+
+  case "${#matches[@]}" in
+    1)
+      printf '%s' "${matches[0]}"
+      return 0
+      ;;
+    0) ;;
+    *) die "ambiguous release commit prefix: $commit" ;;
+  esac
+
+  if [ "${#commit}" -eq 40 ]; then
+    for manifest in "$RELEASE_ROOT"/*/release-manifest.json; do
+      [ -f "$manifest" ] || continue
+      manifest_commit="$(node -e '
+const fs = require("fs");
+try {
+  const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8").replace(/^\uFEFF/, ""));
+  if (typeof manifest.commit === "string" && /^[0-9a-f]{40}$/.test(manifest.commit)) {
+    process.stdout.write(manifest.commit);
+  }
+} catch {}
+' "$manifest")"
+      if [ "$manifest_commit" = "$commit" ]; then
+        matches+=("$(dirname "$manifest")")
+      fi
+    done
+
+    case "${#matches[@]}" in
+      1)
+        printf '%s' "${matches[0]}"
+        return 0
+        ;;
+      0) ;;
+      *) die "ambiguous release manifest commit: $commit" ;;
+    esac
+  fi
+
+  current_dir="$(readlink -f "$CURRENT_LINK" 2>/dev/null || true)"
+  if [ -n "$current_dir" ] && [ -f "$current_dir/release-manifest.json" ] && [ "${#commit}" -eq 40 ]; then
+    manifest_commit="$(node -e '
+const fs = require("fs");
+try {
+  const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8").replace(/^\uFEFF/, ""));
+  if (typeof manifest.commit === "string" && /^[0-9a-f]{40}$/.test(manifest.commit)) {
+    process.stdout.write(manifest.commit);
+  }
+} catch {}
+' "$current_dir/release-manifest.json")"
+    if [ "$manifest_commit" = "$commit" ]; then
+      matches+=("$current_dir")
+    fi
+  fi
+
+  legacy_head="$(git -C "$LEGACY_ROOT" rev-parse HEAD 2>/dev/null || true)"
+  if [[ "$legacy_head" =~ ^[0-9a-f]{40}$ ]] && [[ "$legacy_head" == "$commit"* || "$commit" == "$legacy_head"* ]]; then
+    matches+=("$LEGACY_ROOT")
+  fi
+
+  case "${#matches[@]}" in
+    1) printf '%s' "${matches[0]}" ;;
+    0) die "could not resolve release commit: $commit" ;;
+    *) die "ambiguous release fallback commit: $commit" ;;
+  esac
 }
 
 backup_file() {
@@ -389,7 +467,7 @@ voice_readiness() {
   fi
 
   echo "## voice service processes"
-  ps -eo pid,comm,args | grep -Ei 'livekit|coturn|turnserver' | grep -v grep || {
+  ps -eo pid=,comm= | grep -Ei 'livekit|coturn|turnserver' || {
     echo "voiceProcesses=missing"
     ok=1
   }
@@ -401,11 +479,17 @@ voice_readiness() {
   }
 
   echo "## voice nginx and tls hints"
-  nginx -T 2>/dev/null | grep -niE 'livekit|turn|voice|7880|7881|3478|5349' | sed -n '1,120p' || true
-  find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d -printf '%f\n' 2>/dev/null | sort | grep -Ei 'livekit|turn|voice' || {
+  if nginx -T 2>/dev/null | grep -qiE 'livekit|turn|voice|7880|7881|3478|5349'; then
+    echo "voiceNginxHints=present"
+  else
+    echo "voiceNginxHints=missing"
+  fi
+  if find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d -printf '%f\n' 2>/dev/null | sort | grep -qiE 'livekit|turn|voice'; then
+    echo "voiceTlsCert=present"
+  else
     echo "voiceTlsCert=missing"
     ok=1
-  }
+  fi
 
   return "$ok"
 }
