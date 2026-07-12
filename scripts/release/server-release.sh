@@ -11,9 +11,9 @@ DEPLOY_LOG=${DEPLOY_LOG:-$DATA_ROOT/deploy.log}
 NGINX_SITE=${NGINX_SITE:-/etc/nginx/sites-enabled/sunken-city}
 ENV_FILE=${ENV_FILE:-$DATA_ROOT/env/server.env}
 UPLOADS_DIR=${UPLOADS_DIR:-$DATA_ROOT/uploads}
-HEALTH_MAX_ATTEMPTS=${HEALTH_MAX_ATTEMPTS:-10}
+HEALTH_MAX_ATTEMPTS=${HEALTH_MAX_ATTEMPTS:-60}
 HEALTH_RETRY_INTERVAL_SECONDS=${HEALTH_RETRY_INTERVAL_SECONDS:-1}
-HEALTH_READY_TIMEOUT_SECONDS=${HEALTH_READY_TIMEOUT_SECONDS:-20}
+HEALTH_READY_TIMEOUT_SECONDS=${HEALTH_READY_TIMEOUT_SECONDS:-60}
 HEALTH_REQUEST_TIMEOUT_SECONDS=${HEALTH_REQUEST_TIMEOUT_SECONDS:-3}
 
 usage() {
@@ -426,12 +426,16 @@ health() {
     [ "$remaining" -gt 0 ] || break
     request_timeout=$HEALTH_REQUEST_TIMEOUT_SECONDS
     [ "$request_timeout" -le "$remaining" ] || request_timeout=$remaining
+    log "health attempt=$attempt/$HEALTH_MAX_ATTEMPTS remaining=${remaining}s requestTimeout=${request_timeout}s"
 
     if curl -fsS --max-time "$request_timeout" "http://127.0.0.1:$SERVICE_PORT/health"; then
       echo
       pm2 describe "$PM2_NAME" >/dev/null
+      log "health ready attempt=$attempt/$HEALTH_MAX_ATTEMPTS"
       return 0
     fi
+
+    log "health pending attempt=$attempt/$HEALTH_MAX_ATTEMPTS"
 
     [ "$attempt" -lt "$HEALTH_MAX_ATTEMPTS" ] || break
     remaining=$((deadline - SECONDS))

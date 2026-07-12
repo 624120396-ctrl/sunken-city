@@ -2,7 +2,8 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-release_script="$repo_root/scripts/release/server-release.sh"
+release_script=${RELEASE_SCRIPT_UNDER_TEST:-"$repo_root/scripts/release/server-release.sh"}
+test_node_path=${TEST_NODE_PATH:-"$repo_root/apps/server/node_modules"}
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
 
@@ -32,6 +33,9 @@ if [ "$count" -lt "${TEST_CURL_SUCCEEDS_ON:-2}" ]; then exit 7; fi
 printf "{\"status\":\"ok\"}"'
 
 write_fake "$fake_bin/pm2" '#!/usr/bin/env bash
+if [ "${1:-}" = start ]; then
+  printf "%s|%s\n" "$PWD" "$(tr -d "\r\n" < dist/index.js)" >> "$TEST_STATE_DIR/pm2-start-cwds"
+fi
 exit 0'
 
 write_fake "$fake_bin/id" '#!/usr/bin/env bash
@@ -65,18 +69,28 @@ fi'
 write_fake "$fake_bin/find" '#!/usr/bin/env bash
 printf "livekit.example.test\n"'
 
-if ! PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" TEST_CURL_SUCCEEDS_ON=2 HEALTH_RETRY_DELAY_SECONDS=0 HEALTH_MAX_ATTEMPTS=2 HEALTH_READY_TIMEOUT_SECONDS=5 bash "$release_script" health >/dev/null 2>&1; then
+if ! PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" TEST_CURL_SUCCEEDS_ON=2 HEALTH_RETRY_INTERVAL_SECONDS=0 HEALTH_MAX_ATTEMPTS=2 HEALTH_READY_TIMEOUT_SECONDS=5 bash "$release_script" health >/dev/null 2>&1; then
   fail "health command did not retry a transient startup failure"
 fi
 
 rm -f "$tmp_dir/curl-count"
-if PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" TEST_CURL_SUCCEEDS_ON=99 HEALTH_RETRY_DELAY_SECONDS=0 HEALTH_MAX_ATTEMPTS=3 HEALTH_READY_TIMEOUT_SECONDS=5 bash "$release_script" health >/dev/null 2>&1; then
+if PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" TEST_CURL_SUCCEEDS_ON=99 HEALTH_RETRY_INTERVAL_SECONDS=0 HEALTH_MAX_ATTEMPTS=3 HEALTH_READY_TIMEOUT_SECONDS=5 bash "$release_script" health >/dev/null 2>&1; then
   fail "health command succeeded after the retry limit"
 fi
 
 attempts=$(<"$tmp_dir/curl-count")
 if [ "$attempts" != 3 ]; then
   fail "health command made $attempts attempts instead of the configured limit"
+fi
+
+rm -f "$tmp_dir/curl-count"
+if ! PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" DATA_ROOT="$tmp_dir/data" TEST_CURL_SUCCEEDS_ON=21 HEALTH_RETRY_INTERVAL_SECONDS=0 HEALTH_READY_TIMEOUT_SECONDS=60 bash "$release_script" health >/dev/null 2>&1; then
+  fail "health command did not allow a cold start that becomes ready after 20 probes"
+fi
+
+attempts=$(<"$tmp_dir/curl-count")
+if [ "$attempts" != 21 ]; then
+  fail "health command made $attempts attempts instead of waiting for the cold start"
 fi
 
 mkdir -p "$tmp_dir/data" "$tmp_dir/releases/abcdef1/apps/server"
@@ -90,7 +104,7 @@ run_migrate_case() {
   printf '%s\n' "$line" > "$env_file"
 
   local migration_output
-  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL="$expected" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abcdef1 2>&1); then
+  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$test_node_path" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL="$expected" DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" ENV_FILE="$env_file" bash "$release_script" migrate --commit abcdef1 2>&1); then
     fail "migrate command did not preserve dotenv semantics for $name: $migration_output"
   fi
 }
@@ -116,7 +130,7 @@ run_migrate_resolution() {
 
   rm -f "$tmp_dir/npx-cwd"
   printf '%s\n' 'DATABASE_URL=file:/opt/coc-platform-data/dev.db' > "$env_file"
-  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$repo_root/apps/server/node_modules" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL='file:/opt/coc-platform-data/dev.db' DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" CURRENT_LINK="$current_link" LEGACY_ROOT="$legacy_root" ENV_FILE="$env_file" bash "$release_script" migrate --commit "$commit" 2>&1); then
+  if ! migration_output=$(PATH="$fake_bin:$PATH" NODE_PATH="$test_node_path" TEST_STATE_DIR="$tmp_dir" EXPECTED_DATABASE_URL='file:/opt/coc-platform-data/dev.db' DATA_ROOT="$tmp_dir/data" RELEASE_ROOT="$tmp_dir/releases" CURRENT_LINK="$current_link" LEGACY_ROOT="$legacy_root" ENV_FILE="$env_file" bash "$release_script" migrate --commit "$commit" 2>&1); then
     fail "migrate resolution failed for $name: $migration_output"
   fi
   resolved_dir="$(readlink -f "$(<"$tmp_dir/npx-cwd")")"
@@ -184,4 +198,32 @@ if [[ "$voice_output" == *"secret-must-not-appear"* || "$voice_output" == *"proc
   fail "voice-readiness leaked a secret value"
 fi
 
-echo "PASS: release health, migration resolution, and voice-readiness dispatch"
+if [ "$(uname -s)" = Linux ]; then
+  activation_data="$tmp_dir/activation-data"
+  activation_current="$tmp_dir/activation-current"
+  activation_candidate="$tmp_dir/releases/feedbee"
+  activation_link="$tmp_dir/activation-link"
+  activation_env="$tmp_dir/activation.env"
+  activation_nginx="$tmp_dir/activation-nginx"
+  mkdir -p "$activation_data/uploads" "$activation_current/apps/server/dist" "$activation_candidate/apps/server/dist"
+  touch "$activation_data/dev.db" "$activation_nginx"
+  printf '%s\n' current > "$activation_current/apps/server/dist/index.js"
+  printf '%s\n' candidate > "$activation_candidate/apps/server/dist/index.js"
+  printf '%s\n' 'DATABASE_URL=file:/opt/coc-platform-data/dev.db' > "$activation_env"
+  ln -s "$activation_current" "$activation_link"
+  rm -f "$tmp_dir/pm2-start-cwds" "$tmp_dir/curl-count"
+  if PATH="$fake_bin:$PATH" TEST_STATE_DIR="$tmp_dir" TEST_CURL_SUCCEEDS_ON=99 HEALTH_RETRY_INTERVAL_SECONDS=0 HEALTH_MAX_ATTEMPTS=3 HEALTH_READY_TIMEOUT_SECONDS=60 DATA_ROOT="$activation_data" RELEASE_ROOT="$tmp_dir/releases" CURRENT_LINK="$activation_link" ENV_FILE="$activation_env" UPLOADS_DIR="$activation_data/uploads" NGINX_SITE="$activation_nginx" LEGACY_ROOT="$tmp_dir/legacy-missing" bash "$release_script" activate --commit feedbee >/dev/null 2>&1; then
+    fail "activation unexpectedly succeeded while health was permanently unavailable"
+  fi
+  if [ "$(readlink "$activation_link")" != "$activation_current" ]; then
+    fail "failed activation did not restore the prior current release link"
+  fi
+  last_pm2_target=$(tail -n 1 "$tmp_dir/pm2-start-cwds" | cut -d '|' -f 2)
+  if [ "$last_pm2_target" != current ]; then
+    fail "failed activation did not restart the prior PM2 release"
+  fi
+else
+  echo "SKIP: activation rollback symlink assertion requires Linux"
+fi
+
+echo "PASS: release health, rollback protection, migration resolution, and voice-readiness dispatch"
