@@ -3,6 +3,7 @@ import type {
   StageAssetRef,
   StageEvent,
   StageSnapshot,
+  StageZone,
 } from '../../../../shared/stage/stage-contract';
 
 type StageViewAsset = Pick<StageAssetRef, 'assetId' | 'proxyUrl' | 'kind' | 'durationMs'>;
@@ -23,7 +24,7 @@ export type StageViewModel = {
     actorId: string;
     ownerUserId?: string;
     name: string;
-    zone: string;
+    zone: StageZone;
     entered: boolean;
     expression?: string;
     action?: string;

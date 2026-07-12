@@ -1,8 +1,9 @@
 import type { StageActorProjection, StageZone } from '../../../../shared/stage/stage-contract';
 
 export type StageViewport = 'desktop' | 'mobile';
-export type StageLayoutActor<T extends StageActorProjection = StageActorProjection> = T & { preferredZone: StageZone };
-export type StageLayout<T extends StageActorProjection = StageActorProjection> = { foreground: StageLayoutActor<T>[]; background: T[] };
+type StageLayoutInput = Pick<StageActorProjection, 'actorId' | 'name' | 'zone' | 'entered'>;
+export type StageLayoutActor<T extends StageLayoutInput = StageActorProjection> = T & { preferredZone: StageZone };
+export type StageLayout<T extends StageLayoutInput = StageActorProjection> = { foreground: StageLayoutActor<T>[]; background: T[] };
 
 const zones: Exclude<StageZone, 'backstage'>[] = ['far-left', 'left', 'center', 'right', 'far-right'];
 
@@ -13,7 +14,7 @@ function nearestFree(preferred: StageZone, occupied: Set<StageZone>) {
   )[0];
 }
 
-export function resolveStageLayout<T extends StageActorProjection>(actors: T[], viewport: StageViewport): StageLayout<T> {
+export function resolveStageLayout<T extends StageLayoutInput>(actors: T[], viewport: StageViewport): StageLayout<T> {
   const cap = viewport === 'mobile' ? 3 : 6;
   const occupied = new Set<StageZone>();
   const foreground: StageLayoutActor<T>[] = [];
