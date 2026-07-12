@@ -16,6 +16,13 @@ export function selectNewerSnapshot(current: StageSnapshot | undefined, next: St
   return next;
 }
 
+/** Accept an HTTP authority snapshot without allowing a same-channel rollback. */
+export function acceptAuthoritativeSnapshot(current: StageSnapshot | undefined, next: StageSnapshot) {
+  if (!current) return next;
+  if (current.channel.id !== next.channel.id || next.revision < current.revision) return undefined;
+  return next;
+}
+
 export function canDispatchStageCommand(capabilities: StageCapabilitiesProjection, commandType: StageCommandType) {
   if (!capabilities.canUseStage) return false;
   if (commandType === 'ACTOR_ENTER' || commandType === 'ACTOR_EXIT' || commandType === 'ACTOR_PERFORM') return capabilities.canControlOwnStageActor || capabilities.canManageStage;

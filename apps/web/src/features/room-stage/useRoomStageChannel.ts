@@ -6,7 +6,7 @@ import {
   type StageCommandAck, type StageCommandEnvelope, type StageEventSource, type StageSnapshot, type StageStatusProjection,
 } from '../../../../shared/stage/stage-contract';
 import { applyStageEvent } from './stage-view-model';
-import { canDispatchStageCommand, isStageUsable, selectActiveChannel, selectNewerSnapshot } from './stage-channel-controller';
+import { acceptAuthoritativeSnapshot, canDispatchStageCommand, isStageUsable, selectActiveChannel, selectNewerSnapshot } from './stage-channel-controller';
 
 const statusPath = (roomId: string) => `/rooms/${roomId}/stage/status`;
 const snapshotPath = (roomId: string, channelId: string) => `/rooms/${roomId}/stage/channels/${channelId}/snapshot`;
@@ -31,7 +31,7 @@ export function useRoomStageChannel(roomId: string, socketRef: RefObject<Socket 
     const token = ++requestToken.current;
     const next = await handleApiResponse<StageSnapshot>(await apiFetch(snapshotPath(roomId, channelId)));
     if (next.contractVersion !== STAGE_CONTRACT_VERSION || next.channel.id !== channelId) throw new Error('舞台快照无效');
-    if (token === requestToken.current) setSnapshot(next);
+    if (token === requestToken.current) setSnapshot((current) => acceptAuthoritativeSnapshot(current, next) || current);
     return next;
   }, [roomId]);
 
