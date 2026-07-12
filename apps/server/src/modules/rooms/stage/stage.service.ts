@@ -332,7 +332,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       ...auth.room.members.filter((member: { leftAt: Date | null; role: string }) => !member.leftAt && member.role === 'KP').map((member: { userId: string }) => member.userId),
     ])];
     let eventAudience = envelope.messageDraft?.mode === 'PRIVATE'
-      ? buildStageEventAudience({ visibility: 'PRIVATE_TARGETS', targetUserIds: buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }), kpUserIds: [] })
+      ? buildStageEventAudience({ visibility: 'PRIVATE_TARGETS', targetUserIds: buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }), kpUserIds })
       : buildStageEventAudience({ visibility: 'PUBLIC', targetUserIds: [], kpUserIds: [] });
     if (envelope.commandType.startsWith('ACTOR_')) {
       const actor = previousProjection.actors?.find((item: { actorId: string }) => item.actorId === envelope.payload.actorId);

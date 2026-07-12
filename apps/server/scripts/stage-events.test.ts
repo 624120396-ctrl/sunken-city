@@ -123,6 +123,17 @@ test('hidden actor event audience retains actor visibility and includes KP viewe
   }), { visibility: 'PRIVATE_TARGETS', targetUserIds: ['pl-1', 'kp-1'] });
 });
 
+test('private message audience includes the operator, recipient, and every active KP', () => {
+  assert.deepEqual(buildStageEventAudience({
+    visibility: 'PRIVATE_TARGETS',
+    targetUserIds: buildStageEventTargetUserIds({ operatorUserId: 'pl-1', targetUserId: 'pl-2' }),
+    kpUserIds: ['owner-kp', 'assistant-kp'],
+  }), {
+    visibility: 'PRIVATE_TARGETS',
+    targetUserIds: ['pl-1', 'pl-2', 'owner-kp', 'assistant-kp'],
+  });
+});
+
 test('only a managing KP can re-enable a disabled channel', () => {
   assert.equal(canExecuteStageChannelCommand({ status: 'DISABLED', commandType: 'ACTOR_PERFORM', canManageStage: true }), false);
   assert.equal(canExecuteStageChannelCommand({ status: 'DISABLED', commandType: 'CHANNEL_ENABLE', canManageStage: false }), false);
