@@ -18,9 +18,10 @@ export function createStageAssetDeliverySignature(input: {
   viewerUserId: string;
   expiresAt: number;
   secret: string;
+  deliveryOrigin: string;
 }) {
   return createHmac('sha256', input.secret)
-    .update(`${input.assetId}:${input.version}:${input.viewerUserId}:${input.expiresAt}`)
+    .update(`${input.deliveryOrigin}:${input.assetId}:${input.version}:${input.viewerUserId}:${input.expiresAt}`)
     .digest('hex');
 }
 
@@ -40,6 +41,12 @@ export function issueStageAssetDeliveryUrl(input: {
   const baseUrl = input.baseUrl ?? process.env.STAGE_ASSET_DELIVERY_BASE_URL;
   const secret = input.secret ?? process.env.STAGE_ASSET_DELIVERY_SECRET;
   if (!baseUrl || !secret) return null;
+  let deliveryOrigin: string;
+  try {
+    deliveryOrigin = new URL(baseUrl).origin;
+  } catch {
+    return null;
+  }
   const expiresAt = Math.floor((input.nowMs ?? Date.now()) / 1_000) + 300;
   const signature = createStageAssetDeliverySignature({
     assetId: input.assetId,
@@ -47,6 +54,7 @@ export function issueStageAssetDeliveryUrl(input: {
     viewerUserId: input.viewerUserId,
     expiresAt,
     secret,
+    deliveryOrigin,
   });
   const url = new URL(`${baseUrl.replace(/\/$/, '')}/${encodeURIComponent(input.assetId)}`);
   url.searchParams.set('v', String(input.version));

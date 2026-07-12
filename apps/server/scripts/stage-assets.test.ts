@@ -52,6 +52,7 @@ test('stage delivery urls are signed and do not expose storage keys', () => {
   assert.match(url!, /^https:\/\/assets\.example\.test\/delivery\/asset-1\?v=2&e=301&u=pl-1&sig=/);
   assert.equal(url!.includes('private/'), false);
   assert.equal(issueStageAssetDeliveryUrl({ assetId: 'asset-1', version: 2, viewerUserId: 'pl-1', nowMs: 1_000 }), null);
+  assert.equal(issueStageAssetDeliveryUrl({ assetId: 'asset-1', version: 2, viewerUserId: 'pl-1', nowMs: 1_000, baseUrl: 'not a url', secret: 'test-secret' }), null);
 });
 
 test('theme manifests are declarative and reject executable fields', () => {

@@ -9,14 +9,36 @@ export function verifyStageAssetDeliverySignature(input: {
   expiresAt: number;
   signature: string;
   secret: string;
+  deliveryBaseUrl: string;
   nowMs?: number;
 }) {
   const now = Math.floor((input.nowMs ?? Date.now()) / 1_000);
   if (!Number.isSafeInteger(input.expiresAt) || input.expiresAt < now || input.expiresAt > now + 600) return false;
-  const expected = createStageAssetDeliverySignature(input);
+  let deliveryOrigin: string;
+  try {
+    deliveryOrigin = new URL(input.deliveryBaseUrl).origin;
+  } catch {
+    return false;
+  }
+  const expected = createStageAssetDeliverySignature({ ...input, deliveryOrigin });
   const supplied = Buffer.from(input.signature, 'hex');
   const expectedBytes = Buffer.from(expected, 'hex');
   return supplied.length === expectedBytes.length && timingSafeEqual(supplied, expectedBytes);
+}
+
+export function isStageAssetDeliveryRequestAllowed(input: { protocol: string; hostname: string; deliveryBaseUrl?: string }) {
+  if (!input.deliveryBaseUrl) return false;
+  try {
+    const delivery = new URL(input.deliveryBaseUrl);
+    return input.protocol.toLowerCase() === delivery.protocol.slice(0, -1).toLowerCase()
+      && input.hostname.toLowerCase() === delivery.hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+export function isStageAssetDeliveryPath(pathname: string) {
+  return pathname.startsWith('/api/stage-assets/delivery/');
 }
 
 export function resolveStageAssetFile(assetRoot: string, storageKey: string) {

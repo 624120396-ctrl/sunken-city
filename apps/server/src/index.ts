@@ -36,6 +36,7 @@ import roomVoiceRoutes from './modules/rooms/room-voice.routes';
 import roomOverviewRoutes from './modules/rooms/room-overview.routes';
 import stageRoutes from './modules/rooms/stage/stage.routes';
 import stageAssetDeliveryRoutes from './modules/rooms/stage/stage-asset-delivery.routes';
+import { isStageAssetDeliveryPath } from './modules/rooms/stage/stage-asset-delivery';
 import { setupStageGateway } from './modules/rooms/stage/stage.gateway';
 import aiDoubaoRoutes from './modules/rooms/ai-doubao.routes';
 import aiDeepseekRoutes from './modules/rooms/ai-deepseek.routes';
@@ -66,6 +67,9 @@ import userMessageRoutes from './modules/user-messages/user-messages.routes';
 dotenv.config();
 
 const app = express();
+// Only the local Nginx reverse proxy may supply forwarded host/protocol values.
+// Direct clients therefore cannot turn a forged X-Forwarded-Host into delivery access.
+app.set('trust proxy', (ip: string) => ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1');
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
   cors: {
@@ -85,7 +89,7 @@ app.use(cors({
 }));
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.info(msg.trim()) },
-  skip: (req) => req.path.startsWith('/api/stage-assets/delivery/'),
+  skip: (req) => isStageAssetDeliveryPath(req.path),
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

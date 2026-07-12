@@ -1,26 +1,67 @@
 import { createReadStream } from 'node:fs';
 import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { prisma } from '../../../config/database';
-import { parseStageAssetByteRange, resolveStageAssetFile, stageAssetContentType, verifyStageAssetDeliverySignature } from './stage-asset-delivery';
+import {
+  isStageAssetDeliveryRequestAllowed,
+  parseStageAssetByteRange,
+  resolveStageAssetFile,
+  stageAssetContentType,
+  verifyStageAssetDeliverySignature,
+} from './stage-asset-delivery';
 
 const router = Router();
 const assetRoot = () => process.env.STAGE_ASSET_ROOT || '/opt/coc-platform-data/stage-assets';
+const deliveryBaseUrl = () => process.env.STAGE_ASSET_DELIVERY_BASE_URL;
+const allowedBrowserOrigin = () => process.env.STAGE_ASSET_ALLOWED_ORIGIN || 'https://coc.city';
 
 function singleQueryValue(value: unknown) {
   return typeof value === 'string' ? value : undefined;
 }
 
+function applyDeliveryCors(req: Request, res: Response) {
+  // The app-wide CORS middleware may have set this first; delivery never permits credentials.
+  res.removeHeader('Access-Control-Allow-Credentials');
+  const origin = req.get('origin');
+  if (origin !== allowedBrowserOrigin()) return;
+  res.set({
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Range',
+    'Access-Control-Max-Age': '300',
+    Vary: 'Origin',
+  });
+}
+
+function requestUsesConfiguredDeliveryOrigin(req: { protocol: string; hostname: string }) {
+  return isStageAssetDeliveryRequestAllowed({
+    protocol: req.protocol,
+    hostname: req.hostname,
+    deliveryBaseUrl: deliveryBaseUrl(),
+  });
+}
+
+router.options('/delivery/:assetId', (req, res) => {
+  if (!requestUsesConfiguredDeliveryOrigin(req)) return res.sendStatus(403);
+  applyDeliveryCors(req, res);
+  return res.status(204).end();
+});
+
 router.get('/delivery/:assetId', async (req, res, next) => {
   try {
+    if (!requestUsesConfiguredDeliveryOrigin(req)) {
+      return res.status(403).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材投递来源无效' } });
+    }
+    applyDeliveryCors(req, res);
     const version = Number(singleQueryValue(req.query.v));
     const expiresAt = Number(singleQueryValue(req.query.e));
     const viewerUserId = singleQueryValue(req.query.u);
     const signature = singleQueryValue(req.query.sig);
     const secret = process.env.STAGE_ASSET_DELIVERY_SECRET;
-    if (!secret || !viewerUserId || !signature || !Number.isSafeInteger(version) || version < 1 || !verifyStageAssetDeliverySignature({
-      assetId: req.params.assetId, version, viewerUserId, expiresAt, signature, secret,
+    const baseUrl = deliveryBaseUrl();
+    if (!secret || !baseUrl || !viewerUserId || !signature || !Number.isSafeInteger(version) || version < 1 || !verifyStageAssetDeliverySignature({
+      assetId: req.params.assetId, version, viewerUserId, expiresAt, signature, secret, deliveryBaseUrl: baseUrl,
     })) {
       return res.status(403).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材投递链接无效或已过期' } });
     }
@@ -55,6 +96,7 @@ router.get('/delivery/:assetId', async (req, res, next) => {
       'Cache-Control': 'private, no-store',
       'X-Content-Type-Options': 'nosniff',
       'Content-Security-Policy': "default-src 'none'",
+      'Referrer-Policy': 'no-referrer',
     });
     if (range) res.setHeader('Content-Range', `bytes ${start}-${end}/${info.size}`);
     createReadStream(canonicalFile, { start, end }).on('error', next).pipe(res);
