@@ -8,6 +8,14 @@ export function canAcceptStageCommands(input: { globalEnabled: boolean; roomStag
   return input.globalEnabled && input.roomStageEnabled;
 }
 
+/**
+ * Snapshot, socket join, commands, and asset delivery share this fail-closed
+ * gate.  Status remains readable so a client can render the disabled state.
+ */
+export function isStageAccessEnabled(input: { globalEnabled: boolean; roomStageEnabled: boolean }) {
+  return canAcceptStageCommands(input);
+}
+
 export function buildStageStatus(input: {
   globalEnabled: boolean;
   roomStageEnabled: boolean;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emitStageEvent } from '../src/modules/rooms/stage/stage.gateway.ts';
+import { buildStageCommandError, emitStageEvent } from '../src/modules/rooms/stage/stage.gateway.ts';
 
 test('gateway directs KP_ONLY and PRIVATE_TARGETS stage events only to their audience', () => {
   const deliveries: string[] = [];
@@ -13,4 +13,16 @@ test('gateway directs KP_ONLY and PRIVATE_TARGETS stage events only to their aud
   emitStageEvent(io, { channelId: 'c1', visibility: 'PRIVATE_TARGETS', targetUserIds: ['pl-1', 'kp-1'] });
   emitStageEvent(io, { channelId: 'c1', visibility: 'PUBLIC', targetUserIds: [] });
   assert.deepEqual(deliveries, ['stage:c1:user:kp-1', 'stage:c1:user:pl-1', 'stage:c1:user:kp-1', 'stage:c1']);
+});
+
+test('gateway command errors retain the originating command id for client correlation', () => {
+  assert.deepEqual(buildStageCommandError({ code: 'STAGE_FORBIDDEN', message: '无权操作' }, 'cmd-1'), {
+    code: 'STAGE_FORBIDDEN',
+    message: '无权操作',
+    commandId: 'cmd-1',
+  });
+  assert.deepEqual(buildStageCommandError(new Error('unexpected'), undefined), {
+    code: 'STAGE_INTERNAL_ERROR',
+    message: 'unexpected',
+  });
 });

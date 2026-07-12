@@ -76,3 +76,19 @@ test('stage projection advances with an accepted discriminated command so recove
   assert.equal(next.actors[0].action, 'nod');
   assert.equal(next.actors[0].expression, 'calm');
 });
+
+test('a seeded bound player actor can enter, perform, and exit from an otherwise empty stage', () => {
+  const seed = {
+    contractVersion: 'stage.d1a.v1.1', channel: { id: 'stage-main', kind: 'MAIN_ROOM' as const, roomId: 'room-1' }, revision: 0,
+    serverTime: '', viewer: { userId: 'pl-1', kind: 'PLAYER' as const, roomRole: 'PLAYER' },
+    capabilities: { canUseStage: true, canControlOwnStageActor: true, canManageStage: false, canManageStageAssets: false, canExportStageReplay: false },
+    scene: { title: '共享舞台' }, assetRefs: [],
+    actors: [{ actorId: 'bound-character-1', actorKind: 'PLAYER_CHARACTER', ownerUserId: 'pl-1', characterId: 'character-1', name: '林雾', zone: 'center', entered: false, visibility: 'PUBLIC' as const }],
+  };
+  const entered = applyStageCommandToProjection({ projection: seed, revision: 1, commandType: 'ACTOR_ENTER', payload: { actorId: 'bound-character-1', zone: 'left' } });
+  const performed = applyStageCommandToProjection({ projection: entered, revision: 2, commandType: 'ACTOR_PERFORM', payload: { actorId: 'bound-character-1', action: 'nod' } });
+  const exited = applyStageCommandToProjection({ projection: performed, revision: 3, commandType: 'ACTOR_EXIT', payload: { actorId: 'bound-character-1' } });
+  assert.equal(entered.actors[0].entered, true);
+  assert.equal(performed.actors[0].action, 'nod');
+  assert.equal(exited.actors[0].entered, false);
+});

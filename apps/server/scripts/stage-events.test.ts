@@ -96,7 +96,7 @@ test('stage message metadata links room message to stage command without changin
     commandId: 'cmd-1',
     channelId: 'channel-1',
     targetUserId: 'pl-2',
-    participantUserIds: ['kp-1', 'pl-2'],
+    audienceUserIds: ['kp-1', 'pl-2'],
   }), {
     stageCommandId: 'cmd-1',
     stageChannelId: 'channel-1',

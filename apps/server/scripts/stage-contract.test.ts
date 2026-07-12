@@ -5,6 +5,7 @@ import {
   STAGE_ERROR_CODES,
   STAGE_REST_ENDPOINTS,
   STAGE_SOCKET_EVENTS,
+  type StageSocketErrorPayload,
 } from '../../shared/stage/stage-contract.ts';
 import { mockStageCommandEnvelope, mockStageSnapshots, mockStageStatus } from '../../shared/stage/stage-contract.mock.ts';
 import { STAGE_SOCKET_EVENTS as serverStageSocketEvents } from '../src/generated/stage-socket-events.ts';
@@ -22,6 +23,15 @@ test('stage socket event names are unique and namespaced', () => {
 test('server socket event constants are generated from the frozen shared contract', () => {
   assert.deepEqual(serverStageSocketEvents, STAGE_SOCKET_EVENTS);
   assert.equal(serverStageSocketEvents.EVENT, 'stage:event');
+});
+
+test('stage command errors can correlate an optional command id without breaking older error payloads', () => {
+  const error: StageSocketErrorPayload = {
+    code: 'STAGE_FORBIDDEN',
+    message: '无权操作舞台',
+    commandId: 'cmd-1',
+  };
+  assert.equal(error.commandId, 'cmd-1');
 });
 
 test('stage error codes are unique and programmatic', () => {

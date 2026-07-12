@@ -341,7 +341,12 @@ export interface StageSocketCommandPayload {
 
 export type StageSocketSnapshotPayload = StageSnapshot;
 export type StageSocketEventPayload = StageEventSource;
-export type StageSocketErrorPayload = StageErrorPayload;
+/**
+ * commandId is optional for backward compatibility with existing join/snapshot
+ * errors. Command handlers include it so concurrent clients can correlate only
+ * their own failure without changing the stage.d1a.v1.1 envelope version.
+ */
+export type StageSocketErrorPayload = StageErrorPayload & { commandId?: string };
 
 export interface StageReplaySource {
   contractVersion: typeof STAGE_CONTRACT_VERSION;

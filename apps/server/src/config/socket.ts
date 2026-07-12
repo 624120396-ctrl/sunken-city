@@ -56,7 +56,7 @@ function parseRoomMessageMeta(meta: string | null | undefined): Record<string, a
   }
 }
 
-function canViewRoomMessage(message: { type: string; meta: string }, userId: string) {
+export function canViewRoomMessage(message: { type: string; meta: string }, userId: string) {
   if (message.type !== 'private') return true;
   const meta = parseRoomMessageMeta(message.meta);
   const participantUserIds = Array.isArray(meta.participantUserIds) ? meta.participantUserIds : [];

@@ -91,6 +91,8 @@ Socket 名称仍固定为：
 
 `PRIVATE_TARGETS` 事件仅发送给 `targetUserIds` 中的成员（其中包含操作者与私信接收者）；不得把该事件广播给整条轨道。
 
+`stage:error` 保持 v1.1 的 `{ code, message }` 兼容形状；命令处理产生的错误额外携带可选 `commandId`，用于并发客户端只匹配自身命令。旧服务端的无 `commandId` 错误仍合法，但客户端不得把它归因给任一挂起命令。
+
 ## 迁移与兼容性
 
 这是有意的冻结修订，不是前端临时兼容层：D1-B 必须升级到 `stage.d1a.v1.1`，不能发送 v1.0 envelope，也不能继续假设 Socket snapshot 为 pending 标记。

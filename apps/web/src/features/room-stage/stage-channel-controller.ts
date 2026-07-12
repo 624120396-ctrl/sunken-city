@@ -3,24 +3,53 @@ import { STAGE_SOCKET_EVENTS, type StageCapabilitiesProjection, type StageComman
 
 type StageCommandSocket = Pick<Socket, 'emit' | 'on' | 'off'>;
 
+export const STAGE_COMMAND_TIMEOUT_MS = 10_000;
+
+export type StageCommandTransportOptions = {
+  timeoutMs?: number;
+  signal?: AbortSignal;
+};
+
 /** The frozen contract delivers command results on stage:command:ack, not a Socket.IO callback. */
-export function sendStageCommand(socket: StageCommandSocket, payload: StageSocketCommandPayload) {
+export function sendStageCommand(socket: StageCommandSocket, payload: StageSocketCommandPayload, options: StageCommandTransportOptions = {}) {
   return new Promise<StageCommandAck>((resolve, reject) => {
+    let settled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const cleanup = () => {
+      if (timeout) clearTimeout(timeout);
       socket.off(STAGE_SOCKET_EVENTS.COMMAND_ACK, onAck);
       socket.off(STAGE_SOCKET_EVENTS.ERROR, onError);
+      socket.off('disconnect', onDisconnect);
+      options.signal?.removeEventListener('abort', onAbort);
     };
-    const onAck = (ack: StageCommandAck) => {
-      if (ack.commandId !== payload.envelope.commandId) return;
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+    const succeed = (ack: StageCommandAck) => {
+      if (settled) return;
+      settled = true;
       cleanup();
       resolve(ack);
     };
-    const onError = (error: StageSocketErrorPayload) => {
-      cleanup();
-      reject(new Error(error.message));
+    const onAck = (ack: StageCommandAck) => {
+      if (ack.commandId !== payload.envelope.commandId) return;
+      succeed(ack);
     };
+    const onError = (error: StageSocketErrorPayload) => {
+      if (error.commandId !== payload.envelope.commandId) return;
+      fail(new Error(error.message));
+    };
+    const onDisconnect = () => fail(new Error('舞台连接已断开'));
+    const onAbort = () => fail(new Error('舞台命令已取消'));
     socket.on(STAGE_SOCKET_EVENTS.COMMAND_ACK, onAck);
     socket.on(STAGE_SOCKET_EVENTS.ERROR, onError);
+    socket.on('disconnect', onDisconnect);
+    options.signal?.addEventListener('abort', onAbort, { once: true });
+    if (options.signal?.aborted) return onAbort();
+    timeout = setTimeout(() => fail(new Error('舞台命令响应超时')), options.timeoutMs ?? STAGE_COMMAND_TIMEOUT_MS);
     socket.emit(STAGE_SOCKET_EVENTS.COMMAND, payload);
   });
 }

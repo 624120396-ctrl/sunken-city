@@ -17,6 +17,17 @@ export function useRoomStageChannel(roomId: string, socketRef: RefObject<Socket 
   const [snapshot, setSnapshot] = useState<StageSnapshot>();
   const [error, setError] = useState<string>();
   const requestToken = useRef(0);
+  const mounted = useRef(false);
+  const commandAbortControllers = useRef(new Set<AbortController>());
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      for (const controller of commandAbortControllers.current) controller.abort();
+      commandAbortControllers.current.clear();
+    };
+  }, []);
 
   const loadStatus = useCallback(async () => {
     const next = await handleApiResponse<StageStatusProjection>(await apiFetch(statusPath(roomId)));
@@ -69,14 +80,24 @@ export function useRoomStageChannel(roomId: string, socketRef: RefObject<Socket 
     if (!snapshot || envelope.channelId !== snapshot.channel.id || !canDispatchStageCommand(snapshot.projection.capabilities, envelope.commandType)) return { accepted: false, message: '当前舞台能力不允许此操作' };
     const socket = socketRef.current;
     if (!socket) return { accepted: false, message: '舞台连接不可用' };
-    const ack = await sendStageCommand(socket, { roomId, envelope });
-    if (!ack.accepted && ack.outcome === 'CONFLICT') {
-      if (ack.recovery.type === 'AUTHORITATIVE_SNAPSHOT') setSnapshot(ack.recovery.snapshot);
-      else await loadSnapshot(envelope.channelId);
+    const controller = new AbortController();
+    commandAbortControllers.current.add(controller);
+    try {
+      const ack = await sendStageCommand(socket, { roomId, envelope }, { signal: controller.signal });
+      if (!ack.accepted && ack.outcome === 'CONFLICT') {
+        if (ack.recovery.type === 'AUTHORITATIVE_SNAPSHOT') setSnapshot(ack.recovery.snapshot);
+        else await loadSnapshot(envelope.channelId);
+      }
+      if (ack.accepted && ack.outcome === 'REPLAYED' && ack.revision > snapshot.revision) await loadSnapshot(envelope.channelId);
+      if (!ack.accepted) setError(ack.error.message);
+      return ack;
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : '舞台命令失败';
+      if (mounted.current) setError(message);
+      return { accepted: false, message };
+    } finally {
+      commandAbortControllers.current.delete(controller);
     }
-    if (ack.accepted && ack.outcome === 'REPLAYED' && ack.revision > snapshot.revision) await loadSnapshot(envelope.channelId);
-    if (!ack.accepted) setError(ack.error.message);
-    return ack;
   }, [loadSnapshot, roomId, snapshot, socketRef]);
 
   return { status, activeChannelId, setActiveChannelId, snapshot, error, loadSnapshot, dispatch };

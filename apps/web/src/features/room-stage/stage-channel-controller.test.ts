@@ -26,17 +26,80 @@ test('does not let a delayed reconnect snapshot roll a channel back after its ev
 });
 
 test('sends commands through the frozen command event and consumes the matching ack event', async () => {
-  const listeners = new Map<string, (payload: any) => void>();
-  const socket = {
-    on(event: string, listener: (payload: any) => void) { listeners.set(event, listener); return socket; },
-    off(event: string) { listeners.delete(event); return socket; },
-    emit(event: string, payload: any) {
-      assert.equal(event, STAGE_SOCKET_EVENTS.COMMAND);
-      assert.equal(payload.envelope.commandId, 'cmd-1');
-      listeners.get(STAGE_SOCKET_EVENTS.COMMAND_ACK)?.({ contractVersion: STAGE_CONTRACT_VERSION, accepted: true, outcome: 'APPLIED', commandId: 'cmd-1', channelId: 'a', revision: 2 });
-      return socket;
-    },
-  } as any;
-  const ack = await sendStageCommand(socket, { roomId: 'room-1', envelope: { contractVersion: STAGE_CONTRACT_VERSION, commandId: 'cmd-1', channelId: 'a', expectedRevision: 1, commandType: 'ACTOR_EXIT', payload: { actorId: 'actor-1' } } });
-  assert.equal(ack.outcome, 'APPLIED');
+  const socket = new FakeStageSocket();
+  const pending = sendStageCommand(socket as any, command('cmd-1'), { timeoutMs: 50 });
+  assert.deepEqual(socket.emitted[0], [STAGE_SOCKET_EVENTS.COMMAND, command('cmd-1')]);
+  socket.receive(STAGE_SOCKET_EVENTS.COMMAND_ACK, ack('cmd-1'));
+  const result = await pending;
+  assert.equal(result.outcome, 'APPLIED');
+  assert.equal(socket.listenerCount(), 0);
 });
+
+test('keeps concurrent commands isolated from unrelated stage errors and acknowledgements', async () => {
+  const socket = new FakeStageSocket();
+  const first = sendStageCommand(socket as any, command('cmd-1'), { timeoutMs: 100 });
+  const second = sendStageCommand(socket as any, command('cmd-2'), { timeoutMs: 100 });
+  socket.receive(STAGE_SOCKET_EVENTS.ERROR, { code: 'STAGE_FORBIDDEN', message: 'other command', commandId: 'cmd-other' });
+  socket.receive(STAGE_SOCKET_EVENTS.COMMAND_ACK, ack('cmd-1'));
+  assert.equal((await first).commandId, 'cmd-1');
+  socket.receive(STAGE_SOCKET_EVENTS.ERROR, { code: 'STAGE_FORBIDDEN', message: 'denied', commandId: 'cmd-2' });
+  await assert.rejects(second, /denied/);
+  assert.equal(socket.listenerCount(), 0);
+});
+
+test('cleans up a pending command on timeout, disconnect, and abort signal', async () => {
+  const timeoutSocket = new FakeStageSocket();
+  await assert.rejects(sendStageCommand(timeoutSocket as any, command('cmd-timeout'), { timeoutMs: 5 }), /超时/);
+  assert.equal(timeoutSocket.listenerCount(), 0);
+
+  const disconnectSocket = new FakeStageSocket();
+  const disconnectPending = sendStageCommand(disconnectSocket as any, command('cmd-disconnect'), { timeoutMs: 100 });
+  disconnectSocket.receive('disconnect');
+  await assert.rejects(disconnectPending, /连接已断开/);
+  assert.equal(disconnectSocket.listenerCount(), 0);
+
+  const abortSocket = new FakeStageSocket();
+  const controller = new AbortController();
+  const abortPending = sendStageCommand(abortSocket as any, command('cmd-unmount'), { timeoutMs: 100, signal: controller.signal });
+  controller.abort();
+  await assert.rejects(abortPending, /已取消/);
+  assert.equal(abortSocket.listenerCount(), 0);
+});
+
+function command(commandId: string) {
+  return { roomId: 'room-1', envelope: { contractVersion: STAGE_CONTRACT_VERSION, commandId, channelId: 'a', expectedRevision: 1, commandType: 'ACTOR_EXIT' as const, payload: { actorId: 'actor-1' } } };
+}
+
+function ack(commandId: string) {
+  return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'APPLIED' as const, commandId, channelId: 'a', revision: 2 };
+}
+
+class FakeStageSocket {
+  listeners = new Map<string, Set<(payload?: any) => void>>();
+  emitted: Array<[string, any]> = [];
+
+  on(event: string, listener: (payload?: any) => void) {
+    const current = this.listeners.get(event) ?? new Set();
+    current.add(listener);
+    this.listeners.set(event, current);
+    return this;
+  }
+
+  off(event: string, listener: (payload?: any) => void) {
+    this.listeners.get(event)?.delete(listener);
+    return this;
+  }
+
+  emit(event: string, payload: any) {
+    this.emitted.push([event, payload]);
+    return this;
+  }
+
+  receive(event: string, payload?: any) {
+    for (const listener of this.listeners.get(event) ?? []) listener(payload);
+  }
+
+  listenerCount() {
+    return [...this.listeners.values()].reduce((count, listeners) => count + listeners.size, 0);
+  }
+}

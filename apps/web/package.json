@@ -25,6 +25,7 @@
     "test:rank-title-display": "node --test --experimental-strip-types scripts/rank-title-display.test.ts",
     "test:story-entry": "node --test --experimental-strip-types scripts/story-entry.test.ts",
     "test:auth-portal": "node --test --experimental-strip-types scripts/auth-portal.test.ts",
+    "test:stage": "node ../server/node_modules/tsx/dist/cli.mjs --test src/features/room-stage/stage-channel-controller.test.ts src/features/room-stage/stage-composer.test.ts",
     "check:ui-system": "node scripts/check-ui-system-contract.mjs"
   },
   "dependencies": {

@@ -2,7 +2,7 @@ import { prisma } from '../../../config/database';
 import { AppError } from '../../../middleware/error';
 import { requireRoomCapability } from '../room-auth';
 import { authorizeStageActorCommand, authorizeStageChannelAccess } from './stage-auth';
-import { buildStageStatus, canAcceptStageCommands, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
+import { buildStageStatus, canAcceptStageCommands, isStageAccessEnabled, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
 import { buildStageEventAudience, buildStageEventTargetUserIds, buildStageMessageMeta, canExecuteStageChannelCommand, nextStageRevision } from './stage-events';
 import { authorizeStageAssetRead, issueStageAssetDeliveryUrl } from './stage-assets';
 import { applyStageCommandToProjection, canViewerSeeActor, trimStageAssetRefs } from './stage-projection';
@@ -49,6 +49,39 @@ function parseTargetUserIds(value?: string) {
   } catch {
     return [];
   }
+}
+
+function requireStageEnabled(auth: { room: { stageEnabled?: boolean | null } }) {
+  if (!isStageAccessEnabled({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean(auth.room.stageEnabled) })) {
+    throw new AppError('STAGE_DISABLED', '舞台当前未启用', 403);
+  }
+}
+
+async function ensureBoundStageActor(input: { channelId: string; member?: { userId: string; characterId?: string | null } | null }) {
+  if (!input.member?.characterId) return null;
+  const existing = await (prisma as any).stageActorState.findFirst({ where: { channelId: input.channelId, ownerUserId: input.member.userId, characterId: input.member.characterId } });
+  if (existing) return existing;
+  return (prisma as any).stageActorState.create({ data: {
+    channelId: input.channelId, actorKind: 'PLAYER_CHARACTER', ownerUserId: input.member.userId,
+    characterId: input.member.characterId, zone: 'center', entered: false, visibility: 'PUBLIC', stateJson: '{}', updatedAt: new Date(),
+  } });
+}
+
+async function stageActorProjection(states: any[]) {
+  const characterIds = states.map((state) => state.characterId).filter((id): id is string => typeof id === 'string');
+  const characters = characterIds.length ? await prisma.character.findMany({ where: { id: { in: characterIds } }, select: { id: true, name: true } }) : [];
+  const names = new Map(characters.map((character) => [character.id, character.name]));
+  return states.map((state) => ({
+    actorId: state.id, actorKind: state.actorKind, ...(state.ownerUserId ? { ownerUserId: state.ownerUserId } : {}),
+    ...(state.characterId ? { characterId: state.characterId } : {}), name: names.get(state.characterId) ?? state.temporaryName ?? '舞台角色',
+    zone: state.zone, entered: Boolean(state.entered), visibility: state.visibility,
+  }));
+}
+
+function mergeStageActors(stored: any[], seeded: any[]) {
+  const byId = new Map(stored.map((actor) => [actor.actorId, actor]));
+  for (const actor of seeded) byId.set(actor.actorId, { ...actor, ...(byId.get(actor.actorId) ?? {}) });
+  return [...byId.values()];
 }
 
 function channelRef(channel: StageChannelRecord, publicRoomId: string) {
@@ -215,7 +248,9 @@ export async function disableStageForRoom(input: { roomId: string; userId?: stri
 
 export async function getStageSnapshot(input: { roomId: string; channelId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
+  requireStageEnabled(auth);
   const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: input.channelId });
+  await ensureBoundStageActor({ channelId: channel.id, member: auth.member });
   const snapshot = await (prisma as any).stageSnapshot.findFirst({ where: { channelId: channel.id }, orderBy: { revision: 'desc' } });
   if (!snapshot) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
   const parsed = JSON.parse(snapshot.projectionJson);
@@ -240,7 +275,8 @@ export async function getStageSnapshot(input: { roomId: string; channelId: strin
     })),
   }).filter((asset: { proxyUrl: string }) => Boolean(asset.proxyUrl)).map(({ visibility: _visibility, ...asset }: any) => asset);
   const visibleAssetIds = new Set(visibleAssets.map((asset: { assetId: string }) => asset.assetId));
-  const safeActors = (parsed.actors ?? []).filter((actor: any) => canViewerSeeActor({
+  const seededActors = await stageActorProjection(await (prisma as any).stageActorState.findMany({ where: { channelId: channel.id } }));
+  const safeActors = mergeStageActors(parsed.actors ?? [], seededActors).filter((actor: any) => canViewerSeeActor({
     visibility: actor.visibility, viewerUserId: input.userId ?? '', viewerCanManageStage: auth.capabilities.canManageStage,
     targetUserIds: parseTargetUserIds(JSON.stringify(actor.targetUserIds ?? [])),
   })).map(({ targetUserIds: _targetUserIds, ...actor }: any) => actor);
@@ -275,6 +311,7 @@ export async function getStageSnapshot(input: { roomId: string; channelId: strin
 
 export async function getStageAssetProxy(input: { roomId: string; assetId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
+  requireStageEnabled(auth);
   const asset = await (prisma as any).stageAsset.findFirst({ where: { id: input.assetId, roomId: auth.room.id, deletedAt: null } });
   if (!asset) throw new AppError('STAGE_ASSET_FORBIDDEN', '素材不存在或无权访问', 404);
   const allowed = authorizeStageAssetRead({
@@ -299,7 +336,9 @@ export async function handleStageCommand(input: { roomId: string; userId: string
   if (!validated.ok) throw new AppError('STAGE_INVALID_PAYLOAD', validated.message, 400);
   const envelope = validated.envelope as any;
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
+  requireStageEnabled(auth);
   const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: envelope.channelId });
+  const ownSeed = await ensureBoundStageActor({ channelId: channel.id, member: auth.member });
   if (['SCENE_SET', 'SCENE_CLEAR', 'CHANNEL_ENABLE', 'CHANNEL_DISABLE'].includes(envelope.commandType) && !auth.capabilities.canManageStage) {
     throw new AppError('STAGE_FORBIDDEN', '只有 KP 可以调整场景或轨道状态', 403);
   }
@@ -327,6 +366,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       serverTime: new Date().toISOString(), viewer: stageViewer({ userId: input.userId, role: auth.role }),
       capabilities: auth.capabilities, scene: { title: '共享舞台' }, actors: [], assetRefs: [],
     };
+    if (ownSeed) previousProjection.actors = mergeStageActors(previousProjection.actors ?? [], await stageActorProjection([ownSeed]));
     const kpUserIds = [...new Set([
       auth.room.creatorId,
       ...auth.room.members.filter((member: { leftAt: Date | null; role: string }) => !member.leftAt && member.role === 'KP').map((member: { userId: string }) => member.userId),
@@ -364,7 +404,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
     const savedMessage = envelope.messageDraft ? await tx.roomMessage.create({ data: {
       roomId: auth.room.id, userId: input.userId, nickname: input.nickname, content: envelope.messageDraft.content,
       type: envelope.messageDraft.mode === 'PRIVATE' ? 'private' : 'text',
-      meta: JSON.stringify(buildStageMessageMeta({ commandId: envelope.commandId, channelId: envelope.channelId, targetUserId: envelope.messageDraft.targetUserId, participantUserIds: parseUserIds(currentChannel.participantUserIds) })),
+      meta: JSON.stringify(buildStageMessageMeta({ commandId: envelope.commandId, channelId: envelope.channelId, targetUserId: envelope.messageDraft.targetUserId, audienceUserIds: eventAudience.targetUserIds })),
     } }) : null;
     await (tx as any).stageEvent.create({ data: {
       channelId: envelope.channelId, roomId: auth.room.id, commandId: envelope.commandId, eventType: envelope.commandType, contractVersion: STAGE_CONTRACT_VERSION,
