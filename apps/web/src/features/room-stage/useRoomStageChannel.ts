@@ -52,6 +52,9 @@ export function useRoomStageChannel(roomId: string, socketRef: RefObject<Socket 
       return next || current;
     });
     const onSnapshot = (next: StageSnapshot) => { if (next.contractVersion === STAGE_CONTRACT_VERSION && next.channel.id === activeChannelId) setSnapshot((current) => selectNewerSnapshot(current, next) || current); };
+    // A join acknowledgement is not a snapshot contract.  Every reconnect begins
+    // by replacing local revision state from the authoritative HTTP snapshot.
+    void loadSnapshot(activeChannelId).catch((cause: Error) => setError(cause.message));
     socket.emit(STAGE_SOCKET_EVENTS.JOIN_CHANNEL, join);
     socket.on(STAGE_SOCKET_EVENTS.EVENT, onEvent);
     socket.on(STAGE_SOCKET_EVENTS.SNAPSHOT, onSnapshot);
