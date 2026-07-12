@@ -5,7 +5,7 @@ import { copyFileSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { PrismaClient } from '@prisma/client';
-import { ensureBoundStageActor, stageActorBindingScopeKey } from '../src/modules/rooms/stage/stage-actors.ts';
+import { canonicalizeStageActors, ensureBoundStageActor, findCanonicalStageActor, stageActorBindingScopeKey } from '../src/modules/rooms/stage/stage-actors.ts';
 
 const serverRoot = join(__dirname, '..');
 const databasePath = join(serverRoot, 'prisma', `.stage-actors-${process.pid}-${Date.now()}.db`);
@@ -77,6 +77,18 @@ test('a unique conflict reads the concurrent canonical binding actor', async () 
     member: { userId: 'user-1', characterId: 'character-1' },
   });
   assert.equal(actor, canonical);
+});
+
+test('canonicalization replaces a stale snapshot actor and rejects its old command id', () => {
+  const active = [{ actorId: 'preferred-b', actorKind: 'PLAYER_CHARACTER', ownerUserId: 'user-1', characterId: 'character-1', name: 'Current', zone: 'center', entered: false, visibility: 'PUBLIC' }];
+  const canonical = canonicalizeStageActors([
+    { actorId: 'stale-a', actorKind: 'PLAYER_CHARACTER', ownerUserId: 'user-1', characterId: 'character-1', name: 'Old', zone: 'left', entered: true, action: 'nod', visibility: 'PUBLIC' },
+    { actorId: 'missing-c', actorKind: 'PLAYER_CHARACTER', ownerUserId: 'user-2', characterId: 'character-2', name: 'Missing', zone: 'right', entered: true, visibility: 'PUBLIC' },
+  ], active);
+  assert.deepEqual(canonical.map((actor) => actor.actorId), ['preferred-b']);
+  assert.equal(canonical[0].action, 'nod');
+  assert.equal(findCanonicalStageActor(canonical, 'stale-a'), undefined);
+  assert.equal(findCanonicalStageActor(canonical, 'preferred-b')?.ownerUserId, 'user-1');
 });
 
 test('two concurrent database seeds persist exactly one bound actor', async (t) => {

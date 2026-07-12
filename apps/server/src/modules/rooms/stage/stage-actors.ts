@@ -9,6 +9,67 @@ export function stageActorBindingScopeKey(input: { userId: string; characterId: 
   return `binding:${input.userId}:${input.characterId}`;
 }
 
+type StageActorProjection = {
+  actorId: string;
+  actorKind: string;
+  ownerUserId?: string;
+  characterId?: string;
+  name?: string;
+  zone?: string;
+  entered?: boolean;
+  visibility?: string;
+  [key: string]: unknown;
+};
+
+function bindingScopeForActor(actor: StageActorProjection) {
+  return actor.actorKind === 'PLAYER_CHARACTER' && actor.ownerUserId && actor.characterId
+    ? stageActorBindingScopeKey({ userId: actor.ownerUserId, characterId: actor.characterId })
+    : undefined;
+}
+
+/**
+ * Snapshot actors are only actionable while backed by a current StageActorState.
+ * A persisted snapshot may predate a dedupe migration, so resolve old binding
+ * ids onto the live state and drop every actor without a current state.
+ */
+export function canonicalizeStageActors(stored: StageActorProjection[], active: StageActorProjection[]) {
+  const activeById = new Map(active.map((actor) => [actor.actorId, actor]));
+  const activeByBinding = new Map(active.flatMap((actor) => {
+    const scope = bindingScopeForActor(actor);
+    return scope ? [[scope, actor] as const] : [];
+  }));
+  const overrides = new Map<string, StageActorProjection>();
+  for (const actor of stored) {
+    const current = bindingScopeForActor(actor)
+      ? activeByBinding.get(bindingScopeForActor(actor)!)
+      : activeById.get(actor.actorId);
+    if (!current) continue;
+    const previous = overrides.get(current.actorId);
+    if (!previous || actor.actorId === current.actorId) overrides.set(current.actorId, actor);
+  }
+  return active.map((current) => {
+    const storedActor = overrides.get(current.actorId);
+    if (!storedActor) return current;
+    const merged: StageActorProjection = {
+      ...current,
+      ...storedActor,
+      actorId: current.actorId,
+      actorKind: current.actorKind,
+      name: current.name,
+      visibility: current.visibility,
+    };
+    if (current.ownerUserId) merged.ownerUserId = current.ownerUserId;
+    else delete merged.ownerUserId;
+    if (current.characterId) merged.characterId = current.characterId;
+    else delete merged.characterId;
+    return merged;
+  });
+}
+
+export function findCanonicalStageActor(actors: StageActorProjection[], actorId: string) {
+  return actors.find((actor) => actor.actorId === actorId);
+}
+
 function isUniqueConflict(error: unknown) {
   return Boolean(error && typeof error === 'object' && (error as { code?: string }).code === 'P2002');
 }

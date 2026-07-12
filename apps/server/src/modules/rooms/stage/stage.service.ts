@@ -2,7 +2,7 @@ import { prisma } from '../../../config/database';
 import { AppError } from '../../../middleware/error';
 import { requireRoomCapability } from '../room-auth';
 import { authorizeStageActorCommand, authorizeStageChannelAccess } from './stage-auth';
-import { ensureBoundStageActor } from './stage-actors';
+import { canonicalizeStageActors, ensureBoundStageActor, findCanonicalStageActor } from './stage-actors';
 import { buildStageStatus, canAcceptStageCommands, isStageAccessEnabled, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
 import { buildStageEventAudience, buildStageEventTargetUserIds, buildStageMessageMeta, canExecuteStageChannelCommand, nextStageRevision } from './stage-events';
 import { authorizeStageAssetRead, issueStageAssetDeliveryUrl } from './stage-assets';
@@ -67,12 +67,6 @@ async function stageActorProjection(states: any[], client: any = prisma) {
     ...(state.characterId ? { characterId: state.characterId } : {}), name: names.get(state.characterId) ?? state.temporaryName ?? '舞台角色',
     zone: state.zone, entered: Boolean(state.entered), visibility: state.visibility,
   }));
-}
-
-function mergeStageActors(stored: any[], seeded: any[]) {
-  const byId = new Map(stored.map((actor) => [actor.actorId, actor]));
-  for (const actor of seeded) byId.set(actor.actorId, { ...actor, ...(byId.get(actor.actorId) ?? {}) });
-  return [...byId.values()];
 }
 
 function channelRef(channel: StageChannelRecord, publicRoomId: string) {
@@ -267,7 +261,7 @@ export async function getStageSnapshot(input: { roomId: string; channelId: strin
   }).filter((asset: { proxyUrl: string }) => Boolean(asset.proxyUrl)).map(({ visibility: _visibility, ...asset }: any) => asset);
   const visibleAssetIds = new Set(visibleAssets.map((asset: { assetId: string }) => asset.assetId));
   const seededActors = await stageActorProjection(await (prisma as any).stageActorState.findMany({ where: { channelId: channel.id } }));
-  const safeActors = mergeStageActors(parsed.actors ?? [], seededActors).filter((actor: any) => canViewerSeeActor({
+  const safeActors = canonicalizeStageActors(parsed.actors ?? [], seededActors).filter((actor: any) => canViewerSeeActor({
     visibility: actor.visibility, viewerUserId: input.userId ?? '', viewerCanManageStage: auth.capabilities.canManageStage,
     targetUserIds: parseTargetUserIds(JSON.stringify(actor.targetUserIds ?? [])),
   })).map(({ targetUserIds: _targetUserIds, ...actor }: any) => actor);
@@ -340,7 +334,7 @@ export async function handleStageCommand(input: { roomId: string; userId: string
     if (replayed) return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'REPLAYED' as const, commandId: envelope.commandId, channelId: envelope.channelId, revision: replayed.afterRevision };
     const currentChannel = await (tx as any).stageChannel.findUnique({ where: { id: channel.id } }) as StageChannelRecord | null;
     if (!currentChannel) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
-    const ownSeed = await ensureBoundStageActor({ client: tx as any, channelId: channel.id, member: auth.member });
+    await ensureBoundStageActor({ client: tx as any, channelId: channel.id, member: auth.member });
     if (!canExecuteStageChannelCommand({ status: currentChannel.status, commandType: envelope.commandType, canManageStage: auth.capabilities.canManageStage }) || !canAcceptStageCommands({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean((auth.room as any).stageEnabled) })) {
       return rejectedAck({ commandId: envelope.commandId, channelId: envelope.channelId, revision: currentChannel.revision, code: 'STAGE_DISABLED', message: '舞台当前未启用' });
     }
@@ -357,7 +351,8 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       serverTime: new Date().toISOString(), viewer: stageViewer({ userId: input.userId, role: auth.role }),
       capabilities: auth.capabilities, scene: { title: '共享舞台' }, actors: [], assetRefs: [],
     };
-    if (ownSeed) previousProjection.actors = mergeStageActors(previousProjection.actors ?? [], await stageActorProjection([ownSeed], tx));
+    const activeActors = await stageActorProjection(await (tx as any).stageActorState.findMany({ where: { channelId: channel.id } }), tx);
+    previousProjection.actors = canonicalizeStageActors(previousProjection.actors ?? [], activeActors);
     const kpUserIds = [...new Set([
       auth.room.creatorId,
       ...auth.room.members.filter((member: { leftAt: Date | null; role: string }) => !member.leftAt && member.role === 'KP').map((member: { userId: string }) => member.userId),
@@ -366,9 +361,14 @@ export async function handleStageCommand(input: { roomId: string; userId: string
       ? buildStageEventAudience({ visibility: 'PRIVATE_TARGETS', targetUserIds: buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }), kpUserIds })
       : buildStageEventAudience({ visibility: 'PUBLIC', targetUserIds: [], kpUserIds: [] });
     if (envelope.commandType.startsWith('ACTOR_')) {
-      const actor = previousProjection.actors?.find((item: { actorId: string }) => item.actorId === envelope.payload.actorId);
+      const actor = findCanonicalStageActor(previousProjection.actors ?? [], envelope.payload.actorId) as {
+        actorKind: 'NPC' | 'PLAYER_CHARACTER' | 'TEMPORARY';
+        ownerUserId?: string;
+        visibility: 'PUBLIC' | 'KP_ONLY' | 'PRIVATE_TARGETS';
+        targetUserIds?: string[];
+      } | undefined;
       const actorAccess = actor && authorizeStageActorCommand({ actorKind: actor.actorKind, ownerUserId: actor.ownerUserId, userId: input.userId, capabilities: auth.capabilities });
-      if (!actorAccess?.allowed) throw new AppError('STAGE_ACTOR_FORBIDDEN', '演员不存在或无权操作', 403);
+      if (!actor || !actorAccess?.allowed) throw new AppError('STAGE_ACTOR_FORBIDDEN', '演员不存在或无权操作', 403);
       eventAudience = buildStageEventAudience({
         visibility: actor.visibility,
         targetUserIds: parseTargetUserIds(JSON.stringify(actor.targetUserIds ?? [])),
