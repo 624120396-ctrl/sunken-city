@@ -12,8 +12,32 @@ export function authorizeStageAssetRead(input: {
   return false;
 }
 
-export function buildStageAssetProxyUrl(input: { publicRoomId: string; assetId: string; version: number }) {
-  return `/api/rooms/${encodeURIComponent(input.publicRoomId)}/stage/assets/${encodeURIComponent(input.assetId)}/proxy?v=${input.version}`;
+/**
+ * Creates an expiring URL for a separately configured private asset delivery
+ * service. The application never returns a storage key and cannot fall back to
+ * the API endpoint itself as a fake proxy.
+ */
+export function issueStageAssetDeliveryUrl(input: {
+  assetId: string;
+  version: number;
+  viewerUserId: string;
+  nowMs?: number;
+  baseUrl?: string;
+  secret?: string;
+}) {
+  const baseUrl = input.baseUrl ?? process.env.STAGE_ASSET_DELIVERY_BASE_URL;
+  const secret = input.secret ?? process.env.STAGE_ASSET_DELIVERY_SECRET;
+  if (!baseUrl || !secret) return null;
+  const expiresAt = Math.floor((input.nowMs ?? Date.now()) / 1_000) + 300;
+  const signature = createHmac('sha256', secret)
+    .update(`${input.assetId}:${input.version}:${input.viewerUserId}:${expiresAt}`)
+    .digest('hex');
+  const url = new URL(`${baseUrl.replace(/\/$/, '')}/${encodeURIComponent(input.assetId)}`);
+  url.searchParams.set('v', String(input.version));
+  url.searchParams.set('e', String(expiresAt));
+  url.searchParams.set('u', input.viewerUserId);
+  url.searchParams.set('sig', signature);
+  return url.toString();
 }
 
 const blockedThemeKeys = new Set(['html', 'script', 'javascript', 'remoteScriptUrl', 'styleTag']);
@@ -26,3 +50,4 @@ export function validateThemeManifest(input: Record<string, unknown>) {
   }
   return { ok: true as const };
 }
+import { createHmac } from 'node:crypto';

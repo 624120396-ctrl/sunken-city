@@ -1534,6 +1534,7 @@ model StageChannel {
   kind                  String
   subRoomId             String?
   privateThreadId       String?
+  scopeKey              String
   participantUserIds    String   @default("[]")
   parentChannelId       String?
   status                String   @default("DISABLED")
@@ -1548,7 +1549,7 @@ model StageChannel {
   snapshots             StageSnapshot[]
   actorStates           StageActorState[]
 
-  @@unique([roomId, kind, subRoomId, privateThreadId])
+  @@unique([roomId, scopeKey])
   @@index([roomId, status])
 }
 

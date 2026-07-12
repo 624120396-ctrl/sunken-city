@@ -1,15 +1,7 @@
 import type { Server } from 'socket.io';
 import type { AuthenticatedSocket } from '../../../config/socket';
+import { STAGE_SOCKET_EVENTS } from '../../../generated/stage-socket-events';
 import { getStageEventForCommand, getStageSnapshot, handleStageCommand } from './stage.service';
-
-const STAGE_SOCKET_EVENTS = {
-  JOIN_CHANNEL: 'stage:channel:join',
-  LEAVE_CHANNEL: 'stage:channel:leave',
-  COMMAND: 'stage:command',
-  COMMAND_ACK: 'stage:command:ack',
-  SNAPSHOT: 'stage:snapshot',
-  ERROR: 'stage:error',
-} as const;
 
 export function setupStageGateway(io: Server) {
   io.on('connection', (socket: AuthenticatedSocket) => {

@@ -54,11 +54,13 @@ export function buildStageMessageMeta(input: {
   commandId: string;
   channelId: string;
   targetUserId?: string;
+  participantUserIds?: string[];
 }) {
   return {
     stageCommandId: input.commandId,
     stageChannelId: input.channelId,
     ...(input.targetUserId ? { targetUserId: input.targetUserId } : {}),
+    ...(input.participantUserIds ? { participantUserIds: input.participantUserIds } : {}),
   };
 }
 
