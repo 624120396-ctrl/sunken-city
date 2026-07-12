@@ -1,8 +1,9 @@
-import { AccessToken, TrackSource, type VideoGrant } from 'livekit-server-sdk';
+import { AccessToken, RoomServiceClient, TrackSource, type VideoGrant } from 'livekit-server-sdk';
 import type { RoomCapabilities, RoomRoleView } from './room-auth';
 
 const DEFAULT_TOKEN_TTL_SECONDS = 15 * 60;
 const DEFAULT_MAX_PARTICIPANTS = 10;
+const VOICE_ENABLED_LIFECYCLES = new Set(['PREPARING', 'READY', 'IN_PROGRESS', 'PAUSED']);
 
 export interface RoomVoiceRuntimeConfig {
   enabled: boolean;
@@ -61,8 +62,71 @@ export function roomVoiceConfigStatus(config = buildRoomVoiceRuntimeConfig()) {
   return config.enabled ? 'READY' : 'MISSING_CONFIG';
 }
 
+export interface RoomVoiceParticipantClient {
+  listParticipants(room: string): Promise<unknown[]>;
+}
+
+export class RoomVoiceCapacityError extends Error {
+  constructor(
+    readonly code: 'VOICE_ROOM_FULL' | 'VOICE_CAPACITY_CHECK_FAILED',
+    readonly statusCode: 409 | 503,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'RoomVoiceCapacityError';
+  }
+}
+
+export function isRoomVoiceLifecycleAllowed(lifecycle: string) {
+  return VOICE_ENABLED_LIFECYCLES.has(lifecycle);
+}
+
 export function buildLiveKitRoomName(roomId: string) {
   return `sunken-room-${roomId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)}`;
+}
+
+export function buildLiveKitServiceUrl(serverUrl: string) {
+  const endpoint = new URL(serverUrl);
+  if (endpoint.protocol === 'wss:') endpoint.protocol = 'https:';
+  if (endpoint.protocol === 'ws:') endpoint.protocol = 'http:';
+  endpoint.pathname = '';
+  endpoint.search = '';
+  endpoint.hash = '';
+  return endpoint.toString();
+}
+
+export async function assertRoomVoiceCapacity(input: {
+  config?: RoomVoiceRuntimeConfig;
+  env?: NodeJS.ProcessEnv;
+  roomName: string;
+  client?: RoomVoiceParticipantClient;
+}) {
+  const env = input.env ?? process.env;
+  const config = input.config ?? buildRoomVoiceRuntimeConfig(env);
+  if (!config.enabled || !config.serverUrl) {
+    throw new RoomVoiceCapacityError('VOICE_CAPACITY_CHECK_FAILED', 503, '无法确认房间语音容量，请稍后重试');
+  }
+
+  let participants: unknown[];
+  try {
+    const client = input.client ?? new RoomServiceClient(
+      buildLiveKitServiceUrl(config.serverUrl),
+      env.LIVEKIT_API_KEY,
+      env.LIVEKIT_API_SECRET,
+    );
+    participants = await client.listParticipants(input.roomName);
+  } catch {
+    throw new RoomVoiceCapacityError('VOICE_CAPACITY_CHECK_FAILED', 503, '无法确认房间语音容量，请稍后重试');
+  }
+
+  if (participants.length >= config.maxParticipants) {
+    throw new RoomVoiceCapacityError('VOICE_ROOM_FULL', 409, `房间语音已达到 ${config.maxParticipants} 人上限`);
+  }
+
+  return {
+    participantCount: participants.length,
+    maxParticipants: config.maxParticipants,
+  };
 }
 
 export function canPublishRoomVoice(
