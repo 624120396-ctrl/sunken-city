@@ -1,243 +1,353 @@
 import { prisma } from '../../../config/database';
 import { AppError } from '../../../middleware/error';
 import { requireRoomCapability } from '../room-auth';
+import { authorizeStageActorCommand, authorizeStageChannelAccess } from './stage-auth';
 import { buildStageStatus, canAcceptStageCommands, stageGlobalEnabled, STAGE_CONTRACT_VERSION } from './stage-flags';
-import { buildStageCommandDisabledResult, buildStageMessageMeta, nextStageRevision } from './stage-events';
+import { buildStageEventTargetUserIds, buildStageMessageMeta, nextStageRevision } from './stage-events';
 import { buildStageAssetProxyUrl } from './stage-assets';
+import { applyStageCommandToProjection } from './stage-projection';
+import { validateStageCommandEnvelope } from './stage-validation';
 
-export type StageCommandEnvelope = {
-  contractVersion: typeof STAGE_CONTRACT_VERSION;
-  commandId: string;
-  channelId: string;
-  expectedRevision: number;
-  commandType: string;
-  payload: unknown;
-  messageDraft?: {
-    content: string;
-    targetUserId?: string;
-    mode: 'PUBLIC' | 'PRIVATE';
-  };
+type StageChannelRecord = {
+  id: string;
+  kind: 'MAIN_ROOM' | 'SUB_ROOM' | 'PRIVATE_THREAD';
+  subRoomId: string | null;
+  privateThreadId: string | null;
+  parentChannelId: string | null;
+  participantUserIds?: string;
+  status: 'ACTIVE' | 'DISABLED';
+  revision: number;
 };
 
 function getUserId(input: { userId?: string; user?: { userId: string } }) {
   return input.userId || input.user?.userId;
 }
 
-export async function getStageStatus(input: {
+function stageViewer(input: { userId?: string; role: string }) {
+  return {
+    userId: input.userId ?? '',
+    kind: input.role === 'OWNER_KP' || input.role === 'ASSISTANT_KP' ? 'KP' as const : input.role === 'PLAYER' ? 'PLAYER' as const : 'OBSERVER' as const,
+    roomRole: input.role,
+  };
+}
+
+function parseUserIds(value?: string) {
+  try {
+    const parsed = JSON.parse(value ?? '[]');
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string') ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function channelRef(channel: StageChannelRecord, publicRoomId: string) {
+  return {
+    id: channel.id,
+    kind: channel.kind,
+    roomId: publicRoomId,
+    ...(channel.subRoomId ? { subRoomId: channel.subRoomId } : {}),
+    ...(channel.privateThreadId ? { privateThreadId: channel.privateThreadId } : {}),
+    ...(channel.parentChannelId ? { parentChannelId: channel.parentChannelId } : {}),
+  };
+}
+
+async function memberSubRoomIds(userId: string | undefined, roomId: string) {
+  if (!userId) return new Set<string>();
+  const memberships = await (prisma as any).subRoomMember.findMany({
+    where: { userId, leftAt: null, subRoom: { parentRoomId: roomId } },
+    select: { subRoomId: true },
+  });
+  return new Set<string>(memberships.map((membership: { subRoomId: string }) => membership.subRoomId));
+}
+
+async function accessibleStageChannels(input: {
   roomId: string;
+  publicRoomId: string;
   userId?: string;
+  role: string;
+  capabilities: { canUseStage: boolean; canManageStage: boolean };
 }) {
+  const channels = await (prisma as any).stageChannel.findMany({
+    where: { roomId: input.roomId },
+    orderBy: [{ kind: 'asc' }, { createdAt: 'asc' }],
+  }) as StageChannelRecord[];
+  const memberSubRooms = await memberSubRoomIds(input.userId, input.roomId);
+  const subRooms = await (prisma as any).subRoom.findMany({
+    where: { parentRoomId: input.roomId },
+    select: { id: true, name: true, description: true },
+  });
+  const subRoomById = new Map(subRooms.map((subRoom: { id: string; name: string; description?: string | null }) => [subRoom.id, subRoom]));
+
+  return channels.flatMap((channel) => {
+    const channelInput = channel.kind === 'MAIN_ROOM'
+      ? { kind: 'MAIN_ROOM' as const, roomId: input.roomId }
+      : channel.kind === 'SUB_ROOM' && channel.subRoomId
+        ? { kind: 'SUB_ROOM' as const, roomId: input.roomId, subRoomId: channel.subRoomId }
+        : channel.privateThreadId
+          ? { kind: 'PRIVATE_THREAD' as const, roomId: input.roomId, privateThreadId: channel.privateThreadId, participantUserIds: parseUserIds(channel.participantUserIds) }
+          : null;
+    if (!channelInput) return [];
+    const access = authorizeStageChannelAccess({
+      channel: channelInput,
+      userId: input.userId ?? '',
+      role: input.role as any,
+      capabilities: input.capabilities,
+      subRoomMemberUserIds: [...memberSubRooms],
+    });
+    if (!access.allowed) return [];
+    const subRoom = channel.subRoomId ? subRoomById.get(channel.subRoomId) : undefined;
+    return [{
+      channel: channelRef(channel, input.publicRoomId),
+      status: channel.status,
+      revision: channel.revision,
+      scope: channel.kind === 'MAIN_ROOM'
+        ? { type: 'ROOM' as const }
+        : channel.kind === 'SUB_ROOM'
+          ? { type: 'SUB_ROOM' as const, subRoomId: channel.subRoomId! }
+          : { type: 'PRIVATE_THREAD' as const, privateThreadId: channel.privateThreadId! },
+      display: channel.kind === 'MAIN_ROOM'
+        ? { label: '主舞台', description: '房间全体可见的公开舞台' }
+        : channel.kind === 'SUB_ROOM'
+          ? { label: subRoom?.name ?? '子房间舞台', ...(subRoom?.description ? { description: subRoom.description } : {}) }
+          : { label: '私密舞台', description: '仅限私密参与者与 KP' },
+    }];
+  });
+}
+
+async function requireStageChannelAccess(input: {
+  roomId: string;
+  publicRoomId: string;
+  userId?: string;
+  role: string;
+  capabilities: { canUseStage: boolean; canManageStage: boolean };
+  channelId: string;
+}) {
+  const channel = await (prisma as any).stageChannel.findFirst({
+    where: { id: input.channelId, roomId: input.roomId },
+  }) as StageChannelRecord | null;
+  if (!channel) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
+  const subRoomMembers = channel.subRoomId ? [...await memberSubRoomIds(input.userId, input.roomId)] : [];
+  const channelInput = channel.kind === 'MAIN_ROOM'
+    ? { kind: 'MAIN_ROOM' as const, roomId: input.roomId }
+    : channel.kind === 'SUB_ROOM' && channel.subRoomId
+      ? { kind: 'SUB_ROOM' as const, roomId: input.roomId, subRoomId: channel.subRoomId }
+      : channel.privateThreadId
+        ? { kind: 'PRIVATE_THREAD' as const, roomId: input.roomId, privateThreadId: channel.privateThreadId, participantUserIds: parseUserIds(channel.participantUserIds) }
+        : null;
+  if (!channelInput || !authorizeStageChannelAccess({
+    channel: channelInput,
+    userId: input.userId ?? '',
+    role: input.role as any,
+    capabilities: input.capabilities,
+    subRoomMemberUserIds: subRoomMembers,
+  }).allowed) {
+    throw new AppError('STAGE_FORBIDDEN', '你无权访问此舞台轨道', 403);
+  }
+  return channel;
+}
+
+export async function getStageStatus(input: { roomId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canViewPublicContent');
+  const channels = await accessibleStageChannels({
+    roomId: auth.room.id,
+    publicRoomId: auth.room.roomId,
+    userId: input.userId,
+    role: auth.role,
+    capabilities: auth.capabilities,
+  });
   return buildStageStatus({
     globalEnabled: stageGlobalEnabled(),
     roomStageEnabled: Boolean((auth.room as any).stageEnabled),
     canUseStage: auth.capabilities.canUseStage,
+    canControlOwnStageActor: auth.capabilities.canControlOwnStageActor,
     canManageStage: auth.capabilities.canManageStage,
+    canManageStageAssets: auth.capabilities.canManageStageAssets,
+    canExportStageReplay: auth.capabilities.canExportStageReplay,
+    viewer: stageViewer({ userId: input.userId, role: auth.role }),
+    channels,
   });
 }
 
 async function ensureMainStageChannel(roomId: string, publicRoomId: string) {
-  const existing = await (prisma as any).stageChannel.findFirst({
-    where: { roomId, kind: 'MAIN_ROOM' },
-  });
+  const existing = await (prisma as any).stageChannel.findFirst({ where: { roomId, kind: 'MAIN_ROOM' } });
   if (existing) return existing;
-
   return (prisma as any).stageChannel.create({
     data: {
-      roomId,
-      kind: 'MAIN_ROOM',
-      status: 'ACTIVE',
-      revision: 0,
-      updatedAt: new Date(),
-      snapshots: {
-        create: {
-          roomId,
-          revision: 0,
-          contractVersion: STAGE_CONTRACT_VERSION,
-          projectionJson: JSON.stringify({
-            contractVersion: STAGE_CONTRACT_VERSION,
-            channel: { id: 'pending', kind: 'MAIN_ROOM', roomId: publicRoomId },
-            revision: 0,
-            serverTime: new Date().toISOString(),
-            viewer: { userId: 'system', kind: 'KP', roomRole: 'OWNER_KP' },
-            capabilities: {
-              canUseStage: true,
-              canControlOwnStageActor: false,
-              canManageStage: true,
-              canManageStageAssets: true,
-              canExportStageReplay: true,
-            },
-            scene: { title: '共享舞台' },
-            actors: [],
-            assetRefs: [],
-          }),
-          updatedAt: new Date(),
-        },
-      },
+      roomId, kind: 'MAIN_ROOM', status: 'ACTIVE', revision: 0, updatedAt: new Date(),
+      snapshots: { create: { roomId, revision: 0, contractVersion: STAGE_CONTRACT_VERSION, projectionJson: JSON.stringify({
+        contractVersion: STAGE_CONTRACT_VERSION,
+        channel: { id: 'pending', kind: 'MAIN_ROOM', roomId: publicRoomId }, revision: 0, serverTime: new Date().toISOString(),
+        viewer: { userId: 'system', kind: 'KP', roomRole: 'OWNER_KP' },
+        capabilities: { canUseStage: true, canControlOwnStageActor: false, canManageStage: true, canManageStageAssets: true, canExportStageReplay: true },
+        scene: { title: '共享舞台' }, actors: [], assetRefs: [],
+      }), updatedAt: new Date() } },
     },
   });
 }
 
-export async function enableStageForRoom(input: {
-  roomId: string;
-  userId?: string;
-}) {
+export async function enableStageForRoom(input: { roomId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canManageStage');
-  const updated = await prisma.room.update({
-    where: { id: auth.room.id },
-    data: { stageEnabled: true } as any,
-  });
+  await prisma.room.update({ where: { id: auth.room.id }, data: { stageEnabled: true } as any });
   await ensureMainStageChannel(auth.room.id, auth.room.roomId);
-  return { roomId: updated.roomId, stageEnabled: true };
+  return getStageStatus(input);
 }
 
-export async function disableStageForRoom(input: {
-  roomId: string;
-  userId?: string;
-}) {
+export async function disableStageForRoom(input: { roomId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canManageStage');
-  const updated = await prisma.room.update({
-    where: { id: auth.room.id },
-    data: { stageEnabled: false } as any,
-  });
-  await (prisma as any).stageChannel.updateMany({
-    where: { roomId: auth.room.id },
-    data: { status: 'DISABLED' },
-  });
-  return { roomId: updated.roomId, stageEnabled: false };
+  await prisma.room.update({ where: { id: auth.room.id }, data: { stageEnabled: false } as any });
+  await (prisma as any).stageChannel.updateMany({ where: { roomId: auth.room.id }, data: { status: 'DISABLED' } });
+  return getStageStatus(input);
 }
 
-export async function getStageSnapshot(input: {
-  roomId: string;
-  channelId: string;
-  userId?: string;
-}) {
-  await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
-  const snapshot = await (prisma as any).stageSnapshot.findFirst({
-    where: { channelId: input.channelId },
-    orderBy: { revision: 'desc' },
-  });
-  if (!snapshot) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
-  return JSON.parse(snapshot.projectionJson);
-}
-
-export async function getStageAssetProxy(input: {
-  roomId: string;
-  assetId: string;
-  userId?: string;
-}) {
+export async function getStageSnapshot(input: { roomId: string; channelId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
-  const asset = await (prisma as any).stageAsset.findFirst({
-    where: { id: input.assetId, roomId: auth.room.id, deletedAt: null },
-  });
-  if (!asset) throw new AppError('STAGE_ASSET_FORBIDDEN', '素材不存在或无权访问', 404);
+  const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: input.channelId });
+  const snapshot = await (prisma as any).stageSnapshot.findFirst({ where: { channelId: channel.id }, orderBy: { revision: 'desc' } });
+  if (!snapshot) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
+  const parsed = JSON.parse(snapshot.projectionJson);
+  const viewer = stageViewer({ userId: input.userId, role: auth.role });
   return {
-    assetId: asset.id,
-    kind: asset.kind,
-    version: asset.version,
-    proxyUrl: buildStageAssetProxyUrl({ publicRoomId: auth.room.roomId, assetId: asset.id, version: asset.version }),
+    contractVersion: STAGE_CONTRACT_VERSION,
+    channel: channelRef(channel, auth.room.roomId),
+    revision: snapshot.revision,
+    projection: {
+      ...parsed,
+      contractVersion: STAGE_CONTRACT_VERSION,
+      channel: channelRef(channel, auth.room.roomId),
+      revision: snapshot.revision,
+      viewer,
+      capabilities: {
+        canUseStage: auth.capabilities.canUseStage,
+        canControlOwnStageActor: auth.capabilities.canControlOwnStageActor,
+        canManageStage: auth.capabilities.canManageStage,
+        canManageStageAssets: auth.capabilities.canManageStageAssets,
+        canExportStageReplay: auth.capabilities.canExportStageReplay,
+      },
+    },
   };
 }
 
-export async function handleStageCommand(input: {
-  roomId: string;
-  userId: string;
-  nickname: string;
-  envelope: StageCommandEnvelope;
-}) {
-  if (input.envelope.contractVersion !== STAGE_CONTRACT_VERSION) {
-    throw new AppError('STAGE_INVALID_PAYLOAD', '舞台契约版本不匹配', 400);
-  }
-
+export async function getStageAssetProxy(input: { roomId: string; assetId: string; userId?: string }) {
   const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
-  const channel = await (prisma as any).stageChannel.findFirst({
-    where: { id: input.envelope.channelId, roomId: auth.room.id },
-  });
-  if (!channel) throw new AppError('STAGE_CHANNEL_NOT_FOUND', '舞台轨道不存在', 404);
+  const asset = await (prisma as any).stageAsset.findFirst({ where: { id: input.assetId, roomId: auth.room.id, deletedAt: null } });
+  if (!asset) throw new AppError('STAGE_ASSET_FORBIDDEN', '素材不存在或无权访问', 404);
+  return { assetId: asset.id, kind: asset.kind, version: asset.version, proxyUrl: buildStageAssetProxyUrl({ publicRoomId: auth.room.roomId, assetId: asset.id, version: asset.version }) };
+}
 
+function rejectedAck(input: { commandId: string; channelId: string; revision: number; code: string; message: string }) {
+  return { contractVersion: STAGE_CONTRACT_VERSION, accepted: false as const, outcome: 'REJECTED' as const, commandId: input.commandId, channelId: input.channelId, revision: input.revision, error: { code: input.code, message: input.message } };
+}
+
+export async function handleStageCommand(input: { roomId: string; userId: string; nickname: string; envelope: unknown }) {
+  const validated = validateStageCommandEnvelope(input.envelope);
+  if (!validated.ok) throw new AppError('STAGE_INVALID_PAYLOAD', validated.message, 400);
+  const envelope = validated.envelope as any;
+  const auth = await requireRoomCapability(input.roomId, input.userId, 'canUseStage');
+  const channel = await requireStageChannelAccess({ roomId: auth.room.id, publicRoomId: auth.room.roomId, userId: input.userId, role: auth.role, capabilities: auth.capabilities, channelId: envelope.channelId });
   if (!canAcceptStageCommands({ globalEnabled: stageGlobalEnabled(), roomStageEnabled: Boolean((auth.room as any).stageEnabled) })) {
-    return buildStageCommandDisabledResult({
-      commandId: input.envelope.commandId,
-      channelId: input.envelope.channelId,
-      revision: channel.revision,
-    });
+    return rejectedAck({ commandId: envelope.commandId, channelId: envelope.channelId, revision: channel.revision, code: 'STAGE_DISABLED', message: '舞台当前未启用' });
   }
-
-  const revision = nextStageRevision({
-    currentRevision: channel.revision,
-    expectedRevision: input.envelope.expectedRevision,
-  });
+  if (envelope.commandType.startsWith('ACTOR_')) {
+    const snapshot = await (prisma as any).stageSnapshot.findFirst({ where: { channelId: channel.id }, orderBy: { revision: 'desc' } });
+    const actor = snapshot ? JSON.parse(snapshot.projectionJson).actors?.find((item: { actorId: string }) => item.actorId === envelope.payload.actorId) : null;
+    const actorAccess = actor && authorizeStageActorCommand({
+      actorKind: actor.actorKind,
+      ownerUserId: actor.ownerUserId,
+      userId: input.userId,
+      capabilities: auth.capabilities,
+    });
+    if (!actorAccess?.allowed) throw new AppError('STAGE_ACTOR_FORBIDDEN', '演员不存在或无权操作', 403);
+  }
+  if (['SCENE_SET', 'SCENE_CLEAR', 'CHANNEL_ENABLE', 'CHANNEL_DISABLE'].includes(envelope.commandType) && !auth.capabilities.canManageStage) {
+    throw new AppError('STAGE_FORBIDDEN', '只有 KP 可以调整场景或轨道状态', 403);
+  }
+  const replayed = await (prisma as any).stageEvent.findUnique({ where: { channelId_commandId: { channelId: envelope.channelId, commandId: envelope.commandId } } });
+  if (replayed) return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'REPLAYED' as const, commandId: envelope.commandId, channelId: envelope.channelId, revision: replayed.afterRevision };
+  const revision = nextStageRevision({ currentRevision: channel.revision, expectedRevision: envelope.expectedRevision });
   if (!revision.ok) {
     return {
-      accepted: false as const,
-      commandId: input.envelope.commandId,
-      channelId: input.envelope.channelId,
-      revision: channel.revision,
-      code: revision.code,
-      latestRevision: revision.latestRevision,
+      contractVersion: STAGE_CONTRACT_VERSION, accepted: false as const, outcome: 'CONFLICT' as const,
+      commandId: envelope.commandId, channelId: envelope.channelId, revision: channel.revision,
+      error: { code: revision.code, message: '舞台版本已更新，请恢复最新状态', latestRevision: revision.latestRevision },
+      recovery: { type: 'REFETCH_SNAPSHOT' as const, snapshotUrl: `/api/rooms/${auth.room.roomId}/stage/channels/${channel.id}/snapshot` },
     };
   }
-
-  const result = await prisma.$transaction(async (tx) => {
-    const existing = await (tx as any).stageEvent.findUnique({
-      where: { channelId_commandId: { channelId: input.envelope.channelId, commandId: input.envelope.commandId } },
-    });
-    if (existing) {
-      return {
-        accepted: true as const,
-        commandId: input.envelope.commandId,
-        channelId: input.envelope.channelId,
-        revision: existing.afterRevision,
-      };
-    }
-
-    const savedMessage = input.envelope.messageDraft
-      ? await tx.roomMessage.create({
-          data: {
-            roomId: auth.room.id,
-            userId: input.userId,
-            nickname: input.nickname,
-            content: input.envelope.messageDraft.content,
-            type: input.envelope.messageDraft.mode === 'PRIVATE' ? 'private' : 'text',
-            meta: JSON.stringify(buildStageMessageMeta({
-              commandId: input.envelope.commandId,
-              channelId: input.envelope.channelId,
-              targetUserId: input.envelope.messageDraft.targetUserId,
-            })),
-          },
-        })
-      : null;
-
-    await (tx as any).stageEvent.create({
+  await prisma.$transaction(async (tx) => {
+    const savedMessage = envelope.messageDraft ? await tx.roomMessage.create({ data: {
+      roomId: auth.room.id, userId: input.userId, nickname: input.nickname, content: envelope.messageDraft.content,
+      type: envelope.messageDraft.mode === 'PRIVATE' ? 'private' : 'text',
+      meta: JSON.stringify(buildStageMessageMeta({ commandId: envelope.commandId, channelId: envelope.channelId, targetUserId: envelope.messageDraft.targetUserId })),
+    } }) : null;
+    await (tx as any).stageEvent.create({ data: {
+      channelId: envelope.channelId, roomId: auth.room.id, commandId: envelope.commandId, eventType: envelope.commandType, contractVersion: STAGE_CONTRACT_VERSION,
+      roomMessageId: savedMessage?.id, operatorUserId: input.userId, visibility: envelope.messageDraft?.mode === 'PRIVATE' ? 'PRIVATE_TARGETS' : 'PUBLIC',
+      targetUserIds: JSON.stringify(envelope.messageDraft?.mode === 'PRIVATE' ? buildStageEventTargetUserIds({ operatorUserId: input.userId, targetUserId: envelope.messageDraft.targetUserId }) : []),
+      beforeRevision: revision.beforeRevision, afterRevision: revision.afterRevision, payload: JSON.stringify(envelope.payload),
+    } });
+    await (tx as any).stageChannel.update({
+      where: { id: envelope.channelId },
       data: {
-        channelId: input.envelope.channelId,
-        roomId: auth.room.id,
-        commandId: input.envelope.commandId,
-        eventType: input.envelope.commandType,
-        contractVersion: STAGE_CONTRACT_VERSION,
-        roomMessageId: savedMessage?.id,
-        operatorUserId: input.userId,
-        visibility: input.envelope.messageDraft?.mode === 'PRIVATE' ? 'PRIVATE_TARGETS' : 'PUBLIC',
-        beforeRevision: revision.beforeRevision,
-        afterRevision: revision.afterRevision,
-        payload: JSON.stringify(input.envelope.payload),
+        revision: revision.afterRevision,
+        ...(envelope.commandType === 'CHANNEL_ENABLE' ? { status: 'ACTIVE' } : {}),
+        ...(envelope.commandType === 'CHANNEL_DISABLE' ? { status: 'DISABLED' } : {}),
       },
     });
-
-    await (tx as any).stageChannel.update({
-      where: { id: input.envelope.channelId },
-      data: { revision: revision.afterRevision },
+    const latestSnapshot = await (tx as any).stageSnapshot.findFirst({
+      where: { channelId: envelope.channelId },
+      orderBy: { revision: 'desc' },
     });
-
-    return {
-      accepted: true as const,
-      commandId: input.envelope.commandId,
-      channelId: input.envelope.channelId,
-      revision: revision.afterRevision,
+    const previousProjection = latestSnapshot ? JSON.parse(latestSnapshot.projectionJson) : {
+      contractVersion: STAGE_CONTRACT_VERSION,
+      channel: channelRef(channel, auth.room.roomId),
+      revision: revision.beforeRevision,
+      serverTime: new Date().toISOString(),
+      viewer: stageViewer({ userId: input.userId, role: auth.role }),
+      capabilities: {
+        canUseStage: auth.capabilities.canUseStage,
+        canControlOwnStageActor: auth.capabilities.canControlOwnStageActor,
+        canManageStage: auth.capabilities.canManageStage,
+        canManageStageAssets: auth.capabilities.canManageStageAssets,
+        canExportStageReplay: auth.capabilities.canExportStageReplay,
+      },
+      scene: { title: '共享舞台' }, actors: [], assetRefs: [],
     };
+    await (tx as any).stageSnapshot.create({ data: {
+      channelId: envelope.channelId,
+      roomId: auth.room.id,
+      revision: revision.afterRevision,
+      contractVersion: STAGE_CONTRACT_VERSION,
+      projectionJson: JSON.stringify(applyStageCommandToProjection({
+        projection: previousProjection,
+        revision: revision.afterRevision,
+        commandType: envelope.commandType,
+        payload: envelope.payload,
+      })),
+      updatedAt: new Date(),
+    } });
   });
+  return { contractVersion: STAGE_CONTRACT_VERSION, accepted: true as const, outcome: 'APPLIED' as const, commandId: envelope.commandId, channelId: envelope.channelId, revision: revision.afterRevision };
+}
 
-  return result;
+export async function getStageEventForCommand(input: { channelId: string; commandId: string }) {
+  const event = await (prisma as any).stageEvent.findUnique({
+    where: { channelId_commandId: { channelId: input.channelId, commandId: input.commandId } },
+  });
+  if (!event) return null;
+  return {
+    contractVersion: STAGE_CONTRACT_VERSION,
+    eventId: event.id,
+    channelId: event.channelId,
+    commandId: event.commandId,
+    eventType: event.eventType,
+    beforeRevision: event.beforeRevision,
+    afterRevision: event.afterRevision,
+    ...(event.operatorUserId ? { operatorUserId: event.operatorUserId } : {}),
+    ...(event.roomMessageId ? { roomMessageId: event.roomMessageId } : {}),
+    visibility: event.visibility,
+    targetUserIds: parseUserIds(event.targetUserIds),
+    payload: JSON.parse(event.payload),
+    createdAt: event.createdAt.toISOString(),
+  };
 }
 
 export function getStageUserId(req: { userId?: string; user?: { userId: string } }) {

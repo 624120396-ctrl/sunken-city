@@ -6,10 +6,10 @@ import {
   STAGE_REST_ENDPOINTS,
   STAGE_SOCKET_EVENTS,
 } from '../../shared/stage/stage-contract.ts';
-import { mockStageSnapshots } from '../../shared/stage/stage-contract.mock.ts';
+import { mockStageCommandEnvelope, mockStageSnapshots, mockStageStatus } from '../../shared/stage/stage-contract.mock.ts';
 
-test('stage contract exposes the frozen d1a version', () => {
-  assert.equal(STAGE_CONTRACT_VERSION, 'stage.d1a.v1');
+test('stage contract exposes the amended d1a v1.1 version', () => {
+  assert.equal(STAGE_CONTRACT_VERSION, 'stage.d1a.v1.1');
 });
 
 test('stage socket event names are unique and namespaced', () => {
@@ -47,4 +47,26 @@ test('stage mocks cover main room sub-room and private-thread channels', () => {
   assert.equal(mockStageSnapshots.subRoom.channel.kind, 'SUB_ROOM');
   assert.equal(mockStageSnapshots.privateThread.channel.kind, 'PRIVATE_THREAD');
   assert.equal(mockStageSnapshots.privateThread.projection.actors[0].visibility, 'PRIVATE_TARGETS');
+});
+
+test('stage status mock gives D1-B the enabled state, full capabilities, and accessible channel catalog', () => {
+  assert.equal(mockStageStatus.contractVersion, STAGE_CONTRACT_VERSION);
+  assert.equal(mockStageStatus.stageEnabled, true);
+  assert.equal(mockStageStatus.capabilities.canManageStageAssets, true);
+  assert.deepEqual(mockStageStatus.channels.map((channel) => channel.scope.type), [
+    'ROOM',
+    'SUB_ROOM',
+    'PRIVATE_THREAD',
+  ]);
+  assert.ok(mockStageStatus.channels.every((channel) => channel.display.label.length > 0));
+});
+
+test('stage command mock uses an exact discriminated payload and an optimistic revision', () => {
+  assert.equal(mockStageCommandEnvelope.commandType, 'ACTOR_PERFORM');
+  assert.deepEqual(mockStageCommandEnvelope.payload, {
+    actorId: 'actor-pl-1',
+    action: 'nod',
+    expression: 'calm',
+  });
+  assert.equal(mockStageCommandEnvelope.expectedRevision, 3);
 });

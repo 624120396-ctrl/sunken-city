@@ -1534,6 +1534,7 @@ model StageChannel {
   kind                  String
   subRoomId             String?
   privateThreadId       String?
+  participantUserIds    String   @default("[]")
   parentChannelId       String?
   status                String   @default("DISABLED")
   revision              Int      @default(0)

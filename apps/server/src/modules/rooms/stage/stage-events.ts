@@ -1,6 +1,6 @@
 export type StageCommandResult =
-  | { accepted: true; commandId: string; channelId: string; revision: number }
-  | { accepted: false; commandId: string; channelId: string; revision: number; code: string; latestRevision?: number };
+  | { contractVersion: 'stage.d1a.v1.1'; accepted: true; outcome: 'APPLIED' | 'REPLAYED'; commandId: string; channelId: string; revision: number }
+  | { contractVersion: 'stage.d1a.v1.1'; accepted: false; outcome: 'REJECTED'; commandId: string; channelId: string; revision: number; error: { code: string; message: string } };
 
 export function nextStageRevision(input: { currentRevision: number; expectedRevision: number }) {
   if (input.expectedRevision !== input.currentRevision) {
@@ -37,11 +37,16 @@ export function buildStageCommandDisabledResult(input: {
   revision: number;
 }): StageCommandResult {
   return {
+    contractVersion: 'stage.d1a.v1.1',
     accepted: false,
+    outcome: 'REJECTED',
     commandId: input.commandId,
     channelId: input.channelId,
     revision: input.revision,
-    code: 'STAGE_DISABLED',
+    error: {
+      code: 'STAGE_DISABLED',
+      message: '舞台当前未启用',
+    },
   };
 }
 
@@ -55,6 +60,11 @@ export function buildStageMessageMeta(input: {
     stageChannelId: input.channelId,
     ...(input.targetUserId ? { targetUserId: input.targetUserId } : {}),
   };
+}
+
+/** PRIVATE_TARGETS events are delivered only to their recipient and operator. */
+export function buildStageEventTargetUserIds(input: { operatorUserId: string; targetUserId?: string }) {
+  return [...new Set([input.operatorUserId, input.targetUserId].filter((userId): userId is string => Boolean(userId)))];
 }
 
 export async function appendStageEvent(input: {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  applyStageCommandToProjection,
   canViewerSeeActor,
   serializeStageSnapshot,
   trimStageAssetRefs,
@@ -31,12 +32,34 @@ test('stage projection never returns storage keys in asset refs', () => {
 
 test('stage snapshot serializer keeps contract version channel revision and projection together', () => {
   const snapshot = serializeStageSnapshot({
-    contractVersion: 'stage.d1a.v1',
+    contractVersion: 'stage.d1a.v1.1',
     channel: { id: 'stage-main', kind: 'MAIN_ROOM', roomId: 'room-1' },
     revision: 2,
     projection: { actors: [] },
   });
-  assert.equal(snapshot.contractVersion, 'stage.d1a.v1');
+  assert.equal(snapshot.contractVersion, 'stage.d1a.v1.1');
   assert.equal(snapshot.channel.id, 'stage-main');
   assert.equal(snapshot.revision, 2);
+});
+
+test('stage projection advances with an accepted discriminated command so recovery refetch is authoritative', () => {
+  const next = applyStageCommandToProjection({
+    projection: {
+      contractVersion: 'stage.d1a.v1.1',
+      channel: { id: 'stage-main', kind: 'MAIN_ROOM', roomId: 'room-1' },
+      revision: 2,
+      serverTime: '2026-07-12T01:00:00.000Z',
+      viewer: { userId: 'kp-1', kind: 'KP', roomRole: 'OWNER_KP' },
+      capabilities: { canUseStage: true, canControlOwnStageActor: true, canManageStage: true, canManageStageAssets: true, canExportStageReplay: true },
+      scene: { title: '旧场景' },
+      actors: [{ actorId: 'actor-1', actorKind: 'PLAYER_CHARACTER', name: '林雾', zone: 'left', entered: true, visibility: 'PUBLIC' }],
+      assetRefs: [],
+    },
+    revision: 3,
+    commandType: 'ACTOR_PERFORM',
+    payload: { actorId: 'actor-1', action: 'nod', expression: 'calm' },
+  });
+  assert.equal(next.revision, 3);
+  assert.equal(next.actors[0].action, 'nod');
+  assert.equal(next.actors[0].expression, 'calm');
 });

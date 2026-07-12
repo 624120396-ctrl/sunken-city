@@ -1,4 +1,9 @@
-import { STAGE_CONTRACT_VERSION, StageSnapshot } from './stage-contract';
+import {
+  STAGE_CONTRACT_VERSION,
+  StageCommandEnvelope,
+  StageStatusProjection,
+  StageSnapshot,
+} from './stage-contract';
 
 export const mockStageSnapshots: Record<'mainRoom' | 'subRoom' | 'privateThread', StageSnapshot> = {
   mainRoom: {
@@ -151,4 +156,53 @@ export const mockStageSnapshots: Record<'mainRoom' | 'subRoom' | 'privateThread'
       assetRefs: [],
     },
   },
+};
+
+/** D1-B status fixture: the channel list is already server-side access filtered. */
+export const mockStageStatus: StageStatusProjection = {
+  contractVersion: STAGE_CONTRACT_VERSION,
+  stageEnabled: true,
+  enabled: true,
+  roomStageEnabled: true,
+  globalEnabled: true,
+  viewer: { userId: 'kp-1', kind: 'KP', roomRole: 'OWNER_KP' },
+  capabilities: {
+    canUseStage: true,
+    canControlOwnStageActor: true,
+    canManageStage: true,
+    canManageStageAssets: true,
+    canExportStageReplay: true,
+  },
+  channels: [
+    {
+      channel: mockStageSnapshots.mainRoom.channel,
+      status: 'ACTIVE',
+      revision: mockStageSnapshots.mainRoom.revision,
+      scope: { type: 'ROOM' },
+      display: { label: '主舞台', description: '房间全体可见的公开舞台' },
+    },
+    {
+      channel: mockStageSnapshots.subRoom.channel,
+      status: 'ACTIVE',
+      revision: mockStageSnapshots.subRoom.revision,
+      scope: { type: 'SUB_ROOM', subRoomId: 'sub-room-1' },
+      display: { label: '仓库背门', description: '已加入成员可见的子房间舞台' },
+    },
+    {
+      channel: mockStageSnapshots.privateThread.channel,
+      status: 'ACTIVE',
+      revision: mockStageSnapshots.privateThread.revision,
+      scope: { type: 'PRIVATE_THREAD', privateThreadId: 'thread-pl1-kp' },
+      display: { label: '私密耳语', description: '私密参与者可见的舞台' },
+    },
+  ],
+};
+
+export const mockStageCommandEnvelope: StageCommandEnvelope = {
+  contractVersion: STAGE_CONTRACT_VERSION,
+  commandId: 'cmd-perform-1',
+  channelId: 'stage-main-room-1',
+  expectedRevision: 3,
+  commandType: 'ACTOR_PERFORM',
+  payload: { actorId: 'actor-pl-1', action: 'nod', expression: 'calm' },
 };

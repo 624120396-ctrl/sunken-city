@@ -1,6 +1,6 @@
 import type { Server } from 'socket.io';
 import type { AuthenticatedSocket } from '../../../config/socket';
-import { handleStageCommand } from './stage.service';
+import { getStageEventForCommand, getStageSnapshot, handleStageCommand } from './stage.service';
 
 const STAGE_SOCKET_EVENTS = {
   JOIN_CHANNEL: 'stage:channel:join',
@@ -14,15 +14,23 @@ const STAGE_SOCKET_EVENTS = {
 export function setupStageGateway(io: Server) {
   io.on('connection', (socket: AuthenticatedSocket) => {
     socket.on(STAGE_SOCKET_EVENTS.JOIN_CHANNEL, async (data: { roomId: string; channelId: string }) => {
-      if (!socket.user?.userId) {
-        socket.emit(STAGE_SOCKET_EVENTS.ERROR, { code: 'STAGE_FORBIDDEN', message: '请先登录' });
-        return;
+      try {
+        if (!socket.user?.userId) {
+          socket.emit(STAGE_SOCKET_EVENTS.ERROR, { code: 'STAGE_FORBIDDEN', message: '请先登录' });
+          return;
+        }
+        const snapshot = await getStageSnapshot({ roomId: data.roomId, channelId: data.channelId, userId: socket.user.userId });
+        socket.join(`stage:${data.channelId}`);
+        socket.join(`stage:${data.channelId}:user:${socket.user.userId}`);
+        socket.emit(STAGE_SOCKET_EVENTS.SNAPSHOT, snapshot);
+      } catch (error) {
+        const appError = error as { code?: string; message?: string };
+        socket.emit(STAGE_SOCKET_EVENTS.ERROR, { code: appError.code || 'STAGE_INTERNAL_ERROR', message: appError.message || '舞台快照获取失败' });
       }
-      socket.join(`stage:${data.channelId}:user:${socket.user.userId}`);
-      socket.emit(STAGE_SOCKET_EVENTS.SNAPSHOT, { channelId: data.channelId, pending: true });
     });
 
     socket.on(STAGE_SOCKET_EVENTS.LEAVE_CHANNEL, (data: { channelId: string }) => {
+      socket.leave(`stage:${data.channelId}`);
       if (socket.user?.userId) socket.leave(`stage:${data.channelId}:user:${socket.user.userId}`);
     });
 
@@ -39,6 +47,14 @@ export function setupStageGateway(io: Server) {
           envelope: data.envelope,
         });
         socket.emit(STAGE_SOCKET_EVENTS.COMMAND_ACK, ack);
+        if (ack.accepted && ack.outcome === 'APPLIED') {
+          const event = await getStageEventForCommand({ channelId: ack.channelId, commandId: ack.commandId });
+          if (event?.visibility === 'PRIVATE_TARGETS') {
+            for (const userId of event.targetUserIds) io.to(`stage:${ack.channelId}:user:${userId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
+          } else if (event) {
+            io.to(`stage:${ack.channelId}`).emit(STAGE_SOCKET_EVENTS.EVENT, event);
+          }
+        }
       } catch (error) {
         const appError = error as { code?: string; message?: string };
         socket.emit(STAGE_SOCKET_EVENTS.ERROR, {
