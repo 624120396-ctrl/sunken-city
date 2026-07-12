@@ -36,7 +36,7 @@ import roomVoiceRoutes from './modules/rooms/room-voice.routes';
 import roomOverviewRoutes from './modules/rooms/room-overview.routes';
 import stageRoutes from './modules/rooms/stage/stage.routes';
 import stageAssetDeliveryRoutes from './modules/rooms/stage/stage-asset-delivery.routes';
-import { isStageAssetDeliveryPath } from './modules/rooms/stage/stage-asset-delivery';
+import { isStageAssetDeliveryPath, shouldSkipStageAssetDeliveryAccessLog } from './modules/rooms/stage/stage-asset-delivery';
 import { setupStageGateway } from './modules/rooms/stage/stage.gateway';
 import aiDoubaoRoutes from './modules/rooms/ai-doubao.routes';
 import aiDeepseekRoutes from './modules/rooms/ai-deepseek.routes';
@@ -92,7 +92,7 @@ const appCors = cors({
 app.use((req, res, next) => isStageAssetDeliveryPath(req.path) ? next() : appCors(req, res, next));
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.info(msg.trim()) },
-  skip: (req) => isStageAssetDeliveryPath(req.path),
+  skip: shouldSkipStageAssetDeliveryAccessLog,
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
