@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateWusoanGraySeedPlan } from './stage-wusoan-gray-seed.logic.ts';
+import { resolveWusoanThemeAssetUpdate, validateWusoanGraySeedPlan } from './stage-wusoan-gray-seed.logic.ts';
 
 const members = [
   { userId: 'kp', role: 'KP', leftAt: null, characterId: 'kp-character' },
@@ -35,4 +35,11 @@ test('WUSOAN gray seed rejects wrong kind, room, uploader, and visibility', () =
   assert.throws(() => validateWusoanGraySeedPlan({ ...input(), assets: assets.map((asset) => asset.id === 'pl-portrait' ? { ...asset, roomId: 'other-room' } : asset) }), /room/);
   assert.throws(() => validateWusoanGraySeedPlan({ ...input(), assets: assets.map((asset) => asset.id === 'pl-portrait' ? { ...asset, uploadedById: 'kp' } : asset) }), /owned/);
   assert.throws(() => validateWusoanGraySeedPlan({ ...input(), assets: assets.map((asset) => asset.id === 'background' ? { ...asset, visibility: 'KP_ONLY' } : asset) }), /PRIVATE_ROOM/);
+});
+
+test('WUSOAN theme is idempotent for matching refs and explicitly updates changed background or BGM', () => {
+  const original = ['background-1', 'kp-portrait', 'pl-portrait', 'bgm-1'];
+  assert.deepEqual(resolveWusoanThemeAssetUpdate(JSON.stringify(original), original), { action: 'noop' });
+  assert.deepEqual(resolveWusoanThemeAssetUpdate(JSON.stringify(original), ['background-2', 'kp-portrait', 'pl-portrait', 'bgm-2']), { action: 'update', assetIdsJson: JSON.stringify(['background-2', 'kp-portrait', 'pl-portrait', 'bgm-2']) });
+  assert.throws(() => resolveWusoanThemeAssetUpdate('{not-json}', original), /invalid/);
 });

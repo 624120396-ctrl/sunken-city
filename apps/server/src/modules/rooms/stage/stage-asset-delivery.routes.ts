@@ -20,9 +20,17 @@ function singleQueryValue(value: unknown) {
   return typeof value === 'string' ? value : undefined;
 }
 
-function applyDeliveryCors(req: Request, res: Response) {
-  // The app-wide CORS middleware may have set this first; delivery never permits credentials.
+function clearDeliveryCors(res: Response) {
+  res.removeHeader('Access-Control-Allow-Origin');
   res.removeHeader('Access-Control-Allow-Credentials');
+  res.removeHeader('Access-Control-Allow-Methods');
+  res.removeHeader('Access-Control-Allow-Headers');
+  res.removeHeader('Access-Control-Max-Age');
+}
+
+function applyDeliveryCors(req: Request, res: Response) {
+  // Delivery never inherits the app-wide CORS policy or allows credentials.
+  clearDeliveryCors(res);
   const origin = req.get('origin');
   if (origin !== allowedBrowserOrigin()) return;
   res.set({
@@ -42,8 +50,14 @@ function requestUsesConfiguredDeliveryOrigin(req: { protocol: string; hostname: 
   });
 }
 
+router.use('/delivery', (req, res, next) => {
+  clearDeliveryCors(res);
+  next();
+});
+
 router.options('/delivery/:assetId', (req, res) => {
   if (!requestUsesConfiguredDeliveryOrigin(req)) return res.sendStatus(403);
+  if (req.get('origin') !== allowedBrowserOrigin()) return res.sendStatus(403);
   applyDeliveryCors(req, res);
   return res.status(204).end();
 });

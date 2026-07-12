@@ -83,10 +83,13 @@ const io = new SocketIOServer(httpServer, {
 app.use(helmet({
   contentSecurityPolicy: false, // 开发环境关闭CSP
 }));
-app.use(cors({
+const appCors = cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
-}));
+});
+// Delivery URLs have their own fail-closed CORS + host gate. In particular,
+// global cors must not consume OPTIONS before that router can reject it.
+app.use((req, res, next) => isStageAssetDeliveryPath(req.path) ? next() : appCors(req, res, next));
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.info(msg.trim()) },
   skip: (req) => isStageAssetDeliveryPath(req.path),

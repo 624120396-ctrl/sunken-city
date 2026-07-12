@@ -17,6 +17,10 @@ export function validateStageAssetImportAccess(input: {
 type ImportRequest = { roomId: string; kind: string; hash: string; uploadedById: string; visibility: string; targetUserIds: string[] };
 type ExistingAsset = ImportRequest & { id: string; metadataJson: string };
 
+export function stageAssetImportKey(kind: string, hash: string) {
+  return `${kind}:${hash}`;
+}
+
 function metadataTargets(value: string) {
   try {
     const parsed = JSON.parse(value) as { targetUserIds?: unknown };

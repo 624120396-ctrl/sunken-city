@@ -2,7 +2,7 @@ import { chmod, copyFile, mkdir, open, rename, stat, unlink } from 'node:fs/prom
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
-import { decideStageAssetImport, validateStageAssetImportAccess } from './stage-assets-import.logic';
+import { decideStageAssetImport, stageAssetImportKey, validateStageAssetImportAccess } from './stage-assets-import.logic';
 
 const prisma = new PrismaClient();
 const allowed = new Map([
@@ -62,12 +62,14 @@ async function main() {
   if (!room) throw new Error('room not found');
   const normalizedTargetUserIds = validateStageAssetImportAccess({ uploadedById, visibility, targetUserIds, members: room.members });
   const hash = await sha256(source);
-  const existing = await prisma.stageAsset.findMany({
-    where: { roomId: room.id, kind: requestedKind, hash, deletedAt: null },
-    select: { id: true, roomId: true, kind: true, hash: true, uploadedById: true, visibility: true, metadataJson: true },
+  const importKey = stageAssetImportKey(requestedKind, hash);
+  const found = await prisma.stageAsset.findUnique({
+    where: { roomId_importKey: { roomId: room.id, importKey } },
+    select: { id: true, roomId: true, kind: true, hash: true, uploadedById: true, visibility: true, metadataJson: true, deletedAt: true },
   });
+  if (found?.deletedAt) throw new Error('a retired stage asset already owns this import identity; refusing to recreate it');
   const decision = decideStageAssetImport({
-    existing,
+    existing: found ? [found] : [],
     request: { roomId: room.id, kind: requestedKind, hash, uploadedById, visibility, targetUserIds: normalizedTargetUserIds },
   });
   if (decision.action === 'reuse') {
@@ -75,7 +77,7 @@ async function main() {
     return;
   }
   const assetId = randomUUID();
-  const storageKey = path.posix.join(room.id, requestedKind.toLowerCase(), `${assetId}${extension}`);
+  const storageKey = path.posix.join(room.id, requestedKind.toLowerCase(), hash);
   const root = process.env.STAGE_ASSET_ROOT || '/opt/coc-platform-data/stage-assets';
   const destination = path.resolve(root, storageKey);
   await mkdir(path.dirname(destination), { recursive: true, mode: 0o750 });
@@ -84,9 +86,24 @@ async function main() {
     await prisma.stageAsset.create({ data: {
       id: assetId, roomId: room.id, uploadedById, kind: requestedKind, visibility,
       originalName: path.basename(source), mimeType: format.mimeType, size: sourceInfo.size, hash,
-      storageKey, metadataJson: JSON.stringify({ targetUserIds: normalizedTargetUserIds, importedBy: 'stage-assets-import' }),
+      importKey, storageKey, metadataJson: JSON.stringify({ targetUserIds: normalizedTargetUserIds, importedBy: 'stage-assets-import' }),
     } });
   } catch (error) {
+    if ((error as { code?: string }).code === 'P2002') {
+      const winner = await prisma.stageAsset.findUnique({
+        where: { roomId_importKey: { roomId: room.id, importKey } },
+        select: { id: true, roomId: true, kind: true, hash: true, uploadedById: true, visibility: true, metadataJson: true, deletedAt: true },
+      });
+      if (winner?.deletedAt) throw new Error('a retired stage asset won this import identity; refusing to reuse it');
+      const concurrent = decideStageAssetImport({
+        existing: winner ? [winner] : [],
+        request: { roomId: room.id, kind: requestedKind, hash, uploadedById, visibility, targetUserIds: normalizedTargetUserIds },
+      });
+      if (concurrent.action === 'reuse') {
+        console.log(JSON.stringify({ assetId: concurrent.assetId, kind: requestedKind, roomId, reused: true }));
+        return;
+      }
+    }
     await unlink(destination).catch(() => undefined);
     throw error;
   }

@@ -4,7 +4,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import { stageActorBindingScopeKey } from '../src/modules/rooms/stage/stage-actors';
-import { validateWusoanGraySeedPlan } from './stage-wusoan-gray-seed.logic';
+import { resolveWusoanThemeAssetUpdate, validateWusoanGraySeedPlan } from './stage-wusoan-gray-seed.logic';
 
 const prisma = new PrismaClient();
 const option = (name: string) => {
@@ -34,7 +34,7 @@ async function main() {
   const plan = { roomId, roomStageEnabled: enableRoomStage, assets: assets.map((asset) => ({ id: asset.id, kind: asset.kind })), theme: 'WUSOAN-D1-ARCHIVE-V1' };
   if (!apply) return console.log(JSON.stringify({ dryRun: true, plan }, null, 2));
 
-  await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // Refresh every authorization/ownership check inside the mutation transaction.
     const currentRoom = await tx.room.findUnique({ where: { roomId: 'WUSOAN' }, include: { members: true } });
     if (!currentRoom) throw new Error('room not found');
@@ -66,8 +66,20 @@ async function main() {
     }
     const characters = await tx.character.findMany({ where: { id: { in: actorRows.map((actor) => actor.characterId).filter(Boolean) as string[] } }, select: { id: true, name: true } });
     const characterNames = new Map(characters.map((character) => [character.id, character.name]));
-    const theme = await tx.stageThemePack.findFirst({ where: { roomId: currentRoom.id, name: 'WUSOAN-D1-ARCHIVE-V1' } })
-      ?? await tx.stageThemePack.create({ data: { roomId: currentRoom.id, name: 'WUSOAN-D1-ARCHIVE-V1', createdById: kpUserId!, manifestJson: JSON.stringify({ palette: 'deep-sea-cyan-and-ritual-gold', version: 1 }), assetIdsJson: JSON.stringify([backgroundAssetId, kpPortraitAssetId, plPortraitAssetId, bgmAssetId]) } });
+    const themeAssetIds = [backgroundAssetId!, kpPortraitAssetId!, plPortraitAssetId!, bgmAssetId!];
+    let theme = await tx.stageThemePack.findFirst({ where: { roomId: currentRoom.id, name: 'WUSOAN-D1-ARCHIVE-V1' } });
+    let themeAction: 'created' | 'noop' | 'updated' = 'created';
+    if (!theme) {
+      theme = await tx.stageThemePack.create({ data: { roomId: currentRoom.id, name: 'WUSOAN-D1-ARCHIVE-V1', createdById: kpUserId!, manifestJson: JSON.stringify({ palette: 'deep-sea-cyan-and-ritual-gold', version: 1 }), assetIdsJson: JSON.stringify(themeAssetIds) } });
+    } else {
+      const update = resolveWusoanThemeAssetUpdate(theme.assetIdsJson, themeAssetIds);
+      if (update.action === 'update') {
+        theme = await tx.stageThemePack.update({ where: { id: theme.id }, data: { assetIdsJson: update.assetIdsJson, version: { increment: 1 } } });
+        themeAction = 'updated';
+      } else {
+        themeAction = 'noop';
+      }
+    }
     const projection = {
       contractVersion: 'stage.d1a.v1.1', channel: { id: channel.id, kind: 'MAIN_ROOM', roomId }, revision: channel.revision,
       serverTime: new Date().toISOString(), viewer: { userId: kpUserId, kind: 'KP', roomRole: 'OWNER_KP' },
@@ -82,8 +94,9 @@ async function main() {
       validateWusoanGraySeedPlan({ room: currentRoom, kpUserId: kpUserId!, plUserId: plUserId!, assets: currentAssets, assetIds });
       await tx.room.update({ where: { id: currentRoom.id }, data: { stageEnabled: true } });
     }
+    return { themeAction, themeId: theme.id };
   });
-  console.log(JSON.stringify({ applied: true, roomId, stageEnabled: enableRoomStage }));
+  console.log(JSON.stringify({ applied: true, roomId, stageEnabled: enableRoomStage, ...result }));
 }
 
 main().finally(() => prisma.$disconnect());

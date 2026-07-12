@@ -46,3 +46,19 @@ export function validateWusoanGraySeedPlan(input: {
   }
   return { kp, pl, assets };
 }
+
+export function resolveWusoanThemeAssetUpdate(existingAssetIdsJson: string, nextAssetIds: string[]) {
+  let existing: unknown;
+  try {
+    existing = JSON.parse(existingAssetIdsJson);
+  } catch {
+    throw new Error('existing WUSOAN theme asset references are invalid');
+  }
+  if (!Array.isArray(existing) || !existing.every((assetId) => typeof assetId === 'string')) {
+    throw new Error('existing WUSOAN theme asset references are invalid');
+  }
+  const nextJson = JSON.stringify(nextAssetIds);
+  return JSON.stringify(existing) === nextJson
+    ? { action: 'noop' as const }
+    : { action: 'update' as const, assetIdsJson: nextJson };
+}
