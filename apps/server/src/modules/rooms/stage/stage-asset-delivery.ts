@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import { createStageAssetDeliverySignature } from './stage-assets';
 
@@ -39,6 +39,29 @@ export function isStageAssetDeliveryRequestAllowed(input: { protocol: string; ho
 
 export function isStageAssetDeliveryPath(pathname: string) {
   return pathname.startsWith('/api/stage-assets/delivery/');
+}
+
+function pathnameWithoutQuery(value?: string) {
+  if (!value) return '';
+  const rawPath = value.split('?', 1)[0];
+  try {
+    return new URL(rawPath).pathname;
+  } catch {
+    return rawPath;
+  }
+}
+
+/** Morgan runs before routers; use raw URL fields so mounts and query strings cannot bypass the skip. */
+export function shouldSkipStageAssetDeliveryAccessLog(req: { originalUrl?: string; url?: string; path?: string }) {
+  return [req.originalUrl, req.url, req.path]
+    .some((value) => isStageAssetDeliveryPath(pathnameWithoutQuery(value)));
+}
+
+export function stageAssetDeliveryAuditMetadata(input: { assetId: string; status: number }) {
+  return {
+    status: input.status,
+    assetIdDigest: createHash('sha256').update(input.assetId).digest('hex').slice(0, 16),
+  };
 }
 
 export function resolveStageAssetFile(assetRoot: string, storageKey: string) {

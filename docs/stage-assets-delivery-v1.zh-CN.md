@@ -25,4 +25,6 @@
 
 `stage-assets-import.ts` 仅接受目标房间的 active 成员作为上传者；`PRIVATE_TARGETS` 会去重并要求每个目标仍是 active 成员。迁移 `20260712140000_stage_asset_import_identity` 会为既有素材回填 `kind:sha256` 的 `importKey`，并以数据库唯一约束锁定 `roomId + importKey`。导入时同一 identity 的并发 loser 捕获 P2002 后回读 winner；文件位置同样由 hash 确定，因此不会留下竞争副本。ACL 与上传者完全相同才复用，冲突立即拒绝。文件先写入同目录临时文件、fsync、收紧为 0640 后原子 rename；非并发数据库失败会删除刚写入的文件。
 
+delivery 所有 `/api/stage-assets/delivery/` 入口会在应用 morgan access log 前按 `originalUrl`/`url` 去 query 后匹配并完全跳过，因而主站错误路径与素材子域反代均不记录 bearer query。拒绝请求只产生结构化安全日志：状态码与 assetId 的短 SHA-256 摘要；绝不记录 query、签名、过期时间或用户标识。
+
 `stage-wusoan-gray-seed.ts` 是不可泛化的 WUSOAN 工具，拒绝其他 `--room`。KP 只需为 active OWNER_KP/ASSISTANT_KP（或房主）而不绑定角色卡；seed 使用现有 `TEMPORARY` actorKind 创建 `director:<kpUserId>` 的 KP 导演 actor，`characterId` 保持空、名称取 KP 昵称、默认后台/KP_ONLY。它不是伪造 Character，也不影响 KP 以 `canManageStage` 控制场景。PL 必须是绑定本人角色卡的 active PLAYER，且仅 PL 创建 `PortraitPack`/`PortraitVariant`/`PLAYER_CHARACTER` actor。脚本仍校验背景、两张立绘、BGM 的 room/kind/visibility/uploader；snapshot 继续按冻结契约投射 `portraitAssetId`。同名 theme 的素材引用相同则 no-op，变更背景/BGM 时事务内受控更新 theme、版本和 snapshot，并在结果中记录 `themeAction`。`--apply` 与 `--enable-room-stage` 保持分离，enable 在事务内再次执行完整校验。

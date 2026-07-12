@@ -3,10 +3,12 @@ import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Router, type Request, type Response } from 'express';
 import { prisma } from '../../../config/database';
+import { logger } from '../../../utils/logger';
 import {
   isStageAssetDeliveryRequestAllowed,
   parseStageAssetByteRange,
   resolveStageAssetFile,
+  stageAssetDeliveryAuditMetadata,
   stageAssetContentType,
   verifyStageAssetDeliverySignature,
 } from './stage-asset-delivery';
@@ -50,14 +52,19 @@ function requestUsesConfiguredDeliveryOrigin(req: { protocol: string; hostname: 
   });
 }
 
+function denyDelivery(req: Request, res: Response, status: number, message: string) {
+  logger.warn('stage asset delivery rejected', stageAssetDeliveryAuditMetadata({ assetId: req.params.assetId ?? '', status }));
+  return res.status(status).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message } });
+}
+
 router.use('/delivery', (req, res, next) => {
   clearDeliveryCors(res);
   next();
 });
 
 router.options('/delivery/:assetId', (req, res) => {
-  if (!requestUsesConfiguredDeliveryOrigin(req)) return res.sendStatus(403);
-  if (req.get('origin') !== allowedBrowserOrigin()) return res.sendStatus(403);
+  if (!requestUsesConfiguredDeliveryOrigin(req)) return denyDelivery(req, res, 403, '素材投递来源无效');
+  if (req.get('origin') !== allowedBrowserOrigin()) return denyDelivery(req, res, 403, '素材投递来源无效');
   applyDeliveryCors(req, res);
   return res.status(204).end();
 });
@@ -65,7 +72,7 @@ router.options('/delivery/:assetId', (req, res) => {
 router.get('/delivery/:assetId', async (req, res, next) => {
   try {
     if (!requestUsesConfiguredDeliveryOrigin(req)) {
-      return res.status(403).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材投递来源无效' } });
+      return denyDelivery(req, res, 403, '素材投递来源无效');
     }
     applyDeliveryCors(req, res);
     const version = Number(singleQueryValue(req.query.v));
@@ -77,27 +84,28 @@ router.get('/delivery/:assetId', async (req, res, next) => {
     if (!secret || !baseUrl || !viewerUserId || !signature || !Number.isSafeInteger(version) || version < 1 || !verifyStageAssetDeliverySignature({
       assetId: req.params.assetId, version, viewerUserId, expiresAt, signature, secret, deliveryBaseUrl: baseUrl,
     })) {
-      return res.status(403).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材投递链接无效或已过期' } });
+      return denyDelivery(req, res, 403, '素材投递链接无效或已过期');
     }
 
     const asset = await (prisma as any).stageAsset.findFirst({
       where: { id: req.params.assetId, version, deletedAt: null },
       select: { storageKey: true, mimeType: true, size: true },
     });
-    if (!asset) return res.status(404).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材不存在' } });
+    if (!asset) return denyDelivery(req, res, 404, '素材不存在');
     const filePath = resolveStageAssetFile(assetRoot(), asset.storageKey);
-    if (!filePath) return res.status(404).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材不可用' } });
+    if (!filePath) return denyDelivery(req, res, 404, '素材不可用');
     const [canonicalRoot, canonicalFile] = await Promise.all([realpath(assetRoot()).catch(() => null), realpath(filePath).catch(() => null)]);
-    if (!canonicalRoot || !canonicalFile || !canonicalFile.startsWith(`${canonicalRoot}${path.sep}`)) return res.status(404).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材不可用' } });
+    if (!canonicalRoot || !canonicalFile || !canonicalFile.startsWith(`${canonicalRoot}${path.sep}`)) return denyDelivery(req, res, 404, '素材不可用');
     const info = await stat(canonicalFile).catch(() => null);
-    if (!info?.isFile()) return res.status(404).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材不可用' } });
+    if (!info?.isFile()) return denyDelivery(req, res, 404, '素材不可用');
     const contentType = stageAssetContentType(asset.mimeType);
-    if (contentType === 'application/octet-stream') return res.status(415).json({ success: false, error: { code: 'STAGE_ASSET_FORBIDDEN', message: '素材类型不受支持' } });
+    if (contentType === 'application/octet-stream') return denyDelivery(req, res, 415, '素材类型不受支持');
 
     const rangeHeader = req.header('range');
     const range = parseStageAssetByteRange(rangeHeader, info.size);
     if (rangeHeader && !range) {
       res.setHeader('Content-Range', `bytes */${info.size}`);
+      logger.warn('stage asset delivery rejected', stageAssetDeliveryAuditMetadata({ assetId: req.params.assetId, status: 416 }));
       return res.status(416).end();
     }
     const start = range?.start ?? 0;
