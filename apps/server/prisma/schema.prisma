@@ -203,6 +203,7 @@ model Room {
   description String?
   creatorId   String
   status      String   @default("ACTIVE")
+  stageEnabled Boolean @default(false)
   
   // 新增：氛围主题
   atmosphere  String   @default("normal") // normal, dark, horror, mystery, warm
@@ -260,6 +261,10 @@ model Room {
   aiUsageLedgers AiUsageLedger[]
   aiContextSnapshots AiContextSnapshot[]
   aiAssets AiAsset[]
+  stageChannels StageChannel[]
+  stageAssets StageAsset[]
+  portraitPacks PortraitPack[]
+  stageThemePacks StageThemePack[]
 }
 
 model RoomRun {
@@ -1521,6 +1526,166 @@ model Upload {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model StageChannel {
+  id                    String   @id @default(uuid())
+  roomId                String
+  kind                  String
+  subRoomId             String?
+  privateThreadId       String?
+  parentChannelId       String?
+  status                String   @default("DISABLED")
+  revision              Int      @default(0)
+  timebaseStartedAt     DateTime @default(now())
+  inheritedFromChannelId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  room                  Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  events                StageEvent[]
+  snapshots             StageSnapshot[]
+  actorStates           StageActorState[]
+
+  @@unique([roomId, kind, subRoomId, privateThreadId])
+  @@index([roomId, status])
+}
+
+model StageEvent {
+  id              String   @id @default(uuid())
+  channelId       String
+  roomId          String
+  commandId       String
+  eventType       String
+  contractVersion String
+  actorId         String?
+  roomMessageId   String?
+  operatorUserId  String?
+  targetUserIds   String   @default("[]")
+  visibility      String   @default("PUBLIC")
+  beforeRevision  Int
+  afterRevision   Int
+  payload         String   @default("{}")
+  createdAt       DateTime @default(now())
+
+  channel         StageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, commandId])
+  @@index([channelId, afterRevision])
+  @@index([roomId, createdAt])
+}
+
+model StageSnapshot {
+  id              String   @id @default(uuid())
+  channelId       String
+  roomId          String
+  revision        Int
+  contractVersion String
+  projectionJson  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  channel         StageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, revision])
+  @@index([roomId, updatedAt])
+}
+
+model StageActorState {
+  id                String   @id @default(uuid())
+  channelId         String
+  actorKind         String
+  ownerUserId       String?
+  characterId       String?
+  npcId             String?
+  temporaryName     String?
+  portraitPackId    String?
+  portraitVariantId String?
+  zone              String   @default("center")
+  entered           Boolean  @default(false)
+  visibility        String   @default("PUBLIC")
+  lockedByKp        Boolean  @default(false)
+  stateJson         String   @default("{}")
+  updatedAt         DateTime @updatedAt
+
+  channel           StageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, ownerUserId])
+  @@index([channelId, characterId])
+}
+
+model StageAsset {
+  id              String   @id @default(uuid())
+  roomId          String
+  uploadedById    String
+  kind            String
+  visibility      String   @default("PRIVATE_ROOM")
+  originalName    String
+  mimeType        String
+  size            Int
+  hash            String
+  storageKey      String
+  proxyStorageKey String?
+  width           Int?
+  height          Int?
+  durationMs      Int?
+  version         Int      @default(1)
+  metadataJson    String   @default("{}")
+  deletedAt       DateTime?
+  createdAt       DateTime @default(now())
+
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, kind, createdAt])
+  @@index([hash])
+}
+
+model PortraitPack {
+  id               String   @id @default(uuid())
+  roomId           String
+  ownerUserId      String
+  characterId      String?
+  name             String
+  defaultVariantId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  room             Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  variants         PortraitVariant[]
+
+  @@index([roomId, ownerUserId])
+  @@index([roomId, characterId])
+}
+
+model PortraitVariant {
+  id          String   @id @default(uuid())
+  packId      String
+  assetId     String
+  label       String
+  expression  String?
+  action      String?
+  anchorJson  String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  pack        PortraitPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, label])
+}
+
+model StageThemePack {
+  id           String   @id @default(uuid())
+  roomId       String
+  name         String
+  manifestJson String
+  assetIdsJson String   @default("[]")
+  version      Int      @default(1)
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
 }
 
 // 商店商品表

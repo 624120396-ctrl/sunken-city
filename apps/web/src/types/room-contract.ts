@@ -39,6 +39,11 @@ export interface RoomCapabilities {
   canRollSecretDice: boolean;
   canViewSecretEvents: boolean;
   canViewPublicContent: boolean;
+  canUseStage: boolean;
+  canControlOwnStageActor: boolean;
+  canManageStage: boolean;
+  canManageStageAssets: boolean;
+  canExportStageReplay: boolean;
 }
 
 export interface RoomBindingView {
@@ -160,6 +165,11 @@ function fallbackRoomCapabilities(role: RoomRoleView, lifecycle: RoomLifecycle):
     canRollSecretDice: isKp && canMutate,
     canViewSecretEvents: isKp,
     canViewPublicContent: isMember,
+    canUseStage: isMember && !closed,
+    canControlOwnStageActor: isPlayer && !closed,
+    canManageStage: isKp && canMutate,
+    canManageStageAssets: isKp && canMutate,
+    canExportStageReplay: isKp,
   };
 }
 

@@ -5,13 +5,13 @@ import { logger } from '../utils/logger';
 import { calculateSuccessLevel } from '../utils/character-calc';
 import { getTemporaryInsanity, rollD10 } from '../data/insanity-tables';
 
-interface SocketUser {
+export interface SocketUser {
   userId: string;
   nickname: string;
   isAdmin: boolean;
 }
 
-interface AuthenticatedSocket extends Socket {
+export interface AuthenticatedSocket extends Socket {
   user?: SocketUser;
 }
 

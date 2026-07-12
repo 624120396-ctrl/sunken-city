@@ -34,6 +34,8 @@ import globalRecruitmentRoutes from './modules/global-recruitment/global-recruit
 import roomAiRoutes from './modules/rooms/room-ai.routes';
 import roomVoiceRoutes from './modules/rooms/room-voice.routes';
 import roomOverviewRoutes from './modules/rooms/room-overview.routes';
+import stageRoutes from './modules/rooms/stage/stage.routes';
+import { setupStageGateway } from './modules/rooms/stage/stage.gateway';
 import aiDoubaoRoutes from './modules/rooms/ai-doubao.routes';
 import aiDeepseekRoutes from './modules/rooms/ai-deepseek.routes';
 import diceRoutes from './modules/dice/dice.routes';
@@ -122,6 +124,7 @@ app.use('/api', globalRecruitmentRoutes);
 app.use('/api/rooms', roomAiRoutes);
 app.use('/api/rooms', roomVoiceRoutes);
 app.use('/api/rooms', roomOverviewRoutes);
+app.use('/api/rooms', stageRoutes);
 app.use('/api/rooms', aiDoubaoRoutes);
 app.use('/api/rooms', aiDeepseekRoutes);
 app.use('/api/dice', diceRoutes);
@@ -175,6 +178,7 @@ app.use(errorHandler);
 
 // 设置WebSocket
 setupSocketHandlers(io);
+setupStageGateway(io);
 
 // 启动服务器
 const PORT = process.env.PORT || 3001;

@@ -28,6 +28,11 @@ export interface RoomCapabilities {
   canRollSecretDice: boolean;
   canViewSecretEvents: boolean;
   canViewPublicContent: boolean;
+  canUseStage: boolean;
+  canControlOwnStageActor: boolean;
+  canManageStage: boolean;
+  canManageStageAssets: boolean;
+  canExportStageReplay: boolean;
 }
 
 export function deriveLifecycle(status?: string | null, lifecycle?: string | null): string {
@@ -86,6 +91,11 @@ export function capabilitiesFor(role: RoomRoleView, lifecycle: string): RoomCapa
     canRollSecretDice: isKp && canMutate,
     canViewSecretEvents: isKp,
     canViewPublicContent: isMember,
+    canUseStage: isMember && !closed,
+    canControlOwnStageActor: isPlayer && !closed,
+    canManageStage: isKp && canMutate,
+    canManageStageAssets: isKp && canMutate,
+    canExportStageReplay: isKp,
   };
 }
 
